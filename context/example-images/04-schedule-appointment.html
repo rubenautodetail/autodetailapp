@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Schedule Appointment</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#1a227f", "accent-gold": "#C9A962", "background-light": "#f5f5f5", "background-dark": "#0f131a" }, fontFamily: { "display": ["Manrope", "sans-serif"] }, borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" } } } }</script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            min-height: max(884px, 100dvh)
+        }
+
+        .glass-footer {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px)
+        }
+
+        .slot-chip {
+            transition: all 0.2s ease-in-out
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#121217] dark:text-white font-display">
+    <header class="sticky top-0 z-50 bg-background-light/80 backdrop-blur-md">
+        <div class="flex items-center p-4 justify-between max-w-md mx-auto">
+            <button class="flex size-10 items-center justify-center rounded-full hover:bg-gray-200"><span
+                    class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <h1 class="text-lg font-bold flex-1 text-center pr-10">Schedule Appointment</h1>
+        </div>
+    </header>
+    <main class="max-w-md mx-auto pb-32 px-4">
+        <div class="mt-4 mb-6">
+            <div class="bg-white p-4 rounded-xl shadow border border-gray-100">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex flex-col gap-1 flex-1">
+                        <div class="flex items-center gap-2"><span
+                                class="text-accent-gold material-symbols-outlined text-sm">stars</span>
+                            <p class="text-xs font-bold uppercase tracking-widest text-accent-gold">Selected Package</p>
+                        </div>
+                        <p class="text-base font-bold">Executive Interior Detail</p>
+                        <p class="text-[#666985] text-sm">Full Deep Clean • Est: 3.5 hours</p>
+                    </div>
+                    <div class="size-16 bg-center bg-cover rounded-lg"
+                        style='background-image:url("https://lh3.googleusercontent.com/aida-public/AB6AXuC1wK2Nl6kWrR2HSJvFs_kLqqWL-VVOJzD1xd-nUCVuXu5N_i_5VngLHeHhgNwCbm9lsYJStUfMtMt-SKW6DMx4RYuGD4V-dC8UJRk-RREB_d9x4GCaioJTLW4RN08cO2YQWZswB8SJTT-28w2mDF-kd1jsyQzlVsOBzLg0wj16LRR_ciXaogSlvS86l5wtfE4MiuOBfhBhfImIQL9YzfB71_pmF59VE-Sag2yDBeFE32KpLNingifAaEsoee9WN9jQc-GhLCD8wbEp")'>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4">
+            <h3 class="text-lg font-extrabold mb-2">Select Date</h3>
+            <div class="bg-white rounded-xl shadow p-4 border border-gray-100">
+                <div class="flex items-center justify-between mb-4"><button
+                        class="size-8 rounded-full hover:bg-gray-100"><span
+                            class="material-symbols-outlined text-sm">chevron_left</span></button>
+                    <p class="font-bold">November 2024</p><button class="size-8 rounded-full hover:bg-gray-100"><span
+                            class="material-symbols-outlined text-sm">chevron_right</span></button>
+                </div>
+                <div class="grid grid-cols-7 mb-2">
+                    <p class="text-[#666985] text-[11px] font-bold flex h-8 items-center justify-center">S</p>
+                    <p class="text-[#666985] text-[11px] font-bold flex h-8 items-center justify-center">M</p>
+                    <p class="text-[#666985] text-[11px] font-bold flex h-8 items-center justify-center">T</p>
+                    <p class="text-[#666985] text-[11px] font-bold flex h-8 items-center justify-center">W</p>
+                    <p class="text-[#666985] text-[11px] font-bold flex h-8 items-center justify-center">T</p>
+                    <p class="text-[#666985] text-[11px] font-bold flex h-8 items-center justify-center">F</p>
+                    <p class="text-[#666985] text-[11px] font-bold flex h-8 items-center justify-center">S</p>
+                </div>
+                <div class="grid grid-cols-7 gap-y-1">
+                    <button class="h-10 text-gray-300 text-sm col-start-6">1</button><button
+                        class="h-10 text-gray-300 text-sm">2</button><button class="h-10 text-sm">3</button><button
+                        class="h-10 text-sm">4</button><button class="h-10 text-sm">5</button><button
+                        class="h-10 text-white text-sm font-bold">
+                        <div class="size-9 mx-auto rounded-full bg-primary shadow-lg flex items-center justify-center">6
+                        </div>
+                    </button><button class="h-10 text-sm">7</button><button class="h-10 text-sm">8</button><button
+                        class="h-10 text-sm">9</button><button class="h-10 text-sm">10</button><button
+                        class="h-10 text-sm">11</button><button class="h-10 text-sm">12</button><button
+                        class="h-10 text-sm">13</button><button class="h-10 text-sm">14</button><button
+                        class="h-10 text-sm">15</button><button class="h-10 text-sm">16</button>
+                </div>
+            </div>
+        </div>
+        <div class="mt-8">
+            <div class="flex items-end justify-between mb-4">
+                <h3 class="text-lg font-extrabold">Arrival Window</h3><span
+                    class="text-xs font-bold text-accent-gold uppercase mb-1">PST Timezone</span>
+            </div>
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3"><span
+                        class="material-symbols-outlined text-accent-gold text-lg">light_mode</span>
+                    <p class="text-sm font-bold text-[#666985]">Morning</p>
+                </div>
+                <div class="grid grid-cols-3 gap-3"><button
+                        class="bg-white border border-accent-gold/40 py-3 rounded-lg text-sm font-semibold">8:00
+                        AM</button><button
+                        class="bg-primary text-white py-3 rounded-lg text-sm font-bold shadow-lg ring-2 ring-primary ring-offset-2">9:30
+                        AM</button><button
+                        class="bg-white border border-accent-gold/40 py-3 rounded-lg text-sm font-semibold">11:00
+                        AM</button></div>
+            </div>
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3"><span
+                        class="material-symbols-outlined text-accent-gold text-lg">wb_sunny</span>
+                    <p class="text-sm font-bold text-[#666985]">Afternoon</p>
+                </div>
+                <div class="grid grid-cols-3 gap-3"><button
+                        class="bg-white border border-accent-gold/40 py-3 rounded-lg text-sm font-semibold">1:00
+                        PM</button>
+                    <div class="relative"><button
+                            class="w-full bg-white border border-accent-gold py-3 rounded-lg text-sm font-bold">2:30
+                            PM</button><span
+                            class="absolute -top-2 left-1/2 -translate-x-1/2 bg-accent-gold text-white text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">Popular</span>
+                    </div><button
+                        class="bg-white border border-accent-gold/40 py-3 rounded-lg text-sm font-semibold">4:00
+                        PM</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div class="fixed bottom-0 left-0 right-0 glass-footer border-t border-gray-200 px-6 pt-4 pb-10">
+        <div class="max-w-md mx-auto flex flex-col gap-4">
+            <div class="flex items-center justify-between text-xs font-bold text-[#666985] uppercase px-1">
+                <span>Estimated Completion</span><span class="text-accent-gold">~ 1:00 PM</span></div><button
+                class="w-full bg-primary text-white py-4 rounded-xl text-base font-bold shadow-xl flex items-center justify-center gap-2">Confirm
+                Selection<span class="material-symbols-outlined text-sm">arrow_forward</span></button>
+        </div>
+    </div>
+</body>
+
+</html>

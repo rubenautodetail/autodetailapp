@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1a227f",
+                        "accent": "#C9A962",
+                        "background-light": "#f5f5f5",
+                        "background-dark": "#0f131a",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .luxury-gradient {
+            background: linear-gradient(180deg, rgba(26, 34, 127, 0) 0%, rgba(26, 34, 127, 0.4) 40%, rgba(26, 34, 127, 0.95) 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark overflow-hidden">
+<div class="relative flex h-screen w-full flex-col overflow-hidden">
+<!-- Full Screen Background Image with Overlay -->
+<div class="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover" data-alt="A pristine black luxury sedan reflecting city lights" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAfTe0eQFjNYwhnZc8Wt1_1i489Gl_n0g7LbSe23k_v-uBdXyX9zF4kfA1KlNV9owK-TXPQhvyLc7OWl7VwN7AxmVz6_fiFJifh0SmHmTXGP0x124sYzhNMIX56fBhNyP0fMWm7dtEbL8DW8Q7uUUA6wTnMBdBr144jfdC8BJsX3BTfiOWhXObmBl5bw5UoQCaG3cavWi3EjxnwW5pD_j8ILzslbiFzA7udjRshZ3CALh9_hYyAoyzpJuqcm1iz2_rhWTHmRv80yiSf");'>
+<!-- Dark Navy Gradient Overlay -->
+<div class="absolute inset-0 luxury-gradient"></div>
+</div>
+<!-- Content Container -->
+<div class="relative z-10 flex h-full flex-col justify-between px-6 pb-12 pt-16">
+<!-- Logo/Top Branding -->
+<div class="flex justify-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-accent text-4xl">diamond</span>
+<span class="text-white text-xl font-light tracking-[0.3em] uppercase">Vantage</span>
+</div>
+</div>
+<!-- Text and Action Area -->
+<div class="flex flex-col items-center text-center">
+<!-- Headline -->
+<h1 class="text-white tracking-tight text-5xl font-extrabold leading-[1.1] mb-4">
+                    Your Car, <br/>
+<span class="text-accent italic font-light">Redefined.</span>
+</h1>
+<!-- Body Text -->
+<p class="text-white/80 text-lg font-light leading-relaxed max-w-[320px] mb-10">
+                    Experience the ultimate in mobile luxury detailing. Expert care brought directly to your doorstep.
+                </p>
+<!-- Page Indicators (Champagne Gold) -->
+<div class="flex w-full flex-row items-center justify-center gap-3 mb-10">
+<div class="h-1.5 w-6 rounded-full bg-accent"></div>
+<div class="h-1.5 w-1.5 rounded-full bg-white/30"></div>
+<div class="h-1.5 w-1.5 rounded-full bg-white/30"></div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col w-full max-w-[480px] gap-4">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-accent text-primary text-lg font-bold leading-normal tracking-wide shadow-lg shadow-black/20 hover:opacity-90 active:scale-[0.98] transition-all">
+<span class="truncate">Book Your Detail</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-white/10 border border-white/20 text-white text-lg font-medium leading-normal tracking-wide backdrop-blur-sm hover:bg-white/20 transition-all">
+<span class="truncate">Log In</span>
+</button>
+</div>
+<!-- Footer/Legal (iOS style) -->
+<div class="mt-8 text-white/40 text-xs font-medium tracking-widest uppercase">
+                    Excellence in every detail
+                </div>
+</div>
+</div>
+<!-- iOS Home Indicator Area (Visual Only) -->
+<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/30 rounded-full z-20"></div>
+</div>
+</body></html>

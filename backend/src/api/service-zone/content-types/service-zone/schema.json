@@ -1,0 +1,50 @@
+{
+    "kind": "collectionType",
+    "collectionName": "service_zones",
+    "info": {
+        "singularName": "service-zone",
+        "pluralName": "service-zones",
+        "displayName": "Service Zone",
+        "description": "Geographic zones where detailing services are available"
+    },
+    "options": {
+        "draftAndPublish": true
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "zipCode": {
+            "type": "string",
+            "required": true,
+            "unique": true,
+            "maxLength": 10
+        },
+        "isActive": {
+            "type": "boolean",
+            "default": true
+        },
+        "coverageRadiusMiles": {
+            "type": "decimal",
+            "default": 5
+        },
+        "priceMultiplier": {
+            "type": "decimal",
+            "default": 1.0,
+            "min": 0.5,
+            "max": 2.0
+        },
+        "peakHoursPricing": {
+            "type": "decimal",
+            "default": 1.2
+        },
+        "minContractorsRequired": {
+            "type": "integer",
+            "default": 2
+        },
+        "contractors": {
+            "type": "relation",
+            "relation": "manyToMany",
+            "target": "api::contractor.contractor",
+            "inversedBy": "serviceZones"
+        }
+    }
+}

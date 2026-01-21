@@ -1,0 +1,68 @@
+{
+    "kind": "collectionType",
+    "collectionName": "add_ons",
+    "info": {
+        "singularName": "add-on",
+        "pluralName": "add-ons",
+        "displayName": "Add On",
+        "description": "Upsell add-on services (Pet Hair, Headlight Restoration, etc.)"
+    },
+    "options": {
+        "draftAndPublish": true
+    },
+    "pluginOptions": {
+        "i18n": {
+            "localized": true
+        }
+    },
+    "attributes": {
+        "name": {
+            "type": "string",
+            "required": true,
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "slug": {
+            "type": "uid",
+            "targetField": "name"
+        },
+        "description": {
+            "type": "text",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "price": {
+            "type": "decimal",
+            "required": true,
+            "min": 0
+        },
+        "durationMinutes": {
+            "type": "integer",
+            "default": 30
+        },
+        "checklist": {
+            "type": "json",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "applicableServices": {
+            "type": "relation",
+            "relation": "manyToMany",
+            "target": "api::service.service",
+            "inversedBy": "addOns"
+        },
+        "sortOrder": {
+            "type": "integer",
+            "default": 0
+        }
+    }
+}

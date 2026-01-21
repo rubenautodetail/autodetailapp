@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Home Discovery - Car Detailing Concierge</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1a227f",
+                        "gold": "#c9a962",
+                        "pearl": "#f1f1f4",
+                        "background-light": "#f5f5f5",
+                        "background-dark": "#0f131a",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .gold-star {
+            font-variation-settings: 'FILL' 1, 'wght' 400;
+            color: #c9a962;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-[#121217] dark:text-white min-h-screen flex flex-col">
+    <!-- Top Navigation -->
+    <header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-4 pt-6 pb-2">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="size-10 shrink-0 rounded-full border-2 border-gold p-0.5">
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-full"
+                        data-alt="User profile portrait of a stylish man"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB50tpPh-bAWu9qRHHjV2kTKtgtuAgsoapZTb17kLPei9K8z4v1GaHO0g1-lFnusj4RCaBDFspHYg_0R8hdkGBxQ4-z8h0FL0E-A1HDfCGbip9vL_USGVZFE625pIBTjV9yMLh3NiPeRMfABZmW5uuKyMUg7wE6D41hOAQsZA9c2g0-fStcWA8wJ8OWRLs4YFOvPmJCe3nDF73KPWocZ7hFIc-ZQhs9Y0xh7wUcnbLLvdX7N5VKC_EPpS9ErfZeZH10b3aOgYyTHJc1");'>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest">Welcome
+                        back</p>
+                    <h2 class="text-lg font-bold leading-tight">James Harrison</h2>
+                </div>
+            </div>
+            <button class="size-10 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 shadow-sm">
+                <span class="material-symbols-outlined text-primary dark:text-gold">notifications</span>
+            </button>
+        </div>
+    </header>
+    <main class="flex-1 pb-24">
+        <!-- Search Bar Section -->
+        <div class="px-4 py-4">
+            <label class="flex flex-col min-w-40 h-14 w-full group">
+                <div
+                    class="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
+                    <div
+                        class="text-[#666985] flex border-none bg-white dark:bg-zinc-900 items-center justify-center pl-4">
+                        <span class="material-symbols-outlined">location_on</span>
+                    </div>
+                    <input
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#121217] dark:text-white focus:outline-0 focus:ring-0 border-none bg-white dark:bg-zinc-900 h-full placeholder:text-[#666985] px-4 pl-2 text-base font-medium"
+                        placeholder="Enter your location" value="Beverly Hills, CA" />
+                    <div class="flex items-center bg-white dark:bg-zinc-900 pr-4">
+                        <span class="material-symbols-outlined text-gold">tune</span>
+                    </div>
+                </div>
+            </label>
+        </div>
+        <!-- Featured Banner -->
+        <div class="px-4 mb-8">
+            <div class="relative h-48 w-full rounded-xl overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-r from-primary/90 to-transparent z-10"></div>
+                <div class="absolute inset-0 bg-center bg-cover"
+                    data-alt="Modern luxury blue sports car interior detail"
+                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBnLWGsUy0kjagl2KUI74ahQ8Yq5Tj7sYbKNXZeM4ea8zw9U4eZFizoVr2_ItisWlZarpOqpXZej22BZG5KIjNRAFXrv5N7X6ZFXKEvyMzB5jvH472uTA6FKKL0OYSzXavBbHPLZE3UHSJUCia5NsjsDqkYYQsN5jxT1psaf8Ij8FLT_B69IQgG7H6WSBSLpAGJd3Vk41vEb3iQg7oIOYVK2NXN5fyqddlG2m5D5lZ9QAPr3Q2fJPVmffkVbiSiXCzjobWiJOHtJ3eU");'>
+                </div>
+                <div class="relative z-20 p-6 h-full flex flex-col justify-center max-w-[60%]">
+                    <span class="text-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-2">New Arrival</span>
+                    <h3 class="text-white text-xl font-bold leading-tight mb-3">Premium Ceramic Coating</h3>
+                    <button class="bg-gold text-white text-xs font-bold px-4 py-2 rounded-lg w-max">RESERVE NOW</button>
+                </div>
+            </div>
+        </div>
+        <!-- Service Packages Carousel -->
+        <div class="mb-4 flex items-center justify-between px-4">
+            <h2 class="text-primary dark:text-white text-[20px] font-bold leading-tight tracking-tight">Service Packages
+            </h2>
+            <button class="text-gold text-sm font-semibold">View All</button>
+        </div>
+        <div class="flex overflow-x-auto gap-4 px-4 pb-6 snap-x">
+            <!-- Interior Card -->
+            <div class="flex-none w-64 snap-start group">
+                <div
+                    class="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-black/5 dark:border-white/5 transition-transform active:scale-95">
+                    <div class="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover"
+                        data-alt="Pristine leather car seat interior detail"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2AQkmgjnpUpAgHiJVVHmo8hq6g1VifqGuDMw0M5CZRNBGb8Ddu1613khjORoUGIdJiYSV6ORVk5vPsAdQcXH5a1JNpnOXVZxaP5LfB2Bk0KHbejajtaPy_t8Y-p2RQHeodePEep2PPvZk1099FKnvtntK3kRoNhsdlSKjXSQzuXUFYDo2mrZnFMtNJ5YfX_RBIsoRJQDjEXR1Zk-5zPdzBD-sfL8swFkPL7MenR_SDLAd8CKNmK4Sio3Yu5cqU1uqJfOUkwxemPqc");'>
+                    </div>
+                    <div class="p-4 bg-pearl/30 dark:bg-zinc-900">
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-primary dark:text-white text-lg font-bold">Interior Detail</p>
+                            <span class="text-gold font-bold">$80+</span>
+                        </div>
+                        <p class="text-[#666985] text-xs font-medium leading-normal mb-3">Complete deep clean &amp;
+                            conditioning</p>
+                        <div class="flex gap-2">
+                            <span
+                                class="bg-white dark:bg-zinc-800 text-[10px] px-2 py-1 rounded-md text-gray-500 border border-black/5">90
+                                mins</span>
+                            <span
+                                class="bg-white dark:bg-zinc-800 text-[10px] px-2 py-1 rounded-md text-gray-500 border border-black/5">Steam
+                                cleaning</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Exterior Card -->
+            <div class="flex-none w-64 snap-start group">
+                <div
+                    class="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-black/5 dark:border-white/5 transition-transform active:scale-95">
+                    <div class="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover"
+                        data-alt="Close up of water beads on a wax car surface"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDp56qwaEjDjvKiw2nd3DFwhWPnt7bOEMfC8cgB4Tp8-DxMkZHbQf3_wiAg7dpFJH3IqjyPham7ocgzsh63HOnv58zu3KhOxX--NGeiwrZooI5W9iOB6soUUla5N9shC4yR9TAKXsgEjIBwv63CrwJT4qlriqRD3GL0cpsFmvIx-loYI2F5zeKBGuCdK3zwPhMTbrAqZ1wYBmFrdnvMUzak5WH8lWEGpArvwXHocyFNuGVTxsQHbuiTmwQ3s2OOmWl45WRIiuAXgTFr");'>
+                    </div>
+                    <div class="p-4 bg-pearl/30 dark:bg-zinc-900">
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-primary dark:text-white text-lg font-bold">Exterior Wash</p>
+                            <span class="text-gold font-bold">$60+</span>
+                        </div>
+                        <p class="text-[#666985] text-xs font-medium leading-normal mb-3">Hand wash, dry &amp; clay bar
+                            treatment</p>
+                        <div class="flex gap-2">
+                            <span
+                                class="bg-white dark:bg-zinc-800 text-[10px] px-2 py-1 rounded-md text-gray-500 border border-black/5">60
+                                mins</span>
+                            <span
+                                class="bg-white dark:bg-zinc-800 text-[10px] px-2 py-1 rounded-md text-gray-500 border border-black/5">UV
+                                Protection</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Full Detail -->
+            <div class="flex-none w-64 snap-start group">
+                <div
+                    class="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-black/5 dark:border-white/5 transition-transform active:scale-95">
+                    <div class="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover"
+                        data-alt="Showroom condition dark luxury sedan"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDOba8PKhy1oV9wnBM4sCAbA73VrHBIM0ke0PpsSw8AEPsR_HpiRb9qLyt01m39ZlpWkXiNu_j1_ouIEJMSGWTU_DnYamMZkG7l7oTGQf1nDM6a3LYLl5BnaF9omxCVKwqHDk5gJay-rlT2KwqGLRsyjBc8oNaMF7EQ_LWQ0TuZmOLZiTlhwChmHaY2P4tewUYSFtcE2ta2X6l0v9b-VGiP8PknIotadhpwt6L8z_8-AyP2tFOAHbzusD6OprnOsZ7cYzW2TlA7VVox");'>
+                    </div>
+                    <div class="p-4 bg-pearl/30 dark:bg-zinc-900">
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-primary dark:text-white text-lg font-bold">Executive Suite</p>
+                            <span class="text-gold font-bold">$150+</span>
+                        </div>
+                        <p class="text-[#666985] text-xs font-medium leading-normal mb-3">Full restoration for showroom
+                            finish</p>
+                        <div class="flex gap-2">
+                            <span
+                                class="bg-white dark:bg-zinc-800 text-[10px] px-2 py-1 rounded-md text-gray-500 border border-black/5">4
+                                hours</span>
+                            <span
+                                class="bg-white dark:bg-zinc-800 text-[10px] px-2 py-1 rounded-md text-gray-500 border border-black/5">Ceramic
+                                finish</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Top-Rated Detailers Section -->
+        <div class="px-4 mb-4">
+            <h2 class="text-primary dark:text-white text-[20px] font-bold leading-tight tracking-tight">Premier
+                Detailers</h2>
+        </div>
+        <div class="px-4 flex flex-col gap-3">
+            <!-- Detailer Item -->
+            <div
+                class="flex items-center gap-4 bg-white dark:bg-zinc-900 p-3 rounded-xl shadow-sm border border-black/5 dark:border-white/5">
+                <div class="relative">
+                    <div class="size-14 rounded-full bg-center bg-cover" data-alt="Professional detailer profile photo"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBFE-QzA9juGPFDz59Qsp6r1xH2KASuvMUCaDEKZEHYBrMUJzq_ppIpbRPw6-12NNjIN5DHJyYAeWJEr5uSbS7NWQwO-vvSaub8zMd9FHW9JjTEi9X2faRg3YG5_kjNFYkAQhi9ay095IqaZ18g7u24HbEzxhqE0lpwHM-O-nuNpnbPRj9LeUqUQ8TEkt9zqWSqQl-Nc1fGCzHRqov8pLxt8-eH8oB9f6UbKftFjEtdrvLGueIHaHwS8cG0Y4vJxLbuxp2NRPhMH0EH");'>
+                    </div>
+                    <div
+                        class="absolute -bottom-1 -right-1 bg-gold rounded-full p-0.5 border-2 border-white dark:border-zinc-900">
+                        <span class="material-symbols-outlined text-[10px] text-white">verified</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-primary dark:text-white">Marcus Sterling</h4>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined gold-star text-sm">star</span>
+                            <span class="text-xs font-bold text-gold">4.9</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-[#666985]">Expert in High-End Exotics • 128 Jobs</p>
+                </div>
+                <button
+                    class="bg-primary/10 dark:bg-gold/10 p-2 rounded-lg group active:bg-primary active:text-white transition-colors">
+                    <span
+                        class="material-symbols-outlined text-primary dark:text-gold group-active:text-white">arrow_forward</span>
+                </button>
+            </div>
+            <!-- Detailer Item -->
+            <div
+                class="flex items-center gap-4 bg-white dark:bg-zinc-900 p-3 rounded-xl shadow-sm border border-black/5 dark:border-white/5">
+                <div class="relative">
+                    <div class="size-14 rounded-full bg-center bg-cover"
+                        data-alt="Female professional detailer headshot"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDbILEMzLMsMrx0aGj0iAyJRiF7lbAuGcNHe4c5eXAkdFaG7pYIBEM1UszbD10B3x6OI6gwAD3AJ2TfU2QcIGt1QqCpBeTfQL6s5hBONeDbaH55CXtCl6ICEnXa4MKR7rKsKTBhet3tD3y6_wN2cIVGcI1j58abDzEcvn6_vD90vOb20GsPO1N_FULQWT6So59SFlJmqpnfUa59lj55gq-CyVixOizW5E_cVTuBKCjJheE_XcnRb8bgQCvSBIbB2q8eQSAbtmr3k8Fy");'>
+                    </div>
+                    <div
+                        class="absolute -bottom-1 -right-1 bg-gold rounded-full p-0.5 border-2 border-white dark:border-zinc-900">
+                        <span class="material-symbols-outlined text-[10px] text-white">verified</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-primary dark:text-white">Elena Rossi</h4>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined gold-star text-sm">star</span>
+                            <span class="text-xs font-bold text-gold">5.0</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-[#666985]">Ceramic Pro Certified • 215 Jobs</p>
+                </div>
+                <button class="bg-primary/10 dark:bg-gold/10 p-2 rounded-lg active:bg-primary transition-colors">
+                    <span class="material-symbols-outlined text-primary dark:text-gold">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    </main>
+    <!-- Fixed Bottom Navigation -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-black/5 dark:border-white/10 px-6 py-3 pb-8 z-50">
+        <div class="flex items-center justify-between max-w-lg mx-auto">
+            <button class="flex flex-col items-center gap-1 text-primary dark:text-gold">
+                <span class="material-symbols-outlined text-[28px]"
+                    style="font-variation-settings: 'FILL' 1;">home</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Explore</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-gray-400">
+                <span class="material-symbols-outlined text-[28px]">calendar_today</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Bookings</span>
+            </button>
+            <div class="relative -top-8">
+                <button
+                    class="size-14 bg-primary shadow-xl shadow-primary/40 rounded-full flex items-center justify-center border-4 border-background-light dark:border-background-dark">
+                    <span class="material-symbols-outlined text-white text-[32px]">add</span>
+                </button>
+            </div>
+            <button class="flex flex-col items-center gap-1 text-gray-400">
+                <span class="material-symbols-outlined text-[28px]">chat_bubble</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Messages</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-gray-400">
+                <span class="material-symbols-outlined text-[28px]">person</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+            </button>
+        </div>
+    </nav>
+</body>
+
+</html>

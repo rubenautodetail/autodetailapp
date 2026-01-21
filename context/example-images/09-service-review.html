@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Service Review</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#1a227f", "gold": "#C9A962", "background-light": "#f5f5f5", "background-dark": "#0f131a" }, fontFamily: { "display": ["Manrope", "sans-serif"] }, borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" } } } }</script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300
+        }
+
+        .star-active {
+            font-variation-settings: 'FILL' 1, 'wght' 400;
+            color: #C9A962
+        }
+
+        .soft-shadow {
+            box-shadow: 0 10px 30px -10px rgba(26, 34, 127, 0.1)
+        }
+
+        body {
+            min-height: max(884px, 100dvh)
+        }
+    </style>
+</head>
+
+<body class="bg-background-light font-display text-[#121217] transition-colors duration-300">
+    <div class="relative flex min-h-screen w-full flex-col max-w-md mx-auto overflow-x-hidden">
+        <header class="flex items-center bg-transparent p-4 pb-2 justify-between z-10">
+            <div class="flex size-12 items-center justify-start"><button
+                    class="flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md size-10 shadow-sm"><span
+                        class="material-symbols-outlined text-[#121217]">close</span></button></div>
+            <div class="flex flex-col items-center"><span
+                    class="text-[10px] uppercase tracking-[0.2em] text-gold font-bold">Detailing Complete</span>
+                <h2 class="text-[#121217] text-lg font-extrabold leading-tight">Your Car is Ready</h2>
+            </div>
+            <div class="flex size-12 items-center justify-end"><button
+                    class="flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md size-10 shadow-sm"><span
+                        class="material-symbols-outlined text-[#121217]">ios_share</span></button></div>
+        </header>
+        <main class="flex-1 pb-24">
+            <div class="px-6 py-4 text-center">
+                <p class="text-sm text-[#666985]">Review the transformation of your Porsche 911 Carrera</p>
+            </div>
+            <div class="flex overflow-x-auto snap-x snap-mandatory">
+                <div class="flex items-stretch px-6 py-2 gap-4">
+                    <div class="flex h-full flex-col gap-3 rounded-xl min-w-[280px] snap-center">
+                        <div class="relative w-full aspect-[4/5] bg-center bg-cover rounded-xl soft-shadow border-2 border-white overflow-hidden"
+                            style='background-image:url("https://lh3.googleusercontent.com/aida-public/AB6AXuDtFzh2cjE7YMt9HsAi74BwNf4sF2GRFi9S39CQhZkSc7G4ec0X2Z4AK3WMa-ga-RAAvMRUB9egAuiazX3IfZ2UBo3CWJL0Y-DPnoloHgoa4iSVrxd-0zRQDuJWtZeHNCPmeMSx_CL1U7UtNjs-qHSPJl8JASeioIgKRPRjWl-2RTPo5FAm_4P3LDzJ8OpEn223YWt4kam8zbecvVkbs1waDKlqk-MZ8mGbMPdeeJzqMuOpceadZF1NlXcJFbyap9QIkX0hJenW9YED")'>
+                            <div
+                                class="absolute top-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+                                <span class="text-[10px] font-bold text-white uppercase tracking-widest">Before</span>
+                            </div>
+                        </div>
+                        <div class="px-1">
+                            <p class="text-[#121217] text-sm font-semibold">Initial Condition</p>
+                            <p class="text-[#666985] text-xs">Arrived with road salt and debris</p>
+                        </div>
+                    </div>
+                    <div class="flex h-full flex-col gap-3 rounded-xl min-w-[280px] snap-center">
+                        <div class="relative w-full aspect-[4/5] bg-center bg-cover rounded-xl soft-shadow border-2 border-gold/30 overflow-hidden"
+                            style='background-image:url("https://lh3.googleusercontent.com/aida-public/AB6AXuCGt_Gppi-9k36svpfoiFNqyxSlXGVT7E_ELUgoXsvjcUVwHH10meScB3XCuSht3DdoFpxH6VMPRwIXLEn-1YzUCzEc70TX79ZhOevN2pGWetmAAah2hikjD8QWO-8IWMpX1_sTFv9hk_RP6id36XLCIew2twLk98UMQp1h4QKNvJa0GRWmiZrb3EAnmnaQxFG-LGjwIyJ4KY7MLC0E5TEbRnto6WEVjZZgEyk4VTepRRkn-m1_zSaQ89oflQQTn2fKB5jUOemO8-2c")'>
+                            <div class="absolute top-4 left-4 bg-gold px-3 py-1 rounded-full shadow-lg"><span
+                                    class="text-[10px] font-bold text-white uppercase tracking-widest">After</span>
+                            </div>
+                            <div
+                                class="absolute bottom-4 right-4 bg-white/10 backdrop-blur-sm p-2 rounded-full border border-white/20">
+                                <span class="material-symbols-outlined text-white text-sm">auto_awesome</span></div>
+                        </div>
+                        <div class="px-1">
+                            <p class="text-[#121217] text-sm font-semibold">Concierge Finish</p>
+                            <p class="text-[#666985] text-xs">Ceramic coating &amp; deep interior clean</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 px-6">
+                <div class="bg-white rounded-xl p-6 soft-shadow border border-white">
+                    <h4 class="text-[#121217] text-sm font-bold text-center mb-4 uppercase">Rate your experience</h4>
+                    <div class="flex justify-between items-center px-4">
+                        <button class="p-1"><span
+                                class="material-symbols-outlined text-3xl star-active">star</span></button>
+                        <button class="p-1"><span
+                                class="material-symbols-outlined text-3xl star-active">star</span></button>
+                        <button class="p-1"><span
+                                class="material-symbols-outlined text-3xl star-active">star</span></button>
+                        <button class="p-1"><span
+                                class="material-symbols-outlined text-3xl star-active">star</span></button>
+                        <button class="p-1"><span
+                                class="material-symbols-outlined text-3xl text-gray-300">star</span></button>
+                    </div>
+                    <div class="mt-8"><label class="flex flex-col w-full"><span
+                                class="text-[10px] uppercase tracking-widest font-bold text-[#666985] mb-2 ml-1">Your
+                                Review</span><textarea
+                                class="form-input flex w-full resize-none rounded-lg text-[#121217] focus:ring-1 focus:ring-gold border border-gray-100 bg-background-light min-h-[120px] placeholder:text-gray-400 p-4 text-sm"
+                                placeholder="Tell us about the service quality, staff, or attention to detail..."></textarea></label>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div
+            class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-gradient-to-t from-background-light via-background-light/95 to-transparent">
+            <button
+                class="flex w-full items-center justify-center rounded-xl h-14 bg-primary text-white gap-2 text-base font-bold shadow-xl"><span
+                    class="material-symbols-outlined text-gold">verified</span><span>Submit Feedback</span></button>
+        </div>
+    </div>
+    <div class="fixed top-0 left-0 -z-10 w-full h-full pointer-events-none opacity-20 overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-gold rounded-full blur-[100px]"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-primary rounded-full blur-[100px]"></div>
+    </div>
+</body>
+
+</html>

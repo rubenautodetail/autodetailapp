@@ -1,0 +1,76 @@
+{
+    "kind": "collectionType",
+    "collectionName": "services",
+    "info": {
+        "singularName": "service",
+        "pluralName": "services",
+        "displayName": "Service",
+        "description": "Detailing service packages (Interior, Exterior, Full)"
+    },
+    "options": {
+        "draftAndPublish": true
+    },
+    "pluginOptions": {
+        "i18n": {
+            "localized": true
+        }
+    },
+    "attributes": {
+        "name": {
+            "type": "string",
+            "required": true,
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "slug": {
+            "type": "uid",
+            "targetField": "name"
+        },
+        "description": {
+            "type": "text",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "basePrice": {
+            "type": "decimal",
+            "required": true,
+            "min": 0
+        },
+        "durationMinutes": {
+            "type": "integer",
+            "required": true,
+            "default": 120
+        },
+        "checklist": {
+            "type": "json",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "image": {
+            "type": "media",
+            "multiple": false,
+            "allowedTypes": [
+                "images"
+            ]
+        },
+        "addOns": {
+            "type": "relation",
+            "relation": "manyToMany",
+            "target": "api::add-on.add-on",
+            "mappedBy": "applicableServices"
+        },
+        "sortOrder": {
+            "type": "integer",
+            "default": 0
+        }
+    }
+}

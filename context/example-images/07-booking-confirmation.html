@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Booking Confirmed</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#1a227f", "gold": "#C9A962", "navy-dark": "#0a0e36", "background-light": "#f5f5f5", "background-dark": "#0f131a" }, fontFamily: { "display": ["Manrope", "sans-serif"] }, borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" } } } }</script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            min-height: max(884px, 100dvh)
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300
+        }
+    </style>
+</head>
+
+<body class="bg-primary text-white min-h-screen flex flex-col items-center overflow-x-hidden">
+    <div class="w-full flex items-center justify-between p-6 pt-12">
+        <button class="text-white/80"><span class="material-symbols-outlined text-[28px]">close</span></button>
+        <h2 class="text-white text-lg font-semibold tracking-wide uppercase text-[13px]">Booking Confirmed</h2>
+        <button class="text-white/80"><span class="material-symbols-outlined text-[28px]">share</span></button>
+    </div>
+    <div class="flex-1 w-full max-w-md px-6 flex flex-col items-center">
+        <div class="mt-4 mb-8 flex flex-col items-center">
+            <div class="w-24 h-24 rounded-full border border-gold/30 flex items-center justify-center mb-6 relative">
+                <div class="absolute inset-0 rounded-full border border-gold animate-ping opacity-20"></div>
+                <span class="material-symbols-outlined text-gold text-[64px]">check_circle</span>
+            </div>
+            <h1 class="text-3xl font-bold text-center leading-tight">Your luxury detail is scheduled</h1>
+            <p class="text-white/60 text-sm mt-3 font-medium tracking-wide">Your detailer arrives in...</p>
+        </div>
+        <div class="w-full flex gap-3 py-4 mb-8">
+            <div class="flex grow basis-0 flex-col items-stretch gap-2">
+                <div
+                    class="flex h-20 grow items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/5">
+                    <p class="text-gold text-3xl font-light tracking-widest">02</p>
+                </div>
+                <div class="flex items-center justify-center">
+                    <p class="text-white/40 text-[10px] uppercase font-bold tracking-[0.2em]">Hours</p>
+                </div>
+            </div>
+            <div class="flex grow basis-0 flex-col items-stretch gap-2">
+                <div
+                    class="flex h-20 grow items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/5">
+                    <p class="text-gold text-3xl font-light tracking-widest">45</p>
+                </div>
+                <div class="flex items-center justify-center">
+                    <p class="text-white/40 text-[10px] uppercase font-bold tracking-[0.2em]">Minutes</p>
+                </div>
+            </div>
+            <div class="flex grow basis-0 flex-col items-stretch gap-2">
+                <div
+                    class="flex h-20 grow items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/5">
+                    <p class="text-gold text-3xl font-light tracking-widest">12</p>
+                </div>
+                <div class="flex items-center justify-center">
+                    <p class="text-white/40 text-[10px] uppercase font-bold tracking-[0.2em]">Seconds</p>
+                </div>
+            </div>
+        </div>
+        <div class="w-full bg-white rounded-2xl p-5 mb-4 shadow-2xl flex items-center gap-4">
+            <div class="size-16 rounded-xl bg-center bg-cover border-2 border-primary/5"
+                style='background-image:url("https://lh3.googleusercontent.com/aida-public/AB6AXuAOI_w3meStMe65gjBTutLOflP8pQ__aONEn1Kd8CiKppQLfCumoVwxEC4-xqDaS68FGhMJVtpO6_YCIEVRZZpNXTR6FuqZwvTddD2YHquI3Iif3F_IggAz3PuuTptl_Ok8thOZW_wuabz0kaYnd85-zpWca_Wi3fzmqfFvIqkqZP0yzaHDUpnRsJSHhr1tz0u9sa4u47Vc7INgQvuZJN9oUUzpJr-mjrB_LG7kZU93mRv4p1iHX0q5mjTRXbKuMIe7xGCEIYenIR6R")'>
+            </div>
+            <div class="flex-1">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="text-primary font-bold text-lg leading-none">Jameson P.</h4>
+                        <div class="flex items-center mt-1"><span class="material-symbols-outlined text-gold text-sm"
+                                style="font-variation-settings:'FILL' 1">star</span><span
+                                class="text-primary/60 text-xs font-bold ml-1">4.9 (124 reviews)</span></div>
+                    </div><button class="bg-primary/5 p-2 rounded-full text-primary"><span
+                            class="material-symbols-outlined text-xl">chat_bubble</span></button>
+                </div>
+                <p class="text-primary/40 text-[11px] mt-2 font-semibold uppercase tracking-wider">Equipped for Luxury
+                    Sedans</p>
+            </div>
+        </div>
+        <div class="w-full bg-white rounded-2xl overflow-hidden mb-6 shadow-2xl">
+            <div class="p-5 border-b border-gray-100">
+                <div class="flex items-start gap-4 mb-4">
+                    <div class="bg-primary/5 p-2 rounded-lg text-primary"><span
+                            class="material-symbols-outlined">calendar_today</span></div>
+                    <div>
+                        <p class="text-primary/40 text-[10px] uppercase font-bold tracking-widest">Date &amp; Time</p>
+                        <p class="text-primary font-bold text-[15px]">Thursday, Oct 12th • 10:00 AM</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="bg-primary/5 p-2 rounded-lg text-primary"><span
+                            class="material-symbols-outlined">location_on</span></div>
+                    <div class="flex-1">
+                        <p class="text-primary/40 text-[10px] uppercase font-bold tracking-widest">Service Location</p>
+                        <p class="text-primary font-bold text-[15px]">123 Beverly Hills Dr, CA</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-primary/5 px-5 py-4 flex justify-between items-center">
+                <div>
+                    <p class="text-primary font-bold text-sm">Signature Ceramic Coating</p>
+                    <p class="text-primary/60 text-xs">Full exterior + interior protection</p>
+                </div>
+                <p class="text-gold font-bold text-xl">$299</p>
+            </div>
+        </div>
+        <div class="w-full mt-auto pb-10 flex flex-col gap-3">
+            <button class="w-full bg-gold text-primary py-4 rounded-xl font-bold tracking-tight shadow-lg">Add to Apple
+                Calendar</button>
+            <button
+                class="w-full bg-white/10 text-white py-4 rounded-xl font-bold tracking-tight border border-white/10">Manage
+                Booking</button>
+        </div>
+    </div>
+    <div class="h-1.5 w-32 bg-white/20 rounded-full mb-2"></div>
+</body>
+
+</html>

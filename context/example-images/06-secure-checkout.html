@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Secure Checkout</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#1a227f", "gold": "#C9A962", "pearl": "#F1F1F4", "background-light": "#f5f5f5", "background-dark": "#0f131a" }, fontFamily: { "display": ["Manrope", "sans-serif"] }, borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" } } } }</script>
+    <style>
+        .ios-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05)
+        }
+
+        .gold-shimmer {
+            background: linear-gradient(135deg, #C9A962 0%, #E5D1A0 50%, #C9A962 100%)
+        }
+
+        body {
+            min-height: max(884px, 100dvh)
+        }
+    </style>
+</head>
+
+<body class="bg-background-light font-display text-[#121217] antialiased">
+    <div
+        class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto bg-background-light overflow-x-hidden pb-40">
+        <div
+            class="sticky top-0 z-50 flex items-center bg-white/80 backdrop-blur-md p-4 pb-2 justify-between border-b border-pearl">
+            <div class="text-primary flex size-12 shrink-0 items-center justify-start cursor-pointer"><span
+                    class="material-symbols-outlined">arrow_back_ios</span></div>
+            <h2 class="text-primary text-lg font-bold flex-1 text-center pr-12 uppercase tracking-widest text-sm">Secure
+                Checkout</h2>
+        </div>
+        <div class="flex flex-col gap-6 p-4">
+            <div class="bg-white p-5 rounded-xl ios-shadow border border-pearl">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex flex-[2_2_0px] flex-col gap-3">
+                        <div class="flex flex-col gap-1">
+                            <p class="text-primary/60 text-[10px] font-bold uppercase tracking-wider">Service Selected
+                            </p>
+                            <p class="text-primary text-xl font-extrabold">Full Ceramic Coating</p>
+                            <p class="text-primary/70 text-sm font-medium">Porsche 911 • June 24, 10:00 AM</p>
+                        </div>
+                        <button
+                            class="flex items-center justify-center rounded-lg h-9 px-4 bg-pearl text-primary gap-2 text-xs font-bold uppercase w-fit"><span
+                                class="material-symbols-outlined text-[18px]">expand_more</span><span>View
+                                Details</span></button>
+                    </div>
+                    <div class="w-24 h-24 bg-center bg-cover rounded-xl shrink-0 border-2 border-pearl"
+                        style='background-image:url("https://lh3.googleusercontent.com/aida-public/AB6AXuComcz7KrZHB-txQj-z9i1IqguMjPwv0nNDgePKKt4HKOLTn26dXzcLkqZepBMbZ277ZqZut2VWZDphBeAKd1Dbo6tClF_rB1z5Dl5bXDq7KO1JfIr0sQaIhDIaRbXZr4X8rcTfuh5ExVzb8vdkuBqtRIVkrNkMdamtiWsa3Wzlk9bJ7kYLFz24g5eKHirk0yYp3MHpSzjhS6xvCDtq2_97WZtC5RcQU_SVERf9sRUs3ea8DYnUJ-j-HeF6rDVJZ6loU7AjcuPn93-l")'>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="flex items-baseline justify-between px-1">
+                    <h3 class="text-primary text-lg font-extrabold">Payment Method</h3><span
+                        class="text-gold text-xs font-bold uppercase">Add New</span>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-4 bg-white px-4 h-16 rounded-xl border border-pearl ios-shadow">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="bg-black rounded-md h-8 w-12 flex items-center justify-center shrink-0"><span
+                                    class="text-white font-bold text-xs">Pay</span></div>
+                            <p class="text-primary text-base font-bold">Apple Pay</p>
+                        </div>
+                        <div class="shrink-0"><input class="h-5 w-5 border-pearl text-primary" name="payment"
+                                type="radio" /></div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 bg-white px-4 h-20 rounded-xl border-2 border-primary/20 bg-primary/[0.02] ios-shadow">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="bg-[#1A1F71] rounded-md h-8 w-12 flex items-center justify-center shrink-0">
+                                <span class="text-white font-italic font-black italic text-[10px]">VISA</span></div>
+                            <div class="flex flex-col justify-center">
+                                <p class="text-primary text-base font-bold">•••• 4242</p>
+                                <p class="text-primary/50 text-xs font-medium uppercase tracking-wider">Expires 12/26
+                                </p>
+                            </div>
+                        </div>
+                        <div class="shrink-0"><input checked class="h-5 w-5 border-primary text-primary" name="payment"
+                                type="radio" /></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="px-1">
+                    <h3 class="text-primary text-lg font-extrabold">Show your detailer some love</h3>
+                    <p class="text-primary/50 text-xs font-medium">100% of tips go directly to your service pro.</p>
+                </div>
+                <div class="grid grid-cols-4 gap-3">
+                    <button
+                        class="flex flex-col items-center justify-center h-16 rounded-xl border border-pearl bg-white"><span
+                            class="text-primary text-sm font-bold">15%</span><span
+                            class="text-primary/40 text-[10px]">$45</span></button>
+                    <button
+                        class="flex flex-col items-center justify-center h-16 rounded-xl border-2 border-primary bg-primary shadow-lg"><span
+                            class="text-white text-sm font-bold">20%</span><span
+                            class="text-white/60 text-[10px]">$60</span></button>
+                    <button
+                        class="flex flex-col items-center justify-center h-16 rounded-xl border border-pearl bg-white"><span
+                            class="text-primary text-sm font-bold">25%</span><span
+                            class="text-primary/40 text-[10px]">$75</span></button>
+                    <button
+                        class="flex flex-col items-center justify-center h-16 rounded-xl border border-pearl bg-white"><span
+                            class="material-symbols-outlined text-primary/40">edit</span><span
+                            class="text-primary/40 text-[10px]">Other</span></button>
+                </div>
+            </div>
+        </div>
+        <div
+            class="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-white/90 backdrop-blur-xl border-t border-pearl p-6 pt-4 pb-10 z-[100]">
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between items-center text-sm font-medium text-primary/60 px-1">
+                        <span>Subtotal</span><span>$300.00</span></div>
+                    <div class="flex justify-between items-center text-sm font-medium text-primary/60 px-1">
+                        <span>Tip</span><span>$60.00</span></div>
+                    <div class="flex justify-between items-center pt-1 px-1"><span
+                            class="text-primary text-lg font-bold">Total Amount</span><span
+                            class="text-primary text-2xl font-black">$360.00</span></div>
+                </div>
+                <div class="flex flex-col items-center gap-3"><button
+                        class="w-full h-14 gold-shimmer rounded-xl flex items-center justify-center shadow-lg"><span
+                            class="text-primary font-extrabold text-base uppercase tracking-widest flex items-center gap-2">Pay
+                            Securely<span class="material-symbols-outlined text-[20px]">lock</span></span></button>
+                    <div class="flex items-center gap-1.5 opacity-40"><span
+                            class="material-symbols-outlined text-[14px]">verified_user</span><span
+                            class="text-[10px] font-bold uppercase tracking-widest">End-to-end encrypted</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

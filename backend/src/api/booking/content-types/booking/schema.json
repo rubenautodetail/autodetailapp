@@ -1,0 +1,127 @@
+{
+    "kind": "collectionType",
+    "collectionName": "bookings",
+    "info": {
+        "singularName": "booking",
+        "pluralName": "bookings",
+        "displayName": "Booking",
+        "description": "Service bookings connecting customers, contractors, and services"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "confirmationCode": {
+            "type": "string",
+            "unique": true
+        },
+        "customer": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::customer.customer",
+            "inversedBy": "bookings"
+        },
+        "contractor": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::contractor.contractor"
+        },
+        "service": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "api::service.service"
+        },
+        "addOns": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::add-on.add-on"
+        },
+        "serviceAddress": {
+            "type": "json",
+            "required": true
+        },
+        "zipCode": {
+            "type": "string",
+            "required": true
+        },
+        "scheduledDate": {
+            "type": "date",
+            "required": true
+        },
+        "timeWindow": {
+            "type": "enumeration",
+            "enum": [
+                "morning",
+                "afternoon",
+                "evening"
+            ],
+            "required": true
+        },
+        "status": {
+            "type": "enumeration",
+            "enum": [
+                "pending",
+                "confirmed",
+                "assigned",
+                "en_route",
+                "in_progress",
+                "completed",
+                "cancelled"
+            ],
+            "default": "pending"
+        },
+        "subtotal": {
+            "type": "decimal",
+            "required": true
+        },
+        "serviceFee": {
+            "type": "decimal"
+        },
+        "total": {
+            "type": "decimal",
+            "required": true
+        },
+        "platformCommission": {
+            "type": "decimal"
+        },
+        "contractorEarnings": {
+            "type": "decimal"
+        },
+        "stripePaymentIntentId": {
+            "type": "string"
+        },
+        "paidAt": {
+            "type": "datetime"
+        },
+        "customerNotes": {
+            "type": "text"
+        },
+        "beforePhotos": {
+            "type": "media",
+            "multiple": true,
+            "allowedTypes": [
+                "images"
+            ]
+        },
+        "afterPhotos": {
+            "type": "media",
+            "multiple": true,
+            "allowedTypes": [
+                "images"
+            ]
+        },
+        "checklistCompleted": {
+            "type": "json"
+        },
+        "completedAt": {
+            "type": "datetime"
+        },
+        "cancelledAt": {
+            "type": "datetime"
+        },
+        "cancellationReason": {
+            "type": "text"
+        }
+    }
+}

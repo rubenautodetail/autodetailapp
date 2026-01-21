@@ -1,0 +1,64 @@
+{
+    "kind": "collectionType",
+    "collectionName": "customers",
+    "info": {
+        "singularName": "customer",
+        "pluralName": "customers",
+        "displayName": "Customer",
+        "description": "End users who book detailing services"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "name": {
+            "type": "string",
+            "required": true
+        },
+        "email": {
+            "type": "email",
+            "required": true,
+            "unique": true
+        },
+        "phone": {
+            "type": "string"
+        },
+        "preferredLanguage": {
+            "type": "enumeration",
+            "enum": [
+                "en",
+                "es"
+            ],
+            "default": "en"
+        },
+        "stripeCustomerId": {
+            "type": "string"
+        },
+        "defaultAddress": {
+            "type": "json"
+        },
+        "savedVehicles": {
+            "type": "json"
+        },
+        "accountCredit": {
+            "type": "decimal",
+            "default": 0
+        },
+        "referralCode": {
+            "type": "string",
+            "unique": true
+        },
+        "referredBy": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "api::customer.customer"
+        },
+        "bookings": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::booking.booking",
+            "mappedBy": "customer"
+        }
+    }
+}

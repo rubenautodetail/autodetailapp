@@ -1,0 +1,106 @@
+{
+    "kind": "collectionType",
+    "collectionName": "contractors",
+    "info": {
+        "singularName": "contractor",
+        "pluralName": "contractors",
+        "displayName": "Contractor",
+        "description": "Independent detailing contractors"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "name": {
+            "type": "string",
+            "required": true
+        },
+        "email": {
+            "type": "email",
+            "required": true,
+            "unique": true
+        },
+        "phone": {
+            "type": "string",
+            "required": true
+        },
+        "homeAddress": {
+            "type": "json"
+        },
+        "preferredLanguage": {
+            "type": "enumeration",
+            "enum": [
+                "en",
+                "es"
+            ],
+            "default": "en"
+        },
+        "status": {
+            "type": "enumeration",
+            "enum": [
+                "pending",
+                "active",
+                "inactive",
+                "suspended",
+                "rejected"
+            ],
+            "default": "pending"
+        },
+        "performanceTier": {
+            "type": "enumeration",
+            "enum": [
+                "standard",
+                "preferred",
+                "elite"
+            ],
+            "default": "standard"
+        },
+        "stripeAccountId": {
+            "type": "string"
+        },
+        "stripeOnboardingComplete": {
+            "type": "boolean",
+            "default": false
+        },
+        "averageRating": {
+            "type": "decimal",
+            "default": 0,
+            "min": 0,
+            "max": 5
+        },
+        "totalJobs": {
+            "type": "integer",
+            "default": 0
+        },
+        "completionRate": {
+            "type": "decimal",
+            "default": 1.0,
+            "min": 0,
+            "max": 1
+        },
+        "defaultAvailability": {
+            "type": "json"
+        },
+        "serviceZones": {
+            "type": "relation",
+            "relation": "manyToMany",
+            "target": "api::service-zone.service-zone",
+            "mappedBy": "contractors"
+        },
+        "documents": {
+            "type": "media",
+            "multiple": true,
+            "allowedTypes": [
+                "images",
+                "files"
+            ]
+        },
+        "approvedAt": {
+            "type": "datetime"
+        },
+        "approvalNotes": {
+            "type": "text"
+        }
+    }
+}
