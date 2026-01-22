@@ -1,0 +1,16 @@
+{
+  "status": "init",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000/",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "frontend",
+    "projectPath": "/Users/othmarcasilla/Rubens Auto detail platfomr/frontend",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-jR_ylFDh9R18tipKd5vNVzTGXhvtQTv0DNonywLuv7lMv7UUUPhocJLp_W9t45QZd0EgIxxMI84MxoaQUkm_rwLtrgWKFkYEwdm-IPkNghVttiWBAr5PDXYVKpvOA1b-dzg"
+    }
+  }
+}

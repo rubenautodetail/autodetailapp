@@ -1,0 +1,58 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "Next.js 16",
+        "React 19",
+        "CSS Modules",
+        "Zustand"
+    ],
+    "features": [
+        {
+            "name": "Homepage",
+            "description": "Bilingual homepage with hero section and CTA button. Supports EN/ES locales via dynamic routing.",
+            "files": [
+                "src/app/[lang]/page.tsx",
+                "src/app/[lang]/page.module.css",
+                "src/app/[lang]/layout.tsx"
+            ]
+        },
+        {
+            "name": "i18n Middleware",
+            "description": "Automatic locale detection and redirection based on cookies and Accept-Language header",
+            "files": [
+                "src/middleware.ts",
+                "src/i18n-config.ts"
+            ]
+        },
+        {
+            "name": "Dictionary System",
+            "description": "Server-side translation loading for EN/ES dictionaries",
+            "files": [
+                "src/lib/dictionaries.ts",
+                "src/dictionaries/en.json",
+                "src/dictionaries/es.json"
+            ]
+        },
+        {
+            "name": "Strapi API Client",
+            "description": "Typed HTTP client for Strapi v5 backend with GET/POST/PUT/DELETE methods",
+            "files": [
+                "src/lib/api.ts"
+            ]
+        },
+        {
+            "name": "Booking Store",
+            "description": "Zustand store for booking wizard state including ZIP validation, service selection, and customer info",
+            "files": [
+                "src/lib/store/booking.ts"
+            ]
+        },
+        {
+            "name": "Design System",
+            "description": "Premium dark theme with gold accent, CSS variables, fluid typography, and glassmorphism effects",
+            "files": [
+                "src/app/globals.css"
+            ]
+        }
+    ]
+}

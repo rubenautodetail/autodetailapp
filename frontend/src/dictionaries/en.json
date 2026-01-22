@@ -1,0 +1,86 @@
+{
+  "common": {
+    "siteName": "Detailing on Demand",
+    "tagline": "Premium Mobile Car Detailing",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "bookNow": "Book Now",
+    "contactUs": "Contact Us"
+  },
+  "home": {
+    "hero": {
+      "title": "Professional Car Detailing at Your Doorstep",
+      "subtitle": "Expert mobile detailing services delivered to your home or office. Quality guaranteed.",
+      "cta": "Check Availability in Your Area"
+    },
+    "services": {
+      "title": "Our Services",
+      "interior": "Interior Detail",
+      "exterior": "Exterior Detail",
+      "full": "Full Detail"
+    }
+  },
+  "booking": {
+    "enterZip": "Enter your ZIP code",
+    "checkAvailability": "Check Availability",
+    "selectService": "Select Your Service",
+    "selectDate": "Choose a Date",
+    "selectTime": "Select Time Window",
+    "checkout": "Proceed to Checkout",
+    "confirmed": "Booking Confirmed!"
+  },
+  "zipChecker": {
+    "placeholder": "Enter ZIP code",
+    "button": "Check Availability",
+    "checking": "Checking...",
+    "available": "We service your area!",
+    "unavailable": "Not available yet",
+    "error": "An error occurred",
+    "continue": "Continue to Service Selection",
+    "waitlist": {
+      "title": "Join Our Waitlist",
+      "description": "We're expanding soon! Enter your email to be notified when we launch in your area.",
+      "emailPlaceholder": "Your email address",
+      "submit": "Notify Me"
+    }
+  },
+  "serviceSelection": {
+    "title": "Choose Your Service",
+    "selectService": "Select a service to continue",
+    "addOns": "Add-Ons",
+    "whatsIncluded": "What's Included",
+    "duration": "Duration",
+    "minutes": "min",
+    "continue": "Continue to Date Selection",
+    "priceSummary": {
+      "title": "Price Summary",
+      "baseService": "Base Service",
+      "addOns": "Add-Ons",
+      "subtotal": "Subtotal",
+      "serviceFee": "Service Fee (5%)",
+      "total": "Total",
+      "viewBreakdown": "View Breakdown",
+      "hideBreakdown": "Hide Breakdown"
+    }
+  },
+  "dateSelector": {
+    "title": "Select Date & Time",
+    "subtitle": "Choose your preferred appointment slot",
+    "nextAvailable": "Next Available",
+    "selectTime": "Select Time Window",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "available": "available",
+    "loading": "Loading availability...",
+    "errorLoading": "Failed to load availability",
+    "errorHolding": "Failed to reserve slot",
+    "slotUnavailable": "This slot is no longer available",
+    "selectDateAndTime": "Select a date and time",
+    "reserving": "Reserving...",
+    "continueToPayment": "Continue to Payment"
+  },
+  "priceSummary": {
+    "total": "Total"
+  }
+}

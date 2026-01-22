@@ -1,0 +1,260 @@
+.container {
+    padding-bottom: 200px;
+    /* Space for sticky footer */
+}
+
+.servicesSection,
+.addOnsSection {
+    margin-bottom: 3rem;
+}
+
+.servicesSection h2,
+.addOnsSection h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: hsl(220, 10%, 98%);
+}
+
+.serviceGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.serviceCard {
+    padding: 1.5rem;
+    background: hsl(220, 15%, 15%);
+    border: 2px solid hsl(220, 15%, 25%);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.serviceCard:hover {
+    transform: translateY(-4px);
+    border-color: hsl(45, 100%, 50%);
+    box-shadow: 0 8px 24px hsla(45, 100%, 50%, 0.15);
+}
+
+.serviceCard.selected {
+    border-color: hsl(45, 100%, 50%);
+    background: linear-gradient(135deg, hsla(45, 100%, 50%, 0.1), hsla(45, 100%, 40%, 0.05));
+}
+
+.serviceCard h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: hsl(220, 10%, 98%);
+}
+
+.price {
+    margin: 0 0 1rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: hsl(45, 100%, 50%);
+}
+
+.description {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: hsl(220, 10%, 70%);
+}
+
+.duration {
+    margin: 0;
+    font-size: 0.85rem;
+    color: hsl(220, 10%, 60%);
+}
+
+.addOnsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.addOnItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: hsl(220, 15%, 15%);
+    border: 1px solid hsl(220, 15%, 25%);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.addOnItem:hover {
+    border-color: hsl(45, 100%, 50%);
+}
+
+.addOnItem input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.addOnInfo {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.addOnInfo strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: hsl(220, 10%, 98%);
+}
+
+.addOnInfo p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: hsl(220, 10%, 70%);
+}
+
+.addOnPrice {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: hsl(45, 100%, 50%);
+    white-space: nowrap;
+}
+
+/* Sticky Footer */
+.priceSummary {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, hsla(220, 15%, 10%, 0.95), hsl(220, 15%, 10%));
+    backdrop-filter: blur(10px);
+    border-top: 1px solid hsl(220, 15%, 25%);
+    padding: 1.5rem;
+    z-index: 100;
+    animation: slideUp 0.3s ease;
+}
+
+.summaryContent {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.breakdownToggle {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    background: transparent;
+    border: 1px solid hsl(220, 15%, 30%);
+    border-radius: 8px;
+    color: hsl(220, 10%, 80%);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.breakdownToggle:hover {
+    border-color: hsl(45, 100%, 50%);
+    color: hsl(45, 100%, 50%);
+}
+
+.breakdown {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: hsla(220, 15%, 15%, 0.5);
+    border-radius: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.breakdownLine {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    color: hsl(220, 10%, 70%);
+    font-size: 0.9rem;
+}
+
+.total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+    border-top: 2px solid hsl(220, 15%, 25%);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: hsl(220, 10%, 98%);
+}
+
+.totalAmount {
+    font-size: 2rem;
+    color: hsl(45, 100%, 50%);
+}
+
+.continueButton {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, hsl(45, 100%, 50%), hsl(35, 100%, 45%));
+    color: hsl(220, 15%, 10%);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.continueButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px hsla(45, 100%, 50%, 0.3);
+}
+
+.continueButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .serviceGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .addOnInfo {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .priceSummary {
+        padding: 1rem;
+    }
+
+    .total {
+        font-size: 1rem;
+    }
+
+    .totalAmount {
+        font-size: 1.5rem;
+    }
+}

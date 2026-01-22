@@ -1,0 +1,558 @@
+[
+  {
+    "id": "TC001",
+    "title": "ZIP Code Validation Success",
+    "description": "Verify that entering a valid ZIP code within the service coverage area returns service availability and updates available contractors count within 1 second.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the homepage"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid ZIP code within the service area into the ZIP code input field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the ZIP code for validation"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the system confirms service availability"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the number of available contractors is displayed and accurate"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm response time is under 1 second"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "ZIP Code Validation Failure and Fallback",
+    "description": "Verify that entering a ZIP code outside the service area shows appropriate fallback waitlist option and denies booking.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the homepage"
+      },
+      {
+        "type": "action",
+        "description": "Enter a ZIP code outside the service coverage area"
+      },
+      {
+        "type": "action",
+        "description": "Submit ZIP code for validation"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the system denies service availability"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify fallback waitlist option is displayed clearly"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Service Selection and Dynamic Pricing Calculation",
+    "description": "Verify customers can select base service packages and add-ons, including zone-based pricing multipliers, and the total price updates accordingly in real-time.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select a base car detailing service package"
+      },
+      {
+        "type": "action",
+        "description": "Select multiple add-ons"
+      },
+      {
+        "type": "action",
+        "description": "Ensure the system applies correct zone-based service multipliers"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the displayed total price matches the sum of base price, add-ons, and zone multiplier"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Real-Time Calendar and Time Slot Availability",
+    "description": "Verify available time slots are displayed in real-time based on contractor availability for the selected service and ZIP, and temporary holds prevent double bookings.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select service and enter ZIP code"
+      },
+      {
+        "type": "action",
+        "description": "Open interactive calendar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify available time slots correspond with contractor availability"
+      },
+      {
+        "type": "action",
+        "description": "Select a time slot"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm temporary hold on time slot is placed during checkout"
+      },
+      {
+        "type": "action",
+        "description": "Attempt another booking on same time slot concurrently"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system prevents double booking of the held slot"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Stripe Connect Payment Success Flow",
+    "description": "Verify booking payment completes successfully using Stripe Connect with 3D Secure support and booking confirmation is triggered.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select services and time slot"
+      },
+      {
+        "type": "action",
+        "description": "Proceed to secure Stripe Checkout"
+      },
+      {
+        "type": "action",
+        "description": "Input valid payment details supporting 3D Secure"
+      },
+      {
+        "type": "action",
+        "description": "Complete payment authentication"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment intent is successful"
+      },
+      {
+        "type": "assertion",
+        "description": "Check booking confirmation is received"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm webhook triggers contractor assignment and booking status update"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Stripe Payment Failure and Error Handling",
+    "description": "Verify appropriate errors are shown if payment fails or 3D Secure is declined and no booking is confirmed.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Proceed to Stripe Checkout with invalid/declined card"
+      },
+      {
+        "type": "action",
+        "description": "Attempt payment including 3D Secure authentication"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment failure message is displayed to user"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm no booking confirmation is sent"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Automated Contractor Assignment Algorithm Validity",
+    "description": "Validate that the automated assignment algorithm selects the best contractor based on zone, availability, ratings, reliability, response time, and proximity.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger contractor assignment for a new booking in a specific zone"
+      },
+      {
+        "type": "assertion",
+        "description": "Check the assigned contractor meets the highest combined scoring criteria"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify fallback broadcast method engages if no contractors fully qualify"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Contractor Registration and Onboarding Workflow",
+    "description": "Verify contractor registration enforces document uploads, background checks, Stripe Express account creation, and requires admin approval before activation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Complete contractor registration form including required documents"
+      },
+      {
+        "type": "action",
+        "description": "Submit background check information"
+      },
+      {
+        "type": "action",
+        "description": "Complete Stripe Express account onboarding flow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify admin receives notification for contractor approval"
+      },
+      {
+        "type": "assertion",
+        "description": "Check contractor status is inactive until admin approval"
+      },
+      {
+        "type": "action",
+        "description": "Admin approves contractor"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify contractor status switches to active"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Multi-Channel Notifications Delivery and Logging",
+    "description": "Verify automated SMS and email notifications are sent at all key booking lifecycle stages with accurate content and delivery status logs.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Complete a booking to trigger notifications"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking confirmation SMS and email received by customer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify contractor receives job notification via SMS and email"
+      },
+      {
+        "type": "action",
+        "description": "Simulate booking reminders, contractor en route, start and completion events"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify corresponding SMS and email notifications are sent"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm notification delivery statuses are logged in the system"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Customer Dashboard Booking Management and History",
+    "description": "Verify customers can view real-time booking status, booking history, payment methods, and use quick rebooking functionalities on their dashboard.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log into customer dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify current bookings display correct status and details"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to booking history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify past bookings are accurately listed"
+      },
+      {
+        "type": "action",
+        "description": "Access payment methods section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify saved payment methods display correctly and can be updated"
+      },
+      {
+        "type": "action",
+        "description": "Use quick rebooking feature on a past booking"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking wizard pre-fills previous details and accepts modifications"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Contractor Dashboard Scheduling and Earnings",
+    "description": "Validate contractors view schedules, earnings summaries, performance stats, and receive/manage job offers via bilingual dashboard.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log into contractor dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify schedule calendar reflects assigned jobs"
+      },
+      {
+        "type": "assertion",
+        "description": "Check earnings summaries display current and historical balances"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify performance metrics including ratings and reliability are up-to-date"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to job offers section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify new job offers are listed and actionable"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Admin Dashboard Management and KPI Monitoring",
+    "description": "Verify administrators can view KPIs, manage contractors and zones, oversee bookings, and access financial reporting through the dashboard.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log into admin dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify KPIs are accurately shown (e.g., bookings, earnings, contractors active)"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to contractor management"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify ability to approve/reject contractors and view status"
+      },
+      {
+        "type": "action",
+        "description": "Access zone management"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify zones can be edited and contractors assigned"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to booking oversight"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify ability to view, filter, and update booking statuses"
+      },
+      {
+        "type": "action",
+        "description": "Open financial reports section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify reports reflect correct commission calculations, payouts, and refunds"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Quality Control Checklist and Photo Upload Enforcement",
+    "description": "Validate contractors cannot complete jobs until all digital checklist items are marked, and before/after photos with metadata are uploaded and securely stored.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log into contractor job workflow"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to mark job complete without completing checklist"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system blocks job completion and shows checklist items required"
+      },
+      {
+        "type": "action",
+        "description": "Complete all checklist items"
+      },
+      {
+        "type": "action",
+        "description": "Attempt job completion without uploading required before and after photos"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system prevents completion until photos with metadata are uploaded"
+      },
+      {
+        "type": "action",
+        "description": "Upload valid before and after photos"
+      },
+      {
+        "type": "assertion",
+        "description": "Check photos are stored securely with generated thumbnails"
+      },
+      {
+        "type": "action",
+        "description": "Mark job complete successfully"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify job status updates accordingly"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Customer Review Submission, Moderation, and Contractor Response",
+    "description": "Verify customers can submit reviews, admins moderate reviews, and contractors respond, with impacts reflected in contractor performance.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "After job completion, customer submits a review via dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify review is submitted but remains pending moderation"
+      },
+      {
+        "type": "action",
+        "description": "Admin reviews and approves review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify review is published and visible under contractor profile"
+      },
+      {
+        "type": "action",
+        "description": "Contractor logs in and responds to review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response is displayed alongside review"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that review rating affects contractor's performance metrics"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Automated Commission Calculation and Payout Accuracy",
+    "description": "Verify platform fee calculations, real-time contractor earnings update, payout scheduling via Stripe Connect, and audit trail integrity including refunds adjustments.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Complete multiple bookings with payments processed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify platform fees are correctly calculated and deducted"
+      },
+      {
+        "type": "assertion",
+        "description": "Check contractors' earnings update in real-time correspondingly"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm scheduled payouts are executed through Stripe Connect"
+      },
+      {
+        "type": "action",
+        "description": "Process a refund for a booking"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify contractors' earnings and platform fees adjust correctly"
+      },
+      {
+        "type": "assertion",
+        "description": "Check audit trail logs all financial transactions including adjustments"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Mobile-First UI and Dark Theme Consistency",
+    "description": "Verify all UI components conform to mobile-first design principles with fluid typography, adequate touch target sizes, and consistent premium dark-theme styling across English and Spanish locales.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access key pages (homepage, booking wizard, dashboards) on mobile device"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI scales fluidly with no horizontal scroll"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that all buttons and inputs meet minimum touch target sizes"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm dark theme styling loads correctly with gold accent and glassmorphism effects"
+      },
+      {
+        "type": "action",
+        "description": "Switch language between English and Spanish on all pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI text updates dynamically and styles remain consistent"
+      }
+    ]
+  }
+]

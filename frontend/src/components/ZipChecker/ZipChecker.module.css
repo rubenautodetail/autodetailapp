@@ -1,0 +1,246 @@
+.container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form {
+    width: 100%;
+}
+
+.inputGroup {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.input {
+    flex: 1;
+    padding: 16px 20px;
+    font-size: 18px;
+    border: 2px solid hsl(220, 15%, 25%);
+    border-radius: 12px;
+    background: hsl(220, 15%, 12%);
+    color: hsl(220, 10%, 98%);
+    transition: all 0.3s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: hsl(45, 100%, 50%);
+    box-shadow: 0 0 0 3px hsla(45, 100%, 50%, 0.1);
+}
+
+.input::placeholder {
+    color: hsl(220, 10%, 50%);
+}
+
+.button {
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, hsl(45, 100%, 50%), hsl(35, 100%, 45%));
+    color: hsl(220, 15%, 10%);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px hsla(45, 100%, 50%, 0.3);
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.error {
+    margin-top: 16px;
+    padding: 16px;
+    background: hsla(0, 70%, 50%, 0.1);
+    border: 1px solid hsl(0, 70%, 50%);
+    border-radius: 8px;
+    color: hsl(0, 70%, 60%);
+}
+
+.success,
+.waitlist {
+    margin-top: 24px;
+    padding: 24px;
+    border-radius: 16px;
+    animation: slideIn 0.3s ease;
+}
+
+.success {
+    background: linear-gradient(135deg, hsla(120, 60%, 50%, 0.1), hsla(120, 60%, 40%, 0.05));
+    border: 1px solid hsl(120, 60%, 40%);
+}
+
+.waitlist {
+    background: linear-gradient(135deg, hsla(220, 60%, 50%, 0.1), hsla(220, 60%, 40%, 0.05));
+    border: 1px solid hsl(220, 60%, 40%);
+}
+
+.success h3,
+.waitlist h3 {
+    margin: 0 0 16px 0;
+    font-size: 24px;
+    color: hsl(220, 10%, 98%);
+}
+
+.servicesPreview {
+    margin-top: 20px;
+}
+
+.servicesCount {
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: hsl(220, 10%, 70%);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.serviceCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.serviceCard {
+    padding: 20px;
+    background: hsla(220, 15%, 15%, 0.5);
+    border: 1px solid hsl(220, 15%, 25%);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.serviceCard:hover {
+    transform: translateY(-4px);
+    border-color: hsl(45, 100%, 50%);
+    box-shadow: 0 8px 24px hsla(45, 100%, 50%, 0.15);
+}
+
+.serviceCard h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: hsl(220, 10%, 98%);
+}
+
+.price {
+    margin: 0 0 12px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: hsl(45, 100%, 50%);
+}
+
+.description {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: hsl(220, 10%, 70%);
+}
+
+.addOnsNote {
+    margin: 16px 0 0 0;
+    padding: 12px;
+    background: hsla(45, 100%, 50%, 0.1);
+    border-radius: 8px;
+    font-size: 14px;
+    color: hsl(45, 100%, 60%);
+    text-align: center;
+}
+
+.waitlistForm {
+    margin-top: 20px;
+}
+
+.waitlistForm h4 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: hsl(220, 10%, 98%);
+}
+
+.waitlistForm p {
+    margin: 0 0 16px 0;
+    color: hsl(220, 10%, 70%);
+}
+
+.emailForm {
+    display: flex;
+    gap: 12px;
+}
+
+.emailInput {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 1px solid hsl(220, 15%, 25%);
+    border-radius: 8px;
+    background: hsl(220, 15%, 12%);
+    color: hsl(220, 10%, 98%);
+    transition: all 0.3s ease;
+}
+
+.emailInput:focus {
+    outline: none;
+    border-color: hsl(220, 60%, 50%);
+    box-shadow: 0 0 0 3px hsla(220, 60%, 50%, 0.1);
+}
+
+.submitButton {
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    background: hsl(220, 60%, 50%);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.submitButton:hover {
+    background: hsl(220, 60%, 45%);
+    transform: translateY(-2px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .inputGroup {
+        flex-direction: column;
+    }
+
+    .button {
+        width: 100%;
+    }
+
+    .serviceCards {
+        grid-template-columns: 1fr;
+    }
+
+    .emailForm {
+        flex-direction: column;
+    }
+
+    .submitButton {
+        width: 100%;
+    }
+}

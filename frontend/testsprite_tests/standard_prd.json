@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "project": "On-Demand Mobile Car Detailing Platform",
+    "date": "2026-01-15",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "This project is a bilingual (English/Spanish) on-demand mobile car detailing marketplace that connects customers with local, vetted contractors for vehicle detailing services at home. It provides customers with seamless booking, scheduling, and payment flow while equipping contractors with management dashboards, quality assurance tools, and automated payouts. The platform emphasizes geographic service zone validation, automated intelligent job assignment, and transparent commission management, delivering a premium experience supported by rich notifications and bilingual support.",
+  "core_goals": [
+    "Enable customers to easily book car detailing services with real-time ZIP code validation and geolocation support to ensure service availability.",
+    "Provide an automated, fair, and performant contractor assignment system based on zone coverage, availability, performance, and proximity metrics.",
+    "Implement secure, automated payments with Stripe Connect enabling transparent commission splits and contractor payouts.",
+    "Offer comprehensive bilingual dashboards for customers, contractors, and administrators to manage bookings, schedules, finances, and performance.",
+    "Ensure high quality and trust through mandatory digital checklists, before/after photos, and customer reviews integrated into workflows.",
+    "Deliver robust automated notifications (SMS and email) for all parties at key booking lifecycle stages to enhance communication and reduce no-shows.",
+    "Guarantee scalability and maintainability using modern tech stack: Next.js frontend, Strapi v5 headless CMS backend, Zustand state management, and CSS Modules for styling."
+  ],
+  "key_features": [
+    "Bilingual Homepage and UI with dynamic routing for English and Spanish locales and real-time i18n support via middleware and dictionaries.",
+    "ZIP Code Validation and Geolocation API to confirm service coverage and provide instant feedback with fallback waitlist options.",
+    "Service Selection with dynamic pricing including base packages and customizable add-ons, supporting zone-based pricing multipliers and real-time cost calculation.",
+    "Interactive Calendar and Time Slot Selection based on real contractor availability with temporary slot holds to prevent double booking.",
+    "Stripe Connect Payment Integration with secure checkout, PCI compliance, 3D Secure support, and webhook-driven booking confirmation and automated contractor payouts.",
+    "Automated Contractor Assignment Algorithm evaluating zone service, availability, ratings, reliability, response time, and proximity with configurable auto-assignment or broadcast methods.",
+    "Contractor Registration & Manual Onboarding workflow including document uploads, background checks, Stripe Express account onboarding, and admin approval.",
+    "Automated Multi-Channel Notifications system (SMS via Twilio, Email via SendGrid) delivering booking confirmations, reminders, real-time updates, and alerts.",
+    "Comprehensive Dashboards for Customers (booking management, history, payment methods), Contractors (schedule, earnings, performance, job offers), and Admins (KPIs, booking oversight, contractor management, financials).",
+    "Quality Control Module mandating contractors to complete digital checklists, upload before/after photos with metadata, and enabling customer reviews with moderation and contractor responses.",
+    "Automated Commission Management system calculating platform fees, tracking contractor earnings in real-time, scheduling payouts, and supporting refunds with audit trails.",
+    "Strict mobile-first, premium dark-theme design system employing CSS variables, fluid typography, and scoped CSS Modules for maintainable styling."
+  ],
+  "user_flow_summary": [
+    "Customers land on the bilingual homepage and enter their ZIP code or use geolocation to check service availability instantly.",
+    "If the area is served, customers select from detailed service packages and add-ons with transparent pricing.",
+    "Customers pick a convenient date and time slot based on contractor availability shown on an interactive calendar.",
+    "A temporary hold is placed on the selected slot during checkout to avoid double booking.",
+    "Customers securely pay online using Stripe Checkout, triggering booking confirmation and automatic contractor assignment.",
+    "Assigned contractors receive job notifications and manage schedules via their bilingual dashboard, completing checklists and uploading mandatory photos upon service.",
+    "Automated notifications inform customers and contractors at each stage including booking confirmation, reminders, contractor en route, service start and completion.",
+    "Customers can view booking history, leave reviews, and use quick rebooking features on their dashboard.",
+    "Administrators oversee operations, manage contractors and zones, review performance metrics, handle disputes and financial reporting through an admin dashboard."
+  ],
+  "validation_criteria": [
+    "Zip code validation API returns accurate coverage status within 1 second and correctly updates available contractors count.",
+    "Service selection UI reflects current pricing with add-ons and zone multipliers dynamically, validated via price calculation API responses.",
+    "Calendar availability endpoints provide correct real-time contractor availability data for the selected service and zip code with temporary holds preventing double bookings.",
+    "Stripe payment integration completes successfully for all test cases including 3D Secure flows, with payment intents triggering correct post-payment booking states via webhooks.",
+    "Contractor assignment algorithm assigns the highest scoring contractor based on configurable criteria, and fallback strategies engage properly when no contractor is available.",
+    "Contractor document upload and onboarding workflow enforces required files and Stripe Express account completion prior to activation.",
+    "Notification system reliably sends SMS and email messages triggered at expected booking lifecycle events, and logs delivery status.",
+    "Dashboards load accurate user-specific data, with up-to-date booking statuses, earnings summaries, and administrative KPIs.",
+    "Checklists prevent job completion until all required items are marked; photo uploads are enforced and stored securely with thumbnail generation.",
+    "Reviews can be submitted, moderated, responded to by contractors, and affect contractor performance standings.",
+    "Commission calculations and payouts reconcile correctly to payments processed, and refunds correctly adjust earnings and balances with audit trails.",
+    "UI components conform to mobile-first design standards with fluid typography, adequate touch target sizes, and dark theme styling consistent across pages."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "Next.js 16",
+      "React 19",
+      "CSS Modules",
+      "Zustand"
+    ],
+    "features": [
+      {
+        "name": "Homepage",
+        "description": "Bilingual homepage with hero section and CTA button. Supports EN/ES locales via dynamic routing.",
+        "files": [
+          "src/app/[lang]/page.tsx",
+          "src/app/[lang]/page.module.css",
+          "src/app/[lang]/layout.tsx"
+        ]
+      },
+      {
+        "name": "i18n Middleware",
+        "description": "Automatic locale detection and redirection based on cookies and Accept-Language header",
+        "files": [
+          "src/middleware.ts",
+          "src/i18n-config.ts"
+        ]
+      },
+      {
+        "name": "Dictionary System",
+        "description": "Server-side translation loading for EN/ES dictionaries",
+        "files": [
+          "src/lib/dictionaries.ts",
+          "src/dictionaries/en.json",
+          "src/dictionaries/es.json"
+        ]
+      },
+      {
+        "name": "Strapi API Client",
+        "description": "Typed HTTP client for Strapi v5 backend with GET/POST/PUT/DELETE methods",
+        "files": [
+          "src/lib/api.ts"
+        ]
+      },
+      {
+        "name": "Booking Store",
+        "description": "Zustand store for booking wizard state including ZIP validation, service selection, and customer info",
+        "files": [
+          "src/lib/store/booking.ts"
+        ]
+      },
+      {
+        "name": "Design System",
+        "description": "Premium dark theme with gold accent, CSS variables, fluid typography, and glassmorphism effects",
+        "files": [
+          "src/app/globals.css"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+    "common": {
+        "siteName": "Detailing on Demand",
+        "tagline": "Detallado Móvil Premium",
+        "getStarted": "Comenzar",
+        "learnMore": "Más Información",
+        "bookNow": "Reservar Ahora",
+        "contactUs": "Contáctanos"
+    },
+    "home": {
+        "hero": {
+            "title": "Detallado Profesional en Tu Puerta",
+            "subtitle": "Servicios de detallado móvil experto entregados a tu hogar u oficina. Calidad garantizada.",
+            "cta": "Verifica Disponibilidad en Tu Área"
+        },
+        "services": {
+            "title": "Nuestros Servicios",
+            "interior": "Detalle Interior",
+            "exterior": "Detalle Exterior",
+            "full": "Detalle Completo"
+        }
+    },
+    "booking": {
+        "enterZip": "Ingresa tu código postal",
+        "checkAvailability": "Verificar Disponibilidad",
+        "selectService": "Selecciona Tu Servicio",
+        "selectDate": "Elige una Fecha",
+        "selectTime": "Selecciona Ventana Horaria",
+        "checkout": "Proceder al Pago",
+        "confirmed": "¡Reserva Confirmada!"
+    },
+    "zipChecker": {
+        "placeholder": "Ingresa código postal",
+        "button": "Verificar Disponibilidad",
+        "checking": "Verificando...",
+        "available": "¡Servimos tu área!",
+        "unavailable": "Aún no disponible",
+        "error": "Ocurrió un error",
+        "continue": "Continuar a Selección de Servicio",
+        "waitlist": {
+            "title": "Únete a Nuestra Lista de Espera",
+            "description": "¡Pronto nos expandiremos! Ingresa tu correo para ser notificado cuando lancemos en tu área.",
+            "emailPlaceholder": "Tu correo electrónico",
+            "submit": "Notificarme"
+        }
+    },
+    "serviceSelection": {
+        "title": "Elige Tu Servicio",
+        "selectService": "Selecciona un servicio para continuar",
+        "addOns": "Extras",
+        "whatsIncluded": "Qué Incluye",
+        "duration": "Duración",
+        "minutes": "min",
+        "continue": "Continuar a Selección de Fecha",
+        "priceSummary": {
+            "title": "Resumen de Precio",
+            "baseService": "Servicio Base",
+            "addOns": "Extras",
+            "subtotal": "Subtotal",
+            "serviceFee": "Tarifa de Servicio (5%)",
+            "total": "Total",
+            "viewBreakdown": "Ver Desglose",
+            "hideBreakdown": "Ocultar Desglose"
+        }
+    },
+    "dateSelector": {
+        "title": "Selecciona Fecha y Hora",
+        "subtitle": "Elige tu horario preferido para la cita",
+        "nextAvailable": "Próximo Disponible",
+        "selectTime": "Selecciona Ventana Horaria",
+        "morning": "Mañana",
+        "afternoon": "Tarde",
+        "evening": "Noche",
+        "available": "disponibles",
+        "loading": "Cargando disponibilidad...",
+        "errorLoading": "Error al cargar disponibilidad",
+        "errorHolding": "Error al reservar horario",
+        "slotUnavailable": "Este horario ya no está disponible",
+        "selectDateAndTime": "Selecciona fecha y hora",
+        "reserving": "Reservando...",
+        "continueToPayment": "Continuar al Pago"
+    },
+    "priceSummary": {
+        "total": "Total"
+    }
+}
