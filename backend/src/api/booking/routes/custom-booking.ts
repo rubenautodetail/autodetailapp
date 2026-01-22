@@ -1,6 +1,5 @@
 export default {
     routes: [
-        // Custom booking routes
         {
             method: 'POST',
             path: '/booking/validate-zip',
@@ -36,7 +35,7 @@ export default {
             path: '/booking/availability',
             handler: 'custom-booking.getAvailability',
             config: {
-                auth: false, // Public endpoint - no authentication required
+                auth: false, // Public endpoint
                 policies: [],
                 middlewares: [],
             },
@@ -46,7 +45,7 @@ export default {
             path: '/booking/hold-slot',
             handler: 'custom-booking.holdSlot',
             config: {
-                auth: false, // Public endpoint - no authentication required
+                auth: false, // Public endpoint
                 policies: [],
                 middlewares: [],
             },
