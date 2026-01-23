@@ -6,6 +6,11 @@
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
 
+// Debug log to verify environment variable is loaded
+if (typeof window !== 'undefined') {
+    console.log('[API] Using Strapi URL:', STRAPI_URL);
+}
+
 interface StrapiResponse<T> {
     data: T;
     meta?: {
