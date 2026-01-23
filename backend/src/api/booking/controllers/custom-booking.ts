@@ -44,15 +44,78 @@ export default factories.createCoreController('api::booking.booking', ({ strapi 
             };
 
             // Get all active services
-            const services = await strapi.db.query('api::service.service').findMany({
+            let services = await strapi.db.query('api::service.service').findMany({
                 where: { publishedAt: { $notNull: true } },
                 populate: ['localizations'],
             });
 
             // Get all active add-ons
-            const addOns = await strapi.db.query('api::add-on.add-on').findMany({
+            let addOns = await strapi.db.query('api::add-on.add-on').findMany({
                 where: { publishedAt: { $notNull: true } },
             });
+
+            // FALLBACK: If no services exist, use mock data for testing
+            if (services.length === 0) {
+                strapi.log.warn('No services found in database. Using mock data for testing.');
+                services = [
+                    {
+                        documentId: 'mock-service-basic',
+                        name: 'Basic Exterior Wash',
+                        description: 'Complete hand wash, wheel cleaning, tire dressing, and exterior dry',
+                        basePrice: 49,
+                        durationMinutes: 45,
+                    },
+                    {
+                        documentId: 'mock-service-full',
+                        name: 'Full Interior & Exterior Detail',
+                        description: 'Complete interior vacuum, wipe down, leather conditioning, plus full exterior wash and wax',
+                        basePrice: 149,
+                        durationMinutes: 120,
+                    },
+                    {
+                        documentId: 'mock-service-premium',
+                        name: 'Premium Show Car Detail',
+                        description: 'Our most comprehensive package: clay bar treatment, paint correction, ceramic coating prep, and complete interior restoration',
+                        basePrice: 299,
+                        durationMinutes: 240,
+                    },
+                ];
+            }
+
+            // FALLBACK: If no add-ons exist, use mock data for testing
+            if (addOns.length === 0) {
+                strapi.log.warn('No add-ons found in database. Using mock data for testing.');
+                addOns = [
+                    {
+                        documentId: 'mock-addon-engine',
+                        name: 'Engine Bay Cleaning',
+                        description: 'Professional engine bay degreasing and dressing',
+                        price: 35,
+                        durationMinutes: 30,
+                    },
+                    {
+                        documentId: 'mock-addon-headlight',
+                        name: 'Headlight Restoration',
+                        description: 'Restore cloudy headlights to crystal clarity',
+                        price: 45,
+                        durationMinutes: 30,
+                    },
+                    {
+                        documentId: 'mock-addon-odor',
+                        name: 'Odor Elimination',
+                        description: 'Deep odor removal treatment for smoke, pet, or food smells',
+                        price: 50,
+                        durationMinutes: 45,
+                    },
+                    {
+                        documentId: 'mock-addon-ceramic',
+                        name: 'Ceramic Spray Coating',
+                        description: '6-month protection ceramic spray application',
+                        price: 75,
+                        durationMinutes: 30,
+                    },
+                ];
+            }
 
             // Count contractors covering this ZIP (placeholder - will implement when contractors are added)
             const contractorCount = 0; // TODO: Query contractors covering this ZIP
@@ -155,17 +218,46 @@ export default factories.createCoreController('api::booking.booking', ({ strapi 
                 priceMultiplier: 1.0,
             };
 
-            // Fetch the selected service
-            const service = await strapi.db.query('api::service.service').findOne({
+            // Fetch the selected service (or use mock data)
+            let service = await strapi.db.query('api::service.service').findOne({
                 where: { documentId: serviceId, publishedAt: { $notNull: true } },
             });
+
+            // FALLBACK: If service not found, check if it's a mock service ID
+            if (!service && serviceId.startsWith('mock-service-')) {
+                strapi.log.warn(`Using mock service data for ${serviceId}`);
+                const mockServices = {
+                    'mock-service-basic': {
+                        documentId: 'mock-service-basic',
+                        name: 'Basic Exterior Wash',
+                        description: 'Complete hand wash, wheel cleaning, tire dressing, and exterior dry',
+                        basePrice: 49,
+                        durationMinutes: 45,
+                    },
+                    'mock-service-full': {
+                        documentId: 'mock-service-full',
+                        name: 'Full Interior & Exterior Detail',
+                        description: 'Complete interior vacuum, wipe down, leather conditioning, plus full exterior wash and wax',
+                        basePrice: 149,
+                        durationMinutes: 120,
+                    },
+                    'mock-service-premium': {
+                        documentId: 'mock-service-premium',
+                        name: 'Premium Show Car Detail',
+                        description: 'Our most comprehensive package',
+                        basePrice: 299,
+                        durationMinutes: 240,
+                    },
+                };
+                service = mockServices[serviceId];
+            }
 
             if (!service) {
                 return ctx.notFound('Service not found');
             }
 
-            // Fetch selected add-ons
-            const addOns = addOnIds.length > 0
+            // Fetch selected add-ons (or use mock data)
+            let addOns = addOnIds.length > 0
                 ? await strapi.db.query('api::add-on.add-on').findMany({
                     where: {
                         documentId: { $in: addOnIds },
@@ -173,6 +265,20 @@ export default factories.createCoreController('api::booking.booking', ({ strapi 
                     },
                 })
                 : [];
+
+            // FALLBACK: If add-ons not found, check for mock add-on IDs
+            if (addOnIds.length > 0 && addOns.length === 0) {
+                const mockAddOns = {
+                    'mock-addon-engine': { documentId: 'mock-addon-engine', name: 'Engine Bay Cleaning', price: 35, durationMinutes: 30 },
+                    'mock-addon-headlight': { documentId: 'mock-addon-headlight', name: 'Headlight Restoration', price: 45, durationMinutes: 30 },
+                    'mock-addon-odor': { documentId: 'mock-addon-odor', name: 'Odor Elimination', price: 50, durationMinutes: 45 },
+                    'mock-addon-ceramic': { documentId: 'mock-addon-ceramic', name: 'Ceramic Spray Coating', price: 75, durationMinutes: 30 },
+                };
+                addOns = addOnIds
+                    .filter(id => id.startsWith('mock-addon-'))
+                    .map(id => mockAddOns[id])
+                    .filter(Boolean);
+            }
 
             // Calculate pricing
             const basePrice = service.basePrice;
