@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, use } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useBooking, Service, AddOn } from "@/contexts";
-import { ServiceCard, AddOnSelector, PricingSummary } from "@/components/booking";
+import { AddOnSelector, PricingSummary } from "@/components/booking";
+import { fetchServices, fetchAddOns, StrapiService, StrapiAddOn } from "@/lib/api/strapi";
 
 interface SelectServicePageProps {
   params: Promise<{
@@ -11,70 +12,145 @@ interface SelectServicePageProps {
   }>;
 }
 
-// Mock services data
-const MOCK_SERVICES: Service[] = [
+interface ServiceCardProps {
+  service: Service;
+  isSelected: boolean;
+  onSelect: (service: Service) => void;
+  locale: "en" | "es";
+}
+
+function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCardProps) {
+  return (
+    <div
+      onClick={() => onSelect(service)}
+      className={`
+        relative cursor-pointer rounded-xl border-2 p-6 transition-all duration-200
+        ${isSelected
+          ? "border-blue-600 bg-blue-50 shadow-md ring-1 ring-blue-600"
+          : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-lg"
+        }
+      `}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-xl font-bold text-gray-900">
+          {locale === "es" ? service.nameEs : service.name}
+        </h3>
+        <span className="text-blue-600 font-bold text-lg">
+          ${service.basePrice.toFixed(2)}
+        </span>
+      </div>
+
+      <p className="text-gray-600 mb-6 text-sm min-h-[40px]">
+        {locale === "es" ? service.descriptionEs : service.description}
+      </p>
+
+      <div className="flex items-center justify-between mt-auto">
+        <div className="flex items-center text-gray-500 text-sm">
+          <svg
+            className="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>
+            {service.duration} {locale === "es" ? "min" : "mins"}
+          </span>
+        </div>
+
+        <div
+          className={`
+            px-4 py-2 rounded-lg font-semibold text-sm transition-colors
+            ${isSelected
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-700"
+            }
+          `}
+        >
+          {isSelected
+            ? locale === "es"
+              ? "Seleccionado"
+              : "Selected"
+            : locale === "es"
+              ? "Seleccionar"
+              : "Select"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Map Strapi service to BookingContext Service
+function mapStrapiService(s: StrapiService): Service {
+  return {
+    id: s.id,
+    strapiId: s.id,
+    name: s.name,
+    nameEs: s.name, // TODO: fetch es locale from Strapi i18n
+    description: s.description,
+    descriptionEs: s.description,
+    basePrice: s.basePrice,
+    duration: s.durationMinutes,
+  };
+}
+
+// Map Strapi add-on to BookingContext AddOn
+function mapStrapiAddOn(a: StrapiAddOn): AddOn {
+  return {
+    id: a.id,
+    strapiId: a.id,
+    name: a.name,
+    nameEs: a.name,
+    description: a.description,
+    descriptionEs: a.description,
+    price: a.price,
+  };
+}
+
+// Fallback mock data (used only when Strapi is completely down)
+const FALLBACK_SERVICES: Service[] = [
   {
-    id: "interior",
-    name: "Interior Detail",
-    nameEs: "Detalle Interior",
+    id: "interior", name: "Interior Detail", nameEs: "Detalle Interior",
     description: "Deep clean of interior surfaces, seats, carpets, and dashboard",
     descriptionEs: "Limpieza profunda de superficies interiores, asientos, alfombras y tablero",
-    basePrice: 100,
-    duration: 90,
+    basePrice: 89.99, duration: 120,
   },
   {
-    id: "exterior",
-    name: "Exterior Detail",
-    nameEs: "Detalle Exterior",
+    id: "exterior", name: "Exterior Detail", nameEs: "Detalle Exterior",
     description: "Complete exterior wash, wax, tire shine, and window cleaning",
     descriptionEs: "Lavado exterior completo, encerado, brillo de llantas y limpieza de ventanas",
-    basePrice: 120,
-    duration: 120,
+    basePrice: 79.99, duration: 90,
   },
   {
-    id: "full-detail",
-    name: "Full Detail",
-    nameEs: "Detalle Completo",
+    id: "full-detail", name: "Full Detail Package", nameEs: "Paquete Detalle Completo",
     description: "Complete interior and exterior detailing package - best value!",
     descriptionEs: "Paquete completo de detallado interior y exterior - ¡mejor valor!",
-    basePrice: 200,
-    duration: 180,
+    basePrice: 149.99, duration: 180,
   },
 ];
 
-// Mock add-ons data
-const MOCK_ADDONS: AddOn[] = [
+const FALLBACK_ADDONS: AddOn[] = [
   {
-    id: "pet-hair",
-    name: "Pet Hair Removal",
-    nameEs: "Remoción de Pelo de Mascota",
-    description: "Specialized removal of pet hair from seats and carpets",
-    descriptionEs: "Remoción especializada de pelo de mascota de asientos y alfombras",
-    price: 25,
+    id: "premium-wax", name: "Premium Wax", nameEs: "Cera Premium", price: 29.99,
+    description: "High-grade carnauba wax for long-lasting shine", descriptionEs: "Cera de carnauba de alta calidad"
   },
   {
-    id: "stain-treatment",
-    name: "Stain Treatment",
-    nameEs: "Tratamiento de Manchas",
-    description: "Deep stain removal from upholstery and carpets",
-    descriptionEs: "Eliminación profunda de manchas de tapicería y alfombras",
-    price: 30,
+    id: "tire-shine", name: "Tire Shine & Dressing", nameEs: "Brillo de Llantas", price: 15.99,
+    description: "Professional tire dressing for a deep black shine", descriptionEs: "Brillo profesional para llantas"
   },
   {
-    id: "headlight-restoration",
-    name: "Headlight Restoration",
-    nameEs: "Restauración de Faros",
-    description: "Restore clarity to foggy or yellowed headlights",
-    descriptionEs: "Restaurar claridad a faros empañados o amarillentos",
-    price: 40,
+    id: "pet-hair", name: "Pet Hair Removal", nameEs: "Remoción de Pelo de Mascota", price: 34.99,
+    description: "Deep cleaning to remove pet hair from seats and carpet", descriptionEs: "Limpieza profunda para remover pelo de mascota"
   },
   {
-    id: "engine-bay",
-    name: "Engine Bay Cleaning",
-    nameEs: "Limpieza de Compartimiento del Motor",
-    description: "Thorough cleaning and degreasing of engine compartment",
-    descriptionEs: "Limpieza y desengrase completo del compartimiento del motor",
-    price: 50,
+    id: "headlight", name: "Headlight Restoration", nameEs: "Restauración de Faros", price: 44.99,
+    description: "Restore cloudy headlights to like-new clarity", descriptionEs: "Restaurar faros opacos a claridad como nuevos"
   },
 ];
 
@@ -97,10 +173,37 @@ export default function SelectServicePage({ params }: SelectServicePageProps) {
     nextStep,
   } = useBooking();
 
-  // Reset booking on mount to start fresh
+  const [services, setServices] = useState<Service[]>([]);
+  const [addOns, setAddOns] = useState<AddOn[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<"strapi" | "fallback">("strapi");
+
+  // Reset booking and load data on mount
   useEffect(() => {
     resetBooking();
+    loadData();
   }, []);
+
+  async function loadData() {
+    setLoading(true);
+    try {
+      const [strapiServices, strapiAddOns] = await Promise.all([
+        fetchServices(locale),
+        fetchAddOns(locale),
+      ]);
+
+      setServices(strapiServices.map(mapStrapiService));
+      setAddOns(strapiAddOns.map(mapStrapiAddOn));
+      setDataSource("strapi");
+    } catch (error) {
+      console.warn("[Booking] Strapi unavailable, using fallback data:", error);
+      setServices(FALLBACK_SERVICES);
+      setAddOns(FALLBACK_ADDONS);
+      setDataSource("fallback");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleServiceSelect = (service: Service) => {
     setService(service);
@@ -120,6 +223,19 @@ export default function SelectServicePage({ params }: SelectServicePageProps) {
     router.push(`/${locale}/booking/location`);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">
+            {locale === "es" ? "Cargando servicios..." : "Loading services..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -132,10 +248,9 @@ export default function SelectServicePage({ params }: SelectServicePageProps) {
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center
                     font-semibold text-sm
-                    ${
-                      currentStep >= step
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-600"
+                    ${currentStep >= step
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-600"
                     }
                   `}
                 >
@@ -174,6 +289,9 @@ export default function SelectServicePage({ params }: SelectServicePageProps) {
               ? "Selecciona el paquete perfecto para tu vehículo"
               : "Select the perfect package for your vehicle"}
           </p>
+          {dataSource === "strapi" && (
+            <p className="text-xs text-green-600 mt-1">Live from Strapi</p>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -185,7 +303,7 @@ export default function SelectServicePage({ params }: SelectServicePageProps) {
                 {locale === "es" ? "Servicios Disponibles" : "Available Services"}
               </h2>
               <div className="grid md:grid-cols-3 gap-4">
-                {MOCK_SERVICES.map((service) => (
+                {services.map((service) => (
                   <ServiceCard
                     key={service.id}
                     service={service}
@@ -201,7 +319,7 @@ export default function SelectServicePage({ params }: SelectServicePageProps) {
             {selectedService && (
               <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
                 <AddOnSelector
-                  addOns={MOCK_ADDONS}
+                  addOns={addOns}
                   selectedAddOns={selectedAddOns}
                   onAddOnToggle={handleAddOnToggle}
                   locale={locale}

@@ -64,7 +64,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   // Redirect if prerequisites not met
   useEffect(() => {
     if (!selectedService) {
-      router.push(`/${locale}/services`);
+      router.push(`/${locale}/booking/select`);
     } else if (!customerLocation) {
       router.push(`/${locale}/booking/location`);
     }

@@ -4,7 +4,8 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 
 // Types adapted from Uber clone but for auto detailing
 export interface Service {
-  id: string;
+  id: string | number;
+  strapiId?: number;
   name: string;
   nameEs: string;
   description: string;
@@ -15,7 +16,8 @@ export interface Service {
 }
 
 export interface AddOn {
-  id: string;
+  id: string | number;
+  strapiId?: number;
   name: string;
   nameEs: string;
   price: number;
@@ -35,6 +37,7 @@ export interface TimeWindow {
   label: string;
   labelEs: string;
   range: string;
+  rangeEs: string;
 }
 
 interface BookingContextType {
@@ -60,7 +63,7 @@ interface BookingContextType {
   // Actions - adapted from Uber clone's Zustand actions
   setService: (service: Service) => void;
   addAddOn: (addOn: AddOn) => void;
-  removeAddOn: (addOnId: string) => void;
+  removeAddOn: (addOnId: string | number) => void;
   setLocation: (location: Location) => void;
   setSchedule: (date: Date, timeWindow: TimeWindow) => void;
   calculateTotal: () => void;
@@ -100,7 +103,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Action: Remove add-on
-  const removeAddOn = (addOnId: string) => {
+  const removeAddOn = (addOnId: string | number) => {
     const newAddOns = selectedAddOns.filter((a) => a.id !== addOnId);
     setSelectedAddOns(newAddOns);
     calculateTotalWithService(selectedService, newAddOns);

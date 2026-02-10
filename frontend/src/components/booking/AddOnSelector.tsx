@@ -15,7 +15,7 @@ export default function AddOnSelector({
   onAddOnToggle,
   locale = "en",
 }: AddOnSelectorProps) {
-  const isSelected = (addOnId: string) => {
+  const isSelected = (addOnId: string | number) => {
     return selectedAddOns.some((a) => a.id === addOnId);
   };
 

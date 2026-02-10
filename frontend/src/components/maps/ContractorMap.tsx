@@ -253,11 +253,11 @@ export default function ContractorMap({
             <div className="mt-2 pt-2 border-t">
               <p className="text-xs text-gray-600">
                 {locale === "es" ? "Distancia:" : "Distance:"}{" "}
-                {(directions.routes[0]?.legs[0]?.distance?.value / 1609.34).toFixed(1)} mi
+                {((directions.routes[0]?.legs?.[0]?.distance?.value || 0) / 1609.34).toFixed(1)} mi
               </p>
               <p className="text-xs text-gray-600">
                 {locale === "es" ? "Tiempo:" : "Time:"}{" "}
-                {directions.routes[0]?.legs[0]?.duration?.text}
+                {directions.routes[0]?.legs?.[0]?.duration?.text || ""}
               </p>
             </div>
           )}

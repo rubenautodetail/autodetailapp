@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useBooking } from "@/contexts";
 import { GoogleAddressInput } from "@/components/maps";
 import { PricingSummary } from "@/components/booking";
+import { validateZip } from "@/lib/api/strapi";
 
 interface LocationPageProps {
   params: Promise<{
@@ -36,42 +37,41 @@ export default function LocationPage({ params }: LocationPageProps) {
   // Redirect if no service selected
   useEffect(() => {
     if (!selectedService) {
-      router.push(`/${locale}/services`);
+      router.push(`/${locale}/booking/select`);
     }
   }, [selectedService, router, locale]);
 
-  // Validate ZIP code with backend
+  // Validate ZIP code against real Strapi service zones
   const validateZipCode = async (zipCode: string): Promise<boolean> => {
     try {
       setIsValidating(true);
       setValidationError("");
 
-      // TODO: Replace with actual Strapi API call
-      // const response = await fetch(`/api/zones/validate?zipCode=${zipCode}`);
-      // const data = await response.json();
-      // return data.available;
+      const result = await validateZip(zipCode);
 
-      // Mock validation - Accept Miami-area ZIP codes for now
-      const validZips = ["33186", "33155", "33143", "33196", "33176", "33183"];
-      const isValid = validZips.includes(zipCode);
-
-      if (!isValid) {
+      if (!result.available) {
         setValidationError(
           locale === "es"
             ? "Lo sentimos, aún no ofrecemos servicio en tu área."
             : "Sorry, we don't service your area yet."
         );
+        return false;
       }
 
-      return isValid;
+      return true;
     } catch (error) {
       console.error("ZIP validation error:", error);
-      setValidationError(
-        locale === "es"
-          ? "Error al validar código postal"
-          : "Error validating ZIP code"
-      );
-      return false;
+      // Fallback: accept known Miami-area ZIPs if Strapi is down
+      const fallbackZips = ["33186", "33183", "33156", "33176"];
+      const isValid = fallbackZips.includes(zipCode);
+      if (!isValid) {
+        setValidationError(
+          locale === "es"
+            ? "Error al validar código postal. Intenta de nuevo."
+            : "Error validating ZIP code. Please try again."
+        );
+      }
+      return isValid;
     } finally {
       setIsValidating(false);
     }
@@ -96,7 +96,7 @@ export default function LocationPage({ params }: LocationPageProps) {
 
   const handleBack = () => {
     previousStep();
-    router.push(`/${locale}/services`);
+    router.push(`/${locale}/booking/select`);
   };
 
   if (!selectedService) {

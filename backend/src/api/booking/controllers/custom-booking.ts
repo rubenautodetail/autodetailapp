@@ -522,6 +522,80 @@ export default factories.createCoreController('api::booking.booking', ({ strapi 
     },
 
     /**
+     * Create a new booking
+     * POST /api/booking/create
+     * Body: { date, timeWindow, address, city, state, zipCode, customerName, customerEmail, customerPhone, specialInstructions?, subtotal, serviceFee, total, service?, addOns? }
+     */
+    async createBooking(ctx) {
+        try {
+            const body = ctx.request.body;
+            const {
+                date, timeWindow, address, city, state, zipCode,
+                customerName, customerEmail, customerPhone,
+                specialInstructions, subtotal, serviceFee, total,
+            } = body;
+
+            // Validate required fields
+            if (!date || !timeWindow || !address || !city || !zipCode || !customerName || !customerEmail || !customerPhone) {
+                return ctx.badRequest('Missing required fields: date, timeWindow, address, city, zipCode, customerName, customerEmail, customerPhone');
+            }
+
+            // Generate confirmation code
+            const confirmationCode = `RBN-${Date.now().toString(36).toUpperCase()}`;
+
+            // Create the booking using entity service (accepts plain objects)
+            const booking = await strapi.entityService.create('api::booking.booking', {
+                data: {
+                    confirmationCode,
+                    status: 'pending' as const,
+                    date,
+                    scheduledDate: date,
+                    timeWindow,
+                    address,
+                    city,
+                    state: state || 'FL',
+                    zipCode,
+                    customerName,
+                    customerEmail,
+                    customerPhone,
+                    specialInstructions: specialInstructions || null,
+                    subtotal: subtotal || 0,
+                    serviceFee: serviceFee || 0,
+                    total: total || 0,
+                    totalAmount: total || 0,
+                },
+            });
+
+            strapi.log.info(`Booking created: ${confirmationCode} for ${customerName}`);
+
+            return ctx.send({
+                success: true,
+                data: {
+                    id: booking.id,
+                    documentId: booking.documentId,
+                    confirmationCode: booking.confirmationCode,
+                    status: booking.status,
+                    date: booking.date,
+                    timeWindow: booking.timeWindow,
+                    address: booking.address,
+                    city: booking.city,
+                    state: booking.state,
+                    zipCode: booking.zipCode,
+                    customerName: booking.customerName,
+                    customerEmail: booking.customerEmail,
+                    customerPhone: booking.customerPhone,
+                    subtotal: booking.subtotal,
+                    serviceFee: booking.serviceFee,
+                    total: booking.total,
+                },
+            });
+        } catch (error) {
+            strapi.log.error('Error in createBooking:', error);
+            return ctx.internalServerError('An error occurred while creating the booking');
+        }
+    },
+
+    /**
      * Create a temporary hold on a time slot
      * POST /api/booking/hold-slot
      * Body: { zipCode: string, date: string, timeWindow: string, duration: number }

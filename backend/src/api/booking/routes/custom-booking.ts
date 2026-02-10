@@ -50,5 +50,15 @@ export default {
                 middlewares: [],
             },
         },
+        {
+            method: 'POST',
+            path: '/booking/create',
+            handler: 'custom-booking.createBooking',
+            config: {
+                auth: false, // Public endpoint for booking creation
+                policies: [],
+                middlewares: [],
+            },
+        },
     ],
 };

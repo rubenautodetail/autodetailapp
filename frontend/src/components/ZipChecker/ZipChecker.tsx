@@ -43,7 +43,7 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
             const response = await strapiClient.validateZip(zipCode);
 
             if (response.available) {
-                router.push(`/${lang}/booking/services?zip=${zipCode}`);
+                router.push(`/${lang}/booking/select?zip=${zipCode}`);
                 // Don't set loading to false here - keep it loading until page transitions
             } else {
                 setResult(response);
@@ -114,7 +114,7 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
                                 </p>
                             )}
                             <Link
-                                href={`/${lang}/booking/services?zip=${zipCode}`}
+                                href={`/${lang}/booking/select?zip=${zipCode}`}
                                 className={styles.continueButton}
                             >
                                 {dict.continue}
