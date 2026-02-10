@@ -30,11 +30,7 @@ export default async function LocaleLayout({
 }) {
     const { lang } = await params;
 
-    return (
-        <html lang={lang} suppressHydrationWarning data-scroll-behavior="smooth">
-            <body>
-                {children}
-            </body>
-        </html>
-    );
+    // Don't render html/body tags - they're in root layout
+    // Just pass through children with lang context
+    return <>{children}</>;
 }

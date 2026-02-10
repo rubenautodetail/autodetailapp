@@ -37,17 +37,53 @@
             "relation": "oneToMany",
             "target": "api::add-on.add-on"
         },
-        "serviceAddress": {
-            "type": "json",
+        "date": {
+            "type": "date",
             "required": true
+        },
+        "address": {
+            "type": "string",
+            "required": true
+        },
+        "city": {
+            "type": "string",
+            "required": true
+        },
+        "state": {
+            "type": "string",
+            "required": true,
+            "default": "FL"
         },
         "zipCode": {
             "type": "string",
             "required": true
         },
-        "scheduledDate": {
-            "type": "date",
+        "customerName": {
+            "type": "string",
             "required": true
+        },
+        "customerEmail": {
+            "type": "email",
+            "required": true
+        },
+        "customerPhone": {
+            "type": "string",
+            "required": true
+        },
+        "vehicleType": {
+            "type": "string"
+        },
+        "vehicleColor": {
+            "type": "string"
+        },
+        "specialInstructions": {
+            "type": "text"
+        },
+        "serviceAddress": {
+            "type": "json"
+        },
+        "scheduledDate": {
+            "type": "date"
         },
         "timeWindow": {
             "type": "enumeration",
@@ -67,26 +103,31 @@
                 "en_route",
                 "in_progress",
                 "completed",
-                "cancelled"
+                "cancelled",
+                "payment_failed"
             ],
             "default": "pending"
         },
         "subtotal": {
-            "type": "decimal",
-            "required": true
+            "type": "decimal"
         },
         "serviceFee": {
             "type": "decimal"
         },
         "total": {
-            "type": "decimal",
-            "required": true
+            "type": "decimal"
+        },
+        "totalAmount": {
+            "type": "decimal"
         },
         "platformCommission": {
             "type": "decimal"
         },
         "contractorEarnings": {
             "type": "decimal"
+        },
+        "paymentIntentId": {
+            "type": "string"
         },
         "stripePaymentIntentId": {
             "type": "string"

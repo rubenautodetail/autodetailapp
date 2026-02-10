@@ -1,0 +1,91 @@
+/* Booking Page Styles */
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    min-height: 100vh;
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #3b82f6;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    transition: color 0.2s;
+}
+
+.backLink:hover {
+    color: #2563eb;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-size: 1.125rem;
+    color: #6b7280;
+}
+
+.subtitle strong {
+    color: #3b82f6;
+}
+
+.error {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #fef2f2;
+    border-radius: 12px;
+    border: 2px solid #fecaca;
+}
+
+.error h1 {
+    font-size: 1.5rem;
+    color: #dc2626;
+    margin-bottom: 1rem;
+}
+
+.error p {
+    font-size: 1rem;
+    color: #991b1b;
+    margin-bottom: 1.5rem;
+}
+
+.backButton {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.backButton:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 2rem 1rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+}

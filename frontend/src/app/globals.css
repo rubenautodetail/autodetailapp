@@ -1,7 +1,9 @@
+@import "tailwindcss";
+
 /*
  * Rubens Auto Detail Platform - Design System
  * Philosophy: Premium Dark Theme with Gold Accent
- * Per frontend_guidelines.md: Vanilla CSS + CSS Modules
+ * Tailwind CSS + CSS Modules for booking flow
  */
 
 /* ============================================
@@ -133,7 +135,7 @@ ul, ol {
 }
 
 /* Make images responsive by default */
-img, picture, video, canvas, svg {
+img, picture, video, canvas {
   display: block;
   max-width: 100%;
   height: auto;
