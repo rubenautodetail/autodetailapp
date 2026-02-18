@@ -24,30 +24,24 @@ export interface PriceCalculation {
 
 export interface PaymentIntentResponse {
     clientSecret: string;
+    paymentIntentId: string;
     amount: number;
-    amountInCents: number;
     platformFee: number;
     contractorAmount: number;
 }
 
 /**
- * Calculate booking price
+ * Calculate booking price via backend
  */
 export async function calculatePrice(
     serviceId: number,
     addOnIds: number[] = [],
     zipCode?: string
 ): Promise<PriceCalculation> {
-    const response = await fetch(`${API_URL}/api/bookings/calculate-price`, {
+    const response = await fetch(`${API_URL}/api/booking/calculate-price`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            serviceId,
-            addOnIds,
-            zipCode,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serviceId, addOnIds, zipCode }),
     });
 
     if (!response.ok) {
@@ -62,17 +56,20 @@ export async function calculatePrice(
  * Create payment intent for a booking
  */
 export async function createPaymentIntent(
-    bookingId: number
+    bookingId: string,
+    amount: number,
+    contractorId?: string
 ): Promise<PaymentIntentResponse> {
-    const response = await fetch(
-        `${API_URL}/api/bookings/${bookingId}/create-payment-intent`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }
-    );
+    const response = await fetch(`${API_URL}/api/payments/create-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            bookingId,
+            amount,
+            contractorId,
+            currency: 'usd',
+        }),
+    });
 
     if (!response.ok) {
         const error = await response.json();
@@ -83,28 +80,42 @@ export async function createPaymentIntent(
 }
 
 /**
- * Confirm payment was successful
+ * Update payment intent with booking details
  */
-export async function confirmPayment(
-    bookingId: number,
-    paymentIntentId: string
-): Promise<{ success: boolean; booking: any }> {
-    const response = await fetch(
-        `${API_URL}/api/bookings/${bookingId}/confirm-payment`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                paymentIntentId,
-            }),
-        }
-    );
+export async function updatePaymentIntent(
+    paymentIntentId: string,
+    bookingId: string,
+    email?: string
+): Promise<{ success: boolean; paymentIntentId: string }> {
+    const response = await fetch(`${API_URL}/api/payments/update-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentIntentId, bookingId, email }),
+    });
 
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to confirm payment');
+        throw new Error(error.error?.message || 'Failed to update payment intent');
+    }
+
+    return response.json();
+}
+
+/**
+ * Calculate platform fees for an amount
+ */
+export async function calculateFees(
+    amount: number
+): Promise<{ platformFee: number; contractorAmount: number; totalAmount: number }> {
+    const response = await fetch(`${API_URL}/api/payments/calculate-fees`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Failed to calculate fees');
     }
 
     return response.json();

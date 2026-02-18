@@ -7,7 +7,7 @@ import {
   DirectionsRenderer,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import { Contractor } from "@/contexts";
+import { Contractor } from "@/types/contractor";
 
 /**
  * Contractor Map Component

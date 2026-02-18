@@ -505,12 +505,14 @@ export interface ApiBookingBooking extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    acceptedAt: Schema.Attribute.DateTime;
     addOns: Schema.Attribute.Relation<'oneToMany', 'api::add-on.add-on'>;
     address: Schema.Attribute.String & Schema.Attribute.Required;
     afterPhotos: Schema.Attribute.Media<'images', true>;
     beforePhotos: Schema.Attribute.Media<'images', true>;
     cancellationReason: Schema.Attribute.Text;
     cancelledAt: Schema.Attribute.DateTime;
+    capturedAt: Schema.Attribute.DateTime;
     checklistCompleted: Schema.Attribute.JSON;
     city: Schema.Attribute.String & Schema.Attribute.Required;
     completedAt: Schema.Attribute.DateTime;
@@ -536,9 +538,25 @@ export interface ApiBookingBooking extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     paidAt: Schema.Attribute.DateTime;
+    paymentAuthId: Schema.Attribute.String;
+    paymentError: Schema.Attribute.Text;
     paymentIntentId: Schema.Attribute.String;
+    paymentStatus: Schema.Attribute.Enumeration<
+      [
+        'pending',
+        'authorized',
+        'captured',
+        'paid',
+        'failed',
+        'refunded',
+        'voided',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'pending'>;
     platformCommission: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
+    refundedAt: Schema.Attribute.DateTime;
+    rejectionReason: Schema.Attribute.Text;
     scheduledDate: Schema.Attribute.Date;
     service: Schema.Attribute.Relation<'oneToOne', 'api::service.service'>;
     serviceAddress: Schema.Attribute.JSON;
@@ -550,6 +568,7 @@ export interface ApiBookingBooking extends Struct.CollectionTypeSchema {
     status: Schema.Attribute.Enumeration<
       [
         'pending',
+        'pending_assignment',
         'confirmed',
         'assigned',
         'en_route',
@@ -669,6 +688,7 @@ export interface ApiContractorContractor extends Struct.CollectionTypeSchema {
     preferredLanguage: Schema.Attribute.Enumeration<['en', 'es']> &
       Schema.Attribute.DefaultTo<'en'>;
     publishedAt: Schema.Attribute.DateTime;
+    reviews: Schema.Attribute.Relation<'oneToMany', 'api::review.review'>;
     serviceZones: Schema.Attribute.Relation<
       'manyToMany',
       'api::service-zone.service-zone'
@@ -678,7 +698,13 @@ export interface ApiContractorContractor extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.DefaultTo<'pending'>;
     stripeAccountId: Schema.Attribute.String;
+    stripeChargesEnabled: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    stripeDetailsSubmitted: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     stripeOnboardingComplete: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    stripePayoutsEnabled: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     totalJobs: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     updatedAt: Schema.Attribute.DateTime;
@@ -721,8 +747,53 @@ export interface ApiCustomerCustomer extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     referralCode: Schema.Attribute.String & Schema.Attribute.Unique;
     referredBy: Schema.Attribute.Relation<'oneToOne', 'api::customer.customer'>;
+    reviews: Schema.Attribute.Relation<'oneToMany', 'api::review.review'>;
     savedVehicles: Schema.Attribute.JSON;
     stripeCustomerId: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReviewReview extends Struct.CollectionTypeSchema {
+  collectionName: 'reviews';
+  info: {
+    description: 'Reviews and ratings for services';
+    displayName: 'Review';
+    pluralName: 'reviews';
+    singularName: 'review';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    booking: Schema.Attribute.Relation<'oneToOne', 'api::booking.booking'>;
+    comment: Schema.Attribute.Text;
+    contractor: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::contractor.contractor'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    customer: Schema.Attribute.Relation<'manyToOne', 'api::customer.customer'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::review.review'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    rating: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 5;
+          min: 1;
+        },
+        number
+      >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1364,6 +1435,7 @@ declare module '@strapi/strapi' {
       'api::contractor-availability.contractor-availability': ApiContractorAvailabilityContractorAvailability;
       'api::contractor.contractor': ApiContractorContractor;
       'api::customer.customer': ApiCustomerCustomer;
+      'api::review.review': ApiReviewReview;
       'api::service-zone.service-zone': ApiServiceZoneServiceZone;
       'api::service.service': ApiServiceService;
       'plugin::content-releases.release': PluginContentReleasesRelease;

@@ -59,6 +59,12 @@
             "relation": "oneToMany",
             "target": "api::booking.booking",
             "mappedBy": "customer"
+        },
+        "reviews": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::review.review",
+            "mappedBy": "customer"
         }
     }
 }

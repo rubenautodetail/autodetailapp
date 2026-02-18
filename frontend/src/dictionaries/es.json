@@ -14,10 +14,41 @@
             "cta": "Verifica Disponibilidad en Tu Área"
         },
         "services": {
-            "title": "Nuestros Servicios",
-            "interior": "Detalle Interior",
-            "exterior": "Detalle Exterior",
-            "full": "Detalle Completo"
+            "title": "Servicios Premium",
+            "subtitle": "Elige el paquete perfecto para tu vehículo",
+            "interior": {
+                "title": "Detalle Interior",
+                "desc": "Limpieza profunda para alfombras, tapicería y cuero.",
+                "price": "Desde $150"
+            },
+            "exterior": {
+                "title": "Detalle Exterior",
+                "desc": "Lavado a mano, descontaminación y cera premium.",
+                "price": "Desde $120"
+            },
+            "full": {
+                "title": "Detalle Completo",
+                "desc": "La transformación total. Interior profundo + Protección exterior.",
+                "price": "Desde $250"
+            }
+        },
+        "howItWorks": {
+            "title": "Cómo Funciona",
+            "step1": {
+                "title": "Reserva en Línea",
+                "desc": "Ingresa tu código postal y elige un horario conveniente."
+            },
+            "step2": {
+                "title": "Vamos a Ti",
+                "desc": "Nuestra unidad totalmente equipada llega a tu casa u oficina."
+            },
+            "step3": {
+                "title": "Relájate y Disfruta",
+                "desc": "Nos encargamos del trabajo sucio mientras recuperas tu tiempo."
+            }
+        },
+        "testimonials": {
+            "title": "Lo Que Dicen Nuestros Clientes"
         }
     },
     "booking": {

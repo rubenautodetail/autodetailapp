@@ -13,7 +13,7 @@ import {
     Elements,
 } from '@stripe/react-stripe-js';
 import { getStripe } from '@/lib/stripe/client';
-import { confirmPayment } from '@/lib/stripe/api';
+import { updatePaymentIntent } from '@/lib/stripe/api';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -71,14 +71,8 @@ function PaymentFormInner({
             }
 
             if (paymentIntent && paymentIntent.status === 'succeeded') {
-                // Confirm payment on backend
-                const result = await confirmPayment(bookingId, paymentIntent.id);
-
-                if (result.success) {
-                    onSuccess(result.booking.confirmationCode);
-                } else {
-                    throw new Error('Payment confirmation failed');
-                }
+                // Payment succeeded - notify parent
+                onSuccess(paymentIntent.id);
             }
         } catch (err: any) {
             console.error('Payment error:', err);

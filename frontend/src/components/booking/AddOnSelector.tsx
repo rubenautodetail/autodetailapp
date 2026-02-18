@@ -25,15 +25,15 @@ export default function AddOnSelector({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-semibold text-gray-900">
+      <h3 className="text-lg font-semibold text-text-primary">
         {locale === "es" ? "Extras Opcionales" : "Optional Add-Ons"}
       </h3>
 
       <div className="space-y-2">
         {addOns.map((addOn) => {
           const selected = isSelected(addOn.id);
-          const name = locale === "es" ? addOn.nameEs : addOn.name;
-          const description = locale === "es" ? addOn.descriptionEs : addOn.description;
+          const name = addOn.name;  // Already localized from Strapi
+          const description = addOn.description;  // Already localized from Strapi
 
           return (
             <label
@@ -41,7 +41,7 @@ export default function AddOnSelector({
               className={`
                 flex items-start gap-3 p-4 rounded-lg cursor-pointer
                 border-2 transition-all duration-200
-                ${selected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white hover:border-blue-300"}
+                ${selected ? "border-accent-gold bg-accent-gold/10" : "border-white/10 bg-white/5 hover:border-accent-gold/50"}
               `}
             >
               <div className="flex items-center h-6">
@@ -49,18 +49,18 @@ export default function AddOnSelector({
                   type="checkbox"
                   checked={selected}
                   onChange={(e) => onAddOnToggle(addOn, e.target.checked)}
-                  className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  className="w-5 h-5 text-accent-gold border-white/20 rounded focus:ring-2 focus:ring-accent-gold bg-white/5 cursor-pointer"
                 />
               </div>
 
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900">{name}</span>
-                  <span className="font-semibold text-gray-900">+${addOn.price}</span>
+                  <span className="font-medium text-text-primary">{name}</span>
+                  <span className="font-semibold text-accent-gold">+${addOn.price}</span>
                 </div>
 
                 {description && (
-                  <p className="text-sm text-gray-600 mt-1">{description}</p>
+                  <p className="text-sm text-text-secondary mt-1">{description}</p>
                 )}
               </div>
             </label>

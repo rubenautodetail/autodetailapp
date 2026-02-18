@@ -568,6 +568,36 @@ export default factories.createCoreController('api::booking.booking', ({ strapi 
 
             strapi.log.info(`Booking created: ${confirmationCode} for ${customerName}`);
 
+            // Send booking confirmation email
+            try {
+                const emailService = strapi.service('api::email.email');
+                const bookingData = {
+                    ...booking,
+                    customer: {
+                        firstName: customerName.split(' ')[0],
+                        lastName: customerName.split(' ').slice(1).join(' ') || '',
+                        email: customerEmail,
+                        phone: customerPhone,
+                    },
+                    service: {
+                        name: body.serviceName || 'Detailing Service',
+                    },
+                    location: {
+                        address,
+                        city,
+                        state: state || 'FL',
+                        zipCode,
+                    },
+                    scheduledTime: timeWindow,
+                };
+
+                await emailService.sendBookingConfirmation(bookingData);
+                strapi.log.info(`Booking confirmation email sent for ${confirmationCode}`);
+            } catch (emailError) {
+                // Log but don't fail the booking if email fails
+                strapi.log.error('Failed to send booking confirmation email:', emailError);
+            }
+
             return ctx.send({
                 success: true,
                 data: {

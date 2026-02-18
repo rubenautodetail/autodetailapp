@@ -14,10 +14,41 @@
       "cta": "Check Availability in Your Area"
     },
     "services": {
-      "title": "Our Services",
-      "interior": "Interior Detail",
-      "exterior": "Exterior Detail",
-      "full": "Full Detail"
+      "title": "Premium Services",
+      "subtitle": "Choose the perfect package for your vehicle",
+      "interior": {
+        "title": "Interior Detail",
+        "desc": "Deep cleaning for carpets, upholstery, and leather.",
+        "price": "From $150"
+      },
+      "exterior": {
+        "title": "Exterior Detail",
+        "desc": "Hand wash, clay bar, and premium wax protection.",
+        "price": "From $120"
+      },
+      "full": {
+        "title": "Full Detail",
+        "desc": "The complete makeover. Interior deep clean + Exterior protection.",
+        "price": "From $250"
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "step1": {
+        "title": "Book Online",
+        "desc": "Enter your ZIP and choose a time slot that works for you."
+      },
+      "step2": {
+        "title": "We Come to You",
+        "desc": "Our fully equipped van arrives at your home or office."
+      },
+      "step3": {
+        "title": "Relax & Enjoy",
+        "desc": "We handle the dirty work while you reclaim your time."
+      }
+    },
+    "testimonials": {
+      "title": "What Our Clients Say"
     }
   },
   "booking": {

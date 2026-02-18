@@ -63,6 +63,18 @@
             "type": "boolean",
             "default": false
         },
+        "stripeDetailsSubmitted": {
+            "type": "boolean",
+            "default": false
+        },
+        "stripeChargesEnabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "stripePayoutsEnabled": {
+            "type": "boolean",
+            "default": false
+        },
         "averageRating": {
             "type": "decimal",
             "default": 0,
@@ -101,6 +113,17 @@
         },
         "approvalNotes": {
             "type": "text"
+        },
+        "reviews": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::review.review",
+            "mappedBy": "contractor"
+        },
+        "user": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "plugin::users-permissions.user"
         }
     }
 }

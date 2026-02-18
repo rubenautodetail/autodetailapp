@@ -1,0 +1,42 @@
+{
+    "kind": "collectionType",
+    "collectionName": "reviews",
+    "info": {
+        "singularName": "review",
+        "pluralName": "reviews",
+        "displayName": "Review",
+        "description": "Reviews and ratings for services"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "rating": {
+            "type": "integer",
+            "min": 1,
+            "max": 5,
+            "required": true
+        },
+        "comment": {
+            "type": "text"
+        },
+        "customer": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::customer.customer",
+            "inversedBy": "reviews"
+        },
+        "contractor": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::contractor.contractor",
+            "inversedBy": "reviews"
+        },
+        "booking": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "api::booking.booking"
+        }
+    }
+}

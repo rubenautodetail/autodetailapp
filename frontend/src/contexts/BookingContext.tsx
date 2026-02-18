@@ -5,11 +5,10 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 // Types adapted from Uber clone but for auto detailing
 export interface Service {
   id: string | number;
+  documentId: string;
   strapiId?: number;
   name: string;
-  nameEs: string;
   description: string;
-  descriptionEs: string;
   basePrice: number;
   duration: number; // in minutes
   image?: string;
@@ -17,16 +16,18 @@ export interface Service {
 
 export interface AddOn {
   id: string | number;
+  documentId: string;
   strapiId?: number;
   name: string;
-  nameEs: string;
   price: number;
   description?: string;
-  descriptionEs?: string;
 }
+
 
 export interface Location {
   address: string;
+  city?: string;
+  state?: string;
   zipCode: string;
   latitude: number;
   longitude: number;
@@ -38,6 +39,13 @@ export interface TimeWindow {
   labelEs: string;
   range: string;
   rangeEs: string;
+}
+
+export interface CustomerInfo {
+  name: string;
+  email: string;
+  phone: string;
+  specialNotes: string;
 }
 
 interface BookingContextType {
@@ -52,6 +60,9 @@ interface BookingContextType {
   selectedDate: Date | null;
   selectedTimeWindow: TimeWindow | null;
 
+  // Customer contact info (collected on review page, used on payment page)
+  customerInfo: CustomerInfo | null;
+
   // Pricing
   subtotal: number;
   serviceFee: number;
@@ -60,12 +71,19 @@ interface BookingContextType {
   // Booking step tracking
   currentStep: number;
 
+  // Payment state
+  paymentStatus: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded';
+  paymentIntentId: string | null;
+  setPaymentStatus: (status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded') => void;
+  setPaymentIntentId: (id: string) => void;
+
   // Actions - adapted from Uber clone's Zustand actions
   setService: (service: Service) => void;
   addAddOn: (addOn: AddOn) => void;
   removeAddOn: (addOnId: string | number) => void;
   setLocation: (location: Location) => void;
   setSchedule: (date: Date, timeWindow: TimeWindow) => void;
+  setCustomerInfo: (info: CustomerInfo) => void;
   calculateTotal: () => void;
   nextStep: () => void;
   previousStep: () => void;
@@ -87,6 +105,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const [subtotal, setSubtotal] = useState(0);
   const [serviceFee, setServiceFee] = useState(0);
   const [total, setTotal] = useState(0);
+
+  // Customer contact info
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
+  // Payment state
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'paid' | 'failed' | 'refunded'>('pending');
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
 
   // Action: Set service (adapted from Uber clone's driver selection)
   const setService = (service: Service) => {
@@ -112,11 +137,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   // Action: Set location (adapted from Uber clone's setUserLocation)
   const setLocation = (location: Location) => {
     setCustomerLocation(location);
-    // Clear schedule if location changes (same pattern as Uber clone)
-    if (selectedDate || selectedTimeWindow) {
-      setSelectedDate(null);
-      setSelectedTimeWindow(null);
-    }
+    // Note: removed schedule clearing logic as precise location is now entered after scheduling
   };
 
   // Action: Set schedule
@@ -175,6 +196,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     setSubtotal(0);
     setServiceFee(0);
     setTotal(0);
+    setCustomerInfo(null);
+    setPaymentStatus('pending');
+    setPaymentIntentId(null);
   };
 
   const value: BookingContextType = {
@@ -183,15 +207,21 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     customerLocation,
     selectedDate,
     selectedTimeWindow,
+    customerInfo,
     subtotal,
     serviceFee,
     total,
     currentStep,
+    paymentStatus,
+    paymentIntentId,
+    setPaymentStatus,
+    setPaymentIntentId,
     setService,
     addAddOn,
     removeAddOn,
     setLocation,
     setSchedule,
+    setCustomerInfo,
     calculateTotal,
     nextStep,
     previousStep,

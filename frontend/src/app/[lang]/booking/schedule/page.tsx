@@ -43,7 +43,6 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const {
     selectedService,
     selectedAddOns,
-    customerLocation,
     selectedDate,
     selectedTimeWindow,
     setSchedule,
@@ -65,10 +64,8 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   useEffect(() => {
     if (!selectedService) {
       router.push(`/${locale}/booking/select`);
-    } else if (!customerLocation) {
-      router.push(`/${locale}/booking/location`);
     }
-  }, [selectedService, customerLocation, router, locale]);
+  }, [selectedService, router, locale]);
 
   // Generate calendar days
   const getDaysInMonth = (date: Date) => {
@@ -123,12 +120,12 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
     setSchedule(tempSelectedDate, tempSelectedWindow);
     nextStep();
-    router.push(`/${locale}/booking/review`);
+    router.push(`/${locale}/booking/payment`);
   };
 
   const handleBack = () => {
     previousStep();
-    router.push(`/${locale}/booking/location`);
+    router.push(`/${locale}/booking/select`);
   };
 
   const monthName = currentMonth.toLocaleDateString(locale, {
@@ -143,7 +140,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
   const days = getDaysInMonth(currentMonth);
 
-  if (!selectedService || !customerLocation) {
+  if (!selectedService) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -163,10 +160,9 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center
                     font-semibold text-sm
-                    ${
-                      currentStep >= step
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-600"
+                    ${currentStep >= step
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-600"
                     }
                   `}
                 >
@@ -185,10 +181,10 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           </div>
           <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-gray-600">
             <span>{locale === "es" ? "Servicio" : "Service"}</span>
-            <span>{locale === "es" ? "Ubicación" : "Location"}</span>
             <span className="font-semibold text-blue-600">
               {locale === "es" ? "Horario" : "Schedule"}
             </span>
+            <span>{locale === "es" ? "Detalles" : "Details"}</span>
             <span>{locale === "es" ? "Pago" : "Payment"}</span>
           </div>
         </div>
@@ -271,11 +267,10 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       className={`
                         aspect-square rounded-lg flex items-center justify-center
                         font-medium text-sm transition-all
-                        ${
-                          isSelected
-                            ? "bg-blue-600 text-white shadow-md"
-                            : isAvailable
-                            ? "bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300"
+                        ${isSelected
+                          ? "bg-blue-600 text-white shadow-md"
+                          : isAvailable
+                            ? "bg-white text-gray-900 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300"
                             : "bg-gray-100 text-gray-400 cursor-not-allowed"
                         }
                         ${isToday && !isSelected ? "border-blue-400" : ""}
@@ -309,10 +304,9 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                         onClick={() => handleWindowSelect(window)}
                         className={`
                           p-6 rounded-xl border-2 transition-all
-                          ${
-                            isSelected
-                              ? "border-blue-600 bg-blue-50"
-                              : "border-gray-200 hover:border-blue-300 bg-white"
+                          ${isSelected
+                            ? "border-blue-600 bg-blue-50"
+                            : "border-gray-200 hover:border-blue-300 bg-white"
                           }
                         `}
                       >
@@ -430,7 +424,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  {locale === "es" ? "Volver a Ubicación" : "Back to Location"}
+                  {locale === "es" ? "Volver a Servicio" : "Back to Service"}
                 </button>
               </div>
             </div>

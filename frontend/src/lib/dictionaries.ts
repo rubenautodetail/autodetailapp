@@ -19,9 +19,19 @@ export interface Dictionary {
         };
         services: {
             title: string;
-            interior: string;
-            exterior: string;
-            full: string;
+            subtitle: string;
+            interior: { title: string; desc: string; price: string };
+            exterior: { title: string; desc: string; price: string };
+            full: { title: string; desc: string; price: string };
+        };
+        howItWorks: {
+            title: string;
+            step1: { title: string; desc: string };
+            step2: { title: string; desc: string };
+            step3: { title: string; desc: string };
+        };
+        testimonials: {
+            title: string;
         };
     };
     booking: {

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { strapiClient, type ZipValidationResponse } from '@/lib/api';
-import styles from './ZipChecker.module.css';
 
 interface ZipCheckerProps {
     dict: {
@@ -26,6 +25,13 @@ interface ZipCheckerProps {
 }
 
 export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
+    // Defensive defaults in case dict is missing
+    const t = {
+        ...dict,
+        placeholder: dict?.placeholder || "Enter Zip Code",
+        button: dict?.button || "Check Availability",
+    };
+
     const [zipCode, setZipCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<ZipValidationResponse | null>(null);
@@ -43,8 +49,8 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
             const response = await strapiClient.validateZip(zipCode);
 
             if (response.available) {
+                sessionStorage.setItem('serviceZipCode', zipCode);
                 router.push(`/${lang}/booking/select?zip=${zipCode}`);
-                // Don't set loading to false here - keep it loading until page transitions
             } else {
                 setResult(response);
                 setLoading(false);
@@ -61,90 +67,94 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
     };
 
     return (
-        <div className={styles.container}>
-            <form onSubmit={handleSubmit} className={styles.form}>
-                <div className={styles.inputGroup}>
-                    <input
-                        type="text"
-                        value={zipCode}
-                        onChange={handleZipChange}
-                        placeholder={dict.placeholder}
-                        className={styles.input}
-                        maxLength={5}
-                        pattern="\d{5}"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        className={styles.button}
-                        disabled={loading || zipCode.length !== 5}
-                    >
-                        {loading ? dict.checking : dict.button}
-                    </button>
-                </div>
+        <div className="w-full">
+            <form onSubmit={handleSubmit} className="relative group bg-white rounded-xl shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden">
+                <input
+                    type="text"
+                    value={zipCode}
+                    onChange={handleZipChange}
+                    placeholder={t.placeholder}
+                    className="w-full bg-white text-black text-3xl font-display py-6 px-8 focus:outline-none placeholder:text-gray-400 placeholder:font-sans text-center"
+                    maxLength={5}
+                    pattern="\d{5}"
+                    required
+                />
+                <button
+                    type="submit"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white bg-black hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium shadow-lg"
+                    disabled={loading || zipCode.length !== 5}
+                >
+                    {loading ? (
+                        <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    ) : (
+                        <span className="text-sm font-bold tracking-widest uppercase">{t.button}</span>
+                    )}
+                </button>
+
+                {/* Active Focus Line - Removed for solid style */}
             </form>
 
             {error && (
-                <div className={styles.error}>
-                    <p>{error}</p>
+                <div className="mt-4 text-red-400 text-sm font-light animate-fade-in">
+                    {error}
                 </div>
             )}
 
             {result && (
-                <div className={result.available ? styles.success : styles.waitlist}>
-                    <h3>{result.message}</h3>
+                <div className="mt-8 animate-fade-in-up">
+                    <div className="glass p-8 rounded-none border-l-2 border-accent-gold bg-bg-secondary/80">
+                        <h3 className="text-2xl font-display text-white mb-2">{result.message}</h3>
 
-                    {result.available && result.services && (
-                        <div className={styles.servicesPreview}>
-                            <p className={styles.servicesCount}>
-                                {result.services.length} services available in your area
-                            </p>
-                            <div className={styles.serviceCards}>
-                                {result.services.map((service) => (
-                                    <div key={service.id} className={styles.serviceCard}>
-                                        <h4>{service.name}</h4>
-                                        <p className={styles.price}>${service.basePrice}</p>
-                                        <p className={styles.description}>{service.description}</p>
-                                    </div>
-                                ))}
-                            </div>
-                            {result.addOns && result.addOns.length > 0 && (
-                                <p className={styles.addOnsNote}>
-                                    + {result.addOns.length} add-ons available
+                        {result.available && result.services && (
+                            <div className="space-y-6">
+                                <p className="text-text-secondary font-light">
+                                    We are pleased to serve your area with {result.services.length} signature treatments.
                                 </p>
-                            )}
-                            <Link
-                                href={`/${lang}/booking/select?zip=${zipCode}`}
-                                className={styles.continueButton}
-                            >
-                                {dict.continue}
-                            </Link>
-                        </div>
-                    )}
+                                <div className="space-y-3">
+                                    {result.services.map((service) => (
+                                        <div key={service.id} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0 hover:bg-white/5 px-2 transition-colors">
+                                            <span className="font-display text-lg text-white">{service.name}</span>
+                                            <span className="text-accent-gold font-medium">${service.basePrice}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Link
+                                    href={`/${lang}/booking/select?zip=${zipCode}`}
+                                    className="block w-full text-center bg-white text-black font-bold uppercase tracking-widest py-4 hover:bg-accent-gold hover:text-white transition-all mt-6"
+                                >
+                                    {dict.continue || "Proceed to Booking"}
+                                </Link>
+                            </div>
+                        )}
 
-                    {!result.available && (
-                        <div className={styles.waitlistForm}>
-                            <h4>{dict.waitlist.title}</h4>
-                            <p>{dict.waitlist.description}</p>
-                            <form
-                                className={styles.emailForm}
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    alert('Waitlist feature coming soon! Thank you for your interest.');
-                                }}
-                            >
-                                <input
-                                    type="email"
-                                    placeholder={dict.waitlist.emailPlaceholder}
-                                    className={styles.emailInput}
-                                    required
-                                />
-                                <button type="submit" className={styles.submitButton}>
-                                    {dict.waitlist.submit}
-                                </button>
-                            </form>
-                        </div>
-                    )}
+                        {!result.available && (
+                            <div className="space-y-4">
+                                <p className="text-text-secondary">
+                                    {dict.waitlist.description}
+                                </p>
+                                <form
+                                    className="flex gap-4 border-b border-white/20 pb-2"
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        alert('Added to priority waitlist.');
+                                    }}
+                                >
+                                    <input
+                                        type="email"
+                                        placeholder={dict.waitlist.emailPlaceholder}
+                                        className="flex-1 bg-transparent text-white focus:outline-none placeholder:text-white/20"
+                                        required
+                                    />
+                                    <button type="submit" className="text-accent-gold text-sm uppercase tracking-widest hover:text-white transition-colors">
+                                        Join
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>

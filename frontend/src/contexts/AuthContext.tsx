@@ -1,205 +1,131 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
-// Types for Strapi authentication
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: "customer" | "contractor" | "admin";
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  locale?: "en" | "es";
-}
+import { Database } from "@/types/database";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 interface AuthContextType {
   // User state
   user: User | null;
+  session: Session | null;
+  profile: Profile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    role: "customer" | "contractor",
-    additionalData?: Partial<User>
-  ) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (data: Partial<User>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
 
-  // Check if user is logged in on mount (check Strapi JWT)
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setProfile(null);
+    }
+  };
+
+  // Check auth state on mount and listen for changes
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem("jwt");
-      if (!token) {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error("Error getting session:", error);
+      } finally {
         setIsLoading(false);
-        return;
       }
 
-      // Validate token with Strapi
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/users/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await fetchProfile(session.user.id);
+          } else {
+            setProfile(null);
+          }
+          setIsLoading(false);
         }
       );
 
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        // Token invalid, clear it
-        localStorage.removeItem("jwt");
-      }
-    } catch (error) {
-      console.error("Auth check error:", error);
-      localStorage.removeItem("jwt");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return () => subscription.unsubscribe();
+    };
 
-  // Action: Login with Strapi
+    initializeAuth();
+  }, [supabase]);
+
+  // Action: Login with Supabase
   const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            identifier: email,
-            password: password,
-          }),
-        }
-      );
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || "Login failed");
-      }
-
-      const data = await response.json();
-
-      // Store JWT token
-      localStorage.setItem("jwt", data.jwt);
-
-      // Set user
-      setUser(data.user);
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
+    if (error) throw error;
   };
 
-  // Action: Register with Strapi
-  const register = async (
-    email: string,
-    password: string,
-    role: "customer" | "contractor",
-    additionalData?: Partial<User>
-  ) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: email.split("@")[0], // Use email prefix as username
-            email: email,
-            password: password,
-            role: role,
-            ...additionalData,
-          }),
-        }
-      );
+  // Action: Register with Supabase
+  const register = async (name: string, email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+        },
+      },
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || "Registration failed");
-      }
-
-      const data = await response.json();
-
-      // Store JWT token
-      localStorage.setItem("jwt", data.jwt);
-
-      // Set user
-      setUser(data.user);
-    } catch (error) {
-      console.error("Registration error:", error);
-      throw error;
-    }
+    if (error) throw error;
   };
 
   // Action: Logout
   const logout = async () => {
-    localStorage.removeItem("jwt");
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     setUser(null);
-  };
-
-  // Action: Update user profile
-  const updateUser = async (data: Partial<User>) => {
-    try {
-      const token = localStorage.getItem("jwt");
-      if (!token || !user) {
-        throw new Error("Not authenticated");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/users/${user.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(data),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update user");
-      }
-
-      const updatedUser = await response.json();
-      setUser(updatedUser);
-    } catch (error) {
-      console.error("Update user error:", error);
-      throw error;
-    }
+    setSession(null);
   };
 
   const value: AuthContextType = {
     user,
+    session,
+    profile,
     isAuthenticated: !!user,
     isLoading,
     login,
     register,
     logout,
-    updateUser,
+    refreshProfile: () => user ? fetchProfile(user.id) : Promise.resolve(),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -213,3 +139,5 @@ export const useAuth = () => {
   }
   return context;
 };
+export type { User, Session };
+

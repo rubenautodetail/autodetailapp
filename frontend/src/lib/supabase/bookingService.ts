@@ -1,0 +1,91 @@
+import { createClient } from './client';
+import { Database } from '@/types/database';
+
+export type BookingInsert = Database['public']['Tables']['bookings']['Insert'];
+
+/**
+ * Generates a random confirmation code for bookings
+ */
+function generateConfirmationCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+/**
+ * Generates a random alphanumeric string (Strapi-style documentId)
+ */
+function generateDocumentId(length = 24): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+/**
+ * Creates a new booking in Supabase
+ */
+export async function createSupabaseBooking(data: {
+    serviceId: number;
+    addOnIds: number[];
+    date: string;
+    timeWindow: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    specialInstructions?: string;
+    subtotal: number;
+    serviceFee: number;
+    total: number;
+}) {
+    const supabase = createClient();
+
+    const confirmationCode = generateConfirmationCode();
+    const documentId = generateDocumentId();
+
+    const bookingData: BookingInsert = {
+        document_id: documentId,
+        confirmation_code: confirmationCode,
+        date: data.date,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        zip_code: data.zipCode,
+        customer_name: data.customerName,
+        customer_email: data.customerEmail,
+        customer_phone: data.customerPhone,
+        special_instructions: data.specialInstructions,
+        total_amount: data.total,
+        // total: data.total, // If both exist, populate both
+        status: 'pending',
+        payment_status: 'unpaid',
+        time_window: data.timeWindow,
+        published_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    };
+
+    // Explicitly casting for numeric fields if needed, though supabase-js usually handles it
+
+    const { data: booking, error } = await supabase
+        .from('bookings')
+        .insert(bookingData)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Error creating booking:', error);
+        throw error;
+    }
+
+    return booking;
+}

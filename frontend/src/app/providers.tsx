@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BookingProvider } from "@/contexts/BookingContext";
+import { BookingStatusProvider } from "@/contexts/BookingStatusContext";
 import { ContractorProvider } from "@/contexts/ContractorContext";
 
 /**
@@ -15,9 +16,11 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <BookingProvider>
-        <ContractorProvider>
-          {children}
-        </ContractorProvider>
+        <BookingStatusProvider>
+          <ContractorProvider>
+            {children}
+          </ContractorProvider>
+        </BookingStatusProvider>
       </BookingProvider>
     </AuthProvider>
   );

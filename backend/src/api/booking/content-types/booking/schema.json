@@ -98,6 +98,7 @@
             "type": "enumeration",
             "enum": [
                 "pending",
+                "pending_assignment",
                 "confirmed",
                 "assigned",
                 "en_route",
@@ -107,6 +108,9 @@
                 "payment_failed"
             ],
             "default": "pending"
+        },
+        "acceptedAt": {
+            "type": "datetime"
         },
         "subtotal": {
             "type": "decimal"
@@ -129,14 +133,39 @@
         "paymentIntentId": {
             "type": "string"
         },
+        "paymentAuthId": {
+            "type": "string"
+        },
         "stripePaymentIntentId": {
             "type": "string"
         },
         "paidAt": {
             "type": "datetime"
         },
+        "capturedAt": {
+            "type": "datetime"
+        },
         "customerNotes": {
             "type": "text"
+        },
+        "paymentStatus": {
+            "type": "enumeration",
+            "enum": [
+                "pending",
+                "authorized",
+                "captured",
+                "paid",
+                "failed",
+                "refunded",
+                "voided"
+            ],
+            "default": "pending"
+        },
+        "paymentError": {
+            "type": "text"
+        },
+        "refundedAt": {
+            "type": "datetime"
         },
         "beforePhotos": {
             "type": "media",
@@ -160,6 +189,9 @@
         },
         "cancelledAt": {
             "type": "datetime"
+        },
+        "rejectionReason": {
+            "type": "text"
         },
         "cancellationReason": {
             "type": "text"
