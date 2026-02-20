@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useCallback } from "react";
+import { useState, useEffect, use, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -33,9 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
   suspended: "bg-gray-100 text-gray-700",
 };
 
-export default function AdminContractorsPage({ params }: AdminContractorsProps) {
-  const { lang } = use(params);
-  const locale = lang || "en";
+function AdminContractorsContent({ locale }: { locale: string }) {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") || "all";
 
@@ -62,7 +60,7 @@ export default function AdminContractorsPage({ params }: AdminContractorsProps) 
     joined: locale === "es" ? "Registro" : "Joined",
     actions: locale === "es" ? "Acciones" : "Actions",
     approve: locale === "es" ? "Aprobar" : "Approve",
-    reject: locale === "es" ? "Rechazar" : "Reject",
+    reject: locale === "es" ? "Rechazados" : "Reject",
     approved: locale === "es" ? "¡Aprobado!" : "Approved!",
     noContractors: locale === "es" ? "No hay contratistas" : "No contractors found",
     rejectTitle: locale === "es" ? "Rechazar Solicitud" : "Reject Application",
@@ -146,11 +144,10 @@ export default function AdminContractorsPage({ params }: AdminContractorsProps) 
             <button
               key={s}
               onClick={() => { setStatusFilter(s); setPage(1); }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                statusFilter === s
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === s
+                ? "bg-blue-600 text-white"
+                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                }`}
             >
               {t[s as keyof typeof t] || s}
             </button>
@@ -296,5 +293,15 @@ export default function AdminContractorsPage({ params }: AdminContractorsProps) 
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminContractorsPage({ params }: AdminContractorsProps) {
+  const { lang } = use(params);
+  const locale = lang || "en";
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>}>
+      <AdminContractorsContent locale={locale} />
+    </Suspense>
   );
 }
