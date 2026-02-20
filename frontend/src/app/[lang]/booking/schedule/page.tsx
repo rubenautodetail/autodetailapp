@@ -43,6 +43,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const {
     selectedService,
     selectedAddOns,
+    customerLocation,
     selectedDate,
     selectedTimeWindow,
     setSchedule,
@@ -59,13 +60,85 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const [tempSelectedWindow, setTempSelectedWindow] = useState<typeof TIME_WINDOWS[0] | null>(
     selectedTimeWindow
   );
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
   // Redirect if prerequisites not met
   useEffect(() => {
     if (!selectedService) {
       router.push(`/${locale}/booking/select`);
     }
-  }, [selectedService, router, locale]);
+    if (!customerLocation) {
+      router.push(`/${locale}/booking/location`);
+    }
+  }, [selectedService, customerLocation, router, locale]);
+
+  // Fetch availability when month changes
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!customerLocation?.zipCode || !selectedService) return;
+
+      setIsLoadingAvailability(true);
+      try {
+        const month = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}`;
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/booking/availability`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              zipCode: customerLocation.zipCode,
+              serviceId: selectedService.documentId,
+              month,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch availability");
+        }
+
+        const data = await response.json();
+
+        // Convert available dates to Set for quick lookup
+        const dateSet = new Set<string>();
+        if (data.availableDates && Array.isArray(data.availableDates)) {
+          data.availableDates.forEach((dateInfo: any) => {
+            if (dateInfo.date) {
+              dateSet.add(dateInfo.date);
+            }
+          });
+        }
+
+        setAvailableDates(dateSet);
+      } catch (error) {
+        console.error("Error fetching availability:", error);
+        // On error, allow all future dates (fallback behavior)
+        const dateSet = new Set<string>();
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(year, month, day);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          if (date >= today) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            dateSet.add(dateStr);
+          }
+        }
+
+        setAvailableDates(dateSet);
+      } finally {
+        setIsLoadingAvailability(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [currentMonth, customerLocation, selectedService]);
 
   // Generate calendar days
   const getDaysInMonth = (date: Date) => {
@@ -100,9 +173,9 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     // Can't book same day or past dates
     if (date < today) return false;
 
-    // Mock availability - all future dates available for now
-    // TODO: Check actual contractor availability from Strapi
-    return true;
+    // Check real contractor availability from API
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return availableDates.has(dateStr);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -120,12 +193,12 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
     setSchedule(tempSelectedDate, tempSelectedWindow);
     nextStep();
-    router.push(`/${locale}/booking/payment`);
+    router.push(`/${locale}/booking/review`);
   };
 
   const handleBack = () => {
     previousStep();
-    router.push(`/${locale}/booking/select`);
+    router.push(`/${locale}/booking/location`);
   };
 
   const monthName = currentMonth.toLocaleDateString(locale, {
@@ -140,7 +213,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
   const days = getDaysInMonth(currentMonth);
 
-  if (!selectedService) {
+  if (!selectedService || !customerLocation) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -154,7 +227,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5].map((step) => (
               <div key={step} className="flex items-center">
                 <div
                   className={`
@@ -168,10 +241,10 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                 >
                   {step}
                 </div>
-                {step < 4 && (
+                {step < 5 && (
                   <div
                     className={`
-                      w-16 h-1 mx-2
+                      w-12 h-1 mx-2
                       ${currentStep > step ? "bg-blue-600" : "bg-gray-200"}
                     `}
                   />
@@ -181,10 +254,11 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           </div>
           <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-gray-600">
             <span>{locale === "es" ? "Servicio" : "Service"}</span>
+            <span>{locale === "es" ? "Ubicación" : "Location"}</span>
             <span className="font-semibold text-blue-600">
               {locale === "es" ? "Horario" : "Schedule"}
             </span>
-            <span>{locale === "es" ? "Detalles" : "Details"}</span>
+            <span>{locale === "es" ? "Revisar" : "Review"}</span>
             <span>{locale === "es" ? "Pago" : "Payment"}</span>
           </div>
         </div>
@@ -208,6 +282,13 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           <div className="lg:col-span-2 space-y-6">
             {/* Calendar */}
             <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+              {isLoadingAvailability && (
+                <div className="absolute top-4 right-4 flex items-center gap-2 text-sm text-blue-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  {locale === "es" ? "Cargando..." : "Loading..."}
+                </div>
+              )}
+
               {/* Month Navigation */}
               <div className="flex items-center justify-between mb-6">
                 <button
@@ -387,7 +468,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                     shadow-lg hover:shadow-xl
                   "
                 >
-                  {locale === "es" ? "Continuar a Pago" : "Continue to Payment"}
+                  {locale === "es" ? "Continuar a Revisar" : "Continue to Review"}
                   <svg
                     className="inline-block ml-2 w-5 h-5"
                     fill="none"
@@ -424,7 +505,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  {locale === "es" ? "Volver a Servicio" : "Back to Service"}
+                  {locale === "es" ? "Volver a Ubicación" : "Back to Location"}
                 </button>
               </div>
             </div>

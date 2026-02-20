@@ -48,6 +48,13 @@ export interface CustomerInfo {
   specialNotes: string;
 }
 
+export interface VehicleInfo {
+  make: string;
+  model: string;
+  year: string;
+  color: string;
+}
+
 interface BookingContextType {
   // Service selection
   selectedService: Service | null;
@@ -62,6 +69,9 @@ interface BookingContextType {
 
   // Customer contact info (collected on review page, used on payment page)
   customerInfo: CustomerInfo | null;
+
+  // Vehicle info (collected on details page, used on payment page)
+  vehicleInfo: VehicleInfo | null;
 
   // Pricing
   subtotal: number;
@@ -84,6 +94,7 @@ interface BookingContextType {
   setLocation: (location: Location) => void;
   setSchedule: (date: Date, timeWindow: TimeWindow) => void;
   setCustomerInfo: (info: CustomerInfo) => void;
+  setVehicleInfo: (info: VehicleInfo) => void;
   calculateTotal: () => void;
   nextStep: () => void;
   previousStep: () => void;
@@ -108,6 +119,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Customer contact info
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
+  // Vehicle info
+  const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
 
   // Payment state
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'paid' | 'failed' | 'refunded'>('pending');
@@ -178,7 +192,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Navigation actions
   const nextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 5)); // Max 5 steps
+    setCurrentStep((prev) => Math.min(prev + 1, 6)); // Max 6 steps
   };
 
   const previousStep = () => {
@@ -197,6 +211,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     setServiceFee(0);
     setTotal(0);
     setCustomerInfo(null);
+    setVehicleInfo(null);
     setPaymentStatus('pending');
     setPaymentIntentId(null);
   };
@@ -208,6 +223,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     selectedDate,
     selectedTimeWindow,
     customerInfo,
+    vehicleInfo,
     subtotal,
     serviceFee,
     total,
@@ -222,6 +238,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     setLocation,
     setSchedule,
     setCustomerInfo,
+    setVehicleInfo,
     calculateTotal,
     nextStep,
     previousStep,

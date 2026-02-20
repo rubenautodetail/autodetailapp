@@ -50,7 +50,7 @@ export default function ServiceSelectionForm({
     const handleContinue = () => {
         if (!selectedService) return;
         nextStep();
-        router.push(`/${locale}/booking/schedule`);
+        router.push(`/${locale}/booking/location`);
     };
 
     const handleBack = () => {
@@ -64,7 +64,7 @@ export default function ServiceSelectionForm({
                 {/* Progress Indicator */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between max-w-3xl mx-auto">
-                        {[1, 2, 3, 4].map((step) => (
+                        {[1, 2, 3, 4, 5].map((step) => (
                             <div key={step} className="flex items-center">
                                 <div
                                     className={`
@@ -78,10 +78,10 @@ export default function ServiceSelectionForm({
                                 >
                                     {step}
                                 </div>
-                                {step < 4 && (
+                                {step < 5 && (
                                     <div
                                         className={`
-                      w-16 h-1 mx-2 transition-colors
+                      w-12 h-1 mx-2 transition-colors
                       ${currentStep > step ? "bg-accent-gold" : "bg-white/10"}
                     `}
                                     />
@@ -93,8 +93,9 @@ export default function ServiceSelectionForm({
                         <span className="font-semibold text-accent-gold">
                             {locale === "es" ? "Servicio" : "Service"}
                         </span>
+                        <span>{locale === "es" ? "Ubicación" : "Location"}</span>
                         <span>{locale === "es" ? "Horario" : "Schedule"}</span>
-                        <span>{locale === "es" ? "Detalles" : "Details"}</span>
+                        <span>{locale === "es" ? "Revisar" : "Review"}</span>
                         <span>{locale === "es" ? "Pago" : "Payment"}</span>
                     </div>
                 </div>

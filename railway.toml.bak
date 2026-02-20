@@ -1,0 +1,11 @@
+[[services]]
+name = "backend"
+rootDirectory = "backend"
+[services.deploy]
+restartPolicyType = "ON_FAILURE"
+
+[[services]]
+name = "frontend"
+rootDirectory = "frontend"
+[services.deploy]
+restartPolicyType = "ON_FAILURE"

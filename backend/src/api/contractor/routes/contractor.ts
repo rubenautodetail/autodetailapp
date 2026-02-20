@@ -48,5 +48,46 @@ export default {
                 policies: ['global::contractor-only'],
             },
         },
+        // Admin routes
+        {
+            method: 'GET',
+            path: '/admin/contractors',
+            handler: 'contractor.adminList',
+            config: {
+                policies: ['global::is-admin'],
+            },
+        },
+        {
+            method: 'PUT',
+            path: '/admin/contractors/:id/approve',
+            handler: 'contractor.adminApprove',
+            config: {
+                policies: ['global::is-admin'],
+            },
+        },
+        {
+            method: 'PUT',
+            path: '/admin/contractors/:id/reject',
+            handler: 'contractor.adminReject',
+            config: {
+                policies: ['global::is-admin'],
+            },
+        },
+        {
+            method: 'GET',
+            path: '/admin/bookings',
+            handler: 'contractor.adminBookings',
+            config: {
+                policies: ['global::is-admin'],
+            },
+        },
+        {
+            method: 'GET',
+            path: '/admin/stats',
+            handler: 'contractor.adminStats',
+            config: {
+                policies: ['global::is-admin'],
+            },
+        },
     ],
 };

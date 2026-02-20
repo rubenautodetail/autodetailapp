@@ -5,6 +5,7 @@
 
 import stripeService from '../../../services/stripe-service';
 import { getSupabaseBooking, updateSupabaseBooking } from '../../../services/supabase-service';
+import { assignContractor, markSlotAsBooked } from '../../assignments/services/assignment-algorithm';
 
 export default {
     /**
@@ -269,25 +270,153 @@ async function handlePaymentAuthorized(paymentIntent) {
 
 /**
  * Handle successful payment
+ * CRITICAL: Auto-assigns contractor after payment succeeds
  */
 async function handlePaymentSucceeded(paymentIntent) {
     const { bookingId } = paymentIntent.metadata;
     if (!bookingId || bookingId === 'test_booking') return;
 
     try {
-        // Update booking status in Supabase
+        // Get full booking details from Supabase
+        const booking = await getSupabaseBooking(bookingId);
+
+        if (!booking) {
+            strapi.log.error(`Booking ${bookingId} not found in Supabase`);
+            return;
+        }
+
+        // Update payment status first
         await updateSupabaseBooking(bookingId, {
             payment_status: 'paid',
-            status: 'confirmed',
             paid_at: new Date().toISOString(),
         });
 
         strapi.log.info(`✅ Payment succeeded for Supabase booking ${bookingId}`);
 
-        // TODO: Send confirmation emails
-        // TODO: Notify contractor
+        // AUTO-ASSIGN CONTRACTOR
+        // Note: Works with one contractor or many - algorithm handles both cases
+        try {
+            const assignmentResult = await assignContractor(strapi, Number(bookingId), {
+                zipCode: booking.zip_code,
+                scheduledDate: booking.scheduled_date || booking.date,
+                timeWindow: booking.time_window,
+                serviceLatitude: booking.service_address?.latitude,
+                serviceLongitude: booking.service_address?.longitude,
+                serviceDuration: 120, // TODO: Get from service
+            });
+
+            if (assignmentResult) {
+                // Update booking with contractor assignment
+                await updateSupabaseBooking(bookingId, {
+                    contractor_id: assignmentResult.contractorId,
+                    status: 'confirmed',
+                    accepted_at: new Date().toISOString(),
+                });
+
+                // Mark contractor's slot as booked
+                await markSlotAsBooked(
+                    strapi,
+                    assignmentResult.contractorId,
+                    booking.scheduled_date || booking.date,
+                    booking.time_window
+                );
+
+                strapi.log.info(`🎯 Auto-assigned contractor ${assignmentResult.contractorId} to booking ${bookingId} (score: ${assignmentResult.score})`);
+
+                // Send notification to contractor (non-blocking)
+                try {
+                    const contractor: any = await strapi.entityService.findOne(
+                        'api::contractor.contractor',
+                        assignmentResult.contractorId
+                    );
+
+                    if (contractor?.email) {
+                        await strapi.service('api::email.email').sendNewJobToContractor(
+                            {
+                                id: booking.id,
+                                confirmationCode: booking.confirmation_code || 'N/A',
+                                scheduledDate: booking.scheduled_date,
+                                scheduledTime: booking.time_window,
+                                totalAmount: booking.total_amount || booking.total,
+                                paymentStatus: booking.payment_status,
+                                customer: {
+                                    firstName: booking.customer_name?.split(' ')[0] || 'Customer',
+                                    lastName: booking.customer_name?.split(' ').slice(1).join(' ') || '',
+                                    email: booking.customer_email,
+                                    phone: booking.customer_phone,
+                                },
+                                service: {
+                                    name: 'Auto Detailing Service', // TODO: Get from service relation
+                                },
+                                location: {
+                                    address: booking.address,
+                                    city: booking.city,
+                                    state: booking.state,
+                                    zipCode: booking.zip_code,
+                                },
+                            },
+                            contractor.email
+                        );
+
+                        strapi.log.info(`📧 New job email sent to contractor ${contractor.email}`);
+                    }
+                } catch (emailError) {
+                    strapi.log.error('Failed to send contractor notification email:', emailError);
+                    // Don't fail the payment - just log the error
+                }
+            } else {
+                // No contractor available - set to pending_assignment
+                await updateSupabaseBooking(bookingId, {
+                    status: 'pending_assignment',
+                });
+
+                strapi.log.warn(`⚠️ No contractor available for booking ${bookingId} - manual assignment needed`);
+
+                // TODO: Send admin notification
+            }
+        } catch (assignmentError) {
+            strapi.log.error(`Failed to assign contractor to booking ${bookingId}:`, assignmentError);
+
+            // Don't fail the payment - just mark for manual assignment
+            await updateSupabaseBooking(bookingId, {
+                status: 'pending_assignment',
+            });
+        }
+
+        // Send confirmation email to customer (non-blocking)
+        try {
+            await strapi.service('api::email.email').sendBookingConfirmation({
+                id: booking.id,
+                confirmationCode: booking.confirmation_code || 'N/A',
+                scheduledDate: booking.scheduled_date,
+                scheduledTime: booking.time_window,
+                totalAmount: booking.total_amount || booking.total,
+                paymentStatus: booking.payment_status,
+                customer: {
+                    firstName: booking.customer_name?.split(' ')[0] || 'Customer',
+                    lastName: booking.customer_name?.split(' ').slice(1).join(' ') || '',
+                    email: booking.customer_email,
+                    phone: booking.customer_phone,
+                },
+                service: {
+                    name: 'Auto Detailing Service', // TODO: Get from service relation
+                },
+                location: {
+                    address: booking.address,
+                    city: booking.city,
+                    state: booking.state,
+                    zipCode: booking.zip_code,
+                },
+            });
+
+            strapi.log.info(`📧 Confirmation email sent to ${booking.customer_email}`);
+        } catch (emailError) {
+            strapi.log.error('Failed to send confirmation email:', emailError);
+            // Don't fail the payment - just log the error
+        }
+
     } catch (error) {
-        strapi.log.error(`Failed to update Supabase booking ${bookingId}:`, error);
+        strapi.log.error(`Failed to process payment success for booking ${bookingId}:`, error);
     }
 }
 

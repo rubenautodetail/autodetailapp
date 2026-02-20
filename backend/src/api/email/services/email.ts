@@ -464,6 +464,199 @@ export default ({ strapi }) => ({
     },
 
     /**
+     * Send new job notification to contractor
+     */
+    async sendNewJobToContractor(booking: BookingData, contractorEmail: string) {
+        try {
+            const { customer, service, location } = booking;
+
+            const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+              .header h1 { margin: 0; font-size: 24px; }
+              .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
+              .job-box { background: #f0fdf4; border: 2px solid #10b981; padding: 20px; margin: 20px 0; border-radius: 8px; }
+              .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #d1fae5; }
+              .label { font-weight: 600; color: #065f46; }
+              .value { color: #111827; }
+              .button { display: inline-block; background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+              .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>💼 New Job Assigned!</h1>
+            </div>
+
+            <div class="content">
+              <p><strong>You have a new detailing appointment!</strong></p>
+
+              <div class="job-box">
+                <h3 style="margin-top: 0; color: #065f46;">Job Details</h3>
+                <div class="detail-row">
+                  <span class="label">Confirmation Code:</span>
+                  <span class="value"><strong>${booking.confirmationCode}</strong></span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Service:</span>
+                  <span class="value">${service.name}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Date:</span>
+                  <span class="value">${new Date(booking.scheduledDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Time:</span>
+                  <span class="value">${booking.scheduledTime}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Location:</span>
+                  <span class="value">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Customer:</span>
+                  <span class="value">${customer.firstName} ${customer.lastName}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Contact:</span>
+                  <span class="value">${customer.phone}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Your Earnings:</span>
+                  <span class="value"><strong>$${(booking.totalAmount * 0.85).toFixed(2)}</strong> (85% of $${booking.totalAmount.toFixed(2)})</span>
+                </div>
+              </div>
+
+              <h3>Next Steps:</h3>
+              <ul>
+                <li>Review the job details in your dashboard</li>
+                <li>Prepare your equipment and supplies</li>
+                <li>Contact customer if you need additional information</li>
+                <li>Arrive on time and provide excellent service!</li>
+              </ul>
+
+              <p style="margin-top: 30px; text-align: center;">
+                <a href="${APP_URL}/en/contractor/jobs/${booking.id}" class="button">View Job Details</a>
+              </p>
+            </div>
+
+            <div class="footer">
+              <p>Rubens Auto Detail - Contractor Portal</p>
+              <p>Questions? <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
+            </div>
+          </body>
+        </html>
+      `;
+
+            const { data, error } = await resend.emails.send({
+                from: FROM_EMAIL,
+                to: contractorEmail,
+                subject: '💼 New Job Assigned - ' + booking.confirmationCode,
+                html,
+            });
+
+            if (error) {
+                strapi.log.error('Error sending new job email to contractor:', error);
+                throw error;
+            }
+
+            strapi.log.info(`New job email sent to contractor ${contractorEmail}`);
+            return data;
+        } catch (error) {
+            strapi.log.error('Failed to send new job email to contractor:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Send payment received notification to contractor
+     */
+    async sendPaymentToContractor(booking: BookingData, contractorEmail: string, contractorEarnings: number) {
+        try {
+            const { customer, service } = booking;
+
+            const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+              .header h1 { margin: 0; font-size: 24px; }
+              .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
+              .earnings-box { background: #dbeafe; border: 2px solid #3b82f6; padding: 30px; margin: 20px 0; border-radius: 8px; text-align: center; }
+              .amount { font-size: 48px; font-weight: bold; color: #1e40af; margin: 20px 0; }
+              .button { display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+              .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>💰 Payment Received!</h1>
+            </div>
+
+            <div class="content">
+              <p><strong>Great news! Your payment has been processed.</strong></p>
+
+              <div class="earnings-box">
+                <div style="font-size: 18px; color: #1e40af; margin-bottom: 10px;">Your Earnings</div>
+                <div class="amount">$${contractorEarnings.toFixed(2)}</div>
+                <div style="color: #6b7280; font-size: 14px;">
+                  Job: ${booking.confirmationCode}<br>
+                  Customer: ${customer.firstName} ${customer.lastName}<br>
+                  Service: ${service.name}
+                </div>
+              </div>
+
+              <p>This payment will be transferred to your connected bank account within 2-3 business days.</p>
+
+              <p><strong>Payment Breakdown:</strong></p>
+              <ul>
+                <li>Service Total: $${booking.totalAmount.toFixed(2)}</li>
+                <li>Platform Fee (15%): -$${(booking.totalAmount * 0.15).toFixed(2)}</li>
+                <li><strong>Your Earnings (85%): $${contractorEarnings.toFixed(2)}</strong></li>
+              </ul>
+
+              <p style="margin-top: 30px; text-align: center;">
+                <a href="${APP_URL}/en/contractor/earnings" class="button">View Earnings Dashboard</a>
+              </p>
+            </div>
+
+            <div class="footer">
+              <p>Thank you for being part of our team!</p>
+              <p>Questions? <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
+            </div>
+          </body>
+        </html>
+      `;
+
+            const { data, error } = await resend.emails.send({
+                from: FROM_EMAIL,
+                to: contractorEmail,
+                subject: `💰 Payment Received - $${contractorEarnings.toFixed(2)}`,
+                html,
+            });
+
+            if (error) {
+                strapi.log.error('Error sending payment notification to contractor:', error);
+                throw error;
+            }
+
+            strapi.log.info(`Payment notification sent to contractor ${contractorEmail}`);
+            return data;
+        } catch (error) {
+            strapi.log.error('Failed to send payment notification to contractor:', error);
+            throw error;
+        }
+    },
+
+    /**
      * Send auto-approval warning email to customer
      */
     async sendAutoApprovalWarning(booking: BookingData, hoursRemaining: number) {

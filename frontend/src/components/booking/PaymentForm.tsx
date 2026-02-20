@@ -1,23 +1,17 @@
 /**
  * Payment Form Component
- * Separated from Page to allow Server Component wrapper
+ * Simplified to only handle Stripe payment - customer info comes from context
  */
 
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import { useBooking } from "@/contexts";
 import { PricingSummary } from "@/components/booking";
 import { createSupabaseBooking } from "@/lib/supabase/bookingService";
 import StripeProvider from "@/components/payment/StripeProvider";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-
-const GoogleAddressInput = dynamic(
-  () => import("@/components/maps/GoogleAddressInput"),
-  { ssr: false }
-);
 
 interface PaymentFormProps {
   locale: "en" | "es";
@@ -74,9 +68,9 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-        <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
-          <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
           </svg>
           {locale === "es" ? "Información de Pago" : "Payment Information"}
@@ -85,8 +79,13 @@ function CheckoutForm({
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
-          {error}
+        <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 text-red-600 text-sm">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </div>
         </div>
       )}
 
@@ -94,11 +93,11 @@ function CheckoutForm({
         type="submit"
         disabled={!stripe || isProcessing}
         className={`
-          w-full py-4 px-6 rounded-xl font-semibold text-bg-primary text-lg
-          transition-all duration-200 shadow-glow
+          w-full py-4 px-6 rounded-xl font-semibold text-white text-lg
+          transition-all duration-200 shadow-lg
           ${!stripe || isProcessing
-            ? "bg-white/10 text-text-muted cursor-not-allowed"
-            : "bg-accent-gold hover:bg-accent-gold-hover hover:shadow-lg active:scale-98"
+            ? "bg-gray-300 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 hover:shadow-xl"
           }
         `}
       >
@@ -107,11 +106,11 @@ function CheckoutForm({
           : (locale === "es" ? `Pagar $${total.toFixed(2)}` : `Pay $${total.toFixed(2)}`)}
       </button>
 
-      <div className="flex items-center justify-center text-sm text-text-muted">
+      <div className="flex items-center justify-center text-sm text-gray-600">
         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
-        {locale === "es" ? "Seguro y encriptado" : "Secure & Encrypted"}
+        {locale === "es" ? "Seguro y encriptado con Stripe" : "Secure & encrypted by Stripe"}
       </div>
     </form>
   );
@@ -122,91 +121,70 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   const {
     selectedService,
     selectedAddOns,
+    customerLocation,
     selectedDate,
     selectedTimeWindow,
+    customerInfo,
     subtotal,
     serviceFee,
     total,
-    setLocation,
-    setCustomerInfo,
+    currentStep,
+    previousStep,
     setPaymentStatus,
     setPaymentIntentId,
   } = useBooking();
 
-  // Form state
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [serviceAddress, setServiceAddress] = useState("");
-  const [serviceCity, setServiceCity] = useState("");
-  const [serviceState, setServiceState] = useState("FL");
-  const [serviceZip, setServiceZip] = useState("");
-  const [serviceLat, setServiceLat] = useState(0);
-  const [serviceLng, setServiceLng] = useState(0);
-  const [specialNotes, setSpecialNotes] = useState("");
-
-  const [billingDifferent, setBillingDifferent] = useState(false);
-  const [billingAddress, setBillingAddress] = useState("");
-  const [billingCity, setBillingCity] = useState("");
-  const [billingState, setBillingState] = useState("FL");
-  const [billingZip, setBillingZip] = useState("");
-
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [bookingCreated, setBookingCreated] = useState(false);
 
+  // Redirect if prerequisites not met
   useEffect(() => {
     if (!selectedService) {
       router.push(`/${locale}/booking/select`);
+      return;
+    }
+    if (!customerLocation) {
+      router.push(`/${locale}/booking/location`);
       return;
     }
     if (!selectedDate || !selectedTimeWindow) {
       router.push(`/${locale}/booking/schedule`);
       return;
     }
-    const savedZip = sessionStorage.getItem('serviceZipCode');
-    if (savedZip) setServiceZip(savedZip);
-  }, [selectedService, selectedDate, selectedTimeWindow, router, locale]);
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-    if (!name.trim()) errors.name = locale === "es" ? "Requerido" : "Required";
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) errors.email = locale === "es" ? "Inválido" : "Invalid";
-    if (!phone.trim() || phone.replace(/\D/g, '').length < 10) errors.phone = locale === "es" ? "Inválido" : "Invalid";
-    if (!serviceAddress.trim()) errors.serviceAddress = locale === "es" ? "Requerida" : "Required";
-    if (!serviceCity.trim()) errors.serviceCity = locale === "es" ? "Requerida" : "Required";
-    if (!serviceZip.trim() || serviceZip.length !== 5) errors.serviceZip = locale === "es" ? "Inválido" : "Invalid";
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+    if (!customerInfo) {
+      router.push(`/${locale}/booking/review`);
+      return;
+    }
+  }, [selectedService, customerLocation, selectedDate, selectedTimeWindow, customerInfo, router, locale]);
 
   const handleCreateBooking = async () => {
-    if (!validateForm()) return;
+    if (!customerInfo || !customerLocation || !selectedDate || !selectedTimeWindow || !selectedService) {
+      setError(locale === "es" ? "Faltan datos de reserva" : "Missing booking data");
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);
 
     try {
-      if (!selectedDate || !selectedTimeWindow || !selectedService) return;
-
       const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
 
-      // 1. Create booking in Supabase
+      // 1. Create booking in Strapi
       const booking = await createSupabaseBooking({
         serviceId: typeof selectedService.id === "number" ? selectedService.id : 0,
         addOnIds: selectedAddOns.map((a) => a.id as number),
         date: formattedDate,
         timeWindow: selectedTimeWindow.slot,
-        address: serviceAddress,
-        city: serviceCity,
-        state: serviceState,
-        zipCode: serviceZip,
-        customerName: name,
-        customerEmail: email,
-        customerPhone: phone,
-        specialInstructions: specialNotes || undefined,
+        address: customerLocation.address,
+        city: customerLocation.city || "",
+        state: customerLocation.state || "FL",
+        zipCode: customerLocation.zipCode,
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone,
+        specialInstructions: customerInfo.specialNotes || undefined,
         subtotal,
         serviceFee,
         total,
@@ -238,10 +216,6 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
       setPaymentIntentId(data.paymentIntentId);
       setBookingCreated(true);
 
-      // Save context
-      setLocation({ address: serviceAddress, city: serviceCity, state: serviceState, zipCode: serviceZip, latitude: serviceLat, longitude: serviceLng });
-      setCustomerInfo({ name, email, phone, specialNotes });
-
     } catch (err) {
       console.error("Booking creation error:", err);
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -250,69 +224,199 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     }
   };
 
-  if (!selectedService || !selectedDate || !selectedTimeWindow) return null;
+  const handleBack = () => {
+    previousStep();
+    router.push(`/${locale}/booking/review`);
+  };
+
+  if (!selectedService || !customerLocation || !selectedDate || !selectedTimeWindow || !customerInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-bg-primary py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Progress Indicator */}
         <div className="mb-8">
-          <button onClick={() => router.push(`/${locale}/booking/schedule`)} className="flex items-center text-accent-gold hover:text-accent-gold-hover mb-4 transition-colors">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            {locale === "es" ? "Volver" : "Back"}
-          </button>
-          <h1 className="text-3xl font-bold text-text-primary">{locale === "es" ? "Finalizar Reserva" : "Complete Your Booking"}</h1>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-Col 2 space-y-6">
-            <div className="space-y-6">
-              {/* Data Sections (Read only after booking created) */}
-              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-                <h2 className="text-xl font-semibold text-text-primary mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  {locale === "es" ? "Contacto" : "Contact"}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={bookingCreated} className="w-full px-4 py-3 border border-white/10 rounded-lg bg-white/5 text-text-primary disabled:opacity-50" />
-                  <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} disabled={bookingCreated} className="w-full px-4 py-3 border border-white/10 rounded-lg bg-white/5 text-text-primary disabled:opacity-50" />
-                  <input type="tel" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} disabled={bookingCreated} className="md:col-span-2 w-full px-4 py-3 border border-white/10 rounded-lg bg-white/5 text-text-primary disabled:opacity-50" />
+          <div className="flex items-center justify-between max-w-3xl mx-auto">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div key={step} className="flex items-center">
+                <div
+                  className={`
+                    w-10 h-10 rounded-full flex items-center justify-center
+                    font-semibold text-sm
+                    ${currentStep >= step
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-600"
+                    }
+                  `}
+                >
+                  {step}
                 </div>
-              </div>
-
-              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-                <h2 className="text-xl font-semibold text-text-primary mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
-                  {locale === "es" ? "Ubicación" : "Location"}
-                </h2>
-                {!bookingCreated ? (
-                  <GoogleAddressInput onAddressSelect={val => { setServiceAddress(val.address); setServiceCity(val.city || ""); setServiceZip(val.zipCode); }} placeholder="Enter Address" />
-                ) : (
-                  <div className="text-text-secondary">{serviceAddress}, {serviceCity}, {serviceZip}</div>
+                {step < 5 && (
+                  <div
+                    className={`
+                      w-12 h-1 mx-2
+                      ${currentStep > step ? "bg-blue-600" : "bg-gray-200"}
+                    `}
+                  />
                 )}
               </div>
+            ))}
+          </div>
+          <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-gray-600">
+            <span>{locale === "es" ? "Servicio" : "Service"}</span>
+            <span>{locale === "es" ? "Ubicación" : "Location"}</span>
+            <span>{locale === "es" ? "Horario" : "Schedule"}</span>
+            <span>{locale === "es" ? "Revisar" : "Review"}</span>
+            <span className="font-semibold text-blue-600">
+              {locale === "es" ? "Pago" : "Payment"}
+            </span>
+          </div>
+        </div>
 
-              {/* Step 3: Payment */}
-              {clientSecret && bookingCreated ? (
-                <StripeProvider clientSecret={clientSecret}>
-                  <CheckoutForm locale={locale} onSuccess={() => setPaymentStatus("paid")} isProcessing={isProcessing} total={total} />
-                </StripeProvider>
-              ) : (
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            {locale === "es" ? "Pago Seguro" : "Secure Payment"}
+          </h1>
+          <p className="text-lg text-gray-600">
+            {locale === "es"
+              ? "Completa tu reserva con pago seguro"
+              : "Complete your booking with secure payment"}
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left column: Booking Summary & Payment */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Booking Summary (Read-only) */}
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                {locale === "es" ? "Resumen de Reserva" : "Booking Summary"}
+              </h3>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {locale === "es" ? "Contacto:" : "Contact:"}
+                  </span>
+                  <span className="text-gray-900 font-medium">{customerInfo.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {locale === "es" ? "Ubicación:" : "Location:"}
+                  </span>
+                  <span className="text-gray-900 text-right">{customerLocation.address}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {locale === "es" ? "Fecha:" : "Date:"}
+                  </span>
+                  <span className="text-gray-900">
+                    {selectedDate.toLocaleDateString(locale, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {locale === "es" ? "Hora:" : "Time:"}
+                  </span>
+                  <span className="text-gray-900">
+                    {locale === "es" ? selectedTimeWindow.labelEs : selectedTimeWindow.label}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Section */}
+            {clientSecret && bookingCreated ? (
+              <StripeProvider clientSecret={clientSecret}>
+                <CheckoutForm
+                  locale={locale}
+                  onSuccess={() => setPaymentStatus("paid")}
+                  isProcessing={isProcessing}
+                  total={total}
+                />
+              </StripeProvider>
+            ) : (
+              <div className="space-y-4">
                 <button
                   type="button"
                   onClick={handleCreateBooking}
                   disabled={isProcessing}
-                  className="w-full py-4 px-6 rounded-xl font-bold text-bg-primary text-lg transition-all duration-200 shadow-glow bg-accent-gold hover:bg-accent-gold-hover"
+                  className="
+                    w-full py-4 px-6 rounded-xl font-semibold text-white text-lg
+                    transition-all duration-200 shadow-lg
+                    bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300
+                    disabled:cursor-not-allowed
+                  "
                 >
-                  {isProcessing ? "..." : (locale === "es" ? "Continuar al Pago" : "Continue to Payment")}
+                  {isProcessing
+                    ? (locale === "es" ? "Procesando..." : "Processing...")
+                    : (locale === "es" ? "Continuar al Pago" : "Continue to Payment")}
                 </button>
-              )}
 
-              {error && <div className="text-red-400 font-medium p-4 bg-red-500/10 rounded-xl border border-red-500/50">{error}</div>}
-            </div>
+                <button
+                  onClick={handleBack}
+                  className="
+                    w-full bg-white text-gray-700 font-semibold py-4 rounded-xl
+                    border-2 border-gray-300 hover:border-gray-400
+                    transition-colors duration-200
+                  "
+                >
+                  <svg
+                    className="inline-block mr-2 w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                  {locale === "es" ? "Volver a Revisar" : "Back to Review"}
+                </button>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 text-red-600 text-sm">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {error}
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Right column: Price Summary (sticky) */}
           <div className="lg:col-span-1">
-            <PricingSummary service={selectedService} addOns={selectedAddOns} subtotal={subtotal} serviceFee={serviceFee} total={total} locale={locale} />
+            <div className="sticky top-8">
+              <PricingSummary
+                service={selectedService}
+                addOns={selectedAddOns}
+                subtotal={subtotal}
+                serviceFee={serviceFee}
+                total={total}
+                locale={locale}
+              />
+            </div>
           </div>
         </div>
       </div>
