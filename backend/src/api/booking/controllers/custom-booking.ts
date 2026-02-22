@@ -755,4 +755,5 @@ export default factories.createCoreController('api::booking.booking', ({ strapi 
             return ctx.internalServerError('An error occurred while holding the slot');
         }
     },
+
 }));

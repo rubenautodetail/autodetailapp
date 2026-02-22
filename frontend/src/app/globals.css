@@ -9,6 +9,12 @@
   /* Apple Adaptive System - Colors */
   --color-test: #ff0000;
 
+  /* Midnight Gold Dark Theme — Customer Dashboard Tokens */
+  --color-bg-primary: #080808;
+  --color-text-secondary: #8E8E93;
+  --color-text-muted: #48484A;
+  --color-accent-gold: #D4AC0D;
+
   /* Light Mode Base */
   --color-bg-light: #F5F5F7;
   --color-card-light: #FFFFFF;
@@ -38,6 +44,13 @@
   --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-card-dark: 0 0 0 1px rgba(255, 255, 255, 0.1);
   /* Subtle border glow instead of shadow */
+}
+
+/* Glass + Glow CSS Variables (used in @utility glass-card and btn-primary) */
+:root {
+  --color-glass-surface: rgba(255, 255, 255, 0.03);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --shadow-glow: 0 0 24px rgba(212, 172, 13, 0.25);
 }
 
 /* CSS Variables for Dynamic Usage */

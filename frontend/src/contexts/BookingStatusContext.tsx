@@ -109,8 +109,16 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
     // Initial Fetch & Subscriptions
     useEffect(() => {
         if (!user || !user.id || !user.email) {
-            setVehicles([]);
-            setUserProfile(null);
+            // Guest / no-auth mode: load vehicles from localStorage, set a placeholder profile
+            const stored = typeof window !== 'undefined' ? localStorage.getItem('guest_vehicles') : null;
+            setVehicles(stored ? JSON.parse(stored) : []);
+            setUserProfile({
+                name: 'Test User',
+                email: 'test@example.com',
+                phone: '',
+                memberSince: 'February 2026',
+                path: ''
+            });
             setIsLoading(false);
             return;
         }
@@ -149,22 +157,23 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 setVehicles(vehicleData.map(mapDbVehicleToVehicle));
             }
 
-            // Fetch Recent Bookings
+            // Fetch bookings from Supabase (source of truth for transactional data)
             const { data: bookingData } = await supabase
                 .from('bookings')
                 .select('*')
                 .eq('customer_email', userEmail)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(20);
 
             if (bookingData) {
-                setBookings(bookingData.map(b => ({
+                setBookings(bookingData.map((b) => ({
                     id: b.id.toString(),
-                    serviceName: 'Auto Detail',
+                    serviceName: (b as any).service_name || 'Auto Detail',
                     date: b.date,
                     time: b.time_window || 'N/A',
                     status: (b.status as BookingStatus) || 'pending',
-                    price: typeof b.total_amount === 'string' ? parseFloat(b.total_amount) : (b.total_amount || 0),
-                    customerAddress: b.address || 'N/A'
+                    price: Number(b.total_amount) || 0,
+                    customerAddress: b.address || 'N/A',
                 })));
             }
 
@@ -218,7 +227,12 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
     // --- User & Vehicle Methods ---
     const updateProfile = async (data: Partial<UserProfile>) => {
-        if (!user) return;
+        if (!user) {
+            // Guest mode: update local state only
+            setUserProfile(prev => prev ? { ...prev, ...data } : null);
+            addNotification({ title: 'Profile Updated', message: 'Your profile changes have been saved.', type: 'success' });
+            return;
+        }
         const supabase = createClient();
 
         const payload: any = {};
@@ -242,7 +256,17 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
     };
 
     const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
-        if (!user) return;
+        if (!user) {
+            // Guest mode: persist to localStorage
+            const newVehicle: Vehicle = { ...vehicle, id: Math.random().toString(36).substr(2, 9) };
+            setVehicles(prev => {
+                const updated = [...prev, newVehicle];
+                localStorage.setItem('guest_vehicles', JSON.stringify(updated));
+                return updated;
+            });
+            addNotification({ title: 'Vehicle Added', message: `${vehicle.year} ${vehicle.make} ${vehicle.model} added to garage.`, type: 'success' });
+            return;
+        }
         const supabase = createClient();
 
         const { error } = await supabase
@@ -267,6 +291,16 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
     };
 
     const removeVehicle = async (id: string) => {
+        if (!user) {
+            // Guest mode: remove from localStorage
+            setVehicles(prev => {
+                const updated = prev.filter(v => v.id !== id);
+                localStorage.setItem('guest_vehicles', JSON.stringify(updated));
+                return updated;
+            });
+            addNotification({ title: 'Vehicle Removed', message: 'Vehicle removed from your garage.', type: 'info' });
+            return;
+        }
         const supabase = createClient();
         const { error } = await supabase
             .from('vehicles')

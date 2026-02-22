@@ -83,7 +83,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
         const month = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}`;
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/booking/availability`,
+          `/api/booking/availability`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -227,7 +227,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {[1, 2, 3, 4, 5].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <div key={step} className="flex items-center">
                 <div
                   className={`
@@ -241,7 +241,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                 >
                   {step}
                 </div>
-                {step < 5 && (
+                {step < 6 && (
                   <div
                     className={`
                       w-12 h-1 mx-2
@@ -259,6 +259,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
               {locale === "es" ? "Horario" : "Schedule"}
             </span>
             <span>{locale === "es" ? "Revisar" : "Review"}</span>
+            <span>{locale === "es" ? "Vehículo" : "Vehicle"}</span>
             <span>{locale === "es" ? "Pago" : "Payment"}</span>
           </div>
         </div>

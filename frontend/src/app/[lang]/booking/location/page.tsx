@@ -68,7 +68,7 @@ export default function LocationPage({ params }: LocationPageProps) {
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/booking/validate-zip`,
+          `/api/booking/validate-zip`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -78,7 +78,7 @@ export default function LocationPage({ params }: LocationPageProps) {
 
         const data = await response.json();
 
-        if (!data.valid) {
+        if (!data.available) {
           setZipError(
             locale === "es"
               ? "Lo sentimos, actualmente no prestamos servicios en esta área"
@@ -172,7 +172,7 @@ export default function LocationPage({ params }: LocationPageProps) {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {[1, 2, 3, 4, 5].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <div key={step} className="flex items-center">
                 <div
                   className={`
@@ -186,7 +186,7 @@ export default function LocationPage({ params }: LocationPageProps) {
                 >
                   {step}
                 </div>
-                {step < 5 && (
+                {step < 6 && (
                   <div
                     className={`
                       w-12 h-1 mx-2
@@ -204,6 +204,7 @@ export default function LocationPage({ params }: LocationPageProps) {
             </span>
             <span>{locale === "es" ? "Horario" : "Schedule"}</span>
             <span>{locale === "es" ? "Revisar" : "Review"}</span>
+            <span>{locale === "es" ? "Vehículo" : "Vehicle"}</span>
             <span>{locale === "es" ? "Pago" : "Payment"}</span>
           </div>
         </div>

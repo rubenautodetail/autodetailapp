@@ -1,9 +1,10 @@
 /**
  * Payment API client
- * Handles communication with backend payment endpoints
+ * Calls Next.js API routes — Strapi no longer required at runtime.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+// All payment endpoints are now Next.js API routes (relative paths)
+const API_URL = '';
 
 export interface PriceCalculation {
     service: {

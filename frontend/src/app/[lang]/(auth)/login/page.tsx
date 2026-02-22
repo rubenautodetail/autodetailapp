@@ -100,7 +100,7 @@ export default function LoginPage() {
                     <p className="text-sm text-[var(--text-secondary)]">
                         Don't have an account?{" "}
                         <Link
-                            href="/register"
+                            href={`/${params.lang}/register`}
                             className="text-[var(--accent)] hover:underline font-medium"
                         >
                             Create Account

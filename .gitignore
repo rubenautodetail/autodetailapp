@@ -45,3 +45,7 @@ exports/
 
 # Misc
 .turbo
+
+# Dev tools (not app code)
+.playwright-mcp/
+mcp-servers/

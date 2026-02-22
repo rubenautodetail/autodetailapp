@@ -735,6 +735,51 @@ export default factories.createCoreController('api::contractor.contractor', ({ s
     },
 
     /**
+     * Admin: Manually create a contractor (bypasses self-registration flow)
+     * POST /api/admin/contractors
+     */
+    async adminCreate(ctx) {
+        try {
+            const { name, email, phone, status } = ctx.request.body;
+
+            if (!name || !email || !phone) {
+                return ctx.badRequest('Name, email, and phone are required');
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return ctx.badRequest('Invalid email address');
+            }
+
+            const existing = await strapi.db.query('api::contractor.contractor').findOne({ where: { email } });
+            if (existing) {
+                return ctx.badRequest('A contractor with this email already exists');
+            }
+
+            const contractor = await strapi.entityService.create('api::contractor.contractor', {
+                data: {
+                    name,
+                    email,
+                    phone,
+                    status: status || 'active',
+                    stripeOnboardingComplete: false,
+                    performanceTier: 'standard',
+                    averageRating: 0,
+                    totalJobs: 0,
+                    completionRate: 1.0,
+                } as any,
+            });
+
+            strapi.log.info(`✅ Admin manually created contractor: ${name} (${email})`);
+
+            ctx.body = { success: true, contractor };
+        } catch (error) {
+            strapi.log.error('Admin create contractor error:', error);
+            ctx.throw(500, `Failed to create contractor: ${error.message}`);
+        }
+    },
+
+    /**
      * Check Stripe onboarding status
      */
     async onboardingStatus(ctx) {

@@ -125,6 +125,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     selectedDate,
     selectedTimeWindow,
     customerInfo,
+    vehicleInfo,
     subtotal,
     serviceFee,
     total,
@@ -171,7 +172,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     try {
       const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
 
-      // 1. Create booking in Strapi
+      // 1. Create booking in Supabase (source of truth for transactional data)
       const booking = await createSupabaseBooking({
         serviceId: typeof selectedService.id === "number" ? selectedService.id : 0,
         addOnIds: selectedAddOns.map((a) => a.id as number),
@@ -188,13 +189,18 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
         subtotal,
         serviceFee,
         total,
+        serviceName: selectedService.name,
+        vehicleMake: vehicleInfo?.make,
+        vehicleModel: vehicleInfo?.model,
+        vehicleYear: vehicleInfo?.year,
+        vehicleColor: vehicleInfo?.color,
       });
 
       const bookingId = booking.document_id;
 
-      // 2. Create payment intent via backend
+      // 2. Create payment intent via Next.js API route (no Strapi required)
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/payments/create-intent`,
+        `/api/payments/create-intent`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -243,7 +249,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {[1, 2, 3, 4, 5].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <div key={step} className="flex items-center">
                 <div
                   className={`
@@ -257,7 +263,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                 >
                   {step}
                 </div>
-                {step < 5 && (
+                {step < 6 && (
                   <div
                     className={`
                       w-12 h-1 mx-2
@@ -273,6 +279,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
             <span>{locale === "es" ? "Ubicación" : "Location"}</span>
             <span>{locale === "es" ? "Horario" : "Schedule"}</span>
             <span>{locale === "es" ? "Revisar" : "Review"}</span>
+            <span>{locale === "es" ? "Vehículo" : "Vehicle"}</span>
             <span className="font-semibold text-blue-600">
               {locale === "es" ? "Pago" : "Payment"}
             </span>

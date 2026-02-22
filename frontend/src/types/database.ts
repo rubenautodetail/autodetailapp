@@ -76,6 +76,47 @@ export interface Database {
                     created_at?: string
                 }
             }
+            add_ons: {
+                Row: {
+                    id: number
+                    document_id: string | null
+                    name: string
+                    name_es: string | null
+                    description: string | null
+                    description_es: string | null
+                    price: string | number
+                    duration_minutes: number | null
+                    sort_order: number | null
+                    is_active: boolean | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    document_id?: string | null
+                    name: string
+                    name_es?: string | null
+                    description?: string | null
+                    description_es?: string | null
+                    price: string | number
+                    duration_minutes?: number | null
+                    sort_order?: number | null
+                    is_active?: boolean | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    document_id?: string | null
+                    name?: string
+                    name_es?: string | null
+                    description?: string | null
+                    description_es?: string | null
+                    price?: string | number
+                    duration_minutes?: number | null
+                    sort_order?: number | null
+                    is_active?: boolean | null
+                    created_at?: string
+                }
+            }
             services: {
                 Row: {
                     id: number
@@ -135,8 +176,12 @@ export interface Database {
                     customer_name: string | null
                     customer_email: string | null
                     customer_phone: string | null
+                    service_name: string | null
                     vehicle_type: string | null
                     vehicle_color: string | null
+                    vehicle_make: string | null
+                    vehicle_model: string | null
+                    vehicle_year: string | null
                     special_instructions: string | null
                     total_amount: string | number
                     payment_status: string | null
@@ -159,8 +204,12 @@ export interface Database {
                     customer_name?: string | null
                     customer_email?: string | null
                     customer_phone?: string | null
+                    service_name?: string | null
                     vehicle_type?: string | null
                     vehicle_color?: string | null
+                    vehicle_make?: string | null
+                    vehicle_model?: string | null
+                    vehicle_year?: string | null
                     special_instructions?: string | null
                     total_amount?: string | number
                     payment_status?: string | null
@@ -182,8 +231,12 @@ export interface Database {
                     customer_name?: string | null
                     customer_email?: string | null
                     customer_phone?: string | null
+                    service_name?: string | null
                     vehicle_type?: string | null
                     vehicle_color?: string | null
+                    vehicle_make?: string | null
+                    vehicle_model?: string | null
+                    vehicle_year?: string | null
                     special_instructions?: string | null
                     total_amount?: string | number
                     payment_status?: string | null

@@ -46,6 +46,11 @@ export async function createSupabaseBooking(data: {
     subtotal: number;
     serviceFee: number;
     total: number;
+    serviceName?: string;
+    vehicleMake?: string;
+    vehicleModel?: string;
+    vehicleYear?: string;
+    vehicleColor?: string;
 }) {
     const supabase = createClient();
 
@@ -65,10 +70,14 @@ export async function createSupabaseBooking(data: {
         customer_phone: data.customerPhone,
         special_instructions: data.specialInstructions,
         total_amount: data.total,
-        // total: data.total, // If both exist, populate both
         status: 'pending',
         payment_status: 'unpaid',
         time_window: data.timeWindow,
+        service_name: data.serviceName || null,
+        vehicle_make: data.vehicleMake || null,
+        vehicle_model: data.vehicleModel || null,
+        vehicle_year: data.vehicleYear || null,
+        vehicle_color: data.vehicleColor || null,
         published_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

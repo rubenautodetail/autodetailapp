@@ -1,8 +1,12 @@
 /**
- * Strapi API client
- * Centralized client for all Strapi API calls with auth token
+ * API client
+ * Services and add-ons are now fetched directly from Supabase.
+ * Strapi is no longer required at runtime.
  */
 
+import { createClient } from '@supabase/supabase-js';
+
+// Kept for any remaining Strapi-backed calls (booking create, etc.)
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN || "";
 
@@ -14,6 +18,15 @@ function getHeaders(): HeadersInit {
     headers["Authorization"] = `Bearer ${API_TOKEN}`;
   }
   return headers;
+}
+
+// Supabase client for direct data fetching (replaces Strapi for services/add-ons)
+function getSupabaseClient() {
+  // No Database generic — keeps TS simple, we type rows explicitly in each mapper
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 }
 
 // ─── Service Types (matching Strapi response) ───
@@ -77,54 +90,92 @@ export interface StrapiBooking {
 // ─── API Functions ───
 
 /**
- * Fetch all services from Strapi
+ * Fetch all services from Supabase (Strapi no longer required at runtime)
  */
 export async function fetchServices(locale: string = "en"): Promise<StrapiService[]> {
-  const response = await fetch(
-    `${API_URL}/api/services?locale=${locale}&sort=sortOrder:asc`,
-    { headers: getHeaders(), cache: "no-store" }
-  );
+  const supabase = getSupabaseClient();
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch services: ${response.status}`);
+  // Try locale-specific services first, fall back to all services
+  let { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('locale', locale)
+    .order('sort_order', { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    // Fallback: get all services regardless of locale
+    const { data: allData, error: allError } = await supabase
+      .from('services')
+      .select('*')
+      .order('sort_order', { ascending: true });
+
+    if (allError) throw new Error(`Failed to fetch services: ${allError.message}`);
+    data = allData || [];
   }
 
-  const json = await response.json();
-  return json.data;
+  // Map Supabase column names to the StrapiService interface
+  return (data || []).map((row) => ({
+    id: row.id,
+    documentId: row.document_id || String(row.id),
+    name: row.name,
+    slug: row.slug,
+    description: row.description || '',
+    basePrice: Number(row.base_price),
+    durationMinutes: row.duration_minutes || 60,
+    checklist: Array.isArray(row.checklist) ? (row.checklist as string[]) : null,
+    sortOrder: row.sort_order || 0,
+    locale: row.locale || locale,
+  }));
 }
 
 /**
- * Fetch all add-ons from Strapi
+ * Fetch all active add-ons from Supabase (Strapi no longer required at runtime)
  */
 export async function fetchAddOns(locale: string = "en"): Promise<StrapiAddOn[]> {
-  const response = await fetch(
-    `${API_URL}/api/add-ons?locale=${locale}&sort=sortOrder:asc`,
-    { headers: getHeaders(), cache: "no-store" }
-  );
+  const supabase = getSupabaseClient();
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch add-ons: ${response.status}`);
-  }
+  const { data, error } = await supabase
+    .from('add_ons')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
 
-  const json = await response.json();
-  return json.data;
+  if (error) throw new Error(`Failed to fetch add-ons: ${error.message}`);
+
+  // Map Supabase column names to the StrapiAddOn interface
+  return (data || []).map((row) => ({
+    id: row.id,
+    documentId: row.document_id || String(row.id),
+    // Use Spanish name if locale is 'es' and it exists
+    name: (locale === 'es' && row.name_es) ? row.name_es : row.name,
+    slug: null,
+    description: (locale === 'es' && row.description_es) ? row.description_es : (row.description || ''),
+    price: Number(row.price),
+    durationMinutes: row.duration_minutes || 30,
+    checklist: null,
+    sortOrder: row.sort_order || 0,
+    locale,
+  }));
 }
 
 /**
  * Fetch all active service zones from Strapi
+ * NOTE: Returns empty array gracefully if Strapi is offline
  */
 export async function fetchServiceZones(): Promise<StrapiServiceZone[]> {
-  const response = await fetch(
-    `${API_URL}/api/service-zones?filters[isActive][$eq]=true`,
-    { headers: getHeaders(), cache: "no-store" }
-  );
+  try {
+    const response = await fetch(
+      `${API_URL}/api/service-zones?filters[isActive][$eq]=true`,
+      { headers: getHeaders(), cache: "no-store" }
+    );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch service zones: ${response.status}`);
+    if (!response.ok) return [];
+
+    const json = await response.json();
+    return json.data || [];
+  } catch {
+    return [];
   }
-
-  const json = await response.json();
-  return json.data;
 }
 
 /**
