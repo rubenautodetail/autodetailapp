@@ -3,7 +3,7 @@ import { i18n } from './i18n-config'
 
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
     // Check if there is any supported locale in the pathname
     const pathname = request.nextUrl.pathname
     const pathnameIsMissingLocale = i18n.locales.every(
