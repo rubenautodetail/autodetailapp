@@ -1,10 +1,17 @@
 /**
  * Strapi API Client
  * Typed fetcher utilities for Strapi v5 backend
+ * NOTE: Booking endpoints now use Next.js API routes, not Strapi.
  */
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
+
+// Base URL for Next.js API routes (relative on client, absolute on server)
+function getNextApiBase(): string {
+    if (typeof window !== 'undefined') return ''; // browser — relative URL
+    return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+}
 
 // Debug log to verify environment variable is loaded
 if (typeof window !== 'undefined') {
@@ -209,24 +216,52 @@ class ApiClient {
         return this.request<T>(endpoint, { method: 'DELETE' });
     }
 
-    // ZIP Validation
+    // ZIP Validation — calls Next.js API route, not Strapi
     async validateZip(zipCode: string): Promise<ZipValidationResponse> {
-        return this.postRaw<ZipValidationResponse>('/booking/validate-zip', { zipCode });
+        const base = getNextApiBase();
+        const response = await fetch(`${base}/api/booking/validate-zip`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ zipCode }),
+        });
+        if (!response.ok) throw new Error(`validate-zip failed: ${response.status}`);
+        return response.json();
     }
 
-    // Price Calculation
+    // Price Calculation — calls Next.js API route, not Strapi
     async calculatePrice(serviceId: string, addOnIds: string[], zipCode: string): Promise<PriceCalculation> {
-        return this.postRaw<PriceCalculation>('/booking/calculate-price', { serviceId, addOnIds, zipCode });
+        const base = getNextApiBase();
+        const response = await fetch(`${base}/api/booking/calculate-price`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serviceId, addOnIds, zipCode }),
+        });
+        if (!response.ok) throw new Error(`calculate-price failed: ${response.status}`);
+        return response.json();
     }
 
-    // Availability Check
+    // Availability Check — calls Next.js API route, not Strapi
     async getAvailability(zipCode: string, serviceId: string | undefined, month: string): Promise<AvailabilityResponse> {
-        return this.postRaw<AvailabilityResponse>('/booking/availability', { zipCode, serviceId, month });
+        const base = getNextApiBase();
+        const response = await fetch(`${base}/api/booking/availability`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ zipCode, serviceId, month }),
+        });
+        if (!response.ok) throw new Error(`availability failed: ${response.status}`);
+        return response.json();
     }
 
-    // Slot Hold
+    // Slot Hold — calls Next.js API route, not Strapi
     async holdSlot(zipCode: string, date: string, timeWindow: string, duration: number): Promise<SlotHoldResponse> {
-        return this.postRaw<SlotHoldResponse>('/booking/hold-slot', { zipCode, date, timeWindow, duration });
+        const base = getNextApiBase();
+        const response = await fetch(`${base}/api/booking/hold-slot`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ zipCode, date, timeWindow, duration }),
+        });
+        if (!response.ok) throw new Error(`hold-slot failed: ${response.status}`);
+        return response.json();
     }
 }
 

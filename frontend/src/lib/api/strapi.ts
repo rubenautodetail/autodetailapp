@@ -187,7 +187,9 @@ export async function validateZip(zipCode: string): Promise<{
   available: boolean;
   priceMultiplier: number;
 }> {
-  const response = await fetch(`${API_URL}/api/booking/validate-zip`, {
+  // Uses the Next.js API route (not Strapi) — works locally and in production
+  const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+  const response = await fetch(`${baseUrl}/api/booking/validate-zip`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ zipCode }),
@@ -227,7 +229,9 @@ export async function createBooking(data: {
   serviceFee: number;
   total: number;
 }): Promise<StrapiBooking> {
-  const response = await fetch(`${API_URL}/api/booking/create`, {
+  // Uses the Next.js API route (not Strapi) — works locally and in production
+  const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+  const response = await fetch(`${baseUrl}/api/booking/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

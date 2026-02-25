@@ -1,27 +1,33 @@
 /**
  * Contractor API client
- * Handles all contractor-specific backend calls
+ * Calls Next.js API routes instead of Strapi.
+ * All contractor data comes from Supabase via /api/contractors/* routes.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+// Base URL — relative on client (browser), absolute on server (SSR/RSC)
+function getBase(): string {
+    if (typeof window !== 'undefined') return '';
+    return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+}
 
-async function getHeaders(token?: string): Promise<HeadersInit> {
-    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('supabase_access_token') : '');
-
+function buildHeaders(token?: string): HeadersInit {
+    const activeToken =
+        token ||
+        (typeof window !== 'undefined' ? localStorage.getItem('supabase_access_token') : '') ||
+        '';
     return {
-        "Content-Type": "application/json",
-        ...(activeToken ? { "Authorization": `Bearer ${activeToken}` } : {}),
+        'Content-Type': 'application/json',
+        ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
     };
 }
 
 /**
- * Fetch dashboard data
+ * Fetch dashboard data (Active jobs, earnings summary, today's schedule)
  */
 export async function fetchDashboard(token?: string): Promise<any> {
-    const headers = await getHeaders(token);
-    const response = await fetch(`${API_URL}/api/contractors/dashboard`, {
-        headers,
-        cache: "no-store",
+    const response = await fetch(`${getBase()}/api/contractors/dashboard`, {
+        headers: buildHeaders(token),
+        cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -32,21 +38,19 @@ export async function fetchDashboard(token?: string): Promise<any> {
 }
 
 /**
- * Fetch detailed job info
+ * Fetch detailed job info by booking ID
  */
 export async function fetchJobDetails(bookingId: string, token?: string): Promise<any> {
-    const headers = await getHeaders(token);
-    const response = await fetch(`${API_URL}/api/bookings/${bookingId}?populate=*`, {
-        headers,
-        cache: "no-store",
+    const response = await fetch(`${getBase()}/api/contractors/jobs/${bookingId}`, {
+        headers: buildHeaders(token),
+        cache: 'no-store',
     });
 
     if (!response.ok) {
         throw new Error(`Failed to fetch job details: ${response.status}`);
     }
 
-    const { data } = await response.json();
-    return data;
+    return response.json();
 }
 
 export interface OnboardingStatus {
@@ -63,10 +67,9 @@ export interface OnboardingStatus {
  * Initiate Stripe Connect onboarding
  */
 export async function initiateOnboarding(token?: string): Promise<{ success: boolean; url: string }> {
-    const headers = await getHeaders(token);
-    const response = await fetch(`${API_URL}/api/contractors/onboard`, {
-        method: "POST",
-        headers,
+    const response = await fetch(`${getBase()}/api/contractors/onboard`, {
+        method: 'POST',
+        headers: buildHeaders(token),
     });
 
     if (!response.ok) {
@@ -77,13 +80,12 @@ export async function initiateOnboarding(token?: string): Promise<{ success: boo
 }
 
 /**
- * Fetch current onboarding status from backend
+ * Fetch current onboarding status
  */
 export async function fetchOnboardingStatus(token?: string): Promise<OnboardingStatus> {
-    const headers = await getHeaders(token);
-    const response = await fetch(`${API_URL}/api/contractors/onboarding-status`, {
-        headers,
-        cache: "no-store",
+    const response = await fetch(`${getBase()}/api/contractors/onboarding-status`, {
+        headers: buildHeaders(token),
+        cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -97,10 +99,10 @@ export async function fetchOnboardingStatus(token?: string): Promise<OnboardingS
  * Accept a job
  */
 export async function acceptJob(bookingId: string, token?: string): Promise<{ success: boolean }> {
-    const headers = await getHeaders(token);
-    const response = await fetch(`${API_URL}/api/contractors/accept-job/${bookingId}`, {
-        method: "POST",
-        headers,
+    const response = await fetch(`${getBase()}/api/contractors/accept-job`, {
+        method: 'POST',
+        headers: buildHeaders(token),
+        body: JSON.stringify({ bookingId }),
     });
 
     if (!response.ok) {
@@ -114,10 +116,10 @@ export async function acceptJob(bookingId: string, token?: string): Promise<{ su
  * Reject a job
  */
 export async function rejectJob(bookingId: string, token?: string): Promise<{ success: boolean }> {
-    const headers = await getHeaders(token);
-    const response = await fetch(`${API_URL}/api/contractors/reject-job/${bookingId}`, {
-        method: "POST",
-        headers,
+    const response = await fetch(`${getBase()}/api/contractors/reject-job`, {
+        method: 'POST',
+        headers: buildHeaders(token),
+        body: JSON.stringify({ bookingId }),
     });
 
     if (!response.ok) {
@@ -128,15 +130,20 @@ export async function rejectJob(bookingId: string, token?: string): Promise<{ su
 }
 
 /**
- * Complete a job
+ * Complete a job (with photos)
  */
 export async function completeJob(
     bookingId: string,
     data: { checklist: string; beforePhotos: File[]; afterPhotos: File[] },
     token?: string
 ): Promise<{ success: boolean }> {
-    const headers = await getHeaders(token);
+    const activeToken =
+        token ||
+        (typeof window !== 'undefined' ? localStorage.getItem('supabase_access_token') : '') ||
+        '';
+
     const formData = new FormData();
+    formData.append('bookingId', bookingId);
     formData.append('checklist', data.checklist);
 
     data.beforePhotos.forEach((photo, index) => {
@@ -147,14 +154,9 @@ export async function completeJob(
         formData.append(`after_photo_${index}`, photo);
     });
 
-    // Note: When using FormData, fetch sets the Content-Type automatically with boundary
-    // We need to remove Content-Type from headers if it was set to application/json
-    const mutableHeaders = { ...headers } as any;
-    delete mutableHeaders["Content-Type"];
-
-    const response = await fetch(`${API_URL}/api/contractors/complete-job/${bookingId}`, {
-        method: "POST",
-        headers: mutableHeaders,
+    const response = await fetch(`${getBase()}/api/contractors/complete-job`, {
+        method: 'POST',
+        headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
         body: formData,
     });
 
