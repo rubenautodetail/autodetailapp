@@ -43,30 +43,27 @@ export default function MapboxAddressInput({
 
   const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-  const fetchSuggestions = useCallback(
-    async (value: string) => {
-      if (!value || value.length < 3 || !TOKEN) {
-        setSuggestions([]);
-        return;
-      }
+  const fetchSuggestions = useCallback(async (value: string) => {
+    if (!value || value.length < 3 || !TOKEN) {
+      setSuggestions([]);
+      return;
+    }
 
-      setLoading(true);
-      try {
-        const encoded = encodeURIComponent(value);
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${TOKEN}&country=us&types=address&autocomplete=true&limit=5`;
-        const res = await fetch(url);
-        const data = await res.json();
-        setSuggestions(data.features ?? []);
-        setOpen(true);
-      } catch (err) {
-        console.error("Mapbox geocoding error:", err);
-        setSuggestions([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [TOKEN]
-  );
+    setLoading(true);
+    try {
+      const encoded = encodeURIComponent(value);
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${TOKEN}&country=us&types=address&autocomplete=true&limit=5`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setSuggestions(data.features ?? []);
+      setOpen(true);
+    } catch (err) {
+      console.error("Mapbox geocoding error:", err);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [TOKEN]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -111,21 +108,6 @@ export default function MapboxAddressInput({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  if (!TOKEN) {
-    return (
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          onAddressSelect({ address: e.target.value, city: "", state: "FL", zipCode: "", latitude: 0, longitude: 0 });
-        }}
-        placeholder={placeholder ?? (locale === "es" ? "Ingresa tu dirección" : "Enter your address")}
-        className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
-      />
-    );
-  }
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
