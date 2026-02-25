@@ -1,35 +1,16 @@
-/**
- * POST /api/contractors/onboard
- * Initiates Stripe Connect onboarding for the authenticated contractor.
- * Returns a stub URL if Stripe is not configured.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-function getSupabase() {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-}
+import { createAuthClient, createApiClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
     try {
         const authHeader = req.headers.get('Authorization');
         const token = authHeader?.replace('Bearer ', '').trim();
 
-        if (!token) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabase = getSupabase();
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const { user, error: authError } = await createAuthClient(token);
+        if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        // If Stripe secret key is configured, initiate Stripe Connect
         if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder') {
             try {
                 const Stripe = (await import('stripe')).default;
@@ -37,7 +18,7 @@ export async function POST(req: NextRequest) {
 
                 const account = await stripe.accounts.create({ type: 'express' });
 
-                // Save the account ID to the profile
+                const supabase = createApiClient();
                 await supabase
                     .from('profiles')
                     .update({ stripe_account_id: account.id } as any)
@@ -54,11 +35,9 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ success: true, url: accountLink.url });
             } catch (stripeError) {
                 console.error('Stripe onboarding error:', stripeError);
-                // Fall through to stub response
             }
         }
 
-        // Stub response when Stripe is not configured
         return NextResponse.json({
             success: true,
             url: '/en/contractor/settings?onboarding=pending',

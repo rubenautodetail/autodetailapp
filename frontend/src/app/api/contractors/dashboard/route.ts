@@ -5,34 +5,23 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-function getSupabase() {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-}
+import { createAuthClient, createApiClient } from '@/lib/supabase/server';
 
 export async function GET(req: NextRequest) {
     try {
-        // Extract bearer token from Authorization header
         const authHeader = req.headers.get('Authorization');
         const token = authHeader?.replace('Bearer ', '').trim();
-
-        // Use service-role key if available for RLS bypass, else anon key
-        const supabase = getSupabase();
 
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Get user from token
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        const { user, error: authError } = await createAuthClient(token);
         if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const supabase = createApiClient();
         const today = new Date().toISOString().split('T')[0];
 
         // Fetch today's assigned bookings for this contractor
@@ -52,9 +41,9 @@ export async function GET(req: NextRequest) {
             .from('bookings')
             .select('*', { count: 'exact', head: true })
             .eq('contractor_id', user.id)
-            .in('status', ['confirmed', 'en_route', 'working']);
+            .in('status', ['confirmed', 'in_progress', 'working']);
 
-        // Fetch earnings
+        // Fetch completed bookings for earnings
         const { data: completedBookings } = await supabase
             .from('bookings')
             .select('total_amount, created_at')
@@ -73,7 +62,6 @@ export async function GET(req: NextRequest) {
             .filter((b) => new Date(b.created_at) >= weekAgo)
             .reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0);
 
-        // Map bookings to dashboard shape
         const todaySchedule = (todayBookings ?? []).map((b) => ({
             id: b.id,
             service: { name: (b as any).service_name || 'Auto Detail' },

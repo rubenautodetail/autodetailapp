@@ -29,16 +29,36 @@ const ContractorContext = createContext<ContractorContextType | undefined>(undef
 
 // Helper to map Supabase booking to ServiceRequest
 function mapBookingToRequest(booking: any): ServiceRequest {
+  // Build vehicle name from individual columns; fall back gracefully
+  const vehicleParts = [
+    booking.vehicle_year,
+    booking.vehicle_make,
+    booking.vehicle_model,
+    booking.vehicle_color,
+  ].filter(Boolean);
+  const vehicleName = vehicleParts.length > 0 ? vehicleParts.join(' ') : 'Vehicle';
+
+  // Build address string, filtering empty parts
+  const addressParts = [
+    booking.address,
+    booking.city,
+    booking.state,
+    booking.zip_code,
+  ].filter(Boolean);
+  const address = addressParts.join(', ');
+
   return {
     id: booking.id.toString(),
     customerId: booking.customer_email || 'guest',
     customerName: booking.customer_name || 'Guest Customer',
     vehicleId: 'V-N/A',
-    vehicleName: `${booking.vehicle_year || ''} ${booking.vehicle_type || 'Vehicle'} ${booking.vehicle_color || ''}`.trim(),
+    vehicleName,
     serviceId: 'S-N/A',
-    serviceName: 'Auto Detailing', // Booking table doesn't have names, just IDs
-    address: `${booking.address || ''}, ${booking.city || ''}, ${booking.state || ''} ${booking.zip_code || ''}`.trim(),
-    estimatedTotal: typeof booking.total_amount === 'string' ? parseFloat(booking.total_amount) : (booking.total_amount || 0),
+    serviceName: booking.service_name || 'Auto Detailing',
+    address,
+    estimatedTotal: typeof booking.total_amount === 'string'
+      ? parseFloat(booking.total_amount)
+      : (booking.total_amount || 0),
     notes: booking.special_instructions,
     status: (booking.status as RequestStatus) || 'pending',
     timestamp: booking.created_at || new Date().toISOString(),
@@ -105,10 +125,11 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
       req.id === id ? { ...req, status } : req
     ));
 
+    // IDs are UUIDs — do NOT use parseInt which returns NaN for UUIDs
     const { error } = await supabase
       .from('bookings')
       .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', parseInt(id));
+      .eq('id', id);
 
     if (error) {
       console.error('Error updating status:', error);

@@ -23,11 +23,15 @@ function CheckoutForm({
   onSuccess,
   isProcessing: externalIsProcessing,
   total,
+  confirmationCode,
+  serviceName,
 }: {
   locale: "en" | "es";
   onSuccess: () => void;
   isProcessing: boolean;
   total: number;
+  confirmationCode: string;
+  serviceName: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -49,10 +53,15 @@ function CheckoutForm({
       return;
     }
 
+    const returnUrl = new URL(`${window.location.origin}/${locale}/booking/confirmation`);
+    returnUrl.searchParams.set('code', confirmationCode);
+    returnUrl.searchParams.set('service', encodeURIComponent(serviceName));
+    returnUrl.searchParams.set('total', total.toFixed(2));
+
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/${locale}/booking/confirmation`,
+        return_url: returnUrl.toString(),
       },
     });
 
@@ -139,6 +148,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookingCreated, setBookingCreated] = useState(false);
+  const [confirmationCode, setConfirmationCode] = useState('');
 
   // Redirect if prerequisites not met
   useEffect(() => {
@@ -197,6 +207,8 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
       });
 
       const bookingId = booking.document_id;
+      // Capture confirmation code so the return_url can display it
+      setConfirmationCode(booking.confirmation_code || '');
 
       // 2. Create payment intent via Next.js API route (no Strapi required)
       const response = await fetch(
@@ -354,6 +366,8 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                   onSuccess={() => setPaymentStatus("paid")}
                   isProcessing={isProcessing}
                   total={total}
+                  confirmationCode={confirmationCode}
+                  serviceName={selectedService.name}
                 />
               </StripeProvider>
             ) : (
