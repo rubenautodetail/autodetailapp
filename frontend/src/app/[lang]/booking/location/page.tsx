@@ -306,6 +306,7 @@ export default function LocationPage({ params }: LocationPageProps) {
                         : "Enter your full address"
                     }
                     locale={locale}
+                    zipCode={zipCode}
                   />
 
                   {addressError && (

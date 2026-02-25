@@ -25,6 +25,7 @@ interface MapboxAddressInputProps {
   initialValue?: string;
   locale?: "en" | "es";
   className?: string;
+  zipCode?: string; // Used to bias results to the right area
 }
 
 export default function MapboxAddressInput({
@@ -33,6 +34,7 @@ export default function MapboxAddressInput({
   initialValue = "",
   locale = "en",
   className = "",
+  zipCode = "",
 }: MapboxAddressInputProps) {
   const [query, setQuery] = useState(initialValue);
   const [suggestions, setSuggestions] = useState<MapboxFeature[]>([]);
@@ -51,7 +53,9 @@ export default function MapboxAddressInput({
 
     setLoading(true);
     try {
-      const encoded = encodeURIComponent(value);
+      // Append ZIP to query so Mapbox returns results near the right area
+      const searchQuery = zipCode ? `${value}, ${zipCode}` : value;
+      const encoded = encodeURIComponent(searchQuery);
       const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${TOKEN}&country=us&types=address&autocomplete=true&limit=5`;
       const res = await fetch(url);
       const data = await res.json();
@@ -63,7 +67,7 @@ export default function MapboxAddressInput({
     } finally {
       setLoading(false);
     }
-  }, [TOKEN]);
+  }, [TOKEN, zipCode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
