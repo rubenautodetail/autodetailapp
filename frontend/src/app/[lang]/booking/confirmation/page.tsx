@@ -96,7 +96,7 @@ function ConfirmationContent({ locale }: { locale: string }) {
               href={`/${locale}`}
               className="
                 block w-full bg-accent-gold text-bg-primary font-bold py-4 rounded-xl
-                hover:bg-accent-gold-hover hover:shadow-lg transition-all duration-200
+                hover:opacity-90 hover:shadow-lg transition-all duration-200
                 text-center shadow-glow
               "
             >

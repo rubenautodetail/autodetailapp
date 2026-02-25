@@ -108,7 +108,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     });
 
     nextStep();
-    router.push(`/${locale}/booking/details`);
+    router.push(`/${locale}/booking/payment`);
   };
 
   const handleBack = () => {
