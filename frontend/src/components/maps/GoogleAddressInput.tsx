@@ -60,13 +60,18 @@ export default function GoogleAddressInput({
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=${locale}&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=${locale}`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      if (window.google?.maps?.places) {
-        setMapsLoaded(true);
-      }
+      // Poll until the places library is fully initialized
+      const checkReady = setInterval(() => {
+        if (window.google?.maps?.places) {
+          setMapsLoaded(true);
+          clearInterval(checkReady);
+        }
+      }, 100);
+      setTimeout(() => clearInterval(checkReady), 10000);
     };
     document.head.appendChild(script);
   }, [locale]);

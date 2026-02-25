@@ -6,8 +6,8 @@ import dynamic from "next/dynamic";
 import { useBooking, Location } from "@/contexts";
 import { PricingSummary } from "@/components/booking";
 
-const GoogleAddressInput = dynamic(
-  () => import("@/components/maps/GoogleAddressInput"),
+const MapboxAddressInput = dynamic(
+  () => import("@/components/maps/MapboxAddressInput"),
   { ssr: false }
 );
 
@@ -298,13 +298,14 @@ export default function LocationPage({ params }: LocationPageProps) {
                 </h3>
 
                 <div className="space-y-2">
-                  <GoogleAddressInput
+                  <MapboxAddressInput
                     onAddressSelect={handleAddressSelect}
                     placeholder={
                       locale === "es"
                         ? "Ingresa tu dirección completa"
                         : "Enter your full address"
                     }
+                    locale={locale}
                   />
 
                   {addressError && (
