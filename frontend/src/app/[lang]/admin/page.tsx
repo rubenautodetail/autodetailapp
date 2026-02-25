@@ -13,14 +13,8 @@ interface Stats {
   revenue: { total: number };
 }
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || "";
-
 async function fetchAdminStats(): Promise<Stats> {
-  const res = await fetch(`${STRAPI_URL}/api/admin/stats`, {
-    headers: { "x-admin-secret": ADMIN_SECRET },
-    cache: "no-store",
-  });
+  const res = await fetch("/api/admin/stats", { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch stats");
   return res.json();
 }

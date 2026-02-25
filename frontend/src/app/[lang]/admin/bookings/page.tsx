@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 interface AdminBookingsProps {
   params: Promise<{ lang: "en" | "es" }>;
@@ -16,13 +17,9 @@ interface Booking {
   scheduledDate?: string;
   timeWindow?: string;
   createdAt: string;
-  service?: { name: string };
-  contractor?: { name: string };
+  serviceName?: string;
   zipCode?: string;
 }
-
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || "";
 
 const STATUS_OPTIONS = ["all", "pending", "pending_assignment", "confirmed", "in_progress", "completed", "cancelled"] as const;
 
@@ -34,6 +31,8 @@ const STATUS_COLORS: Record<string, string> = {
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };
+
+const PAGE_SIZE = 25;
 
 export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   const { lang } = use(params);
@@ -51,27 +50,50 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     noBookings: locale === "es" ? "No hay reservas" : "No bookings found",
     customer: locale === "es" ? "Cliente" : "Customer",
     service: locale === "es" ? "Servicio" : "Service",
-    contractor: locale === "es" ? "Contratista" : "Contractor",
     status: locale === "es" ? "Estado" : "Status",
     date: locale === "es" ? "Fecha" : "Date",
     total: locale === "es" ? "Total" : "Total",
-    unassigned: locale === "es" ? "Sin asignar" : "Unassigned",
   };
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
-      const qs = new URLSearchParams({ page: String(page), pageSize: "25" });
-      if (statusFilter !== "all") qs.set("status", statusFilter);
-      const res = await fetch(`${STRAPI_URL}/api/admin/bookings?${qs}`, {
-        headers: { "x-admin-secret": ADMIN_SECRET },
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      const json = await res.json();
-      setBookings(json.data || []);
-      setTotal(json.meta?.total || 0);
-    } catch {
+      const supabase = createClient();
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query: any = supabase
+        .from("bookings")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapped: Booking[] = (data ?? []).map((b: any) => ({
+        id: b.id,
+        customerName: b.customer_name ?? undefined,
+        customerEmail: b.customer_email ?? undefined,
+        status: b.status ?? "pending",
+        total: b.total_amount != null ? parseFloat(String(b.total_amount)) : undefined,
+        scheduledDate: b.date ?? undefined,
+        timeWindow: b.time_window ?? undefined,
+        createdAt: b.created_at,
+        serviceName: b.service_name ?? undefined,
+        zipCode: b.zip_code ?? undefined,
+      }));
+
+      setBookings(mapped);
+      setTotal(count ?? 0);
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
       setBookings([]);
     } finally {
       setLoading(false);
@@ -80,7 +102,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
 
-  const totalPages = Math.ceil(total / 25);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -90,7 +112,9 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
           {t.back}
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
-        <p className="text-sm text-gray-500">{total} {locale === "es" ? "reservas en total" : "bookings total"}</p>
+        <p className="text-sm text-gray-500">
+          {total} {locale === "es" ? "reservas en total" : "bookings total"}
+        </p>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6">
@@ -106,7 +130,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                   : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
               }`}
             >
-              {s === "all" ? (locale === "es" ? "Todos" : "All") : s.replace("_", " ")}
+              {s === "all" ? (locale === "es" ? "Todos" : "All") : s.replace(/_/g, " ")}
             </button>
           ))}
         </div>
@@ -126,7 +150,6 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.customer}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.service}</th>
-                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.contractor}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.status}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.date}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.total}</th>
@@ -141,18 +164,11 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                         {b.zipCode && <div className="text-xs text-gray-400">{b.zipCode}</div>}
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-700">
-                        {b.service?.name || "—"}
-                      </td>
-                      <td className="px-5 py-4">
-                        {b.contractor?.name ? (
-                          <span className="text-sm text-gray-700">{b.contractor.name}</span>
-                        ) : (
-                          <span className="text-xs text-orange-600 font-medium">{t.unassigned}</span>
-                        )}
+                        {b.serviceName || "—"}
                       </td>
                       <td className="px-5 py-4">
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${STATUS_COLORS[b.status] || "bg-gray-100 text-gray-700"}`}>
-                          {b.status.replace("_", " ")}
+                          {b.status.replace(/_/g, " ")}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-500">
@@ -164,7 +180,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                         )}
                       </td>
                       <td className="px-5 py-4 text-sm font-medium text-gray-900">
-                        {b.total ? `$${b.total.toFixed(2)}` : "—"}
+                        {b.total != null ? `$${b.total.toFixed(2)}` : "—"}
                       </td>
                     </tr>
                   ))}
