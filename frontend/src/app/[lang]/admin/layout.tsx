@@ -9,6 +9,7 @@ const NAV = [
   { segment: "admin", label: "Dashboard", labelEs: "Panel", icon: "📊", exact: true },
   { segment: "admin/bookings", label: "Bookings", labelEs: "Reservas", icon: "📅", exact: false },
   { segment: "admin/contractors", label: "Contractors", labelEs: "Contratistas", icon: "🔧", exact: false },
+  { segment: "admin/services", label: "Services", labelEs: "Servicios", icon: "🛁", exact: false },
   { segment: "admin/users", label: "Users", labelEs: "Usuarios", icon: "👥", exact: false },
   { segment: "admin/payments", label: "Payments", labelEs: "Pagos", icon: "💳", exact: false },
 ];

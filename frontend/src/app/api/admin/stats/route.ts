@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAuthClient, createServiceClient } from "@/lib/supabase/server";
+import { createAuthClient, createClient, createServiceClient } from "@/lib/supabase/server";
 
-/**
- * Verifies the caller is an authenticated admin.
- * When ADMIN_SECRET is not configured (dev mode), all requests are allowed.
- * When ADMIN_SECRET is configured, the caller must either:
- *   (a) Send it as the Bearer token, OR
- *   (b) Be a Supabase user with role='admin'
- */
 async function verifyAdmin(req: NextRequest): Promise<boolean> {
   const adminSecret = process.env.ADMIN_SECRET;
 
-  // Dev mode: no secret configured → allow all (mirrors the cron/ZIP pattern)
-  if (!adminSecret) return true;
+  const token = req.headers.get("Authorization")?.replace("Bearer ", "").trim();
 
-  const authHeader = req.headers.get("Authorization");
-  const token = authHeader?.replace("Bearer ", "").trim();
+  if (adminSecret && token === adminSecret) return true;
 
-  if (token === adminSecret) return true;
+  // Cookie-based session (admin browsing from UI)
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const db = createServiceClient();
+      const { data: p } = await db.from("profiles").select("role").eq("id", user.id).single();
+      if ((p as { role?: string } | null)?.role === "admin") return true;
+    }
+  } catch { /* fall through */ }
 
   if (!token) return false;
 
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   const [{ data: bookings }, { data: profiles }] = await Promise.all([
     supabase.from("bookings").select("status, total_amount"),
-    supabase.from("profiles").select("role"),
+    supabase.from("profiles").select("role, approval_status"),
   ]);
 
   const bookingList = bookings ?? [];
@@ -75,12 +75,11 @@ export async function GET(req: NextRequest) {
     (p) => p.role === "contractor"
   ).length;
 
-  // Pending = contractors who haven't completed Stripe onboarding yet
+  // Pending = applicants waiting for admin approval
   const { data: pendingProfiles } = await supabase
     .from("profiles")
     .select("id")
-    .eq("role", "contractor")
-    .or("onboarding_complete.is.null,onboarding_complete.eq.false");
+    .eq("approval_status", "pending");
 
   const pendingContractors = pendingProfiles?.length ?? 0;
 
@@ -88,7 +87,7 @@ export async function GET(req: NextRequest) {
     contractors: {
       total: activeContractors,
       pending: pendingContractors,
-      active: activeContractors - pendingContractors,
+      active: activeContractors,
     },
     bookings: {
       total: totalBookings,
