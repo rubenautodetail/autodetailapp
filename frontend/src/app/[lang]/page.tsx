@@ -274,6 +274,39 @@ export default async function LandingPage({
                 </div>
             </section>
 
+            {/* ─── Work With Us ───────────────────────────────────────────────── */}
+            <section className="py-16 px-6 border-y border-white/5">
+                <div className="max-w-5xl mx-auto">
+                    <div
+                        className="rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(208,176,120,0.07) 0%, rgba(208,176,120,0.02) 100%)',
+                            border: '1px solid rgba(208,176,120,0.12)',
+                        }}
+                    >
+                        <div className="text-center sm:text-left space-y-2">
+                            <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
+                                {locale === 'es' ? 'Para profesionales' : 'For professionals'}
+                            </p>
+                            <h2 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                                {locale === 'es' ? '¿Eres detallador? Trabaja con nosotros.' : 'Are you a detailer? Work with us.'}
+                            </h2>
+                            <p className="text-white/45 text-sm max-w-md">
+                                {locale === 'es'
+                                    ? 'Gana el 85% por trabajo, establece tu horario y haz crecer tu negocio en nuestra plataforma.'
+                                    : 'Keep 85% per job, set your schedule, and grow your business on our platform.'}
+                            </p>
+                        </div>
+                        <Link
+                            href={`/${locale}/contractors`}
+                            className="shrink-0 btn-primary px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)] whitespace-nowrap"
+                        >
+                            {locale === 'es' ? 'Trabaja con nosotros →' : 'Work with us →'}
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
             {/* ─── Final CTA ───────────────────────────────────────────────────── */}
             <section className="py-24 px-6">
                 <div className="max-w-2xl mx-auto text-center space-y-8">
@@ -331,6 +364,9 @@ export default async function LandingPage({
                         </Link>
                         <Link href={`/${locale}/privacy`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Privacidad' : 'Privacy'}
+                        </Link>
+                        <Link href={`/${locale}/contractors`} className="hover:text-white/60 transition-colors">
+                            {locale === 'es' ? 'Trabaja con nosotros' : 'Work with us'}
                         </Link>
                         <Link href={`/${locale}/login`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Iniciar sesión' : 'Log in'}

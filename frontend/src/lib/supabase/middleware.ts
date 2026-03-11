@@ -1,10 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Extract locale from path (/en/... or /es/...).
+ * Falls back to 'en' for unlocalized paths.
+ */
+function getLocale(path: string): string {
+    const match = path.match(/^\/([a-z]{2})\//)
+    return match ? match[1] : 'en'
+}
+
 export async function updateSession(request: NextRequest) {
-    let supabaseResponse = NextResponse.next({
-        request,
-    })
+    let supabaseResponse = NextResponse.next({ request })
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,12 +22,10 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) =>
+                    cookiesToSet.forEach(({ name, value }) =>
                         request.cookies.set(name, value)
                     )
-                    supabaseResponse = NextResponse.next({
-                        request,
-                    })
+                    supabaseResponse = NextResponse.next({ request })
                     cookiesToSet.forEach(({ name, value, options }) =>
                         supabaseResponse.cookies.set(name, value, options)
                     )
@@ -29,38 +34,104 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // refresh session if expired - required for Server Components
-    // https://supabase.com/docs/guides/auth/server-side/nextjs
+    // Required for SSR — refresh the session on every request
     const {
         data: { user },
     } = await supabase.auth.getUser()
 
     const path = request.nextUrl.pathname
+    const locale = getLocale(path)
 
-    console.log('[Middleware] Checking path:', path)
-    console.log('[Middleware] User authenticated:', !!user)
+    // ─── Route classification ──────────────────────────────────────────────────
 
-    // Check for protected routes (ignoring locale prefix)
-    // Matches /dashboard, /en/dashboard, /es/dashboard, etc.
-    const isProtectedRoute =
-        (path.includes('/dashboard') ||
-        path.includes('/contractor')) &&
-        !path.includes('/admin')
+    // Public API routes that never require auth
+    const isPublicApi =
+        path.startsWith('/api/auth/') ||
+        path.startsWith('/api/booking/validate-zip') ||
+        path.startsWith('/api/booking/availability') ||
+        path.startsWith('/api/booking/approve')   // email-link code-protected
 
-    // Check for auth routes
-    const isAuthRoute =
+    // Auth pages (login / register)
+    const isAuthPage =
         path.includes('/login') ||
-        path.includes('/auth') ||
         path.includes('/register')
 
-    // AUTH BYPASSED FOR TESTING — re-enable before production
-    // if (!user && isProtectedRoute && !isAuthRoute) {
-    //     const url = request.nextUrl.clone()
-    //     const localeMatch = path.match(/^\/([a-z]{2})\//)
-    //     const locale = localeMatch ? localeMatch[1] : 'en'
-    //     url.pathname = `/${locale}/login`
-    //     return NextResponse.redirect(url)
-    // }
+    // Any booking page or API (requires authenticated customer)
+    const isBookingRoute =
+        (path.includes('/booking') && !path.includes('/booking/approve')) ||
+        path.startsWith('/api/booking/create') ||
+        path.startsWith('/api/payments/')
+
+    // Contractor-facing pages & APIs
+    const isContractorRoute =
+        path.includes('/contractor') ||
+        path.startsWith('/api/contractors/')
+
+    // Admin-facing pages & APIs
+    const isAdminRoute =
+        path.includes('/admin') ||
+        path.startsWith('/api/admin/')
+
+    // ─── Redirect unauthenticated users ───────────────────────────────────────
+
+    if (!isPublicApi && !isAuthPage) {
+        if (!user && (isBookingRoute || isContractorRoute || isAdminRoute)) {
+            const loginUrl = request.nextUrl.clone()
+            loginUrl.pathname = `/${locale}/login`
+            loginUrl.searchParams.set('next', path)
+            return NextResponse.redirect(loginUrl)
+        }
+    }
+
+    // ─── Redirect authenticated users away from auth pages ────────────────────
+    if (user && isAuthPage) {
+        const homeUrl = request.nextUrl.clone()
+        homeUrl.pathname = `/${locale}`
+        homeUrl.search = ''
+        return NextResponse.redirect(homeUrl)
+    }
+
+    // ─── Role enforcement for admin & contractor pages ─────────────────────────
+    if (user && (isAdminRoute || isContractorRoute)) {
+        // Fetch role from profiles (single lightweight query)
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, approval_status')
+            .eq('id', user.id)
+            .single()
+
+        const role = (profile as { role?: string } | null)?.role
+
+        // Admin routes: must have role='admin'
+        if (isAdminRoute && role !== 'admin') {
+            const homeUrl = request.nextUrl.clone()
+            homeUrl.pathname = `/${locale}`
+            homeUrl.search = ''
+            return NextResponse.redirect(homeUrl)
+        }
+
+        // Contractor pages: must have role='contractor' or 'admin'
+        if (isContractorRoute && role !== 'contractor' && role !== 'admin') {
+            const homeUrl = request.nextUrl.clone()
+            homeUrl.pathname = `/${locale}`
+            homeUrl.search = ''
+            return NextResponse.redirect(homeUrl)
+        }
+
+        // Contractor approval check — pending contractors see the pending page only
+        const approvalStatus = (profile as { approval_status?: string } | null)?.approval_status
+        if (
+            isContractorRoute &&
+            role === 'contractor' &&
+            approvalStatus !== 'approved' &&
+            !path.includes('/contractor/pending')
+        ) {
+            const pendingUrl = request.nextUrl.clone()
+            pendingUrl.pathname = `/${locale}/contractor/pending`
+            pendingUrl.search = ''
+            return NextResponse.redirect(pendingUrl)
+        }
+    }
 
     return supabaseResponse
 }

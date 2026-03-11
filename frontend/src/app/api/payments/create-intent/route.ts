@@ -11,12 +11,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createPaymentIntent } from '@/lib/stripe/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
     if (rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'payment-intent' })) {
         return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
+    }
+
+    // Require authenticated user — no guest payments
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
 
     try {

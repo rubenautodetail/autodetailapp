@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rateLimit';
 
 function generateConfirmationCode(): string {
@@ -22,12 +22,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
     }
 
+    // Require authenticated user — no guest bookings
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Authentication required. Please sign in to book.' }, { status: 401 });
+    }
+
     try {
         const body = await req.json();
 
         const {
-            service,
-            addOns,
             date,
             timeWindow,
             address,
@@ -48,6 +53,9 @@ export async function POST(req: NextRequest) {
             vehicleColor,
         } = body;
 
+        // Prevent spoofing — use authenticated user's ID
+        const userId = user.id;
+
         // Basic validation
         if (!date || !timeWindow || !address || !customerEmail || !customerName) {
             return NextResponse.json(
@@ -62,6 +70,7 @@ export async function POST(req: NextRequest) {
         const { data, error } = await supabase
             .from('bookings')
             .insert({
+                user_id: userId,
                 confirmation_code: confirmationCode,
                 status: 'pending_assignment',
                 payment_status: 'unpaid',

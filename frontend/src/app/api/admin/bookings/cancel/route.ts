@@ -8,7 +8,7 @@ import { stripe } from "@/lib/stripe/server";
  */
 async function verifyAdmin(req: NextRequest): Promise<boolean> {
   const adminSecret = process.env.ADMIN_SECRET;
-  if (!adminSecret) return true; // dev mode — no secret configured
+  if (!adminSecret) return false; // misconfigured — deny all
 
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.replace("Bearer ", "").trim();

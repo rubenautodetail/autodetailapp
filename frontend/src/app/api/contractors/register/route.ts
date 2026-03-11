@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendContractorApplication } from "@/lib/email";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 // NOTE: Requires a 'contractor-docs' storage bucket in Supabase Dashboard:
 //   Storage → New bucket → Name: "contractor-docs" → Public: OFF (private)
@@ -40,6 +40,13 @@ async function uploadDocument(
 }
 
 export async function POST(req: NextRequest) {
+    // Must be authenticated — no anonymous applications
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Authentication required. Create an account first.' }, { status: 401 });
+    }
+
     try {
         let formData: FormData;
         try {
@@ -84,6 +91,15 @@ export async function POST(req: NextRequest) {
             + (driversLicense && !uploadResults.driversLicense ? 1 : 0)
             + (vehicleInsurance && !uploadResults.vehicleInsurance ? 1 : 0)
             + (businessLicense && !uploadResults.businessLicense ? 1 : 0);
+
+        // Mark this user's profile as a pending contractor application
+        await supabase
+            .from('profiles')
+            .update({
+                approval_status: 'pending',
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
 
         // Send admin notification email with application details
         await sendContractorApplication({

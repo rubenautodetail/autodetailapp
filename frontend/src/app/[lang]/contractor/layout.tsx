@@ -23,11 +23,15 @@ export default function ContractorLayout({
     const router = useRouter();
     const { profile, isLoading: authLoading } = useAuth();
 
-    // Auth guard — contractor or admin only
+    // Auth guard — contractor or admin only; pending contractors go to pending page
     useEffect(() => {
         if (authLoading) return;
         if (!profile || (profile.role !== 'contractor' && profile.role !== 'admin')) {
             router.replace(`/${lang}`);
+            return;
+        }
+        if (profile.role === 'contractor' && profile.approval_status !== 'approved') {
+            router.replace(`/${lang}/contractor/pending`);
         }
     }, [authLoading, profile, lang, router]);
 
@@ -51,7 +55,8 @@ export default function ContractorLayout({
     // Notifications Hook — must be before any early return
     const { notifications, dismissToast } = useNotifications();
 
-    if (authLoading || !profile || (profile.role !== 'contractor' && profile.role !== 'admin')) {
+    if (authLoading || !profile || (profile.role !== 'contractor' && profile.role !== 'admin') ||
+        (profile.role === 'contractor' && profile.approval_status !== 'approved')) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[#131835]">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />

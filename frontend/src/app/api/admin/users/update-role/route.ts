@@ -6,11 +6,11 @@ type Role = (typeof VALID_ROLES)[number];
 
 /**
  * Verifies the caller is an authenticated admin.
- * When ADMIN_SECRET is not configured (dev mode), all requests are allowed.
+ * ADMIN_SECRET must be configured — if missing, all requests are denied.
  */
 async function verifyAdmin(req: NextRequest): Promise<boolean> {
   const adminSecret = process.env.ADMIN_SECRET;
-  if (!adminSecret) return true; // dev mode — no secret configured
+  if (!adminSecret) return false; // misconfigured — deny all
 
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.replace("Bearer ", "").trim();
