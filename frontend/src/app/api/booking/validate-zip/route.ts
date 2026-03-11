@@ -49,33 +49,38 @@ export async function POST(req: NextRequest) {
 
         const supabase = createApiClient();
 
-        // Fetch services from Supabase
+        // Fetch active services from Supabase
         const { data: servicesData } = await supabase
             .from('services')
-            .select('*')
+            .select('id, name, name_es, description, description_es, base_price, duration_minutes, sort_order')
+            .eq('is_active', true)
             .order('sort_order', { ascending: true });
 
         // Fetch active add-ons from Supabase
         const { data: addOnsData } = await supabase
             .from('add_ons')
-            .select('*')
+            .select('id, name, name_es, description, description_es, price, duration_minutes, sort_order')
             .eq('is_active', true)
             .order('sort_order', { ascending: true });
 
-        // Map services to response shape
+        // Map services to response shape (include bilingual fields)
         const services = (servicesData || []).map((s) => ({
-            id: s.document_id || String(s.id),
+            id: String(s.id),
             name: s.name,
+            nameEs: s.name_es || s.name,
             description: s.description || '',
+            descriptionEs: s.description_es || s.description || '',
             basePrice: Number(s.base_price),
             durationMinutes: s.duration_minutes || 60,
         }));
 
-        // Map add-ons to response shape
+        // Map add-ons to response shape (include bilingual fields)
         const addOns = (addOnsData || []).map((a) => ({
-            id: a.document_id || String(a.id),
+            id: String(a.id),
             name: a.name,
+            nameEs: a.name_es || a.name,
             description: a.description || '',
+            descriptionEs: a.description_es || a.description || '',
             price: Number(a.price),
             durationMinutes: a.duration_minutes || 30,
         }));

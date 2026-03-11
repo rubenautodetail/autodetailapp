@@ -75,42 +75,31 @@ export interface CatalogBooking {
 // ─── API Functions ───
 
 /**
- * Fetch all services from Supabase (catalog no longer required at runtime)
+ * Fetch all active services from Supabase.
+ * Uses name_es / description_es for Spanish locale.
  */
 export async function fetchServices(locale: string = "en"): Promise<CatalogService[]> {
   const supabase = getSupabaseClient();
 
-  // Try locale-specific services first, fall back to all services
-  const { data: initialData, error } = await supabase
+  const { data, error } = await supabase
     .from('services')
-    .select('*')
-    .eq('locale', locale)
+    .select('id, name, name_es, description, description_es, base_price, duration_minutes, sort_order')
+    .eq('is_active', true)
     .order('sort_order', { ascending: true });
-  let data = initialData;
 
-  if (error || !data || data.length === 0) {
-    // Fallback: get all services regardless of locale
-    const { data: allData, error: allError } = await supabase
-      .from('services')
-      .select('*')
-      .order('sort_order', { ascending: true });
+  if (error) throw new Error(`Failed to fetch services: ${error.message}`);
 
-    if (allError) throw new Error(`Failed to fetch services: ${allError.message}`);
-    data = allData || [];
-  }
-
-  // Map Supabase column names to the CatalogService interface
   return (data || []).map((row) => ({
     id: row.id,
-    documentId: row.document_id || String(row.id),
-    name: row.name,
-    slug: row.slug,
-    description: row.description || '',
+    documentId: String(row.id),
+    name: (locale === 'es' && row.name_es) ? row.name_es : row.name,
+    slug: null,
+    description: (locale === 'es' && row.description_es) ? row.description_es : (row.description || ''),
     basePrice: Number(row.base_price),
     durationMinutes: row.duration_minutes || 60,
-    checklist: Array.isArray(row.checklist) ? (row.checklist as string[]) : null,
+    checklist: null,
     sortOrder: row.sort_order || 0,
-    locale: row.locale || locale,
+    locale,
   }));
 }
 
