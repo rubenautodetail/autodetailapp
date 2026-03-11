@@ -56,6 +56,13 @@ export async function updateSession(request: NextRequest) {
         path.includes('/login') ||
         path.includes('/register')
 
+    // Landing page — always public (root locale paths like /en or /en/)
+    const isLandingPage =
+        path === `/${locale}` ||
+        path === `/${locale}/` ||
+        path === '/' ||
+        path === ''
+
     // Any booking page or API (requires authenticated customer)
     const isBookingRoute =
         (path.includes('/booking') && !path.includes('/booking/approve')) ||
@@ -74,8 +81,10 @@ export async function updateSession(request: NextRequest) {
 
     // ─── Redirect unauthenticated users ───────────────────────────────────────
 
-    // Enforce authentication globally except for public APIs and auth pages
-    if (!isPublicApi && !isAuthPage) {
+    // Enforce authentication for protected routes only
+    const isCustomerRoute = path.includes('/dashboard') || path.includes('/customer')
+    const isProtectedRoute = isContractorRoute || isAdminRoute || isCustomerRoute
+    if (!isPublicApi && !isAuthPage && !isLandingPage && !isBookingRoute && isProtectedRoute) {
         if (!user) {
             const loginUrl = request.nextUrl.clone()
             loginUrl.pathname = `/${locale}/login`
