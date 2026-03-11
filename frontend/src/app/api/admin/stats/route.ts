@@ -17,8 +17,7 @@ async function verifyAdmin(req: NextRequest): Promise<boolean> {
       const { data: p } = await db.from("profiles").select("role").eq("id", user.id).single();
       if ((p as { role?: string } | null)?.role === "admin") return true;
     }
-  } catch { /* fall through */ }
-
+  } catch (e) { console.error("Admin check error:", e); }
   if (!token) return false;
 
   try {

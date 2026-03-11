@@ -5,9 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 function ForgotPasswordForm() {
-    const { supabase } = useAuth();
+    const supabase = createClient();
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");

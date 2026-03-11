@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const lang = pathname.split("/")[1] || "en";
   const isEs = lang === "es";
-  const { profile, isLoading } = useAuth();
+  const { profile, isLoading, logout } = useAuth();
 
   // Auth guard — only users with role === 'admin' may access this section
   useEffect(() => {
@@ -28,6 +28,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       router.replace(`/${lang}`);
     }
   }, [isLoading, profile, lang, router]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace(`/${lang}/login`);
+    } catch (e) {
+      console.error(e);
+      window.location.href = `/${lang}`;
+    }
+  };
 
   // Render nothing while auth state is being resolved to avoid flash
   if (isLoading || !profile || profile.role !== "admin") {
@@ -71,7 +81,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="px-5 py-4 border-t border-gray-100">
-          <p className="text-xs text-gray-400">Admin Panel v1.0</p>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg text-sm font-medium transition-colors mb-4"
+          >
+            <span>🚪</span>
+            {isEs ? "Cerrar sesión" : "Log out"}
+          </button>
+          <p className="text-xs text-gray-400 text-center">Admin Panel v1.0</p>
         </div>
       </aside>
 
@@ -94,6 +111,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Link>
           );
         })}
+        {/* Logout on mobile */}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center gap-0.5 px-4 py-3 text-xs font-medium whitespace-nowrap transition-colors border-b-2 border-transparent text-red-500 hover:text-red-700 ml-auto"
+        >
+          <span className="text-base">🚪</span>
+          {isEs ? "Salir" : "Log out"}
+        </button>
       </div>
 
       {/* Main content */}
