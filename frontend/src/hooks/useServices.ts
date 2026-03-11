@@ -4,35 +4,35 @@
 
 import { useState, useEffect } from 'react';
 import { Service, AddOn } from '@/contexts';
-import { fetchServices, fetchAddOns, StrapiService, StrapiAddOn } from '@/lib/api/strapi';
+import { fetchServices, fetchAddOns, CatalogService, CatalogAddOn } from '@/lib/api/catalog';
 
-// Map Strapi service to BookingContext Service
-// Map Strapi service to BookingContext Service
-function mapStrapiService(s: StrapiService): Service {
+// Map catalog service to BookingContext Service
+// Map catalog service to BookingContext Service
+function mapCatalogService(s: CatalogService): Service {
     return {
         id: s.id,
         documentId: s.documentId,
-        strapiId: s.id,
-        name: s.name,  // Already localized from Strapi
-        description: s.description,  // Already localized from Strapi
+        catalogId: s.id,
+        name: s.name,  // Already localized from catalog
+        description: s.description,  // Already localized from catalog
         basePrice: s.basePrice,
         duration: s.durationMinutes,
     };
 }
 
-// Map Strapi add-on to BookingContext AddOn
-function mapStrapiAddOn(a: StrapiAddOn): AddOn {
+// Map catalog add-on to BookingContext AddOn
+function mapCatalogAddOn(a: CatalogAddOn): AddOn {
     return {
         id: a.id,
         documentId: a.documentId,
-        strapiId: a.id,
-        name: a.name,  // Already localized from Strapi
-        description: a.description,  // Already localized from Strapi
+        catalogId: a.id,
+        name: a.name,  // Already localized from catalog
+        description: a.description,  // Already localized from catalog
         price: a.price,
     };
 }
 
-// Fallback mock data (used only when Strapi is completely down)
+// Fallback mock data (used only when catalog is completely down)
 const FALLBACK_SERVICES: Service[] = [
     {
         id: 'interior',
@@ -112,20 +112,20 @@ export function useServices(locale: 'en' | 'es'): UseServicesReturn {
                 setIsLoading(true);
                 setError(null);
 
-                const [strapiServices, strapiAddOns] = await Promise.all([
+                const [catalogServices, catalogAddOns] = await Promise.all([
                     fetchServices(locale),
                     fetchAddOns(locale),
                 ]);
 
                 if (!isMounted) return;
 
-                // Use Strapi data if available, otherwise fallback
-                const mappedServices = strapiServices.length > 0
-                    ? strapiServices.map(mapStrapiService)
+                // Use catalog data if available, otherwise fallback
+                const mappedServices = catalogServices.length > 0
+                    ? catalogServices.map(mapCatalogService)
                     : FALLBACK_SERVICES;
 
-                const mappedAddOns = strapiAddOns.length > 0
-                    ? strapiAddOns.map(mapStrapiAddOn)
+                const mappedAddOns = catalogAddOns.length > 0
+                    ? catalogAddOns.map(mapCatalogAddOn)
                     : FALLBACK_ADDONS;
 
                 setServices(mappedServices);

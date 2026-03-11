@@ -1,11 +1,7 @@
 /**
- * Strapi API Client
- * Typed fetcher utilities for Strapi v5 backend
- * NOTE: Booking endpoints now use Next.js API routes, not Strapi.
+ * API Client
+ * All booking/payment endpoints use Next.js API routes backed by Supabase.
  */
-
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
-const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
 
 // Base URL for Next.js API routes (relative on client, absolute on server)
 function getNextApiBase(): string {
@@ -13,12 +9,7 @@ function getNextApiBase(): string {
     return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
-// Debug log to verify environment variable is loaded
-if (typeof window !== 'undefined') {
-    console.log('[API] Using Strapi URL:', STRAPI_URL);
-}
-
-interface StrapiResponse<T> {
+interface catalogResponse<T> {
     data: T;
     meta?: {
         pagination?: {
@@ -30,7 +21,7 @@ interface StrapiResponse<T> {
     };
 }
 
-interface StrapiError {
+interface catalogError {
     status: number;
     name: string;
     message: string;
@@ -142,7 +133,7 @@ class ApiClient {
     private async request<T>(
         endpoint: string,
         options: RequestInit = {}
-    ): Promise<StrapiResponse<T>> {
+    ): Promise<catalogResponse<T>> {
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
             ...options.headers,
@@ -158,7 +149,7 @@ class ApiClient {
         });
 
         if (!response.ok) {
-            const error: StrapiError = await response.json();
+            const error: catalogError = await response.json();
             throw new Error(error.message || `API Error: ${response.status}`);
         }
 
@@ -166,13 +157,13 @@ class ApiClient {
     }
 
     // GET request
-    async get<T>(endpoint: string, params?: Record<string, string>): Promise<StrapiResponse<T>> {
+    async get<T>(endpoint: string, params?: Record<string, string>): Promise<catalogResponse<T>> {
         const searchParams = params ? `?${new URLSearchParams(params)}` : '';
         return this.request<T>(`${endpoint}${searchParams}`, { method: 'GET' });
     }
 
     // POST request
-    async post<T>(endpoint: string, data: unknown): Promise<StrapiResponse<T>> {
+    async post<T>(endpoint: string, data: unknown): Promise<catalogResponse<T>> {
         return this.request<T>(endpoint, {
             method: 'POST',
             body: JSON.stringify({ data }),
@@ -204,7 +195,7 @@ class ApiClient {
     }
 
     // PUT request
-    async put<T>(endpoint: string, data: unknown): Promise<StrapiResponse<T>> {
+    async put<T>(endpoint: string, data: unknown): Promise<catalogResponse<T>> {
         return this.request<T>(endpoint, {
             method: 'PUT',
             body: JSON.stringify({ data }),
@@ -212,11 +203,10 @@ class ApiClient {
     }
 
     // DELETE request
-    async delete<T>(endpoint: string): Promise<StrapiResponse<T>> {
+    async delete<T>(endpoint: string): Promise<catalogResponse<T>> {
         return this.request<T>(endpoint, { method: 'DELETE' });
     }
 
-    // ZIP Validation — calls Next.js API route, not Strapi
     async validateZip(zipCode: string): Promise<ZipValidationResponse> {
         const base = getNextApiBase();
         const response = await fetch(`${base}/api/booking/validate-zip`, {
@@ -228,7 +218,6 @@ class ApiClient {
         return response.json();
     }
 
-    // Price Calculation — calls Next.js API route, not Strapi
     async calculatePrice(serviceId: string, addOnIds: string[], zipCode: string): Promise<PriceCalculation> {
         const base = getNextApiBase();
         const response = await fetch(`${base}/api/booking/calculate-price`, {
@@ -240,7 +229,6 @@ class ApiClient {
         return response.json();
     }
 
-    // Availability Check — calls Next.js API route, not Strapi
     async getAvailability(zipCode: string, serviceId: string | undefined, month: string): Promise<AvailabilityResponse> {
         const base = getNextApiBase();
         const response = await fetch(`${base}/api/booking/availability`, {
@@ -252,7 +240,6 @@ class ApiClient {
         return response.json();
     }
 
-    // Slot Hold — calls Next.js API route, not Strapi
     async holdSlot(zipCode: string, date: string, timeWindow: string, duration: number): Promise<SlotHoldResponse> {
         const base = getNextApiBase();
         const response = await fetch(`${base}/api/booking/hold-slot`, {
@@ -265,9 +252,9 @@ class ApiClient {
     }
 }
 
-// Export singleton instance
-export const strapiClient = new ApiClient(STRAPI_URL, STRAPI_TOKEN);
+// Singleton instance — baseUrl unused since all methods use Next.js API routes
+export const catalogClient = new ApiClient('');
 
 // Export types for use in components
-export type { StrapiResponse, StrapiError };
+export type { catalogResponse, catalogError };
 

@@ -1,45 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import Image from 'next/image';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 interface Booking {
     id: string;
-    confirmationCode: string;
+    document_id?: string;
     status: string;
+    payment_status: string;
+    contractor_id: string;
     date: string;
-    timeWindow: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    total: number;
-    service?: {
-        name: string;
+    time_window: string;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    zip_code: string | null;
+    total_amount: number | string;
+    service_name?: string;
+    profiles?: {
+        full_name: string;
+        phone_number: string;
     };
-    contractor?: {
-        firstName: string;
-        lastName: string;
-    };
-    beforePhotos?: Array<{
-        url: string;
-        name: string;
-    }>;
-    afterPhotos?: Array<{
-        url: string;
-        name: string;
-    }>;
-    completedAt?: string;
-    approvalStatus?: string;
 }
 
 export default function ApproveServicePage() {
     const params = useParams();
     const router = useRouter();
-    const bookingId = params.id as string;
+    const searchParams = useSearchParams();
+    const bookingId = (params.id as string).replace('%3A', ':');
+    const lang = (params.lang as string) || 'en';
+    const confirmationCode = searchParams.get('code');
 
     const [booking, setBooking] = useState<Booking | null>(null);
     const [loading, setLoading] = useState(true);
@@ -47,16 +38,27 @@ export default function ApproveServicePage() {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        if (!confirmationCode) {
+            setError('Invalid approval link. Please use the link from your email.');
+            setLoading(false);
+            return;
+        }
+
         const fetchBooking = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${bookingId}?populate=*`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setBooking(data.data);
-                } else {
+                const supabase = createClient();
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('*, profiles:contractor_id(full_name, phone_number)')
+                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                    .single();
+
+                if (error || !data) {
                     setError('Booking not found');
+                } else {
+                    setBooking(data as Booking);
                 }
-            } catch (err) {
+            } catch {
                 setError('Failed to load booking');
             } finally {
                 setLoading(false);
@@ -64,205 +66,247 @@ export default function ApproveServicePage() {
         };
 
         fetchBooking();
-    }, [bookingId]);
+    }, [bookingId, confirmationCode]);
 
     const handleApprove = async () => {
         setSubmitting(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${bookingId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    data: {
-                        approvalStatus: 'approved',
-                        approvedAt: new Date().toISOString(),
-                    },
-                }),
+            const res = await fetch('/api/booking/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId: booking!.id, confirmationCode }),
             });
 
-            if (response.ok) {
-                alert('Thank you! Your payment has been processed.');
-                router.push(`/en/booking/${bookingId}/receipt`);
+            if (res.ok) {
+                router.push(`/${lang}/booking/${bookingId}/receipt`);
             } else {
-                setError('Failed to approve service. Please try again.');
+                const data = await res.json();
+                setError(data.error || 'Failed to approve. Please try again.');
             }
-        } catch (err) {
+        } catch {
             setError('An error occurred. Please try again.');
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleReportIssue = () => {
-        router.push(`/en/booking/${bookingId}/report`);
-    };
-
+    // ── Loading state ────────────────────────────────────────────────────────
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-[#131835] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading booking details...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078] mx-auto" />
+                    <p className="mt-4 text-[#A5B0D1]">
+                        {lang === 'es' ? 'Cargando detalles...' : 'Loading details...'}
+                    </p>
                 </div>
             </div>
         );
     }
 
+    // ── Error / not found ────────────────────────────────────────────────────
     if (error || !booking) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Card className="max-w-md">
-                    <div className="text-center p-8">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-4">Booking Not Found</h1>
-                        <p className="text-gray-600 mb-6">{error || 'This booking does not exist.'}</p>
-                        <Button onClick={() => router.push('/en')}>Return to Home</Button>
+            <div className="min-h-screen bg-[#131835] flex items-center justify-center px-4">
+                <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-8 text-center max-w-md w-full">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
-                </Card>
+                    <h2 className="text-xl font-bold text-white mb-2">
+                        {lang === 'es' ? 'No encontrado' : 'Not Found'}
+                    </h2>
+                    <p className="text-[#A5B0D1] mb-6">{error || 'This booking does not exist.'}</p>
+                    <button
+                        onClick={() => router.push(`/${lang}`)}
+                        className="bg-[#D0B078] text-[#131835] font-bold py-3 px-6 rounded-xl hover:opacity-90 transition-all"
+                    >
+                        {lang === 'es' ? 'Volver al Inicio' : 'Return to Home'}
+                    </button>
+                </div>
             </div>
         );
     }
 
-    if (booking.approvalStatus === 'approved' || booking.approvalStatus === 'auto_approved') {
+    // ── Already completed ────────────────────────────────────────────────────
+    if (booking.status === 'completed' && booking.payment_status === 'paid') {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Card className="max-w-md">
-                    <div className="text-center p-8">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-4">Already Approved</h1>
-                        <p className="text-gray-600 mb-6">This service has already been approved and payment has been processed.</p>
-                        <Button onClick={() => router.push('/en')}>Return to Home</Button>
+            <div className="min-h-screen bg-[#131835] flex items-center justify-center px-4">
+                <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-8 text-center max-w-md w-full">
+                    <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/20">
+                        <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
                     </div>
-                </Card>
+                    <h2 className="text-xl font-bold text-white mb-2">
+                        {lang === 'es' ? 'Ya Aprobado' : 'Already Approved'}
+                    </h2>
+                    <p className="text-[#A5B0D1] mb-6">
+                        {lang === 'es'
+                            ? 'Este servicio ya fue aprobado y el pago fue procesado.'
+                            : 'This service has already been approved and payment processed.'}
+                    </p>
+                    <button
+                        onClick={() => router.push(`/${lang}/dashboard`)}
+                        className="bg-[#D0B078] text-[#131835] font-bold py-3 px-6 rounded-xl hover:opacity-90 transition-all"
+                    >
+                        {lang === 'es' ? 'Ver Mis Reservas' : 'View My Bookings'}
+                    </button>
+                </div>
             </div>
         );
     }
 
+    // ── Cancelled ────────────────────────────────────────────────────────────
+    if (booking.status === 'cancelled') {
+        return (
+            <div className="min-h-screen bg-[#131835] flex items-center justify-center px-4">
+                <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-8 text-center max-w-md w-full">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">
+                        {lang === 'es' ? 'Reserva Cancelada' : 'Booking Cancelled'}
+                    </h2>
+                    <p className="text-[#A5B0D1] mb-6">
+                        {lang === 'es'
+                            ? 'Esta reserva fue cancelada. Cualquier autorización de pago ha sido liberada.'
+                            : 'This booking was cancelled. Any payment authorization has been released.'}
+                    </p>
+                    <button
+                        onClick={() => router.push(`/${lang}/booking/select`)}
+                        className="w-full bg-[#D0B078] text-[#131835] font-bold py-3 rounded-xl hover:opacity-90 transition-all mb-3"
+                    >
+                        {lang === 'es' ? 'Reservar de Nuevo' : 'Book Again'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Main approval screen ─────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Approve Your Service</h1>
-                    <p className="text-gray-600">
-                        Booking #{booking.confirmationCode}
+        <div className="min-h-screen bg-[#131835] py-12 px-4">
+            <div className="max-w-xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="text-center">
+                    <div className="w-20 h-20 bg-[#D0B078]/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-[#D0B078]/20">
+                        <svg className="w-10 h-10 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-2">
+                        {lang === 'es' ? '¡Tu Auto Está Listo!' : 'Your Car is Ready!'}
+                    </h1>
+                    <p className="text-[#A5B0D1]">
+                        {lang === 'es'
+                            ? 'Inspecciona el trabajo y aprueba para completar el pago'
+                            : 'Inspect the work, then approve to release payment'}
                     </p>
                 </div>
 
-                <Card className="mb-6">
-                    <div className="p-6">
-                        <h2 className="text-xl font-semibold mb-4">Service Details</h2>
-                        <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <dt className="text-sm font-medium text-gray-500">Service</dt>
-                                <dd className="mt-1 text-sm text-gray-900">{booking.service?.name || 'Detail Service'}</dd>
+                {/* Inspection steps banner */}
+                <div className="bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-2xl p-5">
+                    <p className="font-bold text-[#D0B078] mb-3 text-sm uppercase tracking-wide">
+                        {lang === 'es' ? 'Antes de aprobar:' : 'Before you approve:'}
+                    </p>
+                    <ol className="space-y-2 text-sm text-[#A5B0D1]">
+                        {(lang === 'es' ? [
+                            'Sal y camina alrededor de tu vehículo',
+                            'Revisa el interior y el exterior',
+                            'Confirma que el servicio fue completado a tu satisfacción',
+                        ] : [
+                            'Walk out to your vehicle and do a full inspection',
+                            'Check the interior and exterior thoroughly',
+                            'Confirm the service meets your expectations',
+                        ]).map((step, i) => (
+                            <li key={i} className="flex items-start gap-3">
+                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#D0B078]/20 text-[#D0B078] flex items-center justify-center text-xs font-bold mt-0.5">
+                                    {i + 1}
+                                </span>
+                                {step}
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+
+                {/* Service details */}
+                <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-6">
+                    <h2 className="font-bold text-white mb-4">
+                        {lang === 'es' ? 'Detalles del Servicio' : 'Service Details'}
+                    </h2>
+                    <div className="space-y-3 text-sm">
+                        {[
+                            {
+                                label: lang === 'es' ? 'Servicio' : 'Service',
+                                value: booking.service_name || 'Detail Service',
+                            },
+                            {
+                                label: lang === 'es' ? 'Técnico' : 'Technician',
+                                value: booking.profiles?.full_name || (lang === 'es' ? 'No asignado' : 'Not assigned'),
+                            },
+                            {
+                                label: lang === 'es' ? 'Fecha' : 'Date',
+                                value: booking.date,
+                            },
+                            {
+                                label: lang === 'es' ? 'Ubicación' : 'Location',
+                                value: [booking.address, booking.city, booking.state, booking.zip_code].filter(Boolean).join(', '),
+                            },
+                            {
+                                label: lang === 'es' ? 'Total' : 'Total',
+                                value: `$${Number(booking.total_amount).toFixed(2)}`,
+                                gold: true,
+                            },
+                        ].map(({ label, value, gold }) => (
+                            <div key={label} className="flex justify-between items-start gap-4">
+                                <span className="text-[#5E698F] flex-shrink-0">{label}:</span>
+                                <span className={`text-right font-medium ${gold ? 'text-[#D0B078] text-base font-bold' : 'text-white'}`}>
+                                    {value}
+                                </span>
                             </div>
-                            <div>
-                                <dt className="text-sm font-medium text-gray-500">Contractor</dt>
-                                <dd className="mt-1 text-sm text-gray-900">
-                                    {booking.contractor
-                                        ? `${booking.contractor.firstName} ${booking.contractor.lastName}`
-                                        : 'Not assigned'}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm font-medium text-gray-500">Date</dt>
-                                <dd className="mt-1 text-sm text-gray-900">{booking.date}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm font-medium text-gray-500">Total Amount</dt>
-                                <dd className="mt-1 text-sm text-gray-900">${booking.total.toFixed(2)}</dd>
-                            </div>
-                            <div className="md:col-span-2">
-                                <dt className="text-sm font-medium text-gray-500">Location</dt>
-                                <dd className="mt-1 text-sm text-gray-900">
-                                    {booking.address}, {booking.city}, {booking.state} {booking.zipCode}
-                                </dd>
-                            </div>
-                        </dl>
+                        ))}
                     </div>
-                </Card>
+                </div>
 
-                {/* Before/After Photos */}
-                {(booking.beforePhotos?.length || booking.afterPhotos?.length) && (
-                    <Card className="mb-6">
-                        <div className="p-6">
-                            <h2 className="text-xl font-semibold mb-4">Service Photos</h2>
-
-                            {booking.beforePhotos && booking.beforePhotos.length > 0 && (
-                                <div className="mb-6">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-3">Before Photos</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {booking.beforePhotos.map((photo, index) => (
-                                            <div key={index} className="aspect-square relative rounded-lg overflow-hidden">
-                                                <Image
-                                                    src={photo.url}
-                                                    alt={`Before photo ${index + 1}`}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {booking.afterPhotos && booking.afterPhotos.length > 0 && (
-                                <div>
-                                    <h3 className="text-sm font-medium text-gray-700 mb-3">After Photos</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {booking.afterPhotos.map((photo, index) => (
-                                            <div key={index} className="aspect-square relative rounded-lg overflow-hidden">
-                                                <Image
-                                                    src={photo.url}
-                                                    alt={`After photo ${index + 1}`}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
+                {/* Error */}
+                {error && (
+                    <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400 text-sm flex items-center gap-2">
+                        <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        {error}
+                    </div>
                 )}
 
-                <Card>
-                    <div className="p-6">
-                        <h2 className="text-xl font-semibold mb-4">Next Steps</h2>
-                        <p className="text-gray-600 mb-6">
-                            Please review the service photos and details above. If you're satisfied with the service,
-                            approve below to complete your payment. If you have any concerns, please report an issue.
-                        </p>
+                {/* Actions */}
+                <div className="space-y-3">
+                    <button
+                        onClick={handleApprove}
+                        disabled={submitting}
+                        className="w-full bg-[#D0B078] text-[#131835] font-bold py-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base"
+                    >
+                        {submitting
+                            ? (lang === 'es' ? 'Procesando...' : 'Processing...')
+                            : (lang === 'es' ? 'Apruebo — Se Ve Perfecto ✓' : 'Approve — Looks Great ✓')}
+                    </button>
+                    <button
+                        onClick={() => router.push(`/${lang}/booking/${bookingId}/report`)}
+                        disabled={submitting}
+                        className="w-full bg-transparent text-[#A5B0D1] font-medium py-4 rounded-xl border border-[#2C355E] hover:border-red-400/50 hover:text-red-400 transition-all disabled:opacity-50 text-base"
+                    >
+                        {lang === 'es' ? 'Reportar un Problema' : 'Report an Issue'}
+                    </button>
+                </div>
 
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <Button
-                                onClick={handleApprove}
-                                disabled={submitting}
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                            >
-                                {submitting ? 'Processing...' : 'Approve & Complete Payment'}
-                            </Button>
-                            <Button
-                                onClick={handleReportIssue}
-                                disabled={submitting}
-                                variant="outline"
-                                className="flex-1"
-                            >
-                                Report an Issue
-                            </Button>
-                        </div>
-
-                        <p className="mt-4 text-xs text-gray-500 text-center">
-                            If you don't take action within 24 hours, payment will be automatically approved and processed.
-                        </p>
-                    </div>
-                </Card>
+                <p className="text-xs text-[#5E698F] text-center">
+                    {lang === 'es'
+                        ? 'Si no actúas en 24 horas, el pago se liberará automáticamente.'
+                        : 'If no action is taken within 24 hours, payment will be automatically released.'}
+                </p>
             </div>
         </div>
     );

@@ -1,264 +1,569 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
-import * as contractorApi from "@/lib/api/contractor";
+
+// Supabase browser client for realtime — uses anon key (safe for client-side)
+const supabaseClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface DashboardProps {
-    params: Promise<{
-        lang: "en" | "es";
-    }>;
+    params: Promise<{ lang: "en" | "es" }>;
 }
 
-const translations = {
-    // ... translations stay the same
+const t = {
     en: {
-        title: "Dashboard",
-        todaySchedule: "Today's Schedule",
-        activeJobs: "Active Jobs",
+        title: "Contractor Dashboard",
+        welcome: "Welcome back,",
+        incomingJobs: "Incoming Jobs",
+        activeJobs: "My Active Jobs",
         earnings: "Earnings",
-        total: "Total",
         thisWeek: "This Week",
-        thisMonth: "This Month",
-        noJobs: "No jobs scheduled for today",
-        viewDetails: "View Details",
-        accept: "Accept",
-        reject: "Reject",
-        navigate: "Navigate",
-        complete: "Complete Service",
-        jobDetails: "Job Details",
-        customer: "Customer",
-        service: "Service",
+        total: "Total Earned",
+        activeCount: "Active",
+        incoming: "Incoming",
+        available: "Available for jobs",
+        unavailable: "Unavailable",
+        noIncoming: "No incoming jobs right now",
+        noIncomingDesc: "New jobs will appear here as customers book.",
+        noActive: "No active jobs",
+        noActiveDesc: "Jobs you accept will appear here.",
+        accept: "Accept Job",
+        reject: "Skip",
+        viewJob: "View Job",
+        area: "Area",
+        date: "Date",
         time: "Time",
-        address: "Address",
+        payout: "Payout",
         status: "Status",
-        loading: "Loading...",
+        loading: "Loading dashboard...",
         error: "Error loading dashboard",
+        retry: "Retry",
+        setupPayments: "Set up your payout account",
+        setupDesc: "Complete Stripe onboarding to receive payments for your services.",
+        setupBtn: "Set Up Payments",
+        setupLoading: "Loading...",
+        statusMap: {
+            confirmed: "Confirmed",
+            in_progress: "In Progress",
+            pending_approval: "Awaiting Approval",
+        } as Record<string, string>,
     },
     es: {
-        title: "Panel",
-        todaySchedule: "Horario de Hoy",
-        activeJobs: "Trabajos Activos",
+        title: "Panel del Contratista",
+        welcome: "Bienvenido,",
+        incomingJobs: "Trabajos Disponibles",
+        activeJobs: "Mis Trabajos Activos",
         earnings: "Ganancias",
-        total: "Total",
         thisWeek: "Esta Semana",
-        thisMonth: "Este Mes",
-        noJobs: "No hay trabajos programados para hoy",
-        viewDetails: "Ver Detalles",
+        total: "Total Ganado",
+        activeCount: "Activos",
+        incoming: "Entrantes",
+        available: "Disponible para trabajos",
+        unavailable: "No disponible",
+        noIncoming: "No hay trabajos disponibles ahora",
+        noIncomingDesc: "Los nuevos trabajos aparecerán aquí cuando los clientes reserven.",
+        noActive: "No hay trabajos activos",
+        noActiveDesc: "Los trabajos que aceptes aparecerán aquí.",
         accept: "Aceptar",
-        reject: "Rechazar",
-        navigate: "Navegar",
-        complete: "Completar Servicio",
-        jobDetails: "Detalles del Trabajo",
-        customer: "Cliente",
-        service: "Servicio",
+        reject: "Omitir",
+        viewJob: "Ver Trabajo",
+        area: "Área",
+        date: "Fecha",
         time: "Hora",
-        address: "Dirección",
+        payout: "Pago",
         status: "Estado",
-        loading: "Cargando...",
+        loading: "Cargando panel...",
         error: "Error al cargar el panel",
+        retry: "Reintentar",
+        setupPayments: "Configura tu cuenta de pagos",
+        setupDesc: "Completa el proceso de Stripe para recibir pagos por tus servicios.",
+        setupBtn: "Configurar Pagos",
+        setupLoading: "Cargando...",
+        statusMap: {
+            confirmed: "Confirmado",
+            in_progress: "En Progreso",
+            pending_approval: "Esperando Aprobación",
+        } as Record<string, string>,
     },
 };
 
+function StatusBadge({ status, lang }: { status: string; lang: "en" | "es" }) {
+    const labels = t[lang].statusMap;
+    const label = labels[status] || status;
+    const colors: Record<string, string> = {
+        confirmed: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+        in_progress: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+        pending_approval: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+    };
+    return (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${colors[status] || "bg-white/10 text-white/60 border-white/10"}`}>
+            {label}
+        </span>
+    );
+}
+
 export default function ContractorDashboard({ params }: DashboardProps) {
     const { lang } = use(params);
-    const t = translations[lang];
+    const labels = t[lang];
     const { session, isAuthenticated, isLoading: authLoading } = useAuth();
 
     const [dashboardData, setDashboardData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+    const [startingOnboarding, setStartingOnboarding] = useState(false);
+    const [acceptingId, setAcceptingId] = useState<string | null>(null);
+    const [rejectingId, setRejectingId] = useState<string | null>(null);
+    const [isAvailable, setIsAvailable] = useState<boolean>(true);
+    const [togglingAvailability, setTogglingAvailability] = useState(false);
+
+    // ── Realtime / alert state ────────────────────────────────────────────────
+    const [incomingPulse, setIncomingPulse] = useState(false);
+    // Track pulse timeout so we can clear it on unmount
+    const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    /** Two-tone beep via Web Audio API — no external library required. */
+    const playAlert = () => {
+        try {
+            const AudioCtx = window.AudioContext ||
+                (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.4);
+        } catch {
+            // Browser blocked audio — non-fatal
+        }
+    };
+
+    /** Flash the "Incoming Jobs" card ring for 3 seconds. */
+    const triggerPulse = () => {
+        setIncomingPulse(true);
+        if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+        pulseTimerRef.current = setTimeout(() => setIncomingPulse(false), 3000);
+    };
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
-            loadDashboard();
-        } else if (!authLoading && !isAuthenticated) {
-            setLoading(false);
+        loadDashboard();
+        if (isAuthenticated) {
+            checkOnboardingStatus();
+            fetchAvailability();
+        } else {
+            setOnboardingComplete(true);
         }
-    }, [authLoading, isAuthenticated]);
+    }, [authLoading, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ── Supabase realtime subscription for new pending_assignment bookings ────
+    useEffect(() => {
+        const channel = supabaseClient
+            .channel("incoming-jobs")
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "bookings",
+                    filter: "status=eq.pending_assignment",
+                },
+                () => {
+                    loadDashboard();
+                    playAlert();
+                    triggerPulse();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+            supabaseClient.removeChannel(channel);
+        };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const checkOnboardingStatus = async () => {
+        try {
+            const res = await fetch('/api/contractors/onboarding-status', {
+                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setOnboardingComplete(data.onboardingComplete ?? true);
+            }
+        } catch { /* non-fatal */ }
+    };
+
+    const fetchAvailability = async () => {
+        try {
+            const res = await fetch('/api/contractors/profile', {
+                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+            });
+            if (res.ok) {
+                const data = await res.json();
+                // Profile API returns { success, profile } — read the nested profile field
+                setIsAvailable(data.profile?.is_available ?? true);
+            }
+        } catch { /* non-fatal — keep default true */ }
+    };
+
+    const handleToggleAvailability = async () => {
+        const next = !isAvailable;
+        setIsAvailable(next); // optimistic update
+        setTogglingAvailability(true);
+        try {
+            await fetch('/api/contractors/profile', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({ is_available: next }),
+            });
+        } catch {
+            // Revert on failure
+            setIsAvailable(!next);
+        } finally {
+            setTogglingAvailability(false);
+        }
+    };
+
+    const handleStartOnboarding = async () => {
+        setStartingOnboarding(true);
+        try {
+            const res = await fetch('/api/contractors/onboard', {
+                method: 'POST',
+                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+            }
+        } catch { /* non-fatal */ }
+        finally { setStartingOnboarding(false); }
+    };
 
     const loadDashboard = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const accessToken = session?.access_token;
-            const data = await contractorApi.fetchDashboard(accessToken);
+            const res = await fetch('/api/contractors/dashboard', {
+                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+            });
+            if (!res.ok) throw new Error('Failed to load');
+            const data = await res.json();
             setDashboardData(data);
             setError(null);
-        } catch (error) {
-            console.error("Failed to load dashboard:", error);
-            setError(t.error);
+            // Persist incoming count so the layout's bottom nav dot stays in sync
+            const count: number = data?.incomingJobs?.length ?? 0;
+            try {
+                localStorage.setItem('contractor_incoming_count', String(count));
+            } catch {
+                // Private-browsing mode may block localStorage — non-fatal
+            }
+        } catch {
+            setError(labels.error);
         } finally {
             setLoading(false);
         }
     };
 
     const handleAcceptJob = async (bookingId: string) => {
+        setAcceptingId(bookingId);
         try {
-            const accessToken = session?.access_token;
-            const response = await contractorApi.acceptJob(bookingId, accessToken);
-
-            if (response.success) {
-                loadDashboard(); // Refresh
-            }
-        } catch (error) {
-            console.error("Failed to accept job:", error);
-        }
+            const res = await fetch('/api/contractors/accept-job', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({ bookingId }),
+            });
+            if (res.ok) loadDashboard();
+        } catch { /* non-fatal */ }
+        finally { setAcceptingId(null); }
     };
 
     const handleRejectJob = async (bookingId: string) => {
+        setRejectingId(bookingId);
         try {
-            const accessToken = session?.access_token;
-            const response = await contractorApi.rejectJob(bookingId, accessToken);
-
-            if (response.success) {
-                loadDashboard(); // Refresh
-            }
-        } catch (error) {
-            console.error("Failed to reject job:", error);
-        }
+            const res = await fetch('/api/contractors/reject-job', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({ bookingId }),
+            });
+            if (res.ok) loadDashboard();
+        } catch { /* non-fatal */ }
+        finally { setRejectingId(null); }
     };
 
+    // ── Loading skeleton ──────────────────────────────────────────────────────
     if (authLoading || loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen bg-[#131835] py-8 px-4">
+                <div className="max-w-5xl mx-auto space-y-6">
+                    <div className="h-9 w-56 bg-white/5 rounded-lg animate-pulse" />
+                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 shrink-0 sm:shrink">
+                                <div className="h-2.5 w-14 bg-white/10 rounded animate-pulse mb-2" />
+                                <div className="h-7 w-12 bg-white/10 rounded animate-pulse" />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-6 space-y-4">
+                        <div className="h-5 w-40 bg-white/10 rounded animate-pulse" />
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="border border-[#2C355E] rounded-xl p-4 flex justify-between">
+                                <div className="space-y-2">
+                                    <div className="h-4 w-44 bg-white/10 rounded animate-pulse" />
+                                    <div className="h-3 w-32 bg-white/5 rounded animate-pulse" />
+                                </div>
+                                <div className="h-9 w-24 bg-white/10 rounded-lg animate-pulse" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     }
 
-    if (!isAuthenticated) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
-                <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-                <p className="text-gray-600 mb-8">Please log in to your contractor account to view your dashboard.</p>
-                <Link
-                    href={`/${lang}/login`}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                    Log In
-                </Link>
-            </div>
-        );
-    }
-
+    // ── Error state ───────────────────────────────────────────────────────────
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
-                <p className="text-red-600 font-medium mb-4">{error}</p>
-                <button
-                    onClick={loadDashboard}
-                    className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-                >
-                    Retry
-                </button>
+            <div className="min-h-screen bg-[#131835] flex items-center justify-center px-4">
+                <div className="text-center">
+                    <p className="text-red-400 font-medium mb-4">{error}</p>
+                    <button
+                        onClick={loadDashboard}
+                        className="px-6 py-2.5 bg-[#D0B078] text-[#131835] font-semibold rounded-xl hover:opacity-90 transition-all"
+                    >
+                        {labels.retry}
+                    </button>
+                </div>
             </div>
         );
     }
 
+    const incomingJobs: any[] = dashboardData?.incomingJobs ?? [];
+    const activeJobs: any[] = dashboardData?.activeJobs ?? [];
+
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">{t.title}</h1>
-                {dashboardData?.contractor && (
-                    <p className="mt-2 text-gray-600">
-                        Welcome back, {dashboardData.contractor.name}
-                    </p>
+        <div className="min-h-screen bg-[#131835] py-8 px-4">
+            <div className="max-w-5xl mx-auto space-y-6">
+
+                {/* Stripe Onboarding Banner */}
+                {onboardingComplete === false && (
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 className="font-semibold text-amber-300 text-base">⚡ {labels.setupPayments}</h3>
+                            <p className="text-sm text-amber-400/80 mt-1">{labels.setupDesc}</p>
+                        </div>
+                        <button
+                            onClick={handleStartOnboarding}
+                            disabled={startingOnboarding}
+                            className="shrink-0 px-5 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-colors"
+                        >
+                            {startingOnboarding ? labels.setupLoading : labels.setupBtn}
+                        </button>
+                    </div>
                 )}
-            </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="text-sm font-medium text-gray-500">
-                        {t.activeJobs}
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">{labels.title}</h1>
+                        {dashboardData?.contractor && (
+                            <p className="mt-1 text-[#A5B0D1] text-base">
+                                {labels.welcome} <span className="text-[#D0B078] font-medium">{dashboardData.contractor.name}</span>
+                            </p>
+                        )}
                     </div>
-                    <div className="mt-2 text-3xl font-semibold text-blue-600">
-                        {dashboardData?.activeJobs || 0}
+                    {/* Availability toggle */}
+                    <button
+                        onClick={handleToggleAvailability}
+                        disabled={togglingAvailability}
+                        className={`self-start mt-1 sm:mt-0 bg-[#1A2142] border rounded-full px-4 py-2 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-60 ${
+                            isAvailable
+                                ? 'border-green-500/40 hover:border-green-400/60'
+                                : 'border-[#2C355E] hover:border-white/20'
+                        }`}
+                    >
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isAvailable ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)]' : 'bg-[#5E698F]'}`} />
+                        <span className={`text-sm font-medium ${isAvailable ? 'text-green-300' : 'text-[#A5B0D1]'}`}>
+                            {isAvailable ? labels.available : labels.unavailable}
+                        </span>
+                    </button>
+                </div>
+
+                {/* Stats strip — scrollable on mobile, 4-col grid on desktop */}
+                <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0">
+                    {/* Incoming */}
+                    <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 shrink-0 sm:shrink sm:col-span-1">
+                        <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.incoming}</p>
+                        <p className="text-2xl font-bold text-[#D0B078]">{incomingJobs.length}</p>
+                    </div>
+                    {/* Active */}
+                    <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 shrink-0 sm:shrink sm:col-span-1">
+                        <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.activeCount}</p>
+                        <p className="text-2xl font-bold text-blue-400">{activeJobs.length}</p>
+                    </div>
+                    {/* This Week */}
+                    <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 shrink-0 sm:shrink sm:col-span-1">
+                        <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.thisWeek}</p>
+                        <p className="text-2xl font-bold text-green-400">${(dashboardData?.earnings?.thisWeek || 0).toFixed(2)}</p>
+                    </div>
+                    {/* Total */}
+                    <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 shrink-0 sm:shrink sm:col-span-1">
+                        <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.total}</p>
+                        <p className="text-2xl font-bold text-white">${(dashboardData?.earnings?.total || 0).toFixed(2)}</p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="text-sm font-medium text-gray-500">
-                        {t.earnings} ({t.thisWeek})
+                {/* Incoming Jobs */}
+                <div className={`bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden transition-shadow ${incomingPulse ? 'ring-2 ring-[#D0B078] ring-offset-2 ring-offset-[#131835]' : ''}`}>
+                    <div className="px-6 py-4 border-b border-[#2C355E] flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-white">{labels.incomingJobs}</h2>
+                        {incomingJobs.length > 0 && (
+                            <span className="text-xs font-semibold bg-[#D0B078]/10 text-[#D0B078] border border-[#D0B078]/20 px-2.5 py-1 rounded-full">
+                                {incomingJobs.length} new
+                            </span>
+                        )}
                     </div>
-                    <div className="mt-2 text-3xl font-semibold text-green-600">
-                        ${(dashboardData?.earnings?.thisWeek || 0).toFixed(2)}
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="text-sm font-medium text-gray-500">
-                        {t.total} {t.earnings}
-                    </div>
-                    <div className="mt-2 text-3xl font-semibold text-gray-900">
-                        ${(dashboardData?.earnings?.total || 0).toFixed(2)}
-                    </div>
-                </div>
-            </div>
-
-            {/* Today's Schedule */}
-            <div className="bg-white rounded-lg shadow mb-8">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        {t.todaySchedule}
-                    </h2>
-                </div>
-                <div className="p-6">
-                    {dashboardData?.todaySchedule?.length > 0 ? (
-                        <div className="space-y-4">
-                            {dashboardData.todaySchedule.map((booking: any) => (
-                                <div
-                                    key={booking.id}
-                                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                                >
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h3 className="font-semibold text-lg text-gray-900">
-                                                {booking.service?.name || "Service"}
-                                            </h3>
-                                            <p className="text-gray-600 mt-1">
-                                                {t.time}: {booking.timeWindow || "TBD"}
-                                            </p>
-                                            <p className="text-gray-600">
-                                                {t.address}: {booking.location?.address}
-                                            </p>
+                    <div className="divide-y divide-[#2C355E]">
+                        {incomingJobs.length > 0 ? incomingJobs.map((job) => (
+                            <div key={job.id} className="px-6 py-5 hover:bg-white/[0.02] transition-colors">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="space-y-1.5 min-w-0">
+                                        <h3 className="font-semibold text-white text-base truncate">{job.serviceName}</h3>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#A5B0D1]">
+                                            <span className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                {job.date ? new Date(job.date + 'T12:00:00').toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '—'}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {job.timeWindow}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                {labels.area}: {job.area}
+                                            </span>
                                         </div>
-                                        <div className="flex gap-2">
-                                            {booking.status === "pending" && (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleAcceptJob(booking.id)}
-                                                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                                                    >
-                                                        {t.accept}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleRejectJob(booking.id)}
-                                                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                                                    >
-                                                        {t.reject}
-                                                    </button>
-                                                </>
-                                            )}
-                                            {booking.status === "confirmed" && (
-                                                <Link
-                                                    href={`/${lang}/contractor/jobs/${booking.id}`}
-                                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                                                >
-                                                    {t.viewDetails}
-                                                </Link>
-                                            )}
-                                        </div>
+                                        <p className="text-[#D0B078] font-semibold text-sm">${job.totalAmount.toFixed(2)} {labels.payout}</p>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0">
+                                        <button
+                                            onClick={() => handleAcceptJob(job.id)}
+                                            disabled={acceptingId === job.id}
+                                            className="px-5 py-2.5 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
+                                        >
+                                            {acceptingId === job.id ? '...' : labels.accept}
+                                        </button>
+                                        <button
+                                            onClick={() => handleRejectJob(job.id)}
+                                            disabled={rejectingId === job.id}
+                                            className="px-4 py-2.5 border border-[#2C355E] text-[#A5B0D1] text-sm font-semibold rounded-xl hover:border-white/30 hover:text-white disabled:opacity-50 transition-all"
+                                        >
+                                            {rejectingId === job.id ? '...' : labels.reject}
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500 text-center py-8">{t.noJobs}</p>
-                    )}
+                            </div>
+                        )) : (
+                            <div className="py-14 text-center">
+                                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <svg className="w-6 h-6 text-[#5E698F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    </svg>
+                                </div>
+                                <p className="text-white font-medium mb-1">{labels.noIncoming}</p>
+                                <p className="text-[#5E698F] text-sm">{labels.noIncomingDesc}</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
+
+                {/* Active Jobs */}
+                <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
+                    <div className="px-6 py-4 border-b border-[#2C355E] flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-white">{labels.activeJobs}</h2>
+                        {activeJobs.length > 0 && (
+                            <span className="text-xs font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2.5 py-1 rounded-full">
+                                {activeJobs.length} {lang === 'es' ? 'activo(s)' : 'active'}
+                            </span>
+                        )}
+                    </div>
+                    <div className="divide-y divide-[#2C355E]">
+                        {activeJobs.length > 0 ? activeJobs.map((job) => (
+                            <div key={job.id} className="px-6 py-5 hover:bg-white/[0.02] transition-colors">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="space-y-1.5 min-w-0">
+                                        <div className="flex items-center gap-2.5 flex-wrap">
+                                            <h3 className="font-semibold text-white text-base">{job.serviceName}</h3>
+                                            <StatusBadge status={job.status} lang={lang} />
+                                        </div>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#A5B0D1]">
+                                            <span className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                {job.date ? new Date(job.date + 'T12:00:00').toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '—'}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {job.timeWindow}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                {job.address}
+                                            </span>
+                                        </div>
+                                        <p className="text-[#D0B078] font-semibold text-sm">${job.totalAmount.toFixed(2)}</p>
+                                    </div>
+                                    <Link
+                                        href={`/${lang}/contractor/jobs/${job.id}${job.confirmationCode ? `?code=${job.confirmationCode}` : ''}`}
+                                        className="shrink-0 px-5 py-2.5 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-all border border-white/10"
+                                    >
+                                        {labels.viewJob}
+                                    </Link>
+                                </div>
+                            </div>
+                        )) : (
+                            <div className="py-14 text-center">
+                                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <svg className="w-6 h-6 text-[#5E698F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <p className="text-white font-medium mb-1">{labels.noActive}</p>
+                                <p className="text-[#5E698F] text-sm">{labels.noActiveDesc}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
             </div>
         </div>
     );

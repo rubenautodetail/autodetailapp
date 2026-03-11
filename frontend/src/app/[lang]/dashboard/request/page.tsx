@@ -131,7 +131,7 @@ export default function RequestPage() {
                         </div>
                     </div>
 
-                    <Link href="/dashboard" className="inline-block mt-12 text-[var(--accent)] font-medium hover:underline">
+                    <Link href="/en/dashboard" className="inline-block mt-12 text-[var(--accent)] font-medium hover:underline">
                         Back to Dashboard
                     </Link>
                 </div>

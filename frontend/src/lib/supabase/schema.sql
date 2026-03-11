@@ -87,3 +87,39 @@ $$;
 -- Note: 'services' and 'bookings' already exist in the database (managed by Strapi).
 -- We will avoid recreating them to prevent errors and data loss.
 -- We will instead rely on the existing tables for these entities.
+
+-- Run this if bookings table is missing contractor_id:
+-- ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS contractor_id uuid REFERENCES public.profiles(id);
+
+-- Run this if profiles table is missing stripe fields:
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS stripe_account_id text;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_complete boolean DEFAULT false;
+
+-- NOTIFICATIONS
+create table if not exists public.notifications (
+    id uuid default uuid_generate_v4() primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    title text not null,
+    message text not null,
+    type text not null check (type in ('info', 'success', 'warning', 'error')),
+    is_read boolean default false,
+    link text,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- RLS for Notifications
+alter table public.notifications enable row level security;
+
+do $$
+begin
+    if not exists (select 1 from pg_policies where tablename = 'notifications' and policyname = 'Users can view their own notifications') then
+        create policy "Users can view their own notifications" on notifications for select using ( auth.uid() = user_id );
+    end if;
+    if not exists (select 1 from pg_policies where tablename = 'notifications' and policyname = 'Users can update their own notifications') then
+        create policy "Users can update their own notifications" on notifications for update using ( auth.uid() = user_id );
+    end if;
+    if not exists (select 1 from pg_policies where tablename = 'notifications' and policyname = 'Users can insert their own notifications') then
+        create policy "Users can insert their own notifications" on notifications for insert with check ( auth.uid() = user_id );
+    end if;
+end
+$$;

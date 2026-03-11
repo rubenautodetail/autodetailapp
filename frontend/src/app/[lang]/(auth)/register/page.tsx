@@ -29,9 +29,9 @@ export default function RegisterPage() {
 
         try {
             await register(name, email, password);
-            router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message || "Failed to create account.");
+            router.push(`/${params.lang}/dashboard`);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to create account.");
         } finally {
             setLoading(false);
         }
@@ -116,7 +116,7 @@ export default function RegisterPage() {
                     <p className="text-sm text-[var(--text-secondary)]">
                         Already have an account?{" "}
                         <Link
-                            href="/login"
+                            href={`/${params.lang}/login`}
                             className="text-[var(--accent)] hover:underline font-medium"
                         >
                             Sign In

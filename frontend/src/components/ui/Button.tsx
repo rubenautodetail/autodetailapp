@@ -2,20 +2,23 @@ import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+    fullWidth?: boolean;
 }
 
-export function Button({ className = '', variant = 'primary', ...props }: ButtonProps) {
-    const baseStyle = "px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+export function Button({ className = '', variant = 'primary', fullWidth = false, ...props }: ButtonProps) {
+    const baseStyle = "inline-flex justify-center items-center px-6 py-4 rounded-full font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
+    const widthStyle = fullWidth ? "w-full" : "";
+
     const variants = {
-        primary: "bg-blue-600 text-white hover:bg-blue-700",
-        secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
-        outline: "border-2 border-gray-300 text-gray-700 hover:bg-gray-50",
-        ghost: "text-gray-600 hover:bg-gray-100"
+        primary: "btn-primary", // Uses the utility from globals.css
+        secondary: "bg-[var(--card)] text-[var(--text-primary)] hover:bg-[var(--divider)] shadow-sm",
+        outline: "border-2 border-[var(--divider)] text-[var(--text-primary)] hover:bg-[var(--divider)]",
+        ghost: "text-[var(--text-secondary)] hover:bg-[var(--divider)]"
     };
 
     return (
         <button
-            className={`${baseStyle} ${variants[variant] || variants.primary} ${className}`}
+            className={`${baseStyle} ${widthStyle} ${variants[variant] || variants.primary} ${className}`}
             {...props}
         />
     );

@@ -1,14 +1,24 @@
 /**
  * POST /api/payments/create-intent
- * Creates a Stripe payment intent for a booking.
- * Ported from Strapi backend — Strapi no longer required at runtime.
+ * Creates a Stripe PaymentIntent for a booking.
+ *
+ * - Uses idempotency keys (scoped to bookingId) to prevent duplicate charges on retry.
+ * - Passes transfer_data + application_fee_amount when a contractor with a connected
+ *   Stripe account is already assigned, so funds route automatically on capture.
+ * - If no contractor is assigned yet, transfer_data is omitted; the admin must
+ *   handle payouts manually or re-create the intent once a contractor is assigned.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createPaymentIntent } from '@/lib/stripe/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+    if (rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'payment-intent' })) {
+        return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
+    }
+
     try {
         const { bookingId, amount, currency = 'usd' } = await req.json();
 
@@ -17,37 +27,52 @@ export async function POST(req: NextRequest) {
         }
 
         let customerId = 'guest';
+        let contractorStripeAccountId: string | undefined;
 
-        // Look up the booking in Supabase to get customer email
+        // Look up the booking to get customer email and (if assigned) contractor Stripe account.
         if (bookingId && bookingId !== 'temp_booking' && bookingId !== 'temp_booking_id') {
             try {
-                const supabase = createApiClient();
+                const supabase = createServiceClient();
                 const { data: booking } = await supabase
                     .from('bookings')
-                    .select('customer_email, document_id')
+                    .select('customer_email, document_id, contractor_id')
                     .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
                     .single();
 
                 if (booking?.customer_email) {
                     customerId = booking.customer_email;
                 }
+
+                // If a contractor is already assigned, fetch their Stripe account for Connect routing.
+                if (booking?.contractor_id) {
+                    const { data: contractor } = await supabase
+                        .from('profiles')
+                        .select('stripe_account_id')
+                        .eq('id', booking.contractor_id)
+                        .single();
+
+                    if (contractor?.stripe_account_id) {
+                        contractorStripeAccountId = contractor.stripe_account_id;
+                    }
+                }
             } catch {
-                // Non-fatal: continue as guest
+                // Non-fatal: continue without Connect routing
             }
         }
 
-        // Create Stripe payment intent
+        // Create Stripe PaymentIntent (idempotent — safe to retry).
         const paymentIntent = await createPaymentIntent({
             amount,
             bookingId: bookingId || 'test_booking',
             customerId,
             currency,
+            contractorStripeAccountId,
         });
 
-        // Update booking in Supabase with payment intent ID
+        // Persist payment intent ID on the booking.
         if (bookingId && bookingId !== 'temp_booking' && bookingId !== 'temp_booking_id') {
             try {
-                const supabase = createApiClient();
+                const supabase = createServiceClient();
                 await supabase
                     .from('bookings')
                     .update({
@@ -57,7 +82,7 @@ export async function POST(req: NextRequest) {
                     .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
             } catch (err) {
                 console.error('Failed to update booking with payment intent:', err);
-                // Non-fatal: payment intent was still created
+                // Non-fatal: PaymentIntent was created; the booking record is out of sync but recoverable via webhook.
             }
         }
 
@@ -66,8 +91,6 @@ export async function POST(req: NextRequest) {
             clientSecret: paymentIntent.clientSecret,
             paymentIntentId: paymentIntent.paymentIntentId,
             amount: paymentIntent.amount,
-            platformFee: paymentIntent.platformFee,
-            contractorAmount: paymentIntent.contractorAmount,
         });
     } catch (error) {
         console.error('Create payment intent error:', error);

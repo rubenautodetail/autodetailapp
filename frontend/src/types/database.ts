@@ -16,6 +16,8 @@ export interface Database {
                     phone_number: string | null
                     role: 'user' | 'contractor' | 'admin'
                     avatar_url: string | null
+                    stripe_account_id: string | null
+                    onboarding_complete: boolean | null
                     created_at: string
                     updated_at: string
                 }
@@ -25,6 +27,8 @@ export interface Database {
                     phone_number?: string | null
                     role?: 'user' | 'contractor' | 'admin'
                     avatar_url?: string | null
+                    stripe_account_id?: string | null
+                    onboarding_complete?: boolean | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -34,6 +38,8 @@ export interface Database {
                     phone_number?: string | null
                     role?: 'user' | 'contractor' | 'admin'
                     avatar_url?: string | null
+                    stripe_account_id?: string | null
+                    onboarding_complete?: boolean | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -168,6 +174,7 @@ export interface Database {
                 Row: {
                     id: number
                     document_id: string | null
+                    contractor_id: string | null
                     date: string
                     address: string | null
                     city: string | null
@@ -196,6 +203,7 @@ export interface Database {
                 Insert: {
                     id?: number
                     document_id?: string | null
+                    contractor_id?: string | null
                     date: string
                     address?: string | null
                     city?: string | null
@@ -224,6 +232,7 @@ export interface Database {
                 Update: {
                     id?: number
                     document_id?: string | null
+                    contractor_id?: string | null
                     date?: string
                     address?: string | null
                     city?: string | null

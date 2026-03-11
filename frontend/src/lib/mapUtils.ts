@@ -86,7 +86,11 @@ export const rankContractors = (contractors: Contractor[]): Contractor[] => {
  */
 export const validateZipCode = async (zipCode: string): Promise<boolean> => {
   try {
-    const response = await fetch(`/api/zones/validate?zipCode=${zipCode}`);
+    const response = await fetch(`/api/booking/validate-zip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zipCode }),
+    });
     const data = await response.json();
     return data.available || false;
   } catch (error) {

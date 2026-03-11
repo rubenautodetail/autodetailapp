@@ -2,12 +2,24 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, Plus, Car, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Sidebar({ lang }: { lang: string }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { logout } = useAuth();
+
+    const handleSignOut = async () => {
+        try {
+            await logout();
+            router.replace(`/${lang}/login`);
+        } catch (err) {
+            console.error('Sign out error:', err);
+        }
+    };
 
     const menuItems = [
         { icon: Home, label: 'Dashboard', href: `/${lang}/customer` },
@@ -64,7 +76,9 @@ export default function Sidebar({ lang }: { lang: string }) {
                     <HelpCircle className="w-5 h-5 mr-3" />
                     <span className="font-medium">Support</span>
                 </a>
-                <button className="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">
+                <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">
                     <LogOut className="w-5 h-5 mr-3" />
                     <span className="font-medium">Sign Out</span>
                 </button>

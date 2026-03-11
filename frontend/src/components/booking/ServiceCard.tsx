@@ -5,6 +5,8 @@
 
 import React from 'react';
 import { Service } from '@/contexts';
+import { Card } from '@/components/ui/Card';
+import { Check } from 'lucide-react';
 
 interface ServiceCardProps {
     service: Service;
@@ -15,15 +17,15 @@ interface ServiceCardProps {
 
 export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCardProps) {
     return (
-        <div
+        <Card
             onClick={() => onSelect(service)}
             className={`
-        relative cursor-pointer rounded-xl border-2 p-6 transition-all duration-200
-        ${isSelected
-                    ? 'border-accent-gold bg-accent-gold/10 shadow-glow ring-1 ring-accent-gold'
-                    : 'border-white/10 bg-white/5 hover:border-accent-gold/50 hover:shadow-lg'
+                relative cursor-pointer p-6 transition-all duration-300 flex flex-col h-full
+                ${isSelected
+                    ? 'border-[#D0B078] ring-1 ring-[#D0B078] bg-[#D0B078]/5'
+                    : 'border-[var(--divider)] hover:border-[#D0B078]/50 hover:shadow-lg'
                 }
-      `}
+            `}
             role="button"
             tabIndex={0}
             aria-pressed={isSelected}
@@ -35,23 +37,32 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
                 }
             }}
         >
+            {isSelected && (
+                <div className="absolute -top-3 right-6 bg-[#D0B078] text-[#131835] p-1 rounded-full shadow-md">
+                    <Check className="w-4 h-4" />
+                </div>
+            )}
+
             <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-text-primary">
+                <h3 className={`text-xl font-bold ${isSelected ? 'text-[#D0B078]' : 'text-[var(--text-primary)]'}`}>
                     {service.name}
                 </h3>
-                <span className="text-accent-gold font-bold text-lg">
-                    ${service.basePrice.toFixed(2)}
-                </span>
+                <div className="text-right">
+                    <span className="text-[var(--text-secondary)] text-sm font-semibold mr-1">$</span>
+                    <span className="text-2xl font-bold text-[#D0B078]">
+                        {service.basePrice.toFixed(2)}
+                    </span>
+                </div>
             </div>
 
-            <p className="text-text-secondary mb-6 text-sm min-h-[40px]">
+            <p className="text-[var(--text-secondary)] mb-6 text-sm flex-grow">
                 {service.description}
             </p>
 
-            <div className="flex items-center justify-between mt-auto">
-                <div className="flex items-center text-text-muted text-sm">
+            <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--divider)]">
+                <div className="flex items-center text-[var(--text-muted)] text-sm">
                     <svg
-                        className="w-5 h-5 mr-2"
+                        className="w-4 h-4 mr-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -71,12 +82,12 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
 
                 <div
                     className={`
-            px-4 py-2 rounded-lg font-semibold text-sm transition-colors
-            ${isSelected
-                            ? 'bg-accent-gold text-bg-primary'
-                            : 'bg-white/10 text-text-secondary hover:bg-accent-gold/20 hover:text-accent-gold'
+                        px-4 py-2 rounded-full font-semibold text-sm transition-all duration-300
+                        ${isSelected
+                            ? 'bg-[#131835] border border-[#D0B078] text-[#D0B078]'
+                            : 'bg-[#D0B078] text-[#131835] hover:shadow-[var(--shadow-glow)]'
                         }
-          `}
+                    `}
                 >
                     {isSelected
                         ? locale === 'es'
@@ -87,6 +98,6 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
                             : 'Select'}
                 </div>
             </div>
-        </div>
+        </Card>
     );
 }

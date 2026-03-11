@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { strapiClient, type ZipValidationResponse } from '@/lib/api';
+import { catalogClient, type ZipValidationResponse } from '@/lib/api';
 
 interface ZipCheckerProps {
     dict: {
@@ -36,6 +36,7 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<ZipValidationResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [waitlistJoined, setWaitlistJoined] = useState(false);
 
     const router = useRouter();
 
@@ -46,7 +47,7 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
         setResult(null);
 
         try {
-            const response = await strapiClient.validateZip(zipCode);
+            const response = await catalogClient.validateZip(zipCode);
 
             if (response.available) {
                 sessionStorage.setItem('serviceZipCode', zipCode);
@@ -68,33 +69,35 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
 
     return (
         <div className="w-full">
-            <form onSubmit={handleSubmit} className="relative group bg-white rounded-xl shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden">
-                <input
-                    type="text"
-                    value={zipCode}
-                    onChange={handleZipChange}
-                    placeholder={t.placeholder}
-                    className="w-full bg-white text-black text-3xl font-display py-6 px-8 focus:outline-none placeholder:text-gray-400 placeholder:font-sans text-center"
-                    maxLength={5}
-                    pattern="\d{5}"
-                    required
-                />
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <div className="relative glass-card rounded-2xl overflow-hidden ring-1 ring-white/10 focus-within:ring-accent-gold/40 transition-all duration-300">
+                    <input
+                        type="text"
+                        value={zipCode}
+                        onChange={handleZipChange}
+                        placeholder={t.placeholder}
+                        className="w-full bg-transparent text-white text-3xl py-5 px-6 focus:outline-none placeholder:text-white/20 text-center tracking-[0.15em] font-light"
+                        style={{ fontFamily: 'var(--font-display)' }}
+                        maxLength={5}
+                        inputMode="numeric"
+                        pattern="\d{5}"
+                        required
+                    />
+                </div>
                 <button
                     type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white bg-black hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium shadow-lg"
+                    className="btn-primary w-full py-4 px-6 rounded-xl font-semibold text-sm tracking-widest uppercase transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
                     disabled={loading || zipCode.length !== 5}
                 >
                     {loading ? (
-                        <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                     ) : (
-                        <span className="text-sm font-bold tracking-widest uppercase">{t.button}</span>
+                        t.button
                     )}
                 </button>
-
-                {/* Active Focus Line - Removed for solid style */}
             </form>
 
             {error && (
@@ -135,11 +138,16 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
                                 <p className="text-text-secondary">
                                     {dict.waitlist.description}
                                 </p>
+                                {waitlistJoined ? (
+                                    <p className="text-green-400 text-sm font-medium">
+                                        You&apos;re on the list &mdash; we&apos;ll notify you when we expand to your area.
+                                    </p>
+                                ) : (
                                 <form
                                     className="flex gap-4 border-b border-white/20 pb-2"
                                     onSubmit={(e) => {
                                         e.preventDefault();
-                                        alert('Added to priority waitlist.');
+                                        setWaitlistJoined(true);
                                     }}
                                 >
                                     <input
@@ -152,6 +160,7 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
                                         Join
                                     </button>
                                 </form>
+                                )}
                             </div>
                         )}
                     </div>

@@ -4,7 +4,9 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useBooking, Location } from "@/contexts";
-import { PricingSummary } from "@/components/booking";
+import { PricingSummary, ProgressIndicator } from "@/components/booking";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 const MapboxAddressInput = dynamic(
   () => import("@/components/maps/MapboxAddressInput"),
@@ -167,75 +169,40 @@ export default function LocationPage({ params }: LocationPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#131835] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {[1, 2, 3, 4, 5, 6].map((step) => (
-              <div key={step} className="flex items-center">
-                <div
-                  className={`
-                    w-10 h-10 rounded-full flex items-center justify-center
-                    font-semibold text-sm
-                    ${currentStep >= step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-600"
-                    }
-                  `}
-                >
-                  {step}
-                </div>
-                {step < 6 && (
-                  <div
-                    className={`
-                      w-12 h-1 mx-2
-                      ${currentStep > step ? "bg-blue-600" : "bg-gray-200"}
-                    `}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-gray-600">
-            <span>{locale === "es" ? "Servicio" : "Service"}</span>
-            <span className="font-semibold text-blue-600">
-              {locale === "es" ? "Ubicación" : "Location"}
-            </span>
-            <span>{locale === "es" ? "Horario" : "Schedule"}</span>
-            <span>{locale === "es" ? "Revisar" : "Review"}</span>
-            <span>{locale === "es" ? "Vehículo" : "Vehicle"}</span>
-            <span>{locale === "es" ? "Pago" : "Payment"}</span>
-          </div>
-        </div>
+        <ProgressIndicator currentStep={currentStep} locale={locale} />
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             {locale === "es"
               ? "¿Dónde te gustaría el servicio?"
               : "Where would you like service?"}
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-[#A5B0D1]">
             {locale === "es"
               ? "Ingresa tu ubicación para verificar disponibilidad"
               : "Enter your location to check availability"}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-10">
           {/* Left column: Location Input */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* ZIP Code Input */}
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg>
+            <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </div>
                 {locale === "es" ? "Código Postal" : "ZIP Code"}
               </h3>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <input
                   type="text"
                   value={zipCode}
@@ -246,28 +213,30 @@ export default function LocationPage({ params }: LocationPageProps) {
                   }}
                   placeholder={locale === "es" ? "Ej: 33101" : "e.g. 33101"}
                   className={`
-                    w-full px-4 py-3 text-lg border-2 rounded-lg
-                    focus:outline-none focus:ring-2 focus:ring-blue-500
+                    w-full px-5 py-4 text-lg bg-white/5 border rounded-xl placeholder-[#5E698F]
+                    focus:outline-none focus:ring-2 focus:ring-[#D0B078] transition-all duration-300
                     ${zipError
-                      ? "border-red-500 bg-red-50"
+                      ? "border-red-500/50 bg-red-500/5"
                       : isValid
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-300"
+                        ? "border-green-500/50 bg-green-500/5 focus:border-[#D0B078]"
+                        : "border-[#2C355E] hover:border-white/20"
                     }
                   `}
+                  style={{ color: '#FFFFFF', fontSize: '16px' }}
+                  inputMode="numeric"
                   maxLength={5}
                 />
 
                 {isValidating && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                    {locale === "es" ? "Verificando..." : "Checking..."}
+                  <div className="flex items-center gap-2 text-sm text-[#5E698F] animate-fade-in">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#D0B078]"></div>
+                    {locale === "es" ? "Verificando área de servicio..." : "Checking service area..."}
                   </div>
                 )}
 
                 {zipError && (
-                  <div className="flex items-center gap-2 text-sm text-red-600">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="flex items-center gap-2 text-sm text-red-400 animate-fade-in">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
                     {zipError}
@@ -275,8 +244,8 @@ export default function LocationPage({ params }: LocationPageProps) {
                 )}
 
                 {isValid && !isValidating && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="flex items-center gap-2 text-sm text-green-400 animate-fade-in">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     {locale === "es"
@@ -285,21 +254,24 @@ export default function LocationPage({ params }: LocationPageProps) {
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
 
             {/* Address Input (only show if ZIP is valid) */}
             {isValid && (
-              <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
+              <Card className="p-8 animate-fade-in-up !bg-[#1A2142] !border-[#2C355E]">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                  </div>
                   {locale === "es" ? "Dirección del Servicio" : "Service Address"}
                 </h3>
 
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <MapboxAddressInput
                     onAddressSelect={handleAddressSelect}
+                    initialValue={address}
                     placeholder={
                       locale === "es"
                         ? "Ingresa tu dirección completa"
@@ -310,8 +282,8 @@ export default function LocationPage({ params }: LocationPageProps) {
                   />
 
                   {addressError && (
-                    <div className="flex items-center gap-2 text-sm text-red-600">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="flex items-center gap-2 text-sm text-red-400 animate-fade-in">
+                      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                       </svg>
                       {addressError}
@@ -319,39 +291,39 @@ export default function LocationPage({ params }: LocationPageProps) {
                   )}
 
                   {address && (
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm font-semibold text-blue-900 mb-1">
+                    <div className="mt-4 p-5 bg-[#D0B078]/5 border border-[#D0B078]/30 rounded-xl animate-fade-in">
+                      <p className="text-sm font-semibold text-[#D0B078] mb-1">
                         {locale === "es" ? "Dirección Seleccionada:" : "Selected Address:"}
                       </p>
-                      <p className="text-blue-800">
+                      <p className="text-white">
                         {address}
-                        {city && `, ${city}`}
-                        {state && `, ${state}`} {zipCode}
                       </p>
                     </div>
                   )}
                 </div>
-              </div>
+              </Card>
             )}
 
             {/* Info Box */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-              <div className="flex items-start gap-3">
-                <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
+            <Card className="p-6 !bg-[#1A2142]/50 !border-[#2C355E]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#D0B078]/10 flex-shrink-0 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[#D0B078]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
                 <div>
-                  <p className="font-semibold text-blue-900 mb-1">
+                  <p className="font-bold text-white mb-1">
                     {locale === "es" ? "Servicio Móvil" : "Mobile Service"}
                   </p>
-                  <p className="text-blue-800 text-sm">
+                  <p className="text-[#A5B0D1] leading-relaxed">
                     {locale === "es"
                       ? "Nuestros detalladores profesionales vienen a ti. Asegúrate de que la ubicación tenga acceso a agua y electricidad."
                       : "Our professional detailers come to you. Please ensure the location has access to water and electricity."}
                   </p>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Right column: Summary (sticky) */}
@@ -367,16 +339,13 @@ export default function LocationPage({ params }: LocationPageProps) {
               />
 
               {/* Action buttons */}
-              <div className="space-y-3">
-                <button
+              <div className="mt-6 space-y-3">
+                <Button
+                  fullWidth
+                  variant="primary"
                   onClick={handleContinue}
                   disabled={!isValid || !address}
-                  className="
-                    w-full bg-blue-600 text-white font-semibold py-4 rounded-xl
-                    hover:bg-blue-700 transition-colors duration-200
-                    disabled:bg-gray-300 disabled:cursor-not-allowed
-                    shadow-lg hover:shadow-xl
-                  "
+                  className={(!isValid || !address) ? 'opacity-50 cursor-not-allowed' : ''}
                 >
                   {locale === "es" ? "Continuar a Horario" : "Continue to Schedule"}
                   <svg
@@ -392,15 +361,12 @@ export default function LocationPage({ params }: LocationPageProps) {
                       d="M17 8l4 4m0 0l-4 4m4-4H3"
                     />
                   </svg>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  fullWidth
+                  variant="secondary"
                   onClick={handleBack}
-                  className="
-                    w-full bg-white text-gray-700 font-semibold py-4 rounded-xl
-                    border-2 border-gray-300 hover:border-gray-400
-                    transition-colors duration-200
-                  "
                 >
                   <svg
                     className="inline-block mr-2 w-5 h-5"
@@ -416,7 +382,7 @@ export default function LocationPage({ params }: LocationPageProps) {
                     />
                   </svg>
                   {locale === "es" ? "Volver a Servicio" : "Back to Service"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

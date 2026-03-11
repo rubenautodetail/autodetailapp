@@ -1,11 +1,13 @@
 "use client";
 
-import { use } from 'react';
-import { usePathname } from 'next/navigation';
+import { use, useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Home, List, Settings, MessageSquare } from 'lucide-react';
 import { ContractorProvider } from '@/contexts/ContractorContext';
 import { Toaster } from 'react-hot-toast';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationToast } from '@/components/dashboard/NotificationToast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ContractorLayoutProps {
     children: React.ReactNode;
@@ -18,46 +20,164 @@ export default function ContractorLayout({
 }: ContractorLayoutProps) {
     const { lang } = use(params);
     const pathname = usePathname();
+    const router = useRouter();
+    const { profile, isLoading: authLoading } = useAuth();
+
+    // Auth guard — contractor or admin only
+    useEffect(() => {
+        if (authLoading) return;
+        if (!profile || (profile.role !== 'contractor' && profile.role !== 'admin')) {
+            router.replace(`/${lang}`);
+        }
+    }, [authLoading, profile, lang, router]);
+
+    // Red dot on Jobs tab when there are pending incoming jobs
+    const [hasIncoming, setHasIncoming] = useState(false);
+    useEffect(() => {
+        const check = () => {
+            try {
+                const raw = localStorage.getItem('contractor_incoming_count');
+                setHasIncoming(raw !== null && raw !== '0');
+            } catch {
+                // localStorage unavailable — non-fatal
+            }
+        };
+        check();
+        // Re-check whenever the tab becomes visible (e.g. user navigates back)
+        window.addEventListener('focus', check);
+        return () => window.removeEventListener('focus', check);
+    }, []);
+
+    // Notifications Hook — must be before any early return
+    const { notifications, dismissToast } = useNotifications();
+
+    if (authLoading || !profile || (profile.role !== 'contractor' && profile.role !== 'admin')) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-[#131835]">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
+            </div>
+        );
+    }
 
     const isActive = (path: string) => pathname?.includes(path);
 
-    const navItems = [
-        { icon: Home, label: 'Inbox', path: '/contractor/inbox' },
-        { icon: List, label: 'Active', path: '/contractor/active' },
-        { icon: MessageSquare, label: 'History', path: '/contractor/history' },
-        { icon: Settings, label: 'Settings', path: '/contractor/settings' },
+    const navLinks = [
+        {
+            label: lang === 'es' ? 'Panel' : 'Dashboard',
+            path: `/${lang}/contractor/dashboard`,
+        },
+        {
+            label: lang === 'es' ? 'Historial' : 'History',
+            path: `/${lang}/contractor/history`,
+        },
+        {
+            label: lang === 'es' ? 'Ajustes' : 'Settings',
+            path: `/${lang}/contractor/settings`,
+        },
     ];
 
     return (
         <ContractorProvider>
             <Toaster position="top-center" />
-            <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-0 md:pl-64">
-                {/* Desktop Sidebar (Future Implementation) */}
+            <NotificationToast notifications={notifications.filter(n => !n.is_read)} onDismiss={dismissToast} />
 
-                {/* Mobile Bottom Navigation */}
-                <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-lg border-t border-white/10 z-50 md:hidden pb-safe">
-                    <div className="flex justify-around items-center p-4">
-                        {navItems.map((item) => {
-                            const Icon = item.icon;
-                            const active = isActive(item.path);
-                            return (
-                                <Link
-                                    key={item.path}
-                                    href={`/${lang}${item.path}`}
-                                    className={`flex flex-col items-center space-y-1 transition-colors duration-200 ${active ? 'text-accent-gold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
-                                >
-                                    <Icon className="w-6 h-6" />
-                                    <span className="text-[10px] font-medium">{item.label}</span>
-                                </Link>
-                            );
-                        })}
+            <div className="min-h-screen bg-[#131835]">
+                {/* Top Navigation Bar */}
+                <nav className="bg-[#0d1128] border-b border-white/10 sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            {/* Brand */}
+                            <Link
+                                href={`/${lang}/contractor/dashboard`}
+                                className="flex items-center space-x-2 text-white font-bold text-lg tracking-tight hover:opacity-80 transition-opacity"
+                            >
+                                <span className="text-yellow-400">✦</span>
+                                <span>Rubens Detail</span>
+                            </Link>
+
+                            {/* Nav Links — hidden on mobile (bottom nav handles it) */}
+                            <div className="hidden sm:flex items-center space-x-1">
+                                {navLinks.map((link) => {
+                                    const active = isActive(link.path.replace(`/${lang}`, ''));
+                                    return (
+                                        <Link
+                                            key={link.path}
+                                            href={link.path}
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                                                active
+                                                    ? 'bg-white/10 text-white'
+                                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                            }`}
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </nav>
 
-                {/* Content Area */}
-                <div className="md:p-8">
+                {/* Content Area — pad bottom on mobile for bottom nav */}
+                <div className="pb-20 sm:pb-0">
                     {children}
                 </div>
+
+                {/* Mobile Bottom Navigation */}
+                <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#0d1128] border-t border-white/10 z-50">
+                    <div className="flex h-16">
+                        {/* Jobs tab */}
+                        <Link
+                            href={`/${lang}/contractor/dashboard`}
+                            className={`flex-1 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                                isActive('/contractor/dashboard')
+                                    ? 'text-[#D0B078]'
+                                    : 'text-white/40 hover:text-white/70'
+                            }`}
+                        >
+                            {/* Icon wrapper — relative so we can position the red dot */}
+                            <span className="relative">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive('/contractor/dashboard') ? 2 : 1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                {/* Red dot — shown when there are incoming jobs */}
+                                {hasIncoming && (
+                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full ring-1 ring-[#0d1128]" />
+                                )}
+                            </span>
+                            {lang === 'es' ? 'Trabajos' : 'Jobs'}
+                        </Link>
+                        {/* History tab */}
+                        <Link
+                            href={`/${lang}/contractor/history`}
+                            className={`flex-1 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                                isActive('/contractor/history')
+                                    ? 'text-[#D0B078]'
+                                    : 'text-white/40 hover:text-white/70'
+                            }`}
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive('/contractor/history') ? 2 : 1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {lang === 'es' ? 'Historial' : 'History'}
+                        </Link>
+                        {/* Settings tab */}
+                        <Link
+                            href={`/${lang}/contractor/settings`}
+                            className={`flex-1 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                                isActive('/contractor/settings')
+                                    ? 'text-[#D0B078]'
+                                    : 'text-white/40 hover:text-white/70'
+                            }`}
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive('/contractor/settings') ? 2 : 1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {lang === 'es' ? 'Ajustes' : 'Settings'}
+                        </Link>
+                    </div>
+                </nav>
             </div>
         </ContractorProvider>
     );

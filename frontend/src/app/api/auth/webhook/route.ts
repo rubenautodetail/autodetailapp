@@ -1,0 +1,46 @@
+/**
+ * POST /api/auth/webhook
+ * Receives webhooks from Supabase Database (e.g., when a user is inserted into auth.users)
+ * and triggers notification services.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { notify } from '@/lib/notifications';
+
+export async function POST(req: NextRequest) {
+    try {
+        const payload = await req.json();
+
+        // Optional: verify a webhook secret from the headers
+        // const secret = req.headers.get('x-webhook-secret');
+        // if (secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
+        //     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // }
+
+        if (payload.type === 'INSERT' && payload.table === 'users' && payload.schema === 'auth') {
+            const record = payload.record;
+
+            if (record && record.email) {
+                // Determine user's name
+                // Supabase typically stores metadata in raw_user_meta_data
+                const name = record.raw_user_meta_data?.full_name
+                    || record.raw_user_meta_data?.name
+                    || record.email.split('@')[0];
+
+                await notify({
+                    type: 'user.welcome',
+                    user: {
+                        id: record.id,
+                        name: name,
+                        email: record.email,
+                    }
+                });
+            }
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Auth webhook error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}

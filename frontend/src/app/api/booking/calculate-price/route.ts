@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
         const basePrice = Number(service.base_price);
         const addOnsTotal = addOns.reduce((sum, a) => sum + Number(a.price), 0);
         const subtotal = basePrice + addOnsTotal;
-        const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
-        const total = Math.round((subtotal + serviceFee) * 100) / 100;
+        const serviceFee = 0; // Service fee removed
+        const total = Math.round(subtotal * 100) / 100;
 
         const totalDuration =
             (service.duration_minutes || 60) +

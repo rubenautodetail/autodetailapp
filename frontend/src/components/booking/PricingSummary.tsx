@@ -1,6 +1,7 @@
 "use client";
 
 import { Service, AddOn } from "@/contexts";
+import { Card } from "@/components/ui/Card";
 
 interface PricingSummaryProps {
   service: Service | null;
@@ -25,58 +26,52 @@ export default function PricingSummary({
     return null;
   }
 
-  const serviceName = service.name;  // Already localized from Strapi
+  const serviceName = service.name;
 
   return (
-    <div className={`bg-white/5 rounded-xl border border-white/10 p-6 ${className}`}>
-      <h3 className="text-lg font-semibold text-text-primary mb-4">
+    <Card className={`p-6 !bg-[#1A2142] !border-[#2C355E] ${className}`}>
+      <h3 className="text-xl font-bold text-white mb-6">
         {locale === "es" ? "Resumen de Precio" : "Price Summary"}
       </h3>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-text-primary">{serviceName}</p>
-            <p className="text-sm text-text-muted">
+            <p className="font-semibold text-white">{serviceName}</p>
+            <p className="text-sm text-[#5E698F]">
               {service.duration} {locale === "es" ? "min" : "min"}
             </p>
           </div>
-          <span className="font-medium text-text-primary">${service.basePrice.toFixed(2)}</span>
+          <span className="font-bold text-white">${service.basePrice.toFixed(2)}</span>
         </div>
 
-        {addOns.map((addOn) => {
-          const name = addOn.name;  // Already localized from Strapi
-          return (
-            <div key={addOn.id} className="flex items-center justify-between text-sm">
-              <span className="text-text-secondary">{name}</span>
-              <span className="text-text-primary">+${addOn.price.toFixed(2)}</span>
-            </div>
-          );
-        })}
+        {addOns.length > 0 && (
+          <div className="space-y-2 pt-2">
+            {addOns.map((addOn) => (
+              <div key={addOn.id} className="flex items-center justify-between text-sm">
+                <span className="text-[#A5B0D1]">{addOn.name}</span>
+                <span className="font-medium text-white">+${addOn.price.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
-        <div className="border-t border-white/10 pt-3">
+        <div className="border-t border-[#2C355E] pt-4 mt-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-text-secondary">{locale === "es" ? "Subtotal" : "Subtotal"}</span>
-            <span className="font-medium text-text-primary">${subtotal.toFixed(2)}</span>
-          </div>
-
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-text-muted">
-              {locale === "es" ? "Tarifa de servicio" : "Service fee"} (5%)
-            </span>
-            <span className="text-sm text-text-secondary">${serviceFee.toFixed(2)}</span>
+            <span className="text-[#A5B0D1] font-medium">{locale === "es" ? "Subtotal" : "Subtotal"}</span>
+            <span className="font-bold text-white">${subtotal.toFixed(2)}</span>
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-3">
+        <div className="border-t border-[#2C355E] pt-4 mt-2">
           <div className="flex items-center justify-between">
-            <span className="text-xl font-bold text-text-primary">
+            <span className="text-xl font-bold text-white">
               {locale === "es" ? "Total" : "Total"}
             </span>
-            <span className="text-2xl font-bold text-accent-gold">${total.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-[#D0B078]">${total.toFixed(2)}</span>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

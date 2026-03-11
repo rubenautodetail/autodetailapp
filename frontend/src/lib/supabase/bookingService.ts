@@ -16,7 +16,6 @@ function generateConfirmationCode(): string {
 }
 
 /**
- * Generates a random alphanumeric string (Strapi-style documentId)
  */
 function generateDocumentId(length = 24): string {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';

@@ -14,6 +14,22 @@ export function createApiClient() {
 }
 
 /**
+ * Supabase client using the service role key.
+ * Bypasses RLS — use only in admin server-side routes.
+ * Throws at startup if SUPABASE_SERVICE_ROLE_KEY is not configured.
+ */
+export function createServiceClient() {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+        throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set. This is required for admin operations.');
+    }
+    return createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceKey
+    )
+}
+
+/**
  * Supabase client that can validate user Bearer tokens in API routes.
  * Uses the service role key if available (needed for auth.getUser() to work).
  * Falls back to anon key for read-only operations.

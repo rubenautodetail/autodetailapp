@@ -1,6 +1,5 @@
 /**
  * Contractor API client
- * Calls Next.js API routes instead of Strapi.
  * All contractor data comes from Supabase via /api/contractors/* routes.
  */
 

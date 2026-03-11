@@ -1,14 +1,29 @@
 /**
  * POST /api/payments/capture
- * Captures a previously authorized Stripe payment.
- * Ported from Strapi backend — Strapi no longer required at runtime.
+ * Admin-only route. Captures a previously authorized Stripe PaymentIntent.
+ *
+ * Protected by ADMIN_API_SECRET header to prevent unauthorized captures.
+ *
+ * Failure handling: if Stripe capture throws (e.g. card declined on capture,
+ * or the 7-day hold window expired and the intent was voided), the booking
+ * status is reverted to 'cancelled' and payment_status to 'failed' so the
+ * customer can be notified and re-booked.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { capturePaymentIntent } from '@/lib/stripe/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
+    // Guard: require ADMIN_API_SECRET header so only internal admin UI can trigger this.
+    const adminSecret = process.env.ADMIN_API_SECRET;
+    if (adminSecret) {
+        const provided = req.headers.get('x-admin-secret');
+        if (!provided || provided !== adminSecret) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+    }
+
     try {
         const { bookingId } = await req.json();
 
@@ -16,12 +31,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
         }
 
-        const supabase = createApiClient();
+        const supabase = createServiceClient();
 
-        // Look up booking to get payment intent ID
+        // Look up booking to get payment intent ID, status, and contractor info.
         const { data: booking, error } = await supabase
             .from('bookings')
-            .select('payment_intent_id, payment_status')
+            .select('payment_intent_id, payment_status, contractor_id, total_amount, service_fee, service_name')
             .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
             .single();
 
@@ -40,14 +55,55 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Capture the funds via Stripe
-        const paymentIntent = await capturePaymentIntent(booking.payment_intent_id);
+        let paymentIntent;
+        try {
+            // Capture the funds via Stripe.
+            // If the PaymentIntent was created with transfer_data, Stripe routes
+            // (amount - application_fee_amount) to the contractor automatically.
+            paymentIntent = await capturePaymentIntent(booking.payment_intent_id);
+        } catch (stripeError) {
+            // Capture failed — revert booking to cancelled so it can be re-queued.
+            console.error('Stripe capture failed, reverting booking:', stripeError);
+            await supabase
+                .from('bookings')
+                .update({ payment_status: 'failed', status: 'cancelled' })
+                .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
 
-        // Update booking in Supabase
+            return NextResponse.json(
+                { error: `Stripe capture failed: ${(stripeError as Error).message}` },
+                { status: 502 }
+            );
+        }
+
+        // Capture succeeded — mark booking as paid.
         await supabase
             .from('bookings')
             .update({ payment_status: 'paid' })
             .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+
+        // Notify contractor of payment if they are assigned to this booking.
+        if (booking.contractor_id) {
+            const totalAmount = Number(booking.total_amount ?? 0);
+            const serviceFee = Number(booking.service_fee ?? 0);
+            const contractorPayout = (totalAmount - serviceFee).toFixed(2);
+            const serviceName = booking.service_name ?? 'Detailing Service';
+
+            const { error: notifError } = await supabase
+                .from('notifications')
+                .insert({
+                    user_id: booking.contractor_id,
+                    type: 'success' as const,
+                    title: '💰 Payment Received',
+                    message: `Your payment of $${contractorPayout} for the ${serviceName} job has been processed.`,
+                    booking_id: bookingId,
+                    is_read: false,
+                    link: `/en/contractor/jobs/${bookingId}`,
+                });
+
+            if (notifError) {
+                console.error('Failed to insert contractor payment notification:', notifError);
+            }
+        }
 
         return NextResponse.json({
             success: true,

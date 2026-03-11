@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useBooking, Service, AddOn } from "@/contexts";
 import { AddOnSelector, PricingSummary } from "@/components/booking";
 import { ServiceCard } from "@/components/booking/ServiceCard";
+import { Button } from "@/components/ui/Button";
 
 interface ServiceSelectionFormProps {
     services: Service[];
     addOns: AddOn[];
     locale: "en" | "es";
-    dataSource: "strapi" | "fallback";
+    dataSource: "catalog" | "fallback";
 }
 
 export default function ServiceSelectionForm({
@@ -59,73 +60,69 @@ export default function ServiceSelectionForm({
     };
 
     return (
-        <div className="min-h-screen bg-bg-primary py-8">
+        <div className="min-h-screen bg-[#131835] py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Progress Indicator */}
-                <div className="mb-8">
+                <div className="mb-12">
                     <div className="flex items-center justify-between max-w-3xl mx-auto">
                         {[1, 2, 3, 4, 5].map((step) => (
-                            <div key={step} className="flex items-center">
+                            <div key={step} className="flex items-center w-full relative">
                                 <div
                                     className={`
-                    w-10 h-10 rounded-full flex items-center justify-center
-                    font-semibold text-sm transition-colors
-                    ${currentStep >= step
-                                            ? "bg-accent-gold text-bg-primary"
-                                            : "bg-white/10 text-text-muted"
+                                        z-10 w-10 h-10 rounded-full flex items-center justify-center
+                                        font-bold text-sm transition-all duration-300
+                                        ${currentStep >= step
+                                            ? "bg-[#D0B078] text-[#131835] shadow-[0_0_15px_rgba(208,176,120,0.4)]"
+                                            : "bg-[var(--divider)] text-[var(--text-muted)]"
                                         }
-                  `}
+                                    `}
                                 >
                                     {step}
                                 </div>
                                 {step < 5 && (
                                     <div
                                         className={`
-                      w-12 h-1 mx-2 transition-colors
-                      ${currentStep > step ? "bg-accent-gold" : "bg-white/10"}
-                    `}
+                                            absolute left-5 right-0 top-1/2 -mt-[2px] h-1 transition-colors duration-300
+                                            ${currentStep > step ? "bg-[#D0B078]" : "bg-[var(--divider)]"}
+                                        `}
+                                        style={{ width: 'calc(100% - 1.25rem)' }}
                                     />
                                 )}
                             </div>
                         ))}
                     </div>
-                    <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-text-muted">
-                        <span className="font-semibold text-accent-gold">
-                            {locale === "es" ? "Servicio" : "Service"}
-                        </span>
-                        <span>{locale === "es" ? "Ubicación" : "Location"}</span>
-                        <span>{locale === "es" ? "Horario" : "Schedule"}</span>
-                        <span>{locale === "es" ? "Revisar" : "Review"}</span>
-                        <span>{locale === "es" ? "Pago" : "Payment"}</span>
+                    <div className="flex justify-between max-w-3xl mx-auto mt-3 text-xs uppercase tracking-wider font-semibold">
+                        <span className="text-[#D0B078]">{locale === "es" ? "Servicio" : "Service"}</span>
+                        <span className="text-[var(--text-muted)]">{locale === "es" ? "Ubicación" : "Location"}</span>
+                        <span className="text-[var(--text-muted)]">{locale === "es" ? "Horario" : "Schedule"}</span>
+                        <span className="text-[var(--text-muted)]">{locale === "es" ? "Revisar" : "Review"}</span>
+                        <span className="text-[var(--text-muted)]">{locale === "es" ? "Pago" : "Payment"}</span>
                     </div>
                 </div>
 
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-text-primary mb-2">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
                         {locale === "es"
-                            ? "Elige Tu Servicio de Detallado"
-                            : "Choose Your Detailing Service"}
+                            ? "Elige Tu Paquete"
+                            : "Choose Your Package"}
                     </h1>
-                    <p className="text-lg text-text-secondary">
+                    <p className="text-lg text-[var(--text-secondary)]">
                         {locale === "es"
                             ? "Selecciona el paquete perfecto para tu vehículo"
-                            : "Select the perfect package for your vehicle"}
+                            : "Select the perfect detailing package for your vehicle"}
                     </p>
-                    {dataSource === "strapi" && (
-                        <p className="text-xs text-green-400 mt-1 opacity-60">Connected</p>
+                    {dataSource === "catalog" && (
+                        <p className="text-xs text-green-400 mt-2 opacity-60">Live Pricing Available</p>
                     )}
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-8">
+                <div className="grid lg:grid-cols-3 gap-10">
                     {/* Left column: Services and Add-ons */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-10">
                         {/* Services */}
                         <div>
-                            <h2 className="text-2xl font-bold text-text-primary mb-4">
-                                {locale === "es" ? "Servicios Disponibles" : "Available Services"}
-                            </h2>
-                            <div className="grid md:grid-cols-3 gap-4">
+                            <div className="grid md:grid-cols-3 gap-6">
                                 {services.map((service) => (
                                     <ServiceCard
                                         key={service.id}
@@ -140,7 +137,7 @@ export default function ServiceSelectionForm({
 
                         {/* Add-ons (only show if service selected) */}
                         {selectedService && (
-                            <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                            <div className="animate-fade-in-up">
                                 <AddOnSelector
                                     addOns={addOns}
                                     selectedAddOns={selectedAddOns}
@@ -152,36 +149,36 @@ export default function ServiceSelectionForm({
 
                         {/* Info Cards */}
                         {selectedService && (
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-2 border border-white/10">
-                                        <svg className="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            <div className="grid md:grid-cols-3 gap-4 pt-4">
+                                <div className="bg-[var(--card)] border border-[var(--divider)] rounded-[20px] p-5 text-center">
+                                    <div className="w-12 h-12 bg-[#D0B078]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <svg className="w-6 h-6 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                         </svg>
                                     </div>
-                                    <p className="font-semibold text-text-primary text-sm">
+                                    <p className="font-semibold text-[var(--text-primary)] text-sm">
                                         {locale === "es" ? "Pago Seguro" : "Secure Payment"}
                                     </p>
                                 </div>
 
-                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-2 border border-white/10">
-                                        <svg className="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <div className="bg-[var(--card)] border border-[var(--divider)] rounded-[20px] p-5 text-center">
+                                    <div className="w-12 h-12 bg-[#D0B078]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <svg className="w-6 h-6 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
-                                    <p className="font-semibold text-text-primary text-sm">
+                                    <p className="font-semibold text-[var(--text-primary)] text-sm">
                                         {locale === "es" ? "Cancelación 24h" : "Cancel 24h Before"}
                                     </p>
                                 </div>
 
-                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-2 border border-white/10">
-                                        <svg className="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="bg-[var(--card)] border border-[var(--divider)] rounded-[20px] p-5 text-center">
+                                    <div className="w-12 h-12 bg-[#D0B078]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <svg className="w-6 h-6 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
-                                    <p className="font-semibold text-text-primary text-sm">
+                                    <p className="font-semibold text-[var(--text-primary)] text-sm">
                                         {locale === "es" ? "Garantía de Satisfacción" : "Satisfaction Guaranteed"}
                                     </p>
                                 </div>
@@ -193,7 +190,7 @@ export default function ServiceSelectionForm({
                     <div className="lg:col-span-1">
                         <div className="sticky top-8 space-y-4">
                             {selectedService ? (
-                                <>
+                                <div className="animate-fade-in-up">
                                     <PricingSummary
                                         service={selectedService}
                                         addOns={selectedAddOns}
@@ -203,53 +200,51 @@ export default function ServiceSelectionForm({
                                         locale={locale}
                                     />
 
-                                    <button
-                                        onClick={handleBack}
-                                        className="
-                      w-full mb-3 bg-transparent text-text-secondary font-semibold py-4 rounded-xl
-                      border border-white/20 hover:border-white/40 hover:text-text-primary
-                      transition-colors duration-200
-                    "
-                                    >
-                                        {locale === "es" ? "Volver a Inico" : "Back to Home"}
-                                    </button>
-
-                                    <button
-                                        onClick={handleContinue}
-                                        className="
-                      w-full bg-accent-gold text-bg-primary font-bold py-4 rounded-xl
-                      hover:bg-accent-gold-hover transition-colors duration-200
-                      shadow-glow hover:shadow-lg
-                    "
-                                    >
-                                        {locale === "es" ? "Continuar a Horario" : "Continue to Schedule"}
-                                        <svg
-                                            className="inline-block ml-2 w-5 h-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
+                                    <div className="mt-6 space-y-3">
+                                        <Button
+                                            fullWidth
+                                            variant="primary"
+                                            onClick={handleContinue}
                                         >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M17 8l4 4m0 0l-4 4m4-4H3"
-                                            />
-                                        </svg>
-                                    </button>
-                                </>
+                                            {locale === "es" ? "Continuar a Horario" : "Continue to Schedule"}
+                                            <svg
+                                                className="inline-block ml-2 w-5 h-5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                                />
+                                            </svg>
+                                        </Button>
+
+                                        <Button
+                                            fullWidth
+                                            variant="secondary"
+                                            onClick={handleBack}
+                                        >
+                                            {locale === "es" ? "Volver a Inicio" : "Back to Home"}
+                                        </Button>
+                                    </div>
+                                </div>
                             ) : (
-                                <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                                    <svg className="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
-                                    <p className="text-text-secondary font-medium mb-2">
+                                <div className="bg-[var(--card)] border border-[var(--divider)] rounded-[24px] p-8 text-center">
+                                    <div className="w-20 h-20 bg-[var(--divider)] rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <svg className="w-10 h-10 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-xl text-[var(--text-primary)] font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
                                         {locale === "es" ? "Selecciona un Servicio" : "Select a Service"}
                                     </p>
-                                    <p className="text-sm text-text-muted">
+                                    <p className="text-[var(--text-secondary)] leading-relaxed">
                                         {locale === "es"
-                                            ? "Elige uno de los servicios arriba para comenzar"
-                                            : "Choose one of the services above to get started"}
+                                            ? "Elige uno de los servicios arriba para comenzar con tu reserva."
+                                            : "Choose one of the services above to begin your booking."}
                                     </p>
                                 </div>
                             )}

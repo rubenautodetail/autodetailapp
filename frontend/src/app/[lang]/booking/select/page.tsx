@@ -1,34 +1,34 @@
 import { ServiceSelectionForm } from "@/components/booking";
-import { fetchServices, fetchAddOns, StrapiService, StrapiAddOn } from "@/lib/api/strapi";
+import { fetchServices, fetchAddOns, CatalogService, CatalogAddOn } from "@/lib/api/catalog";
 import { Service, AddOn } from "@/contexts";
 import { Metadata } from 'next';
 
-// Map Strapi service to BookingContext Service
-function mapStrapiService(s: StrapiService): Service {
+// Map catalog service to BookingContext Service
+function mapCatalogService(s: CatalogService): Service {
   return {
     id: s.id,
     documentId: s.documentId,
-    strapiId: s.id,
-    name: s.name,  // Already localized from Strapi
-    description: s.description,  // Already localized from Strapi
+    catalogId: s.id,
+    name: s.name,  // Already localized from catalog
+    description: s.description,  // Already localized from catalog
     basePrice: s.basePrice,
     duration: s.durationMinutes,
   };
 }
 
-// Map Strapi add-on to BookingContext AddOn
-function mapStrapiAddOn(a: StrapiAddOn): AddOn {
+// Map catalog add-on to BookingContext AddOn
+function mapCatalogAddOn(a: CatalogAddOn): AddOn {
   return {
     id: a.id,
     documentId: a.documentId,
-    strapiId: a.id,
-    name: a.name,  // Already localized from Strapi
-    description: a.description,  // Already localized from Strapi
+    catalogId: a.id,
+    name: a.name,  // Already localized from catalog
+    description: a.description,  // Already localized from catalog
     price: a.price,
   };
 }
 
-// Fallback mock data (used only when Strapi is completely down)
+// Fallback mock data (used only when catalog is completely down)
 const FALLBACK_SERVICES: Service[] = [
   {
     id: "interior",
@@ -103,18 +103,18 @@ export default async function SelectServicePage({ params }: { params: Promise<{ 
 
   let services: Service[] = [];
   let addOns: AddOn[] = [];
-  let dataSource: "strapi" | "fallback" = "strapi";
+  let dataSource: "catalog" | "fallback" = "catalog";
 
   try {
-    // Add logic to handle cases where Strapi might be unreachable gracefully
+    // Add logic to handle cases where catalog might be unreachable gracefully
     // Using a timeout race could be good but simple try/catch is sufficient for now
-    const [strapiServices, strapiAddOns] = await Promise.all([
+    const [catalogServices, catalogAddOns] = await Promise.all([
       fetchServices(locale),
       fetchAddOns(locale),
     ]);
 
-    services = strapiServices.map(mapStrapiService);
-    addOns = strapiAddOns.map(mapStrapiAddOn);
+    services = catalogServices.map(mapCatalogService);
+    addOns = catalogAddOns.map(mapCatalogAddOn);
   } catch (error) {
     console.error("[Booking] Error fetching services/addons:", error);
     services = FALLBACK_SERVICES;

@@ -19,6 +19,8 @@ interface Booking {
   createdAt: string;
   serviceName?: string;
   zipCode?: string;
+  contractorId?: string;
+  contractorName?: string;
 }
 
 const STATUS_OPTIONS = ["all", "pending", "pending_assignment", "confirmed", "in_progress", "completed", "cancelled"] as const;
@@ -43,6 +45,8 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const t = {
     title: locale === "es" ? "Gestión de Reservas" : "Booking Management",
@@ -53,6 +57,8 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     status: locale === "es" ? "Estado" : "Status",
     date: locale === "es" ? "Fecha" : "Date",
     total: locale === "es" ? "Total" : "Total",
+    contractor: locale === "es" ? "Técnico" : "Technician",
+    actions: locale === "es" ? "Acciones" : "Actions",
   };
 
   const fetchBookings = useCallback(async () => {
@@ -88,7 +94,28 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
         createdAt: b.created_at,
         serviceName: b.service_name ?? undefined,
         zipCode: b.zip_code ?? undefined,
+        contractorId: b.contractor_id ?? undefined,
       }));
+
+      // Batch-fetch contractor names for bookings that have a contractor_id
+      const contractorIds = [...new Set(mapped.map((b) => b.contractorId).filter(Boolean))] as string[];
+      if (contractorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", contractorIds);
+
+        const nameMap: Record<string, string> = {};
+        (profiles ?? []).forEach((p) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const pp = p as any;
+          nameMap[pp.id] = pp.full_name ?? "—";
+        });
+
+        mapped.forEach((b) => {
+          if (b.contractorId) b.contractorName = nameMap[b.contractorId] ?? "—";
+        });
+      }
 
       setBookings(mapped);
       setTotal(count ?? 0);
@@ -101,6 +128,43 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   }, [statusFilter, page]);
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
+
+  async function handleAction(bookingId: number, action: "cancel" | "requeue") {
+    setActionLoading(bookingId);
+    setMessage(null);
+    try {
+      const endpoint = action === "cancel"
+        ? "/api/admin/bookings/cancel"
+        : "/api/admin/bookings/requeue";
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      const newStatus = action === "cancel" ? "cancelled" : "pending_assignment";
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === bookingId
+            ? { ...b, status: newStatus, contractorId: action === "requeue" ? undefined : b.contractorId, contractorName: action === "requeue" ? undefined : b.contractorName }
+            : b
+        )
+      );
+      setMessage({
+        type: "success",
+        text: action === "cancel"
+          ? (locale === "es" ? "Reserva cancelada." : "Booking cancelled.")
+          : (locale === "es" ? "Trabajo re-asignado a la cola." : "Job re-queued for assignment."),
+      });
+    } catch {
+      setMessage({ type: "error", text: locale === "es" ? "Error. Inténtalo de nuevo." : "Action failed. Try again." });
+    } finally {
+      setActionLoading(null);
+    }
+  }
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -115,6 +179,11 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
         <p className="text-sm text-gray-500">
           {total} {locale === "es" ? "reservas en total" : "bookings total"}
         </p>
+        {message && (
+          <div className={`mt-3 px-4 py-2 rounded-lg text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+            {message.text}
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6">
@@ -138,8 +207,32 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
         {/* Table */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    {[t.customer, t.service, t.status, t.date, t.contractor, t.total, t.actions].map((h) => (
+                      <th key={h} className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {[...Array(8)].map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-5 py-4">
+                        <div className="h-4 w-28 bg-gray-200 rounded animate-pulse mb-1" />
+                        <div className="h-3 w-36 bg-gray-100 rounded animate-pulse" />
+                      </td>
+                      <td className="px-5 py-4"><div className="h-4 w-24 bg-gray-200 rounded animate-pulse" /></td>
+                      <td className="px-5 py-4"><div className="h-5 w-20 bg-gray-200 rounded-full animate-pulse" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded animate-pulse" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-24 bg-gray-100 rounded animate-pulse" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-14 bg-gray-200 rounded animate-pulse" /></td>
+                      <td className="px-5 py-4"><div className="h-8 w-20 bg-gray-200 rounded animate-pulse" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : bookings.length === 0 ? (
             <div className="text-center py-16 text-gray-500">{t.noBookings}</div>
@@ -152,16 +245,20 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.service}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.status}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.date}</th>
+                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.contractor}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.total}</th>
+                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {bookings.map((b) => (
                     <tr key={b.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-5 py-4">
-                        <div className="text-sm font-medium text-gray-900">{b.customerName || "—"}</div>
-                        <div className="text-xs text-gray-500">{b.customerEmail || ""}</div>
-                        {b.zipCode && <div className="text-xs text-gray-400">{b.zipCode}</div>}
+                        <Link href={`/${locale}/admin/bookings/${b.id}`} className="block hover:text-blue-600">
+                          <div className="text-sm font-medium text-gray-900">{b.customerName || "—"}</div>
+                          <div className="text-xs text-gray-500">{b.customerEmail || ""}</div>
+                          {b.zipCode && <div className="text-xs text-gray-400">{b.zipCode}</div>}
+                        </Link>
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-700">
                         {b.serviceName || "—"}
@@ -179,8 +276,45 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                           <div className="text-xs text-gray-400 capitalize">{b.timeWindow}</div>
                         )}
                       </td>
+                      <td className="px-5 py-4">
+                        {b.contractorName ? (
+                          <span className="text-sm text-gray-700">{b.contractorName}</span>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">
+                            {locale === "es" ? "Sin asignar" : "Unassigned"}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-5 py-4 text-sm font-medium text-gray-900">
                         {b.total != null ? `$${b.total.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-1.5">
+                          <Link
+                            href={`/${locale}/admin/bookings/${b.id}`}
+                            className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                          >
+                            {locale === "es" ? "Ver" : "View"}
+                          </Link>
+                          {b.status !== "cancelled" && b.status !== "completed" && (
+                            <>
+                              <button
+                                onClick={() => handleAction(b.id, "requeue")}
+                                disabled={actionLoading === b.id}
+                                className="px-2 py-1 text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 rounded hover:bg-yellow-100 transition-colors disabled:opacity-50"
+                              >
+                                {locale === "es" ? "Re-asignar" : "Re-queue"}
+                              </button>
+                              <button
+                                onClick={() => handleAction(b.id, "cancel")}
+                                disabled={actionLoading === b.id}
+                                className="px-2 py-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 transition-colors disabled:opacity-50"
+                              >
+                                {locale === "es" ? "Cancelar" : "Cancel"}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

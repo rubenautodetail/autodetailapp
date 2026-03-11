@@ -4,6 +4,8 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useBooking, type VehicleInfo } from "@/contexts";
 import { PricingSummary } from "@/components/booking";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 interface DetailsPageProps {
   params: Promise<{
@@ -127,11 +129,11 @@ export default function DetailsPage({ params }: DetailsPageProps) {
   }
 
   const inputClass = (field: string) =>
-    `w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${errors[field] ? "border-red-500 bg-red-50" : "border-gray-300"
+    `w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-luxe-gold bg-luxe-dark-navy text-white transition-all duration-200 ${errors[field] ? "border-red-500 bg-red-500/10" : "border-luxe-gold/20"
     }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-luxe-dark-navy py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Progress Indicator */}
@@ -140,28 +142,28 @@ export default function DetailsPage({ params }: DetailsPageProps) {
             {[1, 2, 3, 4, 5, 6].map((step) => (
               <div key={step} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs ${currentStep >= step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-600"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs transition-colors duration-300 ${currentStep >= step
+                    ? "bg-luxe-gold text-luxe-dark-charcoal shadow-[0_0_15px_rgba(208,176,120,0.4)]"
+                    : "bg-luxe-dark-charcoal text-gray-500 border border-gray-700"
                     }`}
                 >
                   {step}
                 </div>
                 {step < 6 && (
                   <div
-                    className={`w-8 h-1 mx-1 ${currentStep > step ? "bg-blue-600" : "bg-gray-200"
+                    className={`w-8 h-1 mx-1 rounded-full transition-colors duration-300 ${currentStep > step ? "bg-luxe-gold/50" : "bg-gray-800"
                       }`}
                   />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-gray-600">
+          <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-gray-400">
             <span>{locale === "es" ? "Servicio" : "Service"}</span>
             <span>{locale === "es" ? "Ubicación" : "Location"}</span>
             <span>{locale === "es" ? "Horario" : "Schedule"}</span>
             <span>{locale === "es" ? "Revisar" : "Review"}</span>
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-luxe-gold">
               {locale === "es" ? "Vehículo" : "Vehicle"}
             </span>
             <span>{locale === "es" ? "Pago" : "Payment"}</span>
@@ -170,10 +172,10 @@ export default function DetailsPage({ params }: DetailsPageProps) {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-white mb-2">
             {locale === "es" ? "Detalles del Vehículo" : "Vehicle Details"}
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-400">
             {locale === "es"
               ? "Cuéntanos sobre el vehículo que deseas detallar"
               : "Tell us about the vehicle you'd like detailed"}
@@ -183,9 +185,9 @@ export default function DetailsPage({ params }: DetailsPageProps) {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left column: Vehicle Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Card className="p-6 !bg-[#1A2142] !border-[#2C355E]">
+              <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                <svg className="w-5 h-5 text-luxe-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
                 {locale === "es" ? "Información del Vehículo" : "Vehicle Information"}
@@ -196,9 +198,9 @@ export default function DetailsPage({ params }: DetailsPageProps) {
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Make */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       {locale === "es" ? "Marca" : "Make"}
-                      <span className="text-red-500 ml-1">*</span>
+                      <span className="text-luxe-gold ml-1">*</span>
                     </label>
                     <select
                       value={make}
@@ -208,11 +210,11 @@ export default function DetailsPage({ params }: DetailsPageProps) {
                       }}
                       className={inputClass("make")}
                     >
-                      <option value="">
+                      <option className="bg-luxe-dark-navy" value="">
                         {locale === "es" ? "Seleccionar marca" : "Select make"}
                       </option>
                       {CAR_MAKES.map((m) => (
-                        <option key={m} value={m}>{m}</option>
+                        <option className="bg-luxe-dark-navy" key={m} value={m}>{m}</option>
                       ))}
                     </select>
                     {errors.make && (
@@ -222,9 +224,9 @@ export default function DetailsPage({ params }: DetailsPageProps) {
 
                   {/* Year */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       {locale === "es" ? "Año" : "Year"}
-                      <span className="text-red-500 ml-1">*</span>
+                      <span className="text-luxe-gold ml-1">*</span>
                     </label>
                     <select
                       value={year}
@@ -234,11 +236,11 @@ export default function DetailsPage({ params }: DetailsPageProps) {
                       }}
                       className={inputClass("year")}
                     >
-                      <option value="">
+                      <option className="bg-luxe-dark-navy" value="">
                         {locale === "es" ? "Seleccionar año" : "Select year"}
                       </option>
                       {YEARS.map((y) => (
-                        <option key={y} value={y}>{y}</option>
+                        <option className="bg-luxe-dark-navy" key={y} value={y}>{y}</option>
                       ))}
                     </select>
                     {errors.year && (
@@ -249,9 +251,9 @@ export default function DetailsPage({ params }: DetailsPageProps) {
 
                 {/* Model */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     {locale === "es" ? "Modelo" : "Model"}
-                    <span className="text-red-500 ml-1">*</span>
+                    <span className="text-luxe-gold ml-1">*</span>
                   </label>
                   <input
                     type="text"
@@ -270,9 +272,9 @@ export default function DetailsPage({ params }: DetailsPageProps) {
 
                 {/* Color */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     {locale === "es" ? "Color" : "Color"}
-                    <span className="text-red-500 ml-1">*</span>
+                    <span className="text-luxe-gold ml-1">*</span>
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {COLORS.map((c) => (
@@ -284,8 +286,8 @@ export default function DetailsPage({ params }: DetailsPageProps) {
                           if (errors.color) setErrors({ ...errors, color: "" });
                         }}
                         className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${color === c.value
-                            ? "border-blue-600 bg-blue-50 text-blue-700"
-                            : "border-gray-200 text-gray-700 hover:border-gray-400"
+                          ? "border-luxe-gold bg-luxe-gold/10 text-luxe-gold shadow-[0_0_10px_rgba(208,176,120,0.2)]"
+                          : "border-luxe-gold/20 text-gray-400 hover:border-luxe-gold/50 hover:text-white"
                           }`}
                       >
                         {locale === "es" ? c.labelEs : c.label}
@@ -298,18 +300,18 @@ export default function DetailsPage({ params }: DetailsPageProps) {
                 </div>
 
                 {/* Privacy note */}
-                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-                  <svg className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-2 bg-luxe-gold/10 border border-luxe-gold/20 rounded-lg p-3 mt-2">
+                  <svg className="w-4 h-4 text-luxe-gold mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-xs text-blue-700">
+                  <p className="text-xs text-luxe-gold">
                     {locale === "es"
                       ? "Esta información ayuda a nuestro detallador a prepararse. Solo se comparte con el profesional asignado."
                       : "This helps your detailer prepare. It's only shared with your assigned professional."}
                   </p>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Right column: Price Summary (sticky) */}
@@ -326,42 +328,43 @@ export default function DetailsPage({ params }: DetailsPageProps) {
 
               {/* Vehicle preview (shows once filled) */}
               {(make || model || year || color) && (
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                <Card className="p-4 !bg-[#1A2142] !border-[#2C355E]">
+                  <p className="text-xs font-medium text-luxe-gold uppercase tracking-wider mb-2">
                     {locale === "es" ? "Tu Vehículo" : "Your Vehicle"}
                   </p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-white">
                     {[year, make, model].filter(Boolean).join(" ") || "—"}
                   </p>
                   {color && (
-                    <p className="text-sm text-gray-600 capitalize mt-1">
+                    <p className="text-sm text-gray-400 capitalize mt-1">
                       {COLORS.find((c) => c.value === color)?.[locale === "es" ? "labelEs" : "label"] || color}
                     </p>
                   )}
-                </div>
+                </Card>
               )}
 
               {/* Action buttons */}
               <div className="space-y-3">
-                <button
+                <Button
                   onClick={handleContinue}
-                  className="w-full bg-blue-600 text-white font-semibold py-4 rounded-xl hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                  className="w-full flex justify-center items-center py-4 text-base"
                 >
                   {locale === "es" ? "Continuar a Pago" : "Continue to Payment"}
                   <svg className="inline-block ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="outline"
                   onClick={handleBack}
-                  className="w-full bg-white text-gray-700 font-semibold py-4 rounded-xl border-2 border-gray-300 hover:border-gray-400 transition-colors duration-200"
+                  className="w-full flex justify-center items-center py-4 text-base"
                 >
                   <svg className="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                   {locale === "es" ? "Volver a Revisar" : "Back to Review"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

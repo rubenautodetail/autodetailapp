@@ -51,9 +51,9 @@ export default function Header({ profileName }: { profileName?: string }) {
                             <button onClick={() => setIsDrawerOpen(false)} className="p-2">✕</button>
                         </div>
                         <nav className="space-y-4">
-                            <a href="/dashboard/vehicles" className="block py-2 text-[var(--text-primary)] border-b border-[var(--divider)]">My Vehicles</a>
-                            <a href="/dashboard/orders" className="block py-2 text-[var(--text-primary)] border-b border-[var(--divider)]">My Orders</a>
-                            <a href="#" className="block py-2 text-[var(--text-primary)] border-b border-[var(--divider)]">Payment Methods</a>
+                            <span className="block py-2 text-[var(--text-secondary)] border-b border-[var(--divider)] opacity-50">My Vehicles (coming soon)</span>
+                            <span className="block py-2 text-[var(--text-secondary)] border-b border-[var(--divider)] opacity-50">My Orders (coming soon)</span>
+                            <span className="block py-2 text-[var(--text-secondary)] border-b border-[var(--divider)] opacity-50">Payment Methods (coming soon)</span>
                             <button className="block w-full text-left py-2 text-[var(--error)] hover:bg-[var(--error)]/10 px-2 -ml-2 rounded">Logout</button>
                         </nav>
                     </div>

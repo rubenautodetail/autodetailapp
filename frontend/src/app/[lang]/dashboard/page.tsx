@@ -136,7 +136,7 @@ export default function DashboardPage() {
                         <h2 className="text-lg font-bold text-[var(--text-primary)]">
                             Book a Service
                         </h2>
-                        <Link href="/services" className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent)]/80 transition-colors flex items-center">
+                        <Link href="/en/booking/select" className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent)]/80 transition-colors flex items-center">
                             See All <ArrowRight className="w-4 h-4 ml-1" />
                         </Link>
                     </div>
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                 onClose={handleCloseModal}
                 title="Premium Gloss"
                 footer={
-                    <Link href="/dashboard/location" className="block w-full text-center py-4 rounded-xl bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all">
+                    <Link href="/en/booking/location" className="block w-full text-center py-4 rounded-xl bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all">
                         Continue - $140
                     </Link>
                 }

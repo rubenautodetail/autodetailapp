@@ -52,8 +52,35 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="h-7 w-48 bg-gray-200 rounded animate-pulse mb-1" />
+          <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded-xl border border-gray-200 bg-white p-5">
+                <div className="h-6 w-6 bg-gray-200 rounded animate-pulse mb-3" />
+                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mb-2" />
+                <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="h-5 w-32 bg-gray-200 rounded animate-pulse mb-6" />
+                {[...Array(3)].map((_, j) => (
+                  <div key={j} className="flex justify-between py-3 border-b border-gray-100 last:border-0">
+                    <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-4 w-8 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -66,7 +93,7 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
           <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
           <p className="text-sm text-gray-500">Rubens Auto Detail</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 flex-wrap">
           <Link
             href={`/${locale}/admin/contractors`}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
@@ -78,6 +105,18 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
           >
             {t.manageBookings}
+          </Link>
+          <Link
+            href={`/${locale}/admin/users`}
+            className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors"
+          >
+            {locale === "es" ? "👥 Usuarios" : "👥 Users"}
+          </Link>
+          <Link
+            href={`/${locale}/admin/payments`}
+            className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
+          >
+            {locale === "es" ? "💳 Pagos" : "💳 Payments"}
           </Link>
         </div>
       </div>

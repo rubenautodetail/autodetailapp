@@ -9,7 +9,7 @@ export default function TermsPage() {
                 <p>By accessing and using the Rubens Auto Detail Platform, you accept and agree to be bound by the terms and provision of this agreement.</p>
 
                 <h2 className="text-xl font-semibold mt-6 mb-3">2. Service Description</h2>
-                <p>We provide a platform connecting vehicle owners ("Customers") with independent auto detailing professionals ("Contractors"). We facilitate bookings and payments but are not directly responsible for the services provided by Contractors.</p>
+                <p>We provide a platform connecting vehicle owners (&quot;Customers&quot;) with independent auto detailing professionals (&quot;Contractors&quot;). We facilitate bookings and payments but are not directly responsible for the services provided by Contractors.</p>
 
                 <h2 className="text-xl font-semibold mt-6 mb-3">3. User Obligations</h2>
                 <p>Users verify that all information provided is accurate. Customers agree to provide a safe working environment. Contractors agree to maintain professional standards and insurance.</p>

@@ -1,6 +1,5 @@
 /**
  * Payment API client
- * Calls Next.js API routes — Strapi no longer required at runtime.
  */
 
 // All payment endpoints are now Next.js API routes (relative paths)

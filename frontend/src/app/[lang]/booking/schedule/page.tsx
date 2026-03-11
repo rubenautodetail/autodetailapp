@@ -3,7 +3,9 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useBooking } from "@/contexts";
-import { PricingSummary } from "@/components/booking";
+import { PricingSummary, ProgressIndicator } from "@/components/booking";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 interface SchedulePageProps {
   params: Promise<{
@@ -12,27 +14,14 @@ interface SchedulePageProps {
 }
 
 const TIME_WINDOWS = [
-  {
-    slot: "morning" as const,
-    label: "Morning",
-    labelEs: "Mañana",
-    range: "9:00 AM - 12:00 PM",
-    rangeEs: "9:00 AM - 12:00 PM",
-  },
-  {
-    slot: "afternoon" as const,
-    label: "Afternoon",
-    labelEs: "Tarde",
-    range: "1:00 PM - 4:00 PM",
-    rangeEs: "1:00 PM - 4:00 PM",
-  },
-  {
-    slot: "evening" as const,
-    label: "Evening",
-    labelEs: "Noche",
-    range: "4:00 PM - 7:00 PM",
-    rangeEs: "4:00 PM - 7:00 PM",
-  },
+  { slot: "09:00", label: "9:00 AM", labelEs: "9:00 AM", range: "9:00 AM", rangeEs: "9:00 AM" },
+  { slot: "10:00", label: "10:00 AM", labelEs: "10:00 AM", range: "10:00 AM", rangeEs: "10:00 AM" },
+  { slot: "11:00", label: "11:00 AM", labelEs: "11:00 AM", range: "11:00 AM", rangeEs: "11:00 AM" },
+  { slot: "12:00", label: "12:00 PM", labelEs: "12:00 PM", range: "12:00 PM", rangeEs: "12:00 PM" },
+  { slot: "13:00", label: "1:00 PM", labelEs: "1:00 PM", range: "1:00 PM", rangeEs: "1:00 PM" },
+  { slot: "14:00", label: "2:00 PM", labelEs: "2:00 PM", range: "2:00 PM", rangeEs: "2:00 PM" },
+  { slot: "15:00", label: "3:00 PM", labelEs: "3:00 PM", range: "3:00 PM", rangeEs: "3:00 PM" },
+  { slot: "16:00", label: "4:00 PM", labelEs: "4:00 PM", range: "4:00 PM", rangeEs: "4:00 PM" },
 ];
 
 export default function SchedulePage({ params }: SchedulePageProps) {
@@ -75,6 +64,8 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
   // Fetch availability when month changes
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchAvailability = async () => {
       if (!customerLocation?.zipCode || !selectedService) return;
 
@@ -82,18 +73,16 @@ export default function SchedulePage({ params }: SchedulePageProps) {
       try {
         const month = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}`;
 
-        const response = await fetch(
-          `/api/booking/availability`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              zipCode: customerLocation.zipCode,
-              serviceId: selectedService.documentId,
-              month,
-            }),
-          }
-        );
+        const response = await fetch(`/api/booking/availability`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            zipCode: customerLocation.zipCode,
+            serviceId: selectedService.documentId,
+            month,
+          }),
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error("Failed to fetch availability");
@@ -113,6 +102,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
         setAvailableDates(dateSet);
       } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
         console.error("Error fetching availability:", error);
         // On error, allow all future dates (fallback behavior)
         const dateSet = new Set<string>();
@@ -138,6 +128,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     };
 
     fetchAvailability();
+    return () => controller.abort();
   }, [currentMonth, customerLocation, selectedService]);
 
   // Generate calendar days
@@ -170,12 +161,25 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Can't book same day or past dates
-    if (date < today) return false;
+    // Create max date (14 days from today)
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + 14);
 
-    // Check real contractor availability from API
+    // Can't book past dates or beyond 14 days
+    if (date < today || date > maxDate) return false;
+
+    // Optional: check real contractor availability from API
+    // If we only enforce the 14 days, we can skip API check if it's missing,
+    // but the API also handles holiday/busy schedules.
+    // For now, if it's within 14 days, it's considered available locally unless the API strictly overrides.
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-    return availableDates.has(dateStr);
+
+    // If availableDates is populated from API, use it. Otherwise rely on local 14-days logic.
+    if (availableDates.size > 0 && !availableDates.has(dateStr)) {
+      return false;
+    }
+
+    return true;
   };
 
   const handleDateSelect = (date: Date) => {
@@ -222,90 +226,53 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#131835] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {[1, 2, 3, 4, 5, 6].map((step) => (
-              <div key={step} className="flex items-center">
-                <div
-                  className={`
-                    w-10 h-10 rounded-full flex items-center justify-center
-                    font-semibold text-sm
-                    ${currentStep >= step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-600"
-                    }
-                  `}
-                >
-                  {step}
-                </div>
-                {step < 6 && (
-                  <div
-                    className={`
-                      w-12 h-1 mx-2
-                      ${currentStep > step ? "bg-blue-600" : "bg-gray-200"}
-                    `}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between max-w-3xl mx-auto mt-2 text-xs text-gray-600">
-            <span>{locale === "es" ? "Servicio" : "Service"}</span>
-            <span>{locale === "es" ? "Ubicación" : "Location"}</span>
-            <span className="font-semibold text-blue-600">
-              {locale === "es" ? "Horario" : "Schedule"}
-            </span>
-            <span>{locale === "es" ? "Revisar" : "Review"}</span>
-            <span>{locale === "es" ? "Vehículo" : "Vehicle"}</span>
-            <span>{locale === "es" ? "Pago" : "Payment"}</span>
-          </div>
-        </div>
+        <ProgressIndicator currentStep={currentStep} locale={locale} />
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             {locale === "es"
               ? "Elige Fecha y Horario"
               : "Choose Date & Time"}
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-[var(--text-secondary)]">
             {locale === "es"
               ? "Selecciona cuándo te gustaría el servicio"
               : "Select when you'd like service"}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-10">
           {/* Left column: Calendar & Time Selection */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Calendar */}
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+            <Card className="p-8 relative !bg-[#1A2142] !border-[#2C355E]">
               {isLoadingAvailability && (
-                <div className="absolute top-4 right-4 flex items-center gap-2 text-sm text-blue-600">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <div className="absolute top-6 right-6 flex items-center gap-2 text-sm text-[#D0B078] animate-fade-in">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#D0B078]"></div>
                   {locale === "es" ? "Cargando..." : "Loading..."}
                 </div>
               )}
 
               {/* Month Navigation */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-8">
                 <button
                   onClick={() =>
                     setCurrentMonth(
                       new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
                     )
                   }
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
-                <h2 className="text-xl font-bold">{monthName}</h2>
+                <h2 className="text-xl font-bold text-white capitalize">{monthName}</h2>
 
                 <button
                   onClick={() =>
@@ -313,7 +280,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
                     )
                   }
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -322,10 +289,10 @@ export default function SchedulePage({ params }: SchedulePageProps) {
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-x-2 gap-y-4">
                 {/* Week day headers */}
                 {weekDays.map((day) => (
-                  <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
+                  <div key={day} className="text-center text-xs font-semibold uppercase tracking-wider text-[#5E698F] py-2">
                     {day}
                   </div>
                 ))}
@@ -347,15 +314,15 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       onClick={() => handleDateSelect(date)}
                       disabled={!isAvailable}
                       className={`
-                        aspect-square rounded-lg flex items-center justify-center
-                        font-medium text-sm transition-all
+                        aspect-square rounded-xl flex items-center justify-center
+                        font-medium text-sm transition-all duration-300
                         ${isSelected
-                          ? "bg-blue-600 text-white shadow-md"
+                          ? "bg-[#D0B078] text-[#131835] shadow-[0_0_15px_rgba(208,176,120,0.4)]"
                           : isAvailable
-                            ? "bg-white text-gray-900 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            ? "bg-white/5 text-white hover:bg-white/10 border border-[#2C355E] hover:border-[#D0B078]/50"
+                            : "bg-transparent text-[#5E698F] opacity-50 cursor-not-allowed"
                         }
-                        ${isToday && !isSelected ? "border-blue-400" : ""}
+                        ${isToday && !isSelected ? "border-[#D0B078]/50" : ""}
                       `}
                     >
                       {date.getDate()}
@@ -363,71 +330,76 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                   );
                 })}
               </div>
-            </div>
+            </Card>
 
             {/* Time Windows */}
             {tempSelectedDate && (
-              <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <Card className="p-8 animate-fade-in-up !bg-[#1A2142] !border-[#2C355E]">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   {locale === "es"
                     ? "Selecciona Horario"
-                    : "Select Time Window"}
+                    : "Select Time"}
                 </h3>
 
                 <div className="grid md:grid-cols-3 gap-4">
                   {TIME_WINDOWS.map((window) => {
                     const isSelected = tempSelectedWindow?.slot === window.slot;
                     const label = locale === "es" ? window.labelEs : window.label;
-                    const range = locale === "es" ? window.rangeEs : window.range;
 
                     return (
                       <button
                         key={window.slot}
                         onClick={() => handleWindowSelect(window)}
                         className={`
-                          p-6 rounded-xl border-2 transition-all
+                          p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group
                           ${isSelected
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-gray-200 hover:border-blue-300 bg-white"
+                            ? "border-[#D0B078] bg-[#D0B078]/10 ring-1 ring-[#D0B078]"
+                            : "border-[#2C355E] bg-white/5 hover:bg-white/10 hover:border-[#D0B078]/30"
                           }
                         `}
                       >
                         {isSelected && (
-                          <div className="flex justify-end mb-2">
-                            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 bg-[#D0B078] rounded-full flex items-center justify-center">
+                              <svg className="w-3 h-3 text-[#131835]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                               </svg>
                             </div>
                           </div>
                         )}
 
-                        <div className="text-center">
-                          <p className="font-bold text-lg text-gray-900 mb-1">{label}</p>
-                          <p className="text-sm text-gray-600">{range}</p>
-                          <p className="text-xs text-green-600 mt-2">
-                            {locale === "es" ? "✓ Disponible" : "✓ Available"}
+                        <div className="text-center mt-2 mb-1">
+                          <p className={`font-bold text-lg mb-1 transition-colors ${isSelected ? 'text-[#D0B078]' : 'text-white'}`}>{label}</p>
+                          <p className={`text-xs flex justify-center items-center gap-1 opacity-80 ${isSelected ? 'text-[#D0B078]' : 'text-[#5E698F] group-hover:text-green-400'}`}>
+                            {locale === "es" ? "Disponible" : "Available"}
                           </p>
                         </div>
                       </button>
                     );
                   })}
                 </div>
-              </div>
+              </Card>
             )}
 
             {/* Selection Summary */}
-            {tempSelectedDate && tempSelectedWindow && (
-              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
-                <div className="flex items-start gap-3">
-                  <svg className="w-6 h-6 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+            {(tempSelectedDate && tempSelectedWindow) && (
+              <Card className="p-6 !bg-[#D0B078]/5 !border-[#D0B078]/30 animate-fade-in-up">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#D0B078]/20 flex-shrink-0 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#D0B078]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                   <div>
-                    <p className="font-semibold text-green-900 mb-1">
+                    <p className="font-semibold text-white mb-1">
                       {locale === "es" ? "Tu Cita" : "Your Appointment"}
                     </p>
-                    <p className="text-green-800">
+                    <p className="text-white font-medium text-lg">
                       {tempSelectedDate.toLocaleDateString(locale, {
                         weekday: "long",
                         year: "numeric",
@@ -435,13 +407,12 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                         day: "numeric",
                       })}
                     </p>
-                    <p className="text-green-700 text-sm">
-                      {locale === "es" ? tempSelectedWindow.labelEs : tempSelectedWindow.label} •{" "}
-                      {locale === "es" ? tempSelectedWindow.rangeEs : tempSelectedWindow.range}
+                    <p className="text-[#D0B078]">
+                      {locale === "es" ? tempSelectedWindow.labelEs : tempSelectedWindow.label}
                     </p>
                   </div>
                 </div>
-              </div>
+              </Card>
             )}
           </div>
 
@@ -458,16 +429,13 @@ export default function SchedulePage({ params }: SchedulePageProps) {
               />
 
               {/* Action buttons */}
-              <div className="space-y-3">
-                <button
+              <div className="mt-6 space-y-3">
+                <Button
+                  fullWidth
+                  variant="primary"
                   onClick={handleContinue}
                   disabled={!tempSelectedDate || !tempSelectedWindow}
-                  className="
-                    w-full bg-blue-600 text-white font-semibold py-4 rounded-xl
-                    hover:bg-blue-700 transition-colors duration-200
-                    disabled:bg-gray-300 disabled:cursor-not-allowed
-                    shadow-lg hover:shadow-xl
-                  "
+                  className={(!tempSelectedDate || !tempSelectedWindow) ? 'opacity-50 cursor-not-allowed' : ''}
                 >
                   {locale === "es" ? "Continuar a Revisar" : "Continue to Review"}
                   <svg
@@ -483,15 +451,12 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       d="M17 8l4 4m0 0l-4 4m4-4H3"
                     />
                   </svg>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  fullWidth
+                  variant="secondary"
                   onClick={handleBack}
-                  className="
-                    w-full bg-white text-gray-700 font-semibold py-4 rounded-xl
-                    border-2 border-gray-300 hover:border-gray-400
-                    transition-colors duration-200
-                  "
                 >
                   <svg
                     className="inline-block mr-2 w-5 h-5"
@@ -507,7 +472,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                     />
                   </svg>
                   {locale === "es" ? "Volver a Ubicación" : "Back to Location"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

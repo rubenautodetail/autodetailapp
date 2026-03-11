@@ -6,7 +6,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 export interface Service {
   id: string | number;
   documentId: string;
-  strapiId?: number;
+  catalogId?: number;
   name: string;
   description: string;
   basePrice: number;
@@ -17,7 +17,7 @@ export interface Service {
 export interface AddOn {
   id: string | number;
   documentId: string;
-  strapiId?: number;
+  catalogId?: number;
   name: string;
   price: number;
   description?: string;
@@ -34,7 +34,7 @@ export interface Location {
 }
 
 export interface TimeWindow {
-  slot: "morning" | "afternoon" | "evening";
+  slot: string;
   label: string;
   labelEs: string;
   range: string;
@@ -176,9 +176,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const addOnsTotal = addOns.reduce((sum, addon) => sum + addon.price, 0);
     const newSubtotal = servicePrice + addOnsTotal;
 
-    // 5% service fee (same as Uber clone model)
-    const newServiceFee = newSubtotal * 0.05;
-    const newTotal = newSubtotal + newServiceFee;
+    // Service fee removed - included in base price
+    const newServiceFee = 0;
+    const newTotal = newSubtotal;
 
     setSubtotal(newSubtotal);
     setServiceFee(newServiceFee);
@@ -192,7 +192,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Navigation actions
   const nextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 6)); // Max 6 steps
+    setCurrentStep((prev) => Math.min(prev + 1, 5)); // Max 5 steps
   };
 
   const previousStep = () => {

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/othmarcasilla/Rubens\\ Auto\\ detail\\ platfomr/frontend && npx tsc --noEmit --skipLibCheck 2>&1 | grep 'error TS' | head -5"
+          }
+        ]
+      }
+    ]
+  }
+}

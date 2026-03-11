@@ -2,55 +2,59 @@
 
 /*
  * Rubens Auto Detail Platform - Ultra Premium Design System
- * Theme: "Midnight Gold" - Deepest Black & Rich Gold
+ * Theme: "LuxeDetail" - Deep Navy & Champagne Gold
  */
 
 @theme {
   /* Apple Adaptive System - Colors */
   --color-test: #ff0000;
 
-  /* Midnight Gold Dark Theme — Customer Dashboard Tokens */
-  --color-bg-primary: #080808;
+  /* LuxeDetail Dark Theme — Customer Dashboard Tokens */
+  --color-bg-primary: #131835;
   --color-text-secondary: #8E8E93;
-  --color-text-muted: #48484A;
-  --color-accent-gold: #D4AC0D;
+  --color-text-muted: #5E698F;
+  --color-accent-gold: #D0B078;
 
   /* Light Mode Base */
-  --color-bg-light: #F5F5F7;
+  --color-bg-light: #F5F6F8;
   --color-card-light: #FFFFFF;
-  --color-text-primary-light: #1D1D1F;
+  --color-text-primary-light: #131835;
+  /* Navy text on light bg */
   --color-text-secondary-light: #6E6E73;
   --color-divider-light: #E5E5EA;
 
   /* Dark Mode Base */
-  --color-bg-dark: #000000;
-  --color-card-dark: #1C1C1E;
+  --color-bg-dark: #131835;
+  /* Deep Navy Background */
+  --color-card-dark: #1A2142;
+  /* Slightly lighter navy for cards */
   --color-text-primary-dark: #FFFFFF;
-  --color-text-secondary-dark: #8E8E93;
-  --color-divider-dark: #2C2C2E;
+  --color-text-secondary-dark: #A5B0D1;
+  /* Soft blue-grey for secondary text */
+  --color-divider-dark: #2C355E;
 
   /* Shared Accents */
-  --color-accent: #0A84FF;
+  --color-accent: #2740A1;
+  /* Brand Blue Accent */
   --color-success-light: #34C759;
   --color-success-dark: #30D158;
   --color-error-light: #FF3B30;
   --color-error-dark: #FF453A;
 
   /* Fonts */
-  --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  --font-body: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-display: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Utilities */
-  --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-card-dark: 0 0 0 1px rgba(255, 255, 255, 0.1);
-  /* Subtle border glow instead of shadow */
+  --shadow-card-light: 0 4px 20px rgba(19, 24, 53, 0.05), 0 1px 3px rgba(19, 24, 53, 0.1);
+  --shadow-card-dark: 0 4px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* Glass + Glow CSS Variables (used in @utility glass-card and btn-primary) */
 :root {
   --color-glass-surface: rgba(255, 255, 255, 0.03);
   --color-glass-border: rgba(255, 255, 255, 0.08);
-  --shadow-glow: 0 0 24px rgba(212, 172, 13, 0.25);
+  --shadow-glow: 0 0 24px rgba(208, 176, 120, 0.25);
 }
 
 /* CSS Variables for Dynamic Usage */
@@ -105,7 +109,6 @@
 /* Base Styles */
 html {
   scroll-behavior: smooth;
-  color-scheme: dark;
 }
 
 body {
@@ -140,7 +143,7 @@ h6 {
 }
 
 @utility text-gold-gradient {
-  background: linear-gradient(to right, #F1C40F, #F9E79F, #D4AC0D);
+  background: linear-gradient(to right, #C4A467, #EEDCA8, #D0B078);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -148,8 +151,12 @@ h6 {
 }
 
 @utility btn-primary {
-  background: linear-gradient(135deg, #B7950B 0%, #D4AC0D 50%, #B7950B 100%);
-  color: white;
+  background: linear-gradient(135deg, #B59458 0%, #D0B078 50%, #B59458 100%);
+  color: #131835;
+  /* Navy text for primary button */
+  font-weight: 600;
+  border-radius: 9999px;
+  /* Pill shape */
   transition: all 0.3s ease;
   background-size: 200% auto;
 

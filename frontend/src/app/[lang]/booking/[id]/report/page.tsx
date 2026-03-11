@@ -2,32 +2,34 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 
 const ISSUE_TYPES = [
-    { value: 'incomplete', label: 'Service appears incomplete' },
-    { value: 'quality', label: 'Quality concerns' },
-    { value: 'damage', label: 'Vehicle damage' },
-    { value: 'different', label: 'Different than expected' },
-    { value: 'other', label: 'Other issue' },
+    { value: 'incomplete', en: 'Service appears incomplete', es: 'Servicio parece incompleto' },
+    { value: 'quality', en: 'Quality concerns', es: 'Problemas de calidad' },
+    { value: 'damage', en: 'Vehicle damage', es: 'Daño al vehículo' },
+    { value: 'different', en: 'Different than expected', es: 'Diferente a lo esperado' },
+    { value: 'other', en: 'Other issue', es: 'Otro problema' },
 ];
 
 export default function ReportIssuePage() {
     const params = useParams();
     const router = useRouter();
     const bookingId = params.id as string;
+    const lang = (params.lang as string) || 'en';
 
     const [issueType, setIssueType] = useState('');
     const [description, setDescription] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!issueType || !description.trim()) {
-            setError('Please select an issue type and provide a description.');
+            setError(lang === 'es'
+                ? 'Por favor selecciona un tipo de problema y proporciona una descripción.'
+                : 'Please select an issue type and provide a description.');
             return;
         }
 
@@ -35,56 +37,99 @@ export default function ReportIssuePage() {
         setError('');
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${bookingId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    data: {
-                        approvalStatus: 'disputed',
-                        disputeReason: issueType,
-                        disputeDescription: description,
-                        disputedAt: new Date().toISOString(),
-                    },
-                }),
+            const res = await fetch('/api/booking/report-issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId, issueType, description }),
             });
 
-            if (response.ok) {
-                alert('Thank you for your report. Our support team will contact you shortly.');
-                router.push('/en');
+            if (res.ok) {
+                setSubmitted(true);
             } else {
-                setError('Failed to submit report. Please try again or contact support directly.');
+                setError(lang === 'es'
+                    ? 'Error al enviar el reporte. Por favor inténtalo de nuevo.'
+                    : 'Failed to submit report. Please try again or contact support.');
             }
-        } catch (err) {
-            setError('An error occurred. Please try again or contact support directly.');
+        } catch {
+            setError(lang === 'es'
+                ? 'Ocurrió un error. Por favor inténtalo de nuevo.'
+                : 'An error occurred. Please try again.');
         } finally {
             setSubmitting(false);
         }
     };
 
+    // ── Success state ────────────────────────────────────────────────────────
+    if (submitted) {
+        return (
+            <div className="min-h-screen bg-[#131835] flex items-center justify-center px-4">
+                <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-8 text-center max-w-md w-full">
+                    <div className="w-16 h-16 bg-[#D0B078]/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-[#D0B078]/20">
+                        <svg className="w-8 h-8 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                        {lang === 'es' ? 'Reporte Enviado' : 'Report Submitted'}
+                    </h2>
+                    <p className="text-[#A5B0D1] mb-2">
+                        {lang === 'es'
+                            ? 'Nuestro equipo revisará tu reporte y te contactará en 24 horas.'
+                            : 'Our support team will review your report and contact you within 24 hours.'}
+                    </p>
+                    <p className="text-[#5E698F] text-sm mb-8">
+                        {lang === 'es'
+                            ? 'Tu pago NO será capturado mientras revisamos el problema.'
+                            : 'Your payment will NOT be captured while we review the issue.'}
+                    </p>
+                    <button
+                        onClick={() => router.push(`/${lang}/dashboard`)}
+                        className="w-full bg-[#D0B078] text-[#131835] font-bold py-3 rounded-xl hover:opacity-90 transition-all"
+                    >
+                        {lang === 'es' ? 'Ver Mis Reservas' : 'View My Bookings'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Report form ──────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Report an Issue</h1>
-                    <p className="text-gray-600">
-                        We're sorry to hear you're not satisfied. Please provide details below.
+        <div className="min-h-screen bg-[#131835] py-12 px-4">
+            <div className="max-w-2xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-2">
+                        {lang === 'es' ? 'Reportar un Problema' : 'Report an Issue'}
+                    </h1>
+                    <p className="text-[#A5B0D1]">
+                        {lang === 'es'
+                            ? 'Lamentamos que no estés satisfecho. Por favor danos los detalles.'
+                            : "We're sorry to hear you're not satisfied. Please provide details below."}
                     </p>
                 </div>
 
-                <Card>
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                        {/* Issue Type Selection */}
+                <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Issue type */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
-                                What type of issue are you experiencing?
+                            <label className="block text-sm font-semibold text-[#A5B0D1] mb-3 uppercase tracking-wide">
+                                {lang === 'es' ? '¿Qué tipo de problema tienes?' : 'What type of issue are you experiencing?'}
                             </label>
                             <div className="space-y-2">
                                 {ISSUE_TYPES.map((type) => (
                                     <label
                                         key={type.value}
-                                        className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                        className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${
+                                            issueType === type.value
+                                                ? 'border-[#D0B078] bg-[#D0B078]/5'
+                                                : 'border-[#2C355E] hover:border-white/20'
+                                        }`}
                                     >
                                         <input
                                             type="radio"
@@ -92,9 +137,12 @@ export default function ReportIssuePage() {
                                             value={type.value}
                                             checked={issueType === type.value}
                                             onChange={(e) => setIssueType(e.target.value)}
-                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                            className="w-4 h-4 flex-shrink-0"
+                                            style={{ accentColor: '#D0B078' }}
                                         />
-                                        <span className="ml-3 text-sm text-gray-900">{type.label}</span>
+                                        <span className="text-sm text-white">
+                                            {lang === 'es' ? type.es : type.en}
+                                        </span>
                                     </label>
                                 ))}
                             </div>
@@ -102,63 +150,72 @@ export default function ReportIssuePage() {
 
                         {/* Description */}
                         <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                                Please describe the issue in detail
+                            <label htmlFor="description" className="block text-sm font-semibold text-[#A5B0D1] mb-2 uppercase tracking-wide">
+                                {lang === 'es' ? 'Describe el problema en detalle' : 'Describe the issue in detail'}
                             </label>
                             <textarea
                                 id="description"
-                                rows={6}
+                                rows={5}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Provide as much detail as possible to help us resolve your concern..."
-                                required
+                                className="w-full px-4 py-3 bg-white/5 border border-[#2C355E] rounded-xl text-white placeholder:text-[#5E698F] focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-all resize-none"
+                                style={{ fontSize: '16px' }}
+                                placeholder={lang === 'es'
+                                    ? 'Proporciona tantos detalles como sea posible...'
+                                    : 'Provide as much detail as possible to help us resolve your concern...'}
                             />
-                            <p className="mt-2 text-xs text-gray-500">
-                                Include specific areas of concern, any visible issues, or other relevant details.
+                            <p className="mt-2 text-xs text-[#5E698F]">
+                                {lang === 'es'
+                                    ? 'Incluye áreas específicas de preocupación o cualquier problema visible.'
+                                    : 'Include specific areas of concern, visible issues, or other relevant details.'}
                             </p>
                         </div>
 
-                        {/* Error Message */}
+                        {/* Error */}
                         {error && (
-                            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-sm text-red-800">{error}</p>
+                            <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400 text-sm flex items-center gap-2">
+                                <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                {error}
                             </div>
                         )}
 
-                        {/* Submit Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                            <Button
+                        {/* Submit */}
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button
                                 type="submit"
                                 disabled={submitting}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                className="flex-1 bg-red-500/90 text-white font-bold py-4 rounded-xl hover:bg-red-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {submitting ? 'Submitting...' : 'Submit Report'}
-                            </Button>
-                            <Button
+                                {submitting
+                                    ? (lang === 'es' ? 'Enviando...' : 'Submitting...')
+                                    : (lang === 'es' ? 'Enviar Reporte' : 'Submit Report')}
+                            </button>
+                            <button
                                 type="button"
                                 onClick={() => router.back()}
                                 disabled={submitting}
-                                variant="outline"
-                                className="flex-1"
+                                className="flex-1 bg-transparent text-[#A5B0D1] font-medium py-4 rounded-xl border border-[#2C355E] hover:border-white/20 hover:text-white transition-all disabled:opacity-50"
                             >
-                                Cancel
-                            </Button>
+                                {lang === 'es' ? 'Cancelar' : 'Cancel'}
+                            </button>
                         </div>
 
-                        {/* Support Info */}
-                        <div className="pt-4 border-t border-gray-200">
-                            <p className="text-sm text-gray-600 text-center">
-                                Our support team will review your report and contact you within 24 hours.
-                                <br />
-                                For urgent matters, call us at{' '}
-                                <a href="tel:+1-555-123-4567" className="text-blue-600 hover:underline">
-                                    (555) 123-4567
+                        {/* Support contact */}
+                        <div className="pt-4 border-t border-[#2C355E] text-center">
+                            <p className="text-sm text-[#5E698F]">
+                                {lang === 'es' ? 'Para asuntos urgentes, llámanos al ' : 'For urgent matters, call us at '}
+                                <a
+                                    href="tel:+13055550000"
+                                    className="text-[#D0B078] hover:underline font-medium"
+                                >
+                                    (305) 000-0000
                                 </a>
                             </p>
                         </div>
                     </form>
-                </Card>
+                </div>
             </div>
         </div>
     );

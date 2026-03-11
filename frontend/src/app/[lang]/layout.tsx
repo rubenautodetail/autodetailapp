@@ -2,6 +2,8 @@ import { i18n } from '@/i18n-config';
 import { getDictionary } from '@/lib/dictionaries';
 import '../globals.css';
 import type { Metadata } from 'next';
+import MobileBottomNav from '@/components/ui/MobileBottomNav';
+import DevRoleSwitcher from '@/components/dev/DevRoleSwitcher';
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
@@ -30,7 +32,14 @@ export default async function LocaleLayout({
 }) {
     const { lang } = await params;
 
-    // Don't render html/body tags - they're in root layout
-    // Just pass through children with lang context
-    return <>{children}</>;
+    return (
+        <>
+            {/* Pad bottom on mobile so content doesn't hide behind the nav */}
+            <div className="pb-20 md:pb-0">
+                {children}
+            </div>
+            <MobileBottomNav lang={lang} />
+            {process.env.NODE_ENV !== 'production' && <DevRoleSwitcher />}
+        </>
+    );
 }

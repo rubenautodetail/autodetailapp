@@ -1,6 +1,8 @@
 "use client";
 
 import { AddOn } from "@/contexts";
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
+import { Card } from "@/components/ui/Card";
 
 interface AddOnSelectorProps {
   addOns: AddOn[];
@@ -24,46 +26,57 @@ export default function AddOnSelector({
   }
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-lg font-semibold text-text-primary">
-        {locale === "es" ? "Extras Opcionales" : "Optional Add-Ons"}
+    <div className="space-y-4">
+      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-6">
+        {locale === "es" ? "Extras Opcionales" : "Optional Enhancements"}
       </h3>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {addOns.map((addOn) => {
           const selected = isSelected(addOn.id);
-          const name = addOn.name;  // Already localized from Strapi
-          const description = addOn.description;  // Already localized from Strapi
 
           return (
-            <label
+            <Card
               key={addOn.id}
               className={`
-                flex items-start gap-3 p-4 rounded-lg cursor-pointer
-                border-2 transition-all duration-200
-                ${selected ? "border-accent-gold bg-accent-gold/10" : "border-white/10 bg-white/5 hover:border-accent-gold/50"}
+                p-5 transition-all duration-300
+                ${selected
+                  ? 'border-[#D0B078] ring-1 ring-[#D0B078] bg-[#D0B078]/5'
+                  : 'border-[var(--divider)] hover:border-[#D0B078]/50'
+                }
               `}
+              onClick={() => onAddOnToggle(addOn, !selected)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onAddOnToggle(addOn, !selected);
+                }
+              }}
             >
-              <div className="flex items-center h-6">
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  onChange={(e) => onAddOnToggle(addOn, e.target.checked)}
-                  className="w-5 h-5 text-accent-gold border-white/20 rounded focus:ring-2 focus:ring-accent-gold bg-white/5 cursor-pointer"
-                />
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-text-primary">{name}</span>
-                  <span className="font-semibold text-accent-gold">+${addOn.price}</span>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`font-bold text-lg ${selected ? 'text-[#D0B078]' : 'text-[var(--text-primary)]'}`}>
+                      {addOn.name}
+                    </span>
+                    <span className="font-semibold text-[#D0B078]">+${addOn.price.toFixed(2)}</span>
+                  </div>
+                  {addOn.description && (
+                    <p className="text-sm text-[var(--text-secondary)]">{addOn.description}</p>
+                  )}
                 </div>
 
-                {description && (
-                  <p className="text-sm text-text-secondary mt-1">{description}</p>
-                )}
+                <div className="pl-2 border-l border-[var(--divider)] flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <ToggleSwitch
+                    checked={selected}
+                    onChange={(checked) => onAddOnToggle(addOn, checked)}
+                    label={`Toggle ${addOn.name}`}
+                  />
+                </div>
               </div>
-            </label>
+            </Card>
           );
         })}
       </div>

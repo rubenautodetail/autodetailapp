@@ -2,7 +2,6 @@
 
 import { ArrowLeft, User, Car, ShoppingBag, CreditCard, LogOut, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
@@ -19,9 +18,9 @@ export default function ProfilePage() {
     };
 
     const menuItems = [
-        { icon: Car, label: "My Vehicles", href: "/dashboard/vehicles" },
-        { icon: ShoppingBag, label: "My Orders", href: "/dashboard/orders" },
-        { icon: CreditCard, label: "Payment Methods", href: "/dashboard/payment" },
+        { icon: Car, label: "My Vehicles", href: "#", disabled: true },
+        { icon: ShoppingBag, label: "My Orders", href: "#", disabled: true },
+        { icon: CreditCard, label: "Payment Methods", href: "#", disabled: true },
     ];
 
     return (
@@ -53,19 +52,19 @@ export default function ProfilePage() {
             {/* Menu Options */}
             <div className="bg-[var(--card)] rounded-2xl border border-[var(--divider)] shadow-sm overflow-hidden">
                 {menuItems.map((item, index) => (
-                    <Link
+                    <div
                         key={index}
-                        href={item.href}
-                        className={`flex items-center justify-between p-4 hover:bg-[var(--background)] transition-colors ${index !== menuItems.length - 1 ? 'border-b border-[var(--divider)]' : ''}`}
+                        className={`flex items-center justify-between p-4 ${item.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--background)] cursor-pointer'} transition-colors ${index !== menuItems.length - 1 ? 'border-b border-[var(--divider)]' : ''}`}
                     >
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-[var(--background)] flex items-center justify-center text-[var(--text-secondary)]">
                                 <item.icon className="w-5 h-5" />
                             </div>
                             <span className="font-medium text-[var(--text-primary)]">{item.label}</span>
+                            {item.disabled && <span className="text-xs text-[var(--text-secondary)]">(coming soon)</span>}
                         </div>
                         <ChevronRight className="w-5 h-5 text-[var(--text-secondary)]" />
-                    </Link>
+                    </div>
                 ))}
             </div>
 

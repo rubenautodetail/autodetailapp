@@ -1,11 +1,24 @@
 /**
  * POST /api/booking/validate-zip
- * Validates a ZIP code and returns available services + add-ons.
- * Ported from Strapi backend — Strapi no longer required at runtime.
+ * Validates a ZIP code against the configured service area and returns available services + add-ons.
+ *
+ * Configure service area via environment variable:
+ *   SERVICE_ZIP_CODES=33186,33155,33143,33165,33175,33185,33184,33183,33126,33145
+ *
+ * If SERVICE_ZIP_CODES is not set, all valid 5-digit ZIPs are accepted (development mode).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createApiClient } from '@/lib/supabase/server';
+
+// Parse configured service ZIP codes from env
+function getServiceZipCodes(): Set<string> | null {
+    const raw = process.env.SERVICE_ZIP_CODES;
+    if (!raw || !raw.trim()) return null; // null = dev mode, accept all
+
+    const zips = raw.split(',').map((z) => z.trim()).filter((z) => /^\d{5}$/.test(z));
+    return zips.length > 0 ? new Set(zips) : null;
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -24,8 +37,9 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Special case: reject obvious test invalid ZIP
-        if (cleanZip === '00000') {
+        // Check against configured service area
+        const serviceZips = getServiceZipCodes();
+        if (serviceZips && !serviceZips.has(cleanZip)) {
             return NextResponse.json({
                 available: false,
                 zipCode: cleanZip,
