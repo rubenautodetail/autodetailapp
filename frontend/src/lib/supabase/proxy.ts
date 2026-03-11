@@ -45,11 +45,13 @@ export async function updateSession(request: NextRequest) {
     // ─── Route classification ──────────────────────────────────────────────────
 
     // Public API routes that never require auth
+    // Note: /api/admin/* is excluded here — those routes run their own verifyAdmin()
     const isPublicApi =
         path.startsWith('/api/auth/') ||
         path.startsWith('/api/booking/validate-zip') ||
         path.startsWith('/api/booking/availability') ||
-        path.startsWith('/api/booking/approve')   // email-link code-protected
+        path.startsWith('/api/booking/approve') ||  // email-link code-protected
+        path.startsWith('/api/admin/')              // route handlers own their auth
 
     // Auth pages (login / register)
     const isAuthPage =
