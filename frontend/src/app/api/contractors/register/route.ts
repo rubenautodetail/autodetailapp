@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
         await supabase
             .from('profiles')
             .update({
+                role: 'contractor',
                 approval_status: 'pending',
                 updated_at: new Date().toISOString(),
             })

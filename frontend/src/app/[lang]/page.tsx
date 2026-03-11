@@ -357,7 +357,13 @@ export default async function LandingPage({
             {/* ─── Footer ──────────────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 py-8 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
-                    <p>{dict.common.siteName} © {new Date().getFullYear()}</p>
+                    <div className="flex flex-col items-center sm:items-start gap-1">
+                        <p>{dict.common.siteName} © {new Date().getFullYear()}</p>
+                        <p>
+                            {locale === 'es' ? 'Diseñado por' : 'Designed by'}{' '}
+                            <span className="text-white/45 font-medium">OAC Digital Innovations</span>
+                        </p>
+                    </div>
                     <div className="flex gap-6">
                         <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Términos' : 'Terms'}

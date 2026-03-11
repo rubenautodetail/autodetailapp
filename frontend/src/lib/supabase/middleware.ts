@@ -74,8 +74,9 @@ export async function updateSession(request: NextRequest) {
 
     // ─── Redirect unauthenticated users ───────────────────────────────────────
 
+    // Enforce authentication globally except for public APIs and auth pages
     if (!isPublicApi && !isAuthPage) {
-        if (!user && (isBookingRoute || isContractorRoute || isAdminRoute)) {
+        if (!user) {
             const loginUrl = request.nextUrl.clone()
             loginUrl.pathname = `/${locale}/login`
             loginUrl.searchParams.set('next', path)

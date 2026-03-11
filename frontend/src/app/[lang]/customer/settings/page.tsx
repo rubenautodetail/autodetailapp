@@ -151,7 +151,7 @@ export default function SettingsPage() {
 
                         {/* Preferences Section */}
                         <section className="glass-card p-8 rounded-2xl">
-                            <h3 className="text-lg font-bold mb-6">Preferences</h3>
+                            <h3 className="text-lg font-bold mb-6">{params.lang === 'es' ? 'Preferencias' : 'Preferences'}</h3>
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
@@ -193,6 +193,40 @@ export default function SettingsPage() {
                                         />
                                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-gold"></div>
                                     </label>
+                                </div>
+                            </div>
+                        </section>
+                        {/* About Section */}
+                        <section className="glass-card p-8 rounded-2xl">
+                            <h3 className="text-lg font-bold mb-6">{params.lang === 'es' ? 'Acerca de' : 'About'}</h3>
+                            <div className="space-y-4 text-sm text-text-secondary">
+                                <div className="flex items-center justify-between py-3 border-b border-white/5">
+                                    <span>{params.lang === 'es' ? 'Versión de la aplicación' : 'App Version'}</span>
+                                    <span className="text-white/40">1.0.0</span>
+                                </div>
+                                <div className="flex items-center justify-between py-3 border-b border-white/5">
+                                    <Link
+                                        href={`/${params.lang || 'en'}/terms`}
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        {params.lang === 'es' ? 'Términos de Servicio' : 'Terms of Service'}
+                                    </Link>
+                                    <span className="text-white/20">→</span>
+                                </div>
+                                <div className="flex items-center justify-between py-3 border-b border-white/5">
+                                    <Link
+                                        href={`/${params.lang || 'en'}/privacy`}
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        {params.lang === 'es' ? 'Política de Privacidad' : 'Privacy Policy'}
+                                    </Link>
+                                    <span className="text-white/20">→</span>
+                                </div>
+                                <div className="pt-4 text-center">
+                                    <p className="text-white/25 text-xs">
+                                        {params.lang === 'es' ? 'Diseñado por' : 'Designed by'}{' '}
+                                        <span className="text-white/40 font-medium">OAC Digital Innovations</span>
+                                    </p>
                                 </div>
                             </div>
                         </section>
