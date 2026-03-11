@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface AdminPageProps {
   params: Promise<{ lang: "en" | "es" }>;
@@ -14,7 +15,7 @@ interface Stats {
 }
 
 async function fetchAdminStats(): Promise<Stats> {
-  const res = await fetch("/api/admin/stats", { cache: "no-store" });
+  const res = await adminFetch("/api/admin/stats");
   if (!res.ok) throw new Error("Failed to fetch stats");
   return res.json();
 }

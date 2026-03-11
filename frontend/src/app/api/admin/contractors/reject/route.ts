@@ -5,34 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
-
-async function verifyAdmin(req: NextRequest): Promise<boolean> {
-    const adminSecret = process.env.ADMIN_SECRET;
-    if (!adminSecret) return false;
-
-    const authHeader = req.headers.get('Authorization');
-    const token = authHeader?.replace('Bearer ', '').trim();
-
-    if (token === adminSecret) return true;
-    if (!token) return false;
-
-    try {
-        const { user, error } = await createAuthClient(token);
-        if (error || !user) return false;
-
-        const supabase = createServiceClient();
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        return (profile as { role?: string } | null)?.role === 'admin';
-    } catch {
-        return false;
-    }
-}
+import { createServiceClient } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/verifyAdmin';
 
 export async function POST(req: NextRequest) {
     if (!(await verifyAdmin(req))) {

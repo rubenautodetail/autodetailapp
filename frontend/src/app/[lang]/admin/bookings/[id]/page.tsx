@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface PageProps {
   params: Promise<{ lang: "en" | "es"; id: string }>;
@@ -143,9 +144,8 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
         ? "/api/admin/bookings/cancel"
         : "/api/admin/bookings/requeue";
 
-      const res = await fetch(endpoint, {
+      const res = await adminFetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId: booking.id }),
       });
 

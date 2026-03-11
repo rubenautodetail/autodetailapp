@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface AdminServicesProps {
     params: Promise<{ lang: "en" | "es" }>;
@@ -92,7 +93,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch('/api/admin/services', { cache: 'no-store' });
+            const res = await adminFetch('/api/admin/services');
             if (!res.ok) throw new Error('Failed to load');
             const json = await res.json();
             setServices(json.services ?? []);
@@ -132,9 +133,8 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
             const url = isNew ? '/api/admin/services' : `/api/admin/services/${editItem.id}`;
             const method = isNew ? 'POST' : 'PATCH';
 
-            const res = await fetch(url, {
+            const res = await adminFetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editItem),
             });
 
@@ -155,7 +155,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
     async function handleDeactivate(id: number, type: 'service' | 'addon') {
         if (!confirm(isEs ? '¿Desactivar este elemento?' : 'Deactivate this item?')) return;
         const url = `/api/admin/services/${id}?type=${type === 'addon' ? 'addon' : 'service'}`;
-        await fetch(url, { method: 'DELETE' });
+        await adminFetch(url, { method: 'DELETE' });
         fetchData();
     }
 

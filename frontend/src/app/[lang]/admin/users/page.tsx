@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface AdminUsersProps {
   params: Promise<{ lang: "en" | "es" }>;
@@ -98,9 +99,8 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
     setUpdating(userId);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/users/update-role", {
+      const res = await adminFetch("/api/admin/users/update-role", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role: newRole }),
       });
 

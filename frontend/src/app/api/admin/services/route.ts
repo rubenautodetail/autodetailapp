@@ -5,36 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAuthClient, createClient, createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/server';
-
-async function verifyAdmin(req: NextRequest): Promise<boolean> {
-    const adminSecret = process.env.ADMIN_SECRET;
-    const token = req.headers.get('Authorization')?.replace('Bearer ', '').trim();
-
-    if (adminSecret && token === adminSecret) return true;
-
-    // Cookie-based session (admin browsing from UI)
-    try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const db = createServiceClient();
-            const { data: p } = await db.from('profiles').select('role').eq('id', user.id).single();
-            if ((p as { role?: string } | null)?.role === 'admin') return true;
-        }
-    } catch { /* fall through */ }
-
-    if (!token) return false;
-
-    try {
-        const { user, error } = await createAuthClient(token);
-        if (error || !user) return false;
-        const db = createServiceClient();
-        const { data: p } = await db.from('profiles').select('role').eq('id', user.id).single();
-        return (p as { role?: string } | null)?.role === 'admin';
-    } catch { return false; }
-}
+import { verifyAdmin } from '@/lib/verifyAdmin';
 
 export async function GET(req: NextRequest) {
     if (!(await verifyAdmin(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

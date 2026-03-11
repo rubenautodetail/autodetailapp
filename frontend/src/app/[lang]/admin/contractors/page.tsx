@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface AdminContractorsProps {
     params: Promise<{ lang: "en" | "es" }>;
@@ -85,7 +86,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
         setLoading(true);
         try {
             const qs = new URLSearchParams({ status: statusFilter });
-            const res = await fetch(`/api/admin/contractors?${qs}`, { cache: "no-store" });
+            const res = await adminFetch(`/api/admin/contractors?${qs}`);
             if (!res.ok) throw new Error("Failed to fetch");
             const json = await res.json();
             setContractors(json.data ?? []);
@@ -103,9 +104,8 @@ function AdminContractorsContent({ locale }: { locale: string }) {
     const handleApprove = async (id: string) => {
         setActionLoading(id);
         try {
-            const res = await fetch("/api/admin/contractors/approve", {
+            const res = await adminFetch("/api/admin/contractors/approve", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: id }),
             });
             if (res.ok) await fetchContractors();
@@ -118,9 +118,8 @@ function AdminContractorsContent({ locale }: { locale: string }) {
         if (!rejectModal) return;
         setActionLoading(rejectModal.id);
         try {
-            const res = await fetch("/api/admin/contractors/reject", {
+            const res = await adminFetch("/api/admin/contractors/reject", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: rejectModal.id, reason: rejectReason }),
             });
             if (res.ok) {
