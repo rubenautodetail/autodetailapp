@@ -49,3 +49,10 @@ exports/
 # Dev tools (not app code)
 .playwright-mcp/
 mcp-servers/
+
+# Dev screenshots & design assets
+*.png
+*.jpg
+*.jpeg
+_design_inspiration/
+fix_email.js
