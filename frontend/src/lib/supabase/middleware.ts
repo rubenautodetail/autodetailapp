@@ -86,6 +86,9 @@ export async function updateSession(request: NextRequest) {
     const isProtectedRoute = isContractorRoute || isAdminRoute || isCustomerRoute
     if (!isPublicApi && !isAuthPage && !isLandingPage && !isBookingRoute && isProtectedRoute) {
         if (!user) {
+            if (path.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            }
             const loginUrl = request.nextUrl.clone()
             loginUrl.pathname = `/${locale}/login`
             loginUrl.searchParams.set('next', path)
@@ -114,6 +117,7 @@ export async function updateSession(request: NextRequest) {
 
         // Admin routes: must have role='admin'
         if (isAdminRoute && role !== 'admin') {
+            if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             const homeUrl = request.nextUrl.clone()
             homeUrl.pathname = `/${locale}`
             homeUrl.search = ''
@@ -122,6 +126,7 @@ export async function updateSession(request: NextRequest) {
 
         // Contractor pages: must have role='contractor' or 'admin'
         if (isContractorRoute && role !== 'contractor' && role !== 'admin') {
+            if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             const homeUrl = request.nextUrl.clone()
             homeUrl.pathname = `/${locale}`
             homeUrl.search = ''
