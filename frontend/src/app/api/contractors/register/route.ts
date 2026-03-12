@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendContractorApplication } from "@/lib/email";
+import { sendContractorApplication, sendContractorApplicationReceived } from "@/lib/email";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+
+export const dynamic = 'force-dynamic';
 
 // NOTE: Requires a 'contractor-docs' storage bucket in Supabase Dashboard:
 //   Storage → New bucket → Name: "contractor-docs" → Public: OFF (private)
@@ -93,25 +95,28 @@ export async function POST(req: NextRequest) {
             + (businessLicense && !uploadResults.businessLicense ? 1 : 0);
 
         // Mark this user's profile as a pending contractor application
-        await supabase
+        const { error: updateError } = await supabase
             .from('profiles')
             .update({
                 role: 'contractor',
                 approval_status: 'pending',
+                full_name: fullName,
+                phone,
                 updated_at: new Date().toISOString(),
             })
             .eq('id', user.id);
 
-        // Send admin notification email with application details
-        await sendContractorApplication({
-            fullName,
-            email,
-            phone,
-            address,
-            businessName,
-            serviceZipCodes,
-            documentsCount,
-        });
+        if (updateError) {
+            console.error('Profile update failed:', updateError.message);
+            return NextResponse.json({ error: 'Failed to save application. Please try again.' }, { status: 500 });
+        }
+
+        // Send emails — non-fatal: registration succeeds even if email delivery fails
+        const emailData = { fullName, email, phone, address, businessName, serviceZipCodes, documentsCount };
+        await Promise.allSettled([
+            sendContractorApplication(emailData),          // admin notification
+            sendContractorApplicationReceived(emailData),  // applicant confirmation
+        ]);
 
         return NextResponse.json({ success: true, message: "Application submitted successfully." });
     } catch (error: any) {

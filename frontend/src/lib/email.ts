@@ -460,6 +460,79 @@ export async function sendContractorApplication(applicationData: {
 }
 
 /**
+ * Send application received confirmation to the contractor applicant
+ */
+export async function sendContractorApplicationReceived(applicationData: {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  businessName: string;
+  serviceZipCodes: string[];
+  documentsCount: number;
+}) {
+  try {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #131835 0%, #1e2a50 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+            .box { background: #f9fafb; border-left: 4px solid #D0B078; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">Application Received! 🎉</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${applicationData.fullName},</p>
+            <p>Thank you for applying to join the <strong>Rubens Auto Detail</strong> contractor network!</p>
+            <p>We've received your application and our team will review it within <strong>1–2 business days</strong>.</p>
+            <div class="box">
+              <p style="margin: 0; font-weight: 600; color: #4b5563;">What happens next?</p>
+              <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #4b5563;">
+                <li>Our team reviews your documents and information</li>
+                <li>You'll receive an approval or follow-up email within 1–2 business days</li>
+                <li>Once approved, you can set up your payments and start accepting jobs</li>
+              </ul>
+            </div>
+            <p>In the meantime, you can log in to check your application status at <a href="${APP_URL}/en/contractor/pending">${APP_URL}</a>.</p>
+            <p>Questions? Reply to this email or contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
+            <p>Thanks for joining us!<br/>The Rubens Auto Detail Team</p>
+          </div>
+          <div class="footer">
+            <p>Rubens Auto Detail — Contractor Network</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: applicationData.email,
+      subject: 'Application Received — Rubens Auto Detail',
+      html,
+    });
+
+    if (error) {
+      console.error('Error sending contractor application received email:', error);
+      throw error;
+    }
+
+    console.log(`Contractor application received email sent to ${applicationData.email}`);
+    return data;
+  } catch (error) {
+    console.error('Failed to send contractor application received email:', error);
+    throw error;
+  }
+}
+
+/**
  * Send welcome email to new user
  */
 export async function sendWelcomeEmail(user: { name: string; email: string }) {
