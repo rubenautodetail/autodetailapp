@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyAdmin } from "@/lib/verifyAdmin";
 
+export const dynamic = 'force-dynamic';
+
 const VALID_ROLES = ["user", "contractor", "admin"] as const;
 type Role = (typeof VALID_ROLES)[number];
 

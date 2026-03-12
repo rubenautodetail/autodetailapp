@@ -7,25 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/server';
+import { verifyAdmin } from '@/lib/verifyAdmin';
 
-async function verifyAdmin(req: NextRequest): Promise<boolean> {
-    const adminSecret = process.env.ADMIN_SECRET;
-    if (!adminSecret) return false;
-
-    const token = req.headers.get('Authorization')?.replace('Bearer ', '').trim();
-    if (token === adminSecret) return true;
-    if (!token) return false;
-
-    try {
-        const { user, error } = await createAuthClient(token);
-        if (error || !user) return false;
-        const supabase = createServiceClient();
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-        return (profile as { role?: string } | null)?.role === 'admin';
-    } catch { return false; }
-}
+export const dynamic = 'force-dynamic';
 
 export async function PATCH(
     req: NextRequest,

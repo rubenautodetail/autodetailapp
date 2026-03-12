@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { verifyAdmin } from '@/lib/verifyAdmin';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
     if (!(await verifyAdmin(req))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
