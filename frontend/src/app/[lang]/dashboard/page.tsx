@@ -34,7 +34,7 @@ export default function DashboardPage() {
             try {
                 const { data, error } = await supabase
                     .from("bookings")
-                    .select("*, services(*)")
+                    .select("*")
                     .eq("customer_email", user.email)
                     .order("date", { ascending: false })
                     .limit(5);
@@ -43,7 +43,7 @@ export default function DashboardPage() {
 
                 const mappedBookings = (data || []).map(b => ({
                     id: b.id.toString(),
-                    serviceName: (b as any).services?.name || "Service",
+                    serviceName: (b as any).service_name || "Service",
                     date: b.date,
                     time: "Scheduled", // Placeholder if time not specific in schema
                     status: (b.status as any) || "pending",
