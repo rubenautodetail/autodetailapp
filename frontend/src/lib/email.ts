@@ -16,7 +16,8 @@ function getResend(): Resend {
 const FROM_EMAIL = process.env.FROM_EMAIL || 'notifications@rubensautodetail.com';
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@rubensautodetail.com';
 const SUPPORT_PHONE = process.env.SUPPORT_PHONE || '(305) 000-0000';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 export interface BookingEmailData {
   id: number | string;
