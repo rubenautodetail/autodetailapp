@@ -64,11 +64,11 @@ export async function POST(req: NextRequest) {
                 .from('notifications')
                 .insert({
                     user_id: booking.customer_id,
-                    type: 'booking.contractor_en_route',
+                    type: 'info',
                     title: 'Contractor On The Way',
-                    body: 'Your detailer is heading to you now! They should arrive soon.',
-                    booking_id: String(booking.id),
-                    read: false,
+                    message: 'Your detailer is heading to you now! They should arrive soon.',
+                    booking_id: booking.id,
+                    is_read: false,
                 });
 
             if (notifError) {

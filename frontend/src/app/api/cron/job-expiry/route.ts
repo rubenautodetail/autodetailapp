@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
             .from('profiles')
             .select('id')
             .eq('role', 'contractor')
+            .eq('approval_status', 'approved')
             .eq('onboarding_complete', true)
             .eq('is_available', true);
 
@@ -66,16 +67,16 @@ export async function GET(request: NextRequest) {
         const confirmationCodes: string[] = [];
 
         for (const booking of bookings) {
-            // Admin notification
+            // Admin notification (user_id nullable = admin-only row)
             const { error: adminNotifError } = await supabase
                 .from('notifications')
                 .insert({
                     user_id: null,
                     type: 'admin.job_unaccepted',
                     title: 'Job Needs Attention',
-                    body: `Booking #${booking.confirmation_code} has been waiting for a contractor for 3 minutes.`,
+                    message: `Booking #${booking.confirmation_code} has been waiting for a contractor for 3 minutes.`,
                     booking_id: booking.id,
-                    read: false,
+                    is_read: false,
                 });
 
             if (adminNotifError) {
@@ -88,9 +89,9 @@ export async function GET(request: NextRequest) {
                     user_id: contractor.id,
                     type: 'contractor.job_reminder',
                     title: 'New Job Available',
-                    body: `A detailing job in ZIP ${booking.zip_code} still needs a contractor. Tap to view.`,
+                    message: `A detailing job in ZIP ${booking.zip_code} still needs a contractor. Tap to view.`,
                     booking_id: booking.id,
-                    read: false,
+                    is_read: false,
                 }));
 
                 const { error: contractorNotifError } = await supabase
