@@ -317,8 +317,8 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                     />
                     <span className="text-sm text-[#A5B0D1] leading-relaxed">
                       {locale === "es"
-                        ? "Acepto los términos y condiciones de servicio. Entiendo que se requiere acceso a agua y electricidad, y que el profesional requiere un espacio de trabajo seguro."
-                        : "I agree to the terms and conditions of service. I understand that access to water and power is required, and the professional needs a safe working space."}
+                        ? "Acepto los términos y condiciones de servicio. Entiendo que el profesional requiere un espacio de trabajo seguro para realizar el detailing."
+                        : "I agree to the terms and conditions of service. I understand that the professional needs a safe working space to perform the detailing."}
                     </span>
                   </label>
                 </Card>

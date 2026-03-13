@@ -318,8 +318,8 @@ export default function LocationPage({ params }: LocationPageProps) {
                   </p>
                   <p className="text-[#A5B0D1] leading-relaxed">
                     {locale === "es"
-                      ? "Nuestros detalladores profesionales vienen a ti. Asegúrate de que la ubicación tenga acceso a agua y electricidad."
-                      : "Our professional detailers come to you. Please ensure the location has access to water and electricity."}
+                      ? "Nuestros detalladores profesionales llegarán con todo el equipo necesario para ofrecer un servicio premium en tu ubicación."
+                      : "Our professional detailers will arrive fully equipped to provide a premium service at your location."}
                   </p>
                 </div>
               </div>
