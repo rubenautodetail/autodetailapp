@@ -27,6 +27,18 @@ export async function GET(req: NextRequest) {
             }
         }
 
+        // Block unapproved contractors from seeing their personal dashboard data
+        if (contractorId) {
+            const { data: approvalCheck } = await supabase
+                .from('profiles')
+                .select('approval_status')
+                .eq('id', contractorId)
+                .single();
+            if ((approvalCheck as any)?.approval_status !== 'approved') {
+                return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
+            }
+        }
+
         // ── Incoming jobs: unassigned, status = pending_assignment ────────────
         const { data: incomingRaw } = await supabase
             .from('bookings')

@@ -14,9 +14,13 @@ export async function GET(req: NextRequest) {
         const supabase = createServiceClient();
         const { data: profile } = await supabase
             .from('profiles')
-            .select('stripe_account_id, onboarding_complete')
+            .select('stripe_account_id, onboarding_complete, approval_status')
             .eq('id', user.id)
             .single();
+
+        if ((profile as any)?.approval_status !== 'approved') {
+            return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
+        }
 
         const stripeAccountId = (profile as any)?.stripe_account_id as string | null;
         let onboardingComplete = !!(profile as any)?.onboarding_complete;

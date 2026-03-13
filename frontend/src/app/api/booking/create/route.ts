@@ -18,7 +18,7 @@ function generateConfirmationCode(): string {
 }
 
 export async function POST(req: NextRequest) {
-    if (rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'booking-create' })) {
+    if (await rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'booking-create' })) {
         return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
     }
 
@@ -62,6 +62,20 @@ export async function POST(req: NextRequest) {
                 { error: 'Missing required booking fields' },
                 { status: 400 }
             );
+        }
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(customerEmail)) {
+            return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+        }
+
+        // Phone validation — require exactly 10 digits when provided
+        if (customerPhone) {
+            const digits = customerPhone.replace(/\D/g, '');
+            if (digits.length !== 10) {
+                return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
+            }
         }
 
         const supabase = createServiceClient();
@@ -115,6 +129,7 @@ export async function POST(req: NextRequest) {
             .from('profiles')
             .select('id, email')
             .eq('role', 'contractor')
+            .eq('approval_status', 'approved')
             .eq('onboarding_complete', true)
             .eq('is_available', true);
 
@@ -138,7 +153,7 @@ export async function POST(req: NextRequest) {
                 message: `New detailing job in ${zipCode}. Tap to view and accept.`,
                 booking_id: data.id,
                 is_read: false,
-                link: `/en/contractor/jobs/${data.id}`,
+                link: `/contractor/jobs/${data.id}`,
             }));
 
             const { error: notifError } = await supabaseAdmin

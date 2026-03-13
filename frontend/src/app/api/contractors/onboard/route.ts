@@ -11,6 +11,16 @@ export async function POST(req: NextRequest) {
         const { user, error: authError } = await createAuthClient(token);
         if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+        const supabaseCheck = createServiceClient();
+        const { data: approvalCheck } = await supabaseCheck
+            .from('profiles')
+            .select('approval_status')
+            .eq('id', user.id)
+            .single();
+        if ((approvalCheck as any)?.approval_status !== 'approved') {
+            return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
+        }
+
         if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder') {
             try {
                 const Stripe = (await import('stripe')).default;

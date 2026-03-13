@@ -10,7 +10,7 @@ import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
     // Rate-limit: max 3 welcome emails per IP per minute (prevent abuse)
-    if (rateLimit(req, { maxRequests: 3, windowMs: 60_000, keyPrefix: 'send-welcome' })) {
+    if (await rateLimit(req, { maxRequests: 3, windowMs: 60_000, keyPrefix: 'send-welcome' })) {
         return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 

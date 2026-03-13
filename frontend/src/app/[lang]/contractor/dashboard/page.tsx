@@ -48,6 +48,7 @@ const t = {
         setupBtn: "Set Up Payments",
         setupLoading: "Loading...",
         statusMap: {
+            pending_assignment: "Pending Assignment",
             confirmed: "Confirmed",
             in_progress: "In Progress",
             pending_approval: "Awaiting Approval",
@@ -85,6 +86,7 @@ const t = {
         setupBtn: "Configurar Pagos",
         setupLoading: "Cargando...",
         statusMap: {
+            pending_assignment: "Pendiente de Asignación",
             confirmed: "Confirmado",
             in_progress: "En Progreso",
             pending_approval: "Esperando Aprobación",
@@ -96,6 +98,7 @@ function StatusBadge({ status, lang }: { status: string; lang: "en" | "es" }) {
     const labels = t[lang].statusMap;
     const label = labels[status] || status;
     const colors: Record<string, string> = {
+        pending_assignment: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
         confirmed: "bg-blue-500/20 text-blue-300 border-blue-500/30",
         in_progress: "bg-amber-500/20 text-amber-300 border-amber-500/30",
         pending_approval: "bg-purple-500/20 text-purple-300 border-purple-500/30",

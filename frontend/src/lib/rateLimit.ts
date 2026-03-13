@@ -1,55 +1,114 @@
 /**
- * Simple in-memory rate limiter for Next.js API routes.
- * For production with multiple instances, replace with Upstash Redis:
- *   https://upstash.com/docs/redis/sdks/ratelimit
+ * Rate limiter for Next.js API routes.
+ *
+ * Production (Vercel + Upstash):
+ *   Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in your env.
+ *   Rate limits are enforced globally across all serverless instances.
+ *
+ * Development (no Redis configured):
+ *   Falls back to an in-memory Map. Sufficient for local dev — not distributed.
  *
  * Usage:
- *   const limited = rateLimit(req, { maxRequests: 5, windowMs: 60_000 });
+ *   const limited = await rateLimit(req, { maxRequests: 5, windowMs: 60_000 });
  *   if (limited) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
  */
 
-interface RateLimitEntry {
-    count: number;
-    resetAt: number;
-}
+import type { NextRequest } from 'next/server';
 
-// Global store (persists across requests within same server process)
-const store = new Map<string, RateLimitEntry>();
+// ── In-memory fallback (dev only) ────────────────────────────────────────────
 
-// Prune expired entries periodically (every 5 minutes)
+interface MemEntry { count: number; resetAt: number }
+const memStore = new Map<string, MemEntry>();
+
 setInterval(() => {
     const now = Date.now();
-    for (const [key, entry] of store.entries()) {
-        if (entry.resetAt <= now) store.delete(key);
+    for (const [k, v] of memStore.entries()) {
+        if (v.resetAt <= now) memStore.delete(k);
     }
 }, 5 * 60 * 1000);
 
-export function rateLimit(
-    req: { headers: { get(name: string): string | null } },
-    options: { maxRequests?: number; windowMs?: number; keyPrefix?: string } = {}
-): boolean {
-    const { maxRequests = 10, windowMs = 60_000, keyPrefix = 'rl' } = options;
-
-    const ip =
-        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-        req.headers.get('x-real-ip') ||
-        'unknown';
-
-    const key = `${keyPrefix}:${ip}`;
+function memRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
     const now = Date.now();
-
-    const entry = store.get(key);
-
+    const entry = memStore.get(key);
     if (!entry || entry.resetAt <= now) {
-        store.set(key, { count: 1, resetAt: now + windowMs });
-        return false; // Not limited
+        memStore.set(key, { count: 1, resetAt: now + windowMs });
+        return false;
     }
-
     entry.count++;
+    return entry.count > maxRequests;
+}
 
-    if (entry.count > maxRequests) {
-        return true; // Rate limited
+// ── Upstash Redis rate limiter (production) ───────────────────────────────────
+
+let upstashLimiterCache: Map<string, import('@upstash/ratelimit').Ratelimit> | null = null;
+
+async function getUpstashLimiter(
+    keyPrefix: string,
+    maxRequests: number,
+    windowMs: number
+): Promise<import('@upstash/ratelimit').Ratelimit | null> {
+    const url = process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!url || !token) return null;
+
+    try {
+        if (!upstashLimiterCache) upstashLimiterCache = new Map();
+
+        const cacheKey = `${keyPrefix}:${maxRequests}:${windowMs}`;
+        if (upstashLimiterCache.has(cacheKey)) {
+            return upstashLimiterCache.get(cacheKey)!;
+        }
+
+        const { Ratelimit } = await import('@upstash/ratelimit');
+        const { Redis } = await import('@upstash/redis');
+
+        const redis = new Redis({ url, token });
+        const windowSec = Math.ceil(windowMs / 1000);
+
+        const limiter = new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(maxRequests, `${windowSec} s`),
+            prefix: `rl:${keyPrefix}`,
+        });
+
+        upstashLimiterCache.set(cacheKey, limiter);
+        return limiter;
+    } catch (err) {
+        console.warn('Upstash rate limiter init failed, using in-memory fallback:', err);
+        return null;
+    }
+}
+
+// ── Public interface ──────────────────────────────────────────────────────────
+
+function getClientIp(req: NextRequest | { headers: { get(name: string): string | null } }): string {
+    return (
+        ('headers' in req && typeof req.headers.get === 'function'
+            ? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+              req.headers.get('x-real-ip')
+            : null) ?? 'unknown'
+    );
+}
+
+export async function rateLimit(
+    req: NextRequest | { headers: { get(name: string): string | null } },
+    options: { maxRequests?: number; windowMs?: number; keyPrefix?: string } = {}
+): Promise<boolean> {
+    const { maxRequests = 10, windowMs = 60_000, keyPrefix = 'rl' } = options;
+    const ip = getClientIp(req);
+    const key = `${keyPrefix}:${ip}`;
+
+    // Try Upstash first (production)
+    const upstash = await getUpstashLimiter(keyPrefix, maxRequests, windowMs);
+    if (upstash) {
+        try {
+            const { success } = await upstash.limit(ip);
+            return !success; // true = rate limited
+        } catch (err) {
+            console.warn('Upstash rate limit check failed, falling back to in-memory:', err);
+        }
     }
 
-    return false; // Not limited
+    // Fallback: in-memory (dev or Upstash unavailable)
+    return memRateLimit(key, maxRequests, windowMs);
 }

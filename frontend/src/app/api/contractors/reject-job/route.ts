@@ -25,6 +25,16 @@ export async function POST(req: NextRequest) {
 
         const supabase = createServiceClient();
 
+        // Require admin approval before a contractor can reject/skip jobs
+        const { data: approvalCheck } = await supabase
+            .from('profiles')
+            .select('approval_status')
+            .eq('id', actorId)
+            .single();
+        if ((approvalCheck as any)?.approval_status !== 'approved') {
+            return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
+        }
+
         // Look up the booking by `id` first, then fall back to `document_id`.
         const { data: initialBooking, error: fetchError } = await supabase
             .from('bookings')

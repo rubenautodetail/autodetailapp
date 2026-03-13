@@ -5,9 +5,13 @@ import { NextResponse, type NextRequest } from 'next/server'
  * Extract locale from path (/en/... or /es/...).
  * Falls back to 'en' for unlocalized paths.
  */
-function getLocale(path: string): string {
-    const match = path.match(/^\/([a-z]{2})\//)
-    return match ? match[1] : 'en'
+const VALID_LOCALES = ['en', 'es'] as const;
+type Locale = typeof VALID_LOCALES[number];
+
+function getLocale(path: string): Locale {
+    const match = path.match(/^\/([a-z]{2})(\/|$)/)
+    const candidate = match?.[1]
+    return (VALID_LOCALES as readonly string[]).includes(candidate ?? '') ? candidate as Locale : 'en'
 }
 
 export async function updateSession(request: NextRequest) {

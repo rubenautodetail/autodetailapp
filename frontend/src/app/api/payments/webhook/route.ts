@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
             if (bookingId && bookingId !== 'test_booking') {
                 const { data: updatedBooking } = await supabase
                     .from('bookings')
-                    .update({ payment_status: 'authorized', status: 'confirmed' })
+                    // pending_payment → pending_assignment (card authorized; now visible to contractors)
+                    .update({ payment_status: 'authorized', status: 'pending_assignment' })
                     .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
                     .select()
                     .single();
@@ -64,12 +65,14 @@ export async function POST(req: NextRequest) {
                 if (updatedBooking) {
                     const serviceName = (updatedBooking as Record<string, unknown>).service_name as string || 'Detailing Service';
 
-                    // Auto-assign: find any active, onboarded contractor.
+                    // Auto-assign: find an approved, available, onboarded contractor.
                     const { data: contractors } = await supabase
                         .from('profiles')
                         .select('id, full_name, phone_number')
                         .eq('role', 'contractor')
+                        .eq('approval_status', 'approved')
                         .eq('onboarding_complete', true)
+                        .eq('is_available', true)
                         .limit(1);
 
                     const contractor = contractors?.[0] ?? null;

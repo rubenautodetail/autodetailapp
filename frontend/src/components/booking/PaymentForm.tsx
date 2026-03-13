@@ -142,6 +142,8 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   const [bookingCreated, setBookingCreated] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  // Track the booking ID so a payment retry (after client-side Stripe error) reuses the same booking
+  const [createdBookingDocId, setCreatedBookingDocId] = useState<string | null>(null);
 
   // Redirect if prerequisites not met
   useEffect(() => {
@@ -163,12 +165,12 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     try {
       const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
 
-      const bookingRes = await fetch("/api/booking/create", {
+      // Single atomic call: creates booking + Stripe PaymentIntent together.
+      // If Stripe fails the server rolls back the booking — no orphaned records.
+      const res = await fetch("/api/booking/create-with-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          service: selectedService.id,
-          addOns: selectedAddOns.map((a) => a.id),
           date: formattedDate,
           timeWindow: selectedTimeWindow.slot,
           address: customerLocation.address,
@@ -187,35 +189,20 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           vehicleModel: vehicleInfo?.model,
           vehicleYear: vehicleInfo?.year,
           vehicleColor: vehicleInfo?.color,
-        }),
-      });
-
-      if (!bookingRes.ok) {
-        const bookingErr = await bookingRes.json();
-        throw new Error(bookingErr.error || "Failed to create booking");
-      }
-
-      const { data: bookingData } = await bookingRes.json();
-      setConfirmationCode(bookingData.confirmationCode || "");
-
-      const payRes = await fetch("/api/payments/create-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: Math.round(total * 100),
-          bookingId: bookingData.documentId,
           currency: "usd",
         }),
       });
 
-      if (!payRes.ok) {
-        const payErr = await payRes.json();
-        throw new Error(payErr.error?.message || "Failed to initiate payment");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to set up booking");
       }
 
-      const payData = await payRes.json();
-      setClientSecret(payData.clientSecret);
-      setPaymentIntentId(payData.paymentIntentId);
+      const data = await res.json();
+      setConfirmationCode(data.confirmationCode || "");
+      setCreatedBookingDocId(data.bookingId);
+      setClientSecret(data.clientSecret);
+      setPaymentIntentId(data.paymentIntentId);
       setBookingCreated(true);
     } catch (err) {
       console.error("Booking creation error:", err);

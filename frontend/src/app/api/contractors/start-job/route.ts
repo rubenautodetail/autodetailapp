@@ -60,6 +60,15 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
 
+            const { data: approvalCheck } = await supabase
+                .from('profiles')
+                .select('approval_status')
+                .eq('id', user.id)
+                .single();
+            if ((approvalCheck as any)?.approval_status !== 'approved') {
+                return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
+            }
+
             const body = await req.json();
             bookingId = body.bookingId;
             contractorId = user.id;

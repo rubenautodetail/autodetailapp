@@ -15,7 +15,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
-    if (rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'payment-intent' })) {
+    if (await rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'payment-intent' })) {
         return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
     }
 
