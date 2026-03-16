@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { MapPin, Plus, ArrowRight, Sparkles } from "lucide-react";
 import Header from "@/components/dashboard/Header";
 import ServiceCarousel from "@/components/dashboard/ServiceCarousel";
@@ -11,7 +12,6 @@ import BottomSheetModal from "@/components/ui/BottomSheetModal";
 import { Vehicle } from "@/contexts/BookingStatusContext";
 
 import { createClient } from "@/lib/supabase/client";
-import { useEffect } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Database } from "@/types/database";
@@ -19,6 +19,8 @@ import { Database } from "@/types/database";
 type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 export default function DashboardPage() {
+    const params = useParams();
+    const locale = (params?.lang as string) || 'en';
     const { user, profile, isLoading: authLoading } = useAuth();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [bookings, setBookings] = useState<any[]>([]);
@@ -26,42 +28,38 @@ export default function DashboardPage() {
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
     const [selectedService, setSelectedService] = useState<number | null>(null);
     const supabase = createClient();
+    const userEmailRef = useRef<string | undefined>(undefined);
+
+    const fetchBookings = async (email: string) => {
+        try {
+            const { data, error } = await supabase
+                .from("bookings")
+                .select("*")
+                .eq("customer_email", email)
+                .order("date", { ascending: false })
+                .limit(5);
+
+            if (error) throw error;
+
+            setBookings((data || []).map(b => ({
+                id: b.id.toString(),
+                serviceName: (b as any).service_name || "Service",
+                date: b.date,
+                time: "Scheduled",
+                status: (b.status as any) || "pending",
+                price: parseFloat(String(b.total_amount ?? '0')) || 0,
+                providerName: "Ruben's Team"
+            })));
+        } catch (error) {
+            console.error("Error fetching bookings:", error);
+        } finally {
+            setIsLoadingBookings(false);
+        }
+    };
 
     useEffect(() => {
-        async function fetchBookings() {
-            if (!user?.email) return;
-
-            try {
-                const { data, error } = await supabase
-                    .from("bookings")
-                    .select("*")
-                    .eq("customer_email", user.email)
-                    .order("date", { ascending: false })
-                    .limit(5);
-
-                if (error) throw error;
-
-                const mappedBookings = (data || []).map(b => ({
-                    id: b.id.toString(),
-                    serviceName: (b as any).service_name || "Service",
-                    date: b.date,
-                    time: "Scheduled", // Placeholder if time not specific in schema
-                    status: (b.status as any) || "pending",
-                    price: Number(b.total_amount),
-                    providerName: "Ruben's Team"
-                }));
-
-                setBookings(mappedBookings);
-            } catch (error) {
-                console.error("Error fetching bookings:", error);
-            } finally {
-                setIsLoadingBookings(false);
-            }
-        }
-
         async function fetchVehicles() {
             if (!profile?.id) return;
-
             try {
                 const { data, error } = await supabase
                     .from("vehicles")
@@ -70,8 +68,7 @@ export default function DashboardPage() {
 
                 if (error) throw error;
 
-                // Map DB schema to Vehicle interface if necessary
-                const mappedVehicles: Vehicle[] = (data || []).map(v => ({
+                setVehicles((data || []).map(v => ({
                     id: v.id,
                     make: v.make,
                     model: v.model,
@@ -79,9 +76,7 @@ export default function DashboardPage() {
                     color: v.color || "",
                     type: (v.type as any) || "sedan",
                     licensePlate: v.license_plate || ""
-                }));
-
-                setVehicles(mappedVehicles);
+                })));
             } catch (error) {
                 console.error("Error fetching vehicles:", error);
             } finally {
@@ -90,10 +85,33 @@ export default function DashboardPage() {
         }
 
         if (profile) {
+            userEmailRef.current = user?.email;
             fetchVehicles();
-            fetchBookings();
+            if (user?.email) fetchBookings(user.email);
         }
-    }, [profile, supabase]);
+    }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Realtime: refresh bookings when their status changes
+    useEffect(() => {
+        if (!user?.email) return;
+        const email = user.email;
+
+        const channel = supabase
+            .channel("customer-bookings")
+            .on(
+                "postgres_changes",
+                { event: "UPDATE", schema: "public", table: "bookings" },
+                (payload) => {
+                    const updated = payload.new as { customer_email?: string };
+                    if (updated.customer_email === email) {
+                        fetchBookings(email);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [user?.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleServiceSelect = (id: number) => {
         setSelectedService(id);
@@ -136,7 +154,7 @@ export default function DashboardPage() {
                         <h2 className="text-lg font-bold text-[var(--text-primary)]">
                             Book a Service
                         </h2>
-                        <Link href="/en/booking/select" className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent)]/80 transition-colors flex items-center">
+                        <Link href={`/${locale}/booking/select`} className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent)]/80 transition-colors flex items-center">
                             See All <ArrowRight className="w-4 h-4 ml-1" />
                         </Link>
                     </div>
@@ -242,7 +260,7 @@ export default function DashboardPage() {
                 onClose={handleCloseModal}
                 title="Premium Gloss"
                 footer={
-                    <Link href="/en/booking/location" className="block w-full text-center py-4 rounded-xl bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all">
+                    <Link href={`/${locale}/booking/location`} className="block w-full text-center py-4 rounded-xl bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all">
                         Continue - $140
                     </Link>
                 }

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Build CSP as array for readability, then join
 const cspDirectives = [
@@ -42,4 +43,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+    // Silent during local builds; errors still captured in prod
+    silent: !process.env.CI,
+    // Disable source map upload until SENTRY_AUTH_TOKEN + org/project are set
+    sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+});

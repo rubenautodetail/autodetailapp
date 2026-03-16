@@ -97,17 +97,24 @@ export default function LeaveReviewPage() {
         setSubmitting(true);
         try {
             const supabase = createClient();
-            await supabase.from('notifications').insert({
-                type: 'review',
-                payload: {
-                    booking_id: booking?.id,
-                    contractor_id: booking?.contractor_id,
+            const { data: { session } } = await supabase.auth.getSession();
+
+            const res = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({
+                    bookingId: booking?.id,
                     rating,
                     comment: comment.trim(),
-                    submitted_at: new Date().toISOString(),
-                },
+                }),
             });
 
+            if (!res.ok && res.status !== 403) {
+                // Non-fatal — still show success to user
+            }
             setSubmitted(true);
         } catch {
             // Non-fatal — still show success to user

@@ -839,6 +839,71 @@ export async function sendJobPendingApprovalEmail(booking: BookingEmailData) {
 }
 
 /**
+ * Send chargeback/dispute alert to admin
+ */
+export async function sendChargebackAlertEmail(data: {
+    bookingId: string | number;
+    disputeId: string;
+    paymentIntentId: string;
+    amount: number;
+    reason: string;
+}) {
+    try {
+        const amountFormatted = (data.amount / 100).toFixed(2);
+        const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+            .alert-box { background: #fef2f2; border: 2px solid #dc2626; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .row { margin: 10px 0; }
+            .label { font-weight: 600; color: #4b5563; }
+            .button { display: inline-block; background: #dc2626; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">⚠️ Chargeback Alert</h1>
+          </div>
+          <div class="content">
+            <p><strong>A customer has opened a chargeback dispute. Immediate action required.</strong></p>
+            <div class="alert-box">
+              <div class="row"><span class="label">Booking ID:</span> ${data.bookingId}</div>
+              <div class="row"><span class="label">Dispute ID:</span> ${data.disputeId}</div>
+              <div class="row"><span class="label">Payment Intent:</span> ${data.paymentIntentId}</div>
+              <div class="row"><span class="label">Disputed Amount:</span> $${amountFormatted}</div>
+              <div class="row"><span class="label">Reason:</span> ${data.reason}</div>
+            </div>
+            <p>Log into the Stripe Dashboard to respond to this dispute. You typically have <strong>7–21 days</strong> to submit evidence.</p>
+            <p style="text-align: center;">
+              <a href="${APP_URL}/admin/bookings/${data.bookingId}" class="button">View Booking in Admin</a>
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+
+        const { data: result, error } = await getResend().emails.send({
+            from: FROM_EMAIL,
+            to: SUPPORT_EMAIL,
+            subject: `⚠️ Chargeback Alert — Booking ${data.bookingId} ($${amountFormatted})`,
+            html,
+        });
+
+        if (error) throw error;
+        console.log(`Chargeback alert email sent to admin for booking ${data.bookingId}`);
+        return result;
+    } catch (error) {
+        console.error('Failed to send chargeback alert email:', error);
+        throw error;
+    }
+}
+
+/**
  * Send job approved receipt to customer
  */
 export async function sendJobApprovedReceiptEmail(booking: BookingEmailData) {

@@ -47,6 +47,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const t = {
@@ -64,6 +65,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const supabase = createClient();
       const from = (page - 1) * PAGE_SIZE;
@@ -123,6 +125,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     } catch (err) {
       console.error("Error fetching bookings:", err);
       setBookings([]);
+      setFetchError(locale === "es" ? "Error al cargar reservas. Intenta de nuevo." : "Failed to load bookings. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -179,6 +182,11 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
         <p className="text-sm text-gray-500">
           {total} {locale === "es" ? "reservas en total" : "bookings total"}
         </p>
+        {fetchError && (
+          <div className="mt-3 px-4 py-2 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
+            {fetchError}
+          </div>
+        )}
         {message && (
           <div className={`mt-3 px-4 py-2 rounded-lg text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
             {message.text}

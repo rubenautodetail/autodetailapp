@@ -9,6 +9,7 @@
 
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { validateEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';
 // Disable caching so monitors always get a fresh response
@@ -29,9 +30,8 @@ export async function GET() {
     }
 
     // ── Env var presence (not values — never expose secrets) ─────────────────
-    checks.stripe    = process.env.STRIPE_SECRET_KEY    ? 'ok' : 'error';
-    checks.resend    = process.env.RESEND_API_KEY        ? 'ok' : 'error';
-    checks.supabase  = process.env.SUPABASE_SERVICE_ROLE_KEY ? 'ok' : 'error';
+    const { ok: envOk, missing: missingEnv } = validateEnv();
+    checks.env = envOk ? 'ok' : 'error';
 
     const allOk = Object.values(checks).every((v) => v === 'ok');
     const latencyMs = Date.now() - start;
@@ -40,6 +40,7 @@ export async function GET() {
         {
             status: allOk ? 'ok' : 'degraded',
             checks,
+            ...(missingEnv.length > 0 ? { missingEnv } : {}),
             latencyMs,
             timestamp: new Date().toISOString(),
         },

@@ -9,17 +9,45 @@ export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
 }
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rubensautodetail.com';
+
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
     const { lang } = await params;
     const validLang = i18n.locales.includes(lang as 'en' | 'es') ? (lang as 'en' | 'es') : 'en';
     const dict = await getDictionary(validLang);
+    const siteName = dict.common.siteName;
+    const description = dict.common.tagline;
 
     return {
         title: {
-            default: dict.common.siteName,
-            template: `%s | ${dict.common.siteName}`,
+            default: siteName,
+            template: `%s | ${siteName}`,
         },
-        description: dict.common.tagline,
+        description,
+        metadataBase: new URL(APP_URL),
+        alternates: {
+            canonical: `/${validLang}`,
+            languages: { en: '/en', es: '/es' },
+        },
+        openGraph: {
+            type: 'website',
+            siteName,
+            title: siteName,
+            description,
+            locale: validLang === 'es' ? 'es_ES' : 'en_US',
+            alternateLocale: validLang === 'es' ? 'en_US' : 'es_ES',
+            url: `${APP_URL}/${validLang}`,
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: siteName,
+            description,
+        },
+        robots: {
+            index: true,
+            follow: true,
+            googleBot: { index: true, follow: true },
+        },
     };
 }
 

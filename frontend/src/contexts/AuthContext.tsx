@@ -128,6 +128,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
     setUser(null);
     setSession(null);
+    setProfile(null);
+    // Clear any sensitive booking data left in session storage
+    try {
+      sessionStorage.removeItem('rubens_booking_state');
+    } catch {
+      // Private browsing may block sessionStorage — non-fatal
+    }
   };
 
   const value: AuthContextType = {

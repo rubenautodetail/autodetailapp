@@ -163,9 +163,9 @@ export default async function LandingPage({
             </section>
 
             {/* ─── How It Works ───────────────────────────────────────────────── */}
-            <section className="py-24 px-6">
+            <section className="py-14 sm:py-24 px-6">
                 <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16 space-y-3">
+                    <div className="text-center mb-10 sm:mb-16 space-y-3">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {locale === 'es' ? 'El proceso' : 'The process'}
                         </p>
@@ -197,9 +197,9 @@ export default async function LandingPage({
             </section>
 
             {/* ─── Services ───────────────────────────────────────────────────── */}
-            <section className="py-24 px-6 bg-white/[0.015]">
+            <section className="py-14 sm:py-24 px-6 bg-white/[0.015]">
                 <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16 space-y-3">
+                    <div className="text-center mb-10 sm:mb-16 space-y-3">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {locale === 'es' ? 'Nuestros servicios' : 'Our services'}
                         </p>
@@ -243,9 +243,9 @@ export default async function LandingPage({
             </section>
 
             {/* ─── Testimonials ───────────────────────────────────────────────── */}
-            <section className="py-24 px-6">
+            <section className="py-14 sm:py-24 px-6">
                 <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16 space-y-3">
+                    <div className="text-center mb-10 sm:mb-16 space-y-3">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {locale === 'es' ? 'Clientes satisfechos' : 'Happy clients'}
                         </p>
@@ -308,7 +308,7 @@ export default async function LandingPage({
             </section>
 
             {/* ─── Final CTA ───────────────────────────────────────────────────── */}
-            <section className="py-24 px-6">
+            <section className="py-14 sm:py-24 px-6">
                 <div className="max-w-2xl mx-auto text-center space-y-8">
                     <div
                         className="rounded-3xl p-12 space-y-6 relative overflow-hidden"

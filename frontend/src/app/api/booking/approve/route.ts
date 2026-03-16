@@ -26,7 +26,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
         }
 
-        if (!confirmationCode) {
+        // Sanitize: only allow numeric IDs or safe alphanumeric document IDs
+        const safeBookingId = String(bookingId).trim();
+        if (!/^[a-zA-Z0-9\-_]+$/.test(safeBookingId)) {
+            return NextResponse.json({ error: 'Invalid booking ID format' }, { status: 400 });
+        }
+
+        if (!confirmationCode || typeof confirmationCode !== 'string') {
             return NextResponse.json({ error: 'Confirmation code is required' }, { status: 400 });
         }
 
@@ -36,7 +42,7 @@ export async function POST(req: NextRequest) {
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
             .select('*')
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
             .single();
 
         if (fetchError || !booking) {
@@ -77,9 +83,9 @@ export async function POST(req: NextRequest) {
             await supabase
                 .from('bookings')
                 .update({ payment_status: 'failed', status: 'cancelled' })
-                .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+                .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
             return NextResponse.json(
-                { error: `Payment capture failed: ${(stripeError as Error).message}` },
+                { error: 'Payment capture failed. Please contact support.' },
                 { status: 502 }
             );
         }
@@ -92,7 +98,7 @@ export async function POST(req: NextRequest) {
                 status: 'completed',
                 updated_at: new Date().toISOString()
             })
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
 
         if (updateError) {
             throw new Error(`Failed to update booking status: ${updateError.message}`);

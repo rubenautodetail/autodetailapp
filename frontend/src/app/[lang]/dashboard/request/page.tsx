@@ -2,13 +2,15 @@
 
 import { Check, X, Loader2, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
 type RequestStatus = "pending" | "confirmed" | "declined";
 
 export default function RequestPage() {
     const router = useRouter();
+    const params = useParams();
+    const lang = (params?.lang as string) || 'en';
     const [status, setStatus] = useState<RequestStatus | "review">("review");
     const [loading, setLoading] = useState(false);
 
@@ -131,7 +133,7 @@ export default function RequestPage() {
                         </div>
                     </div>
 
-                    <Link href="/en/dashboard" className="inline-block mt-12 text-[var(--accent)] font-medium hover:underline">
+                    <Link href={`/${lang}/dashboard`} className="inline-block mt-12 text-[var(--accent)] font-medium hover:underline">
                         Back to Dashboard
                     </Link>
                 </div>

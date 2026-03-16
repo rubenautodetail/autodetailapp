@@ -72,14 +72,16 @@ export async function updateSession(request: NextRequest) {
         path === ''
 
     // Any booking page or API (requires authenticated customer)
+    // Use regex to avoid false-match on /admin/bookings (which also contains '/booking')
     const isBookingRoute =
-        (path.includes('/booking') && !path.includes('/booking/approve')) ||
+        (/\/[a-z]{2}\/booking(\/|$)/.test(path) && !path.includes('/booking/approve')) ||
         path.startsWith('/api/booking/create') ||
         path.startsWith('/api/payments/')
 
     // Contractor-facing pages & APIs
+    // Use regex to avoid false-match on /contractors (public landing) — only match /contractor/ or /contractor end
     const isContractorRoute =
-        path.includes('/contractor') ||
+        /\/[a-z]{2}\/contractor(\/|$)/.test(path) ||
         path.startsWith('/api/contractors/')
 
     // Admin-facing pages & APIs

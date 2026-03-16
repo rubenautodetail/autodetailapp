@@ -31,13 +31,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
         }
 
+        const safeBookingId = String(bookingId).trim();
+        if (!/^[a-zA-Z0-9\-_]+$/.test(safeBookingId)) {
+            return NextResponse.json({ error: 'Invalid booking ID format' }, { status: 400 });
+        }
+
         const supabase = createServiceClient();
 
         // Look up booking to get payment intent ID, status, and contractor info.
         const { data: booking, error } = await supabase
             .from('bookings')
             .select('payment_intent_id, payment_status, contractor_id, total_amount, service_fee, service_name')
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
             .single();
 
         if (error || !booking) {
@@ -67,10 +72,10 @@ export async function POST(req: NextRequest) {
             await supabase
                 .from('bookings')
                 .update({ payment_status: 'failed', status: 'cancelled' })
-                .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+                .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
 
             return NextResponse.json(
-                { error: `Stripe capture failed: ${(stripeError as Error).message}` },
+                { error: 'Payment capture failed. Please contact support.' },
                 { status: 502 }
             );
         }
@@ -79,7 +84,7 @@ export async function POST(req: NextRequest) {
         await supabase
             .from('bookings')
             .update({ payment_status: 'paid' })
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
 
         // Notify contractor of payment if they are assigned to this booking.
         if (booking.contractor_id) {
@@ -97,7 +102,7 @@ export async function POST(req: NextRequest) {
                     message: `Your payment of $${contractorPayout} for the ${serviceName} job has been processed.`,
                     booking_id: bookingId,
                     is_read: false,
-                    link: `/en/contractor/jobs/${bookingId}`,
+                    link: `/contractor/jobs/${safeBookingId}`,
                 });
 
             if (notifError) {

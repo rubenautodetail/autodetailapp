@@ -81,7 +81,7 @@ export default async function ContractorsPage({
             </nav>
 
             {/* ─── Hero ──────────────────────────────────────────────────────── */}
-            <section className="relative py-24 px-6 overflow-hidden">
+            <section className="relative py-14 sm:py-24 px-6 overflow-hidden">
                 <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
@@ -93,7 +93,7 @@ export default async function ContractorsPage({
                         <span className="w-1.5 h-1.5 rounded-full bg-[#D0B078] animate-pulse" />
                         {isEs ? 'Únete al equipo' : 'Join the team'}
                     </div>
-                    <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
                         {isEs
                             ? <>Gana dinero haciendo<br /><span className="text-gold-gradient">lo que ya sabes hacer.</span></>
                             : <>Get paid to do<br /><span className="text-gold-gradient">what you already do.</span></>}
@@ -121,9 +121,9 @@ export default async function ContractorsPage({
             </section>
 
             {/* ─── Perks ─────────────────────────────────────────────────────── */}
-            <section className="py-20 px-6 bg-white/[0.015]">
+            <section className="py-12 sm:py-20 px-6 bg-white/[0.015]">
                 <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-14 space-y-2">
+                    <div className="text-center mb-10 sm:mb-14 space-y-2">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {isEs ? 'Beneficios' : 'Why join us'}
                         </p>
@@ -147,9 +147,9 @@ export default async function ContractorsPage({
             </section>
 
             {/* ─── How it works ──────────────────────────────────────────────── */}
-            <section className="py-20 px-6">
+            <section className="py-12 sm:py-20 px-6">
                 <div className="max-w-3xl mx-auto">
-                    <div className="text-center mb-14 space-y-2">
+                    <div className="text-center mb-10 sm:mb-14 space-y-2">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {isEs ? 'El proceso' : 'How it works'}
                         </p>
@@ -193,7 +193,7 @@ export default async function ContractorsPage({
             </section>
 
             {/* ─── Requirements ──────────────────────────────────────────────── */}
-            <section className="py-20 px-6 bg-white/[0.015]">
+            <section className="py-12 sm:py-20 px-6 bg-white/[0.015]">
                 <div className="max-w-2xl mx-auto">
                     <div className="text-center mb-10 space-y-2">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
@@ -215,7 +215,7 @@ export default async function ContractorsPage({
             </section>
 
             {/* ─── Final CTA ─────────────────────────────────────────────────── */}
-            <section className="py-24 px-6">
+            <section className="py-14 sm:py-24 px-6">
                 <div className="max-w-xl mx-auto text-center space-y-6">
                     <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                         {isEs ? '¿Listo para empezar?' : 'Ready to get started?'}

@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { sendChargebackAlertEmail } from '@/lib/email';
 import Stripe from 'stripe';
 
 // Required for raw body access in Next.js Route Handlers
@@ -53,12 +54,15 @@ export async function POST(req: NextRequest) {
             // Card was authorized — funds are held. Confirm the booking and auto-assign a contractor.
             const pi = event.data.object as Stripe.PaymentIntent;
             const bookingId = pi.metadata?.bookingId;
-            if (bookingId && bookingId !== 'test_booking') {
+            const safeId = bookingId ? String(bookingId).replace(/[^a-zA-Z0-9\-_]/g, '') : '';
+            if (safeId && safeId !== 'test_booking' && safeId === bookingId) {
                 const { data: updatedBooking } = await supabase
                     .from('bookings')
                     // pending_payment → pending_assignment (card authorized; now visible to contractors)
+                    // .eq('payment_status', 'unpaid') ensures idempotency: duplicate events are no-ops
                     .update({ payment_status: 'authorized', status: 'pending_assignment' })
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                    .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+                    .eq('payment_status', 'unpaid')
                     .select()
                     .single();
 
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
                         await supabase
                             .from('bookings')
                             .update({ contractor_id: contractor.id, status: 'confirmed' })
-                            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+                            .or(`id.eq.${safeId},document_id.eq.${safeId}`);
 
                         const { notify } = await import('@/lib/notifications');
                         await notify({
@@ -107,11 +111,14 @@ export async function POST(req: NextRequest) {
             // Payment was captured (via approve or auto-approve cron). Mark as paid.
             const pi = event.data.object as Stripe.PaymentIntent;
             const bookingId = pi.metadata?.bookingId;
-            if (bookingId && bookingId !== 'test_booking') {
+            const safeId2 = bookingId ? String(bookingId).replace(/[^a-zA-Z0-9\-_]/g, '') : '';
+            if (safeId2 && safeId2 !== 'test_booking' && safeId2 === bookingId) {
+                // .eq('payment_status', 'authorized') ensures idempotency: only capture once
                 await supabase
                     .from('bookings')
                     .update({ payment_status: 'paid', status: 'confirmed' })
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+                    .or(`id.eq.${safeId2},document_id.eq.${safeId2}`)
+                    .eq('payment_status', 'authorized');
 
                 console.log(`Payment succeeded for booking ${bookingId}`);
                 // Receipt email is sent by the approve route (booking.approved notification)
@@ -124,12 +131,13 @@ export async function POST(req: NextRequest) {
             // Authorization or capture failed — cancel the booking.
             const pi = event.data.object as Stripe.PaymentIntent;
             const bookingId = pi.metadata?.bookingId;
+            const safeId3 = bookingId ? String(bookingId).replace(/[^a-zA-Z0-9\-_]/g, '') : '';
             const failureMessage = pi.last_payment_error?.message ?? 'Unknown error';
-            if (bookingId && bookingId !== 'test_booking') {
+            if (safeId3 && safeId3 !== 'test_booking' && safeId3 === bookingId) {
                 const { data: updatedBooking } = await supabase
                     .from('bookings')
                     .update({ payment_status: 'failed', status: 'cancelled' })
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                    .or(`id.eq.${safeId3},document_id.eq.${safeId3}`)
                     .select()
                     .single();
 
@@ -162,13 +170,22 @@ export async function POST(req: NextRequest) {
                     await supabase
                         .from('bookings')
                         .update({ payment_status: 'disputed' })
-                        .eq('id', booking.id);
+                        .eq('id', booking.id)
+                        .neq('payment_status', 'disputed'); // idempotency
 
                     console.warn(
                         `Chargeback opened for booking ${booking.id} (PI: ${paymentIntentId}). ` +
                         `Dispute ID: ${dispute.id}, amount: ${dispute.amount}, reason: ${dispute.reason}`
                     );
-                    // TODO: send admin alert email when dispute notification type is added to notify().
+
+                    // Alert admin immediately — disputes have a response deadline
+                    sendChargebackAlertEmail({
+                        bookingId: booking.id,
+                        disputeId: dispute.id,
+                        paymentIntentId: paymentIntentId,
+                        amount: dispute.amount,
+                        reason: dispute.reason ?? 'unknown',
+                    }).catch((err) => console.error('Failed to send chargeback alert email:', err));
                 } else {
                     console.warn(`Dispute ${dispute.id} references unknown PaymentIntent ${paymentIntentId}`);
                 }

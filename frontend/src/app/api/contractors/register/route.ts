@@ -49,6 +49,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Authentication required. Create an account first.' }, { status: 401 });
     }
 
+    // Reject suspiciously large payloads before parsing (10 MB limit for 3 documents)
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Request body too large (max 10 MB).' }, { status: 413 });
+    }
+
     try {
         let formData: FormData;
         try {
@@ -57,9 +63,24 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Expected multipart form data" }, { status: 400 });
         }
 
-        const fullName = formData.get("fullName") as string;
-        const email = formData.get("email") as string;
-        const phone = formData.get("phone") as string;
+        const fullNameVal = formData.get("fullName");
+        const emailVal = formData.get("email");
+        const phoneVal = formData.get("phone");
+
+        // Input validation
+        if (typeof fullNameVal !== 'string' || fullNameVal.trim().length < 2 || fullNameVal.trim().length > 100) {
+            return NextResponse.json({ error: 'Full name is required (2–100 characters).' }, { status: 400 });
+        }
+        if (typeof emailVal !== 'string' || !emailVal.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal.trim())) {
+            return NextResponse.json({ error: 'A valid email address is required.' }, { status: 400 });
+        }
+        if (typeof phoneVal !== 'string' || phoneVal.trim().length < 7 || phoneVal.trim().length > 20) {
+            return NextResponse.json({ error: 'A valid phone number is required.' }, { status: 400 });
+        }
+
+        const fullName = fullNameVal.trim();
+        const email = emailVal.trim();
+        const phone = phoneVal.trim();
         const address = formData.get("address") as string;
         const businessName = formData.get("businessName") as string;
         const serviceZipCodesStr = formData.get("serviceZipCodes") as string;
@@ -119,10 +140,10 @@ export async function POST(req: NextRequest) {
         ]);
 
         return NextResponse.json({ success: true, message: "Application submitted successfully." });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Contractor registration error:", error);
         return NextResponse.json(
-            { error: error.message || "Failed to submit application" },
+            { error: (error as Error).message || "Failed to submit application" },
             { status: 500 }
         );
     }

@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { createPaymentIntent } from '@/lib/stripe/server';
 import { rateLimit } from '@/lib/rateLimit';
@@ -153,7 +154,7 @@ export async function POST(req: NextRequest) {
 
         console.error('create-with-payment: Stripe failed, booking rolled back:', stripeErr);
         return NextResponse.json(
-            { error: `Payment setup failed: ${(stripeErr as Error).message}` },
+            { error: 'Payment setup failed. Please try again or contact support.' },
             { status: 502 }
         );
     }
@@ -169,7 +170,10 @@ export async function POST(req: NextRequest) {
     // ── Step 4: Notify contractors about the new job ─────────────────────────
     // Fire-and-forget — notification failure must not block the payment flow
     notifyContractors(supabase, booking, zipCode ?? '', serviceName ?? 'Detailing Service').catch(
-        (err) => console.error('create-with-payment: contractor notification failed:', err)
+        (err) => {
+            console.error('create-with-payment: contractor notification failed:', err);
+            Sentry.captureException(err, { tags: { context: 'contractor_notification', bookingId: booking.id } });
+        }
     );
 
     return NextResponse.json({
