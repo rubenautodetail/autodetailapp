@@ -131,6 +131,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     serviceFee,
     total,
     currentStep,
+    isHydrated,
     previousStep,
     setPaymentStatus,
     setPaymentIntentId,
@@ -145,13 +146,14 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   // Track the booking ID so a payment retry (after client-side Stripe error) reuses the same booking
   const [createdBookingDocId, setCreatedBookingDocId] = useState<string | null>(null);
 
-  // Redirect if prerequisites not met
+  // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
+    if (!isHydrated) return;
     if (!selectedService) { router.push(`/${locale}/booking/select`); return; }
     if (!customerLocation) { router.push(`/${locale}/booking/location`); return; }
     if (!selectedDate || !selectedTimeWindow) { router.push(`/${locale}/booking/schedule`); return; }
     if (!customerInfo) { router.push(`/${locale}/booking/review`); return; }
-  }, [selectedService, customerLocation, selectedDate, selectedTimeWindow, customerInfo, router, locale]);
+  }, [isHydrated, selectedService, customerLocation, selectedDate, selectedTimeWindow, customerInfo, router, locale]);
 
   const handleCreateBooking = async () => {
     if (!customerInfo || !customerLocation || !selectedDate || !selectedTimeWindow || !selectedService) {

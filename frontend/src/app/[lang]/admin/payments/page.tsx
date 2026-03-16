@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface AdminPaymentsProps {
   params: Promise<{ lang: "en" | "es" }>;
@@ -55,67 +55,17 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
     async function load() {
       setLoading(true);
       try {
-        const supabase = createClient();
+        const res = await adminFetch("/api/admin/payments/list");
+        if (!res.ok) throw new Error("Failed to fetch payments");
 
-        // Fetch all completed bookings that have a contractor assigned
-        const { data: bookings, error } = await supabase
-          .from("bookings")
-          .select("*")
-          .eq("status", "completed")
-          .not("contractor_id", "is", null)
-          .order("date", { ascending: false });
+        const { jobs } = await res.json();
+        const jobList: CompletedJob[] = jobs ?? [];
 
-        if (error) throw error;
-
-        const bList = (bookings ?? []) as Array<Record<string, unknown>>;
-
-        if (bList.length === 0) {
-          setSummaries([]);
-          setAllJobs([]);
-          setLoading(false);
-          return;
-        }
-
-        // Collect unique contractor IDs
-        const contractorIds = [...new Set(bList.map((b) => b.contractor_id as string).filter(Boolean))];
-
-        // Batch-fetch contractor profiles
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, phone_number")
-          .in("id", contractorIds);
-
-        const profileMap: Record<string, { name: string; phone: string }> = {};
-        (profiles ?? []).forEach((p) => {
-          const pp = p as Record<string, unknown>;
-          profileMap[pp.id as string] = {
-            name: (pp.full_name as string) ?? "Unknown",
-            phone: (pp.phone_number as string) ?? "—",
-          };
-        });
-
-        // Build job list
-        const jobs: CompletedJob[] = bList.map((b) => {
-          const contractorId = b.contractor_id as string;
-          const profile = profileMap[contractorId] ?? { name: "Unknown", phone: "—" };
-          return {
-            bookingId: b.id as number,
-            contractorId,
-            contractorName: profile.name,
-            contractorPhone: profile.phone,
-            serviceName: (b.service_name as string) ?? "—",
-            scheduledDate: (b.date as string) ?? "",
-            totalAmount: b.total_amount ? parseFloat(String(b.total_amount)) : 0,
-            paymentStatus: (b.payment_status as string) ?? "—",
-            confirmationCode: (b.confirmation_code as string) ?? "",
-          };
-        });
-
-        setAllJobs(jobs);
+        setAllJobs(jobList);
 
         // Group by contractor
         const grouped: Record<string, ContractorSummary> = {};
-        jobs.forEach((j) => {
+        jobList.forEach((j: CompletedJob) => {
           if (!grouped[j.contractorId]) {
             grouped[j.contractorId] = {
               contractorId: j.contractorId,

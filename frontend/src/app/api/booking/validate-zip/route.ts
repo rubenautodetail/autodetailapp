@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({
                 available: false,
                 zipCode: cleanZip,
-                message: 'We are not currently servicing your area. Join our waitlist to be notified when we expand!',
+                message: 'We currently only service Miami-Dade County. Join our waitlist to be notified when we expand to your area!',
             });
         }
 

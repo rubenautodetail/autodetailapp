@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { adminFetch } from "@/lib/adminFetch";
 
 interface PageProps {
@@ -67,70 +66,21 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error || !data) {
-        setLoading(false);
-        return;
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const b = data as any;
-      const detail: BookingDetail = {
-        id: b.id,
-        status: b.status ?? "pending",
-        customerName: b.customer_name ?? "—",
-        customerEmail: b.customer_email ?? "—",
-        customerPhone: b.customer_phone ?? "—",
-        serviceName: b.service_name ?? "—",
-        vehicleMake: b.vehicle_make ?? "—",
-        vehicleModel: b.vehicle_model ?? "—",
-        vehicleYear: b.vehicle_year ?? "—",
-        vehicleColor: b.vehicle_color ?? "—",
-        vehicleType: b.vehicle_type ?? "—",
-        address: b.address ?? "—",
-        city: b.city ?? "—",
-        state: b.state ?? "—",
-        zipCode: b.zip_code ?? "—",
-        scheduledDate: b.date ?? "",
-        timeWindow: b.time_window ?? "—",
-        totalAmount: b.total_amount ? parseFloat(String(b.total_amount)) : 0,
-        paymentStatus: b.payment_status ?? "—",
-        paymentIntentId: b.payment_intent_id ?? "",
-        specialInstructions: b.special_instructions ?? "—",
-        confirmationCode: b.confirmation_code ?? "—",
-        contractorId: b.contractor_id ?? null,
-        createdAt: b.created_at,
-        updatedAt: b.updated_at,
-      };
-      setBooking(detail);
-
-      // Fetch contractor if assigned
-      if (b.contractor_id) {
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("id, full_name, phone_number, stripe_account_id, onboarding_complete")
-          .eq("id", b.contractor_id)
-          .single();
-        if (p) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const cp = p as any;
-          setContractor({
-            id: cp.id,
-            name: cp.full_name ?? "Unknown",
-            phone: cp.phone_number ?? "—",
-            stripeAccountId: cp.stripe_account_id ?? null,
-            onboardingComplete: cp.onboarding_complete ?? false,
-          });
+      try {
+        const res = await adminFetch(`/api/admin/bookings/detail?id=${id}`);
+        if (!res.ok) {
+          setLoading(false);
+          return;
         }
-      }
 
-      setLoading(false);
+        const { booking: detail, contractor: contractorData } = await res.json();
+        setBooking(detail);
+        if (contractorData) setContractor(contractorData);
+      } catch (err) {
+        console.error("Error loading booking:", err);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [id]);

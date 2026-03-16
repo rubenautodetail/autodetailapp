@@ -98,6 +98,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Action: Register with Supabase
   const register = async (name: string, email: string, password: string) => {
+    const siteUrl = typeof window !== 'undefined'
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -105,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: {
           full_name: name,
         },
+        emailRedirectTo: `${siteUrl}/api/auth/callback`,
       },
     });
 

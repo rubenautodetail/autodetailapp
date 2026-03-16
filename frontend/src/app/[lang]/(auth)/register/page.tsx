@@ -15,12 +15,16 @@ export default function RegisterPage() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const params = useParams();
+    const next = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("next")
+        : null;
+    const redirectTo = next || `/${params.lang}/dashboard`;
 
     useEffect(() => {
         if (!isLoading && user) {
-            router.push(`/${params.lang}/dashboard`);
+            router.push(redirectTo);
         }
-    }, [user, isLoading, router, params.lang]);
+    }, [user, isLoading, router, redirectTo]);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,7 +33,7 @@ export default function RegisterPage() {
 
         try {
             await register(name, email, password);
-            router.push(`/${params.lang}/dashboard`);
+            router.push(redirectTo);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to create account.");
         } finally {

@@ -21,21 +21,25 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const isEs = lang === "es";
   const { profile, isLoading, logout } = useAuth();
 
-  // Auth guard — only users with role === 'admin' may access this section
+  // Auth guard — must be before any early returns to satisfy Rules of Hooks
   useEffect(() => {
     if (isLoading) return;
     if (!profile || profile.role !== "admin") {
-      router.replace(`/${lang}`);
+      router.replace(`/${lang}/admin/login`);
     }
   }, [isLoading, profile, lang, router]);
+
+  // Admin login page bypasses the layout entirely
+  const isLoginPage = pathname.endsWith("/admin/login");
+  if (isLoginPage) return <>{children}</>;
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace(`/${lang}/login`);
+      router.replace(`/${lang}/admin/login`);
     } catch (e) {
       console.error(e);
-      window.location.href = `/${lang}`;
+      window.location.href = `/${lang}/admin/login`;
     }
   };
 
@@ -58,8 +62,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Sidebar — desktop only */}
       <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 fixed top-0 left-0 h-full z-20">
         <div className="px-5 py-5 border-b border-gray-100">
-          <div className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-0.5">Admin</div>
-          <div className="text-base font-bold text-gray-900">Rubens Auto Detail</div>
+          <div className="text-base font-bold text-gray-900 mb-3">Rubens Auto Detail</div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {profile.full_name || profile.id.slice(0, 8)}
+              </p>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700 uppercase tracking-wider">
+                Admin
+              </span>
+            </div>
+          </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {NAV.map((item) => {

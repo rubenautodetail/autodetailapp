@@ -109,6 +109,9 @@ interface BookingContextType {
   // Booking step tracking
   currentStep: number;
 
+  // Hydration flag — true once sessionStorage state has been restored
+  isHydrated: boolean;
+
   // Payment state
   paymentStatus: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded';
   paymentIntentId: string | null;
@@ -155,6 +158,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'paid' | 'failed' | 'refunded'>('pending');
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
 
+  // Hydration flag — prevents redirect guards from firing before sessionStorage is restored
+  const [isHydrated, setIsHydrated] = useState(false);
+
   // ── Restore state from sessionStorage on mount ─────────────────────────────
   useEffect(() => {
     const svc = ssGet<Service>('selectedService');
@@ -179,6 +185,8 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     if (svc) {
       calculateTotalWithService(svc, addOns ?? []);
     }
+
+    setIsHydrated(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -306,6 +314,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     serviceFee,
     total,
     currentStep,
+    isHydrated,
     paymentStatus,
     paymentIntentId,
     setPaymentStatus,

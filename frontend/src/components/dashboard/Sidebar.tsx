@@ -6,11 +6,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Home, Plus, Car, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserCircle2 } from 'lucide-react';
 
 export default function Sidebar({ lang }: { lang: string }) {
     const pathname = usePathname();
     const router = useRouter();
-    const { logout } = useAuth();
+    const { logout, profile, user } = useAuth();
 
     const handleSignOut = async () => {
         try {
@@ -35,6 +36,23 @@ export default function Sidebar({ lang }: { lang: string }) {
                 <span className="text-xl font-bold font-display tracking-tight text-white">
                     RUBENS <span className="text-accent-gold">AUTO</span>
                 </span>
+            </div>
+
+            {/* User Identity */}
+            <div className="px-4 py-4 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
+                        <UserCircle2 className="w-5 h-5 text-accent-gold" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium text-white truncate">
+                            {profile?.full_name || user?.email?.split('@')[0] || '—'}
+                        </p>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-accent-gold/15 text-accent-gold uppercase tracking-wider">
+                            Customer
+                        </span>
+                    </div>
+                </div>
             </div>
 
             {/* Navigation */}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { adminFetch } from "@/lib/adminFetch";
 
 interface AdminUsersProps {
@@ -56,34 +55,12 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const supabase = createClient();
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const params = new URLSearchParams({ role: roleFilter, page: String(page) });
+      const res = await adminFetch(`/api/admin/users/list?${params}`);
+      if (!res.ok) throw new Error("Failed to fetch users");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query: any = supabase
-        .from("profiles")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (roleFilter !== "all") {
-        query = query.eq("role", roleFilter);
-      }
-
-      const { data, count, error } = await query;
-      if (error) throw error;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped: UserProfile[] = (data ?? []).map((p: any) => ({
-        id: p.id,
-        name: p.full_name || "—",
-        phone: p.phone_number || "—",
-        role: p.role || "user",
-        createdAt: p.created_at,
-      }));
-
-      setUsers(mapped);
+      const { users: list, total: count } = await res.json();
+      setUsers(list ?? []);
       setTotal(count ?? 0);
     } catch (err) {
       console.error("Error fetching users:", err);

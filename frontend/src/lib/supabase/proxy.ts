@@ -84,9 +84,9 @@ export async function updateSession(request: NextRequest) {
         /\/[a-z]{2}\/contractor(\/|$)/.test(path) ||
         path.startsWith('/api/contractors/')
 
-    // Admin-facing pages & APIs
+    // Admin-facing pages & APIs (exclude /admin/login — it's an auth page)
     const isAdminRoute =
-        path.includes('/admin') ||
+        (path.includes('/admin') && !path.includes('/admin/login')) ||
         path.startsWith('/api/admin/')
 
     // ─── Redirect unauthenticated users ───────────────────────────────────────
@@ -100,7 +100,10 @@ export async function updateSession(request: NextRequest) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
             }
             const loginUrl = request.nextUrl.clone()
-            loginUrl.pathname = `/${locale}/login`
+            // Admin routes get the admin login page; all others go to the standard login
+            loginUrl.pathname = isAdminRoute
+                ? `/${locale}/admin/login`
+                : `/${locale}/login`
             loginUrl.searchParams.set('next', path)
             return NextResponse.redirect(loginUrl)
         }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { adminFetch } from "@/lib/adminFetch";
 
 interface AdminBookingsProps {
@@ -67,60 +66,12 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     setLoading(true);
     setFetchError(null);
     try {
-      const supabase = createClient();
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const params = new URLSearchParams({ status: statusFilter, page: String(page) });
+      const res = await adminFetch(`/api/admin/bookings/list?${params}`);
+      if (!res.ok) throw new Error("Failed to fetch bookings");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query: any = supabase
-        .from("bookings")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
-      }
-
-      const { data, count, error } = await query;
-      if (error) throw error;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped: Booking[] = (data ?? []).map((b: any) => ({
-        id: b.id,
-        customerName: b.customer_name ?? undefined,
-        customerEmail: b.customer_email ?? undefined,
-        status: b.status ?? "pending",
-        total: b.total_amount != null ? parseFloat(String(b.total_amount)) : undefined,
-        scheduledDate: b.date ?? undefined,
-        timeWindow: b.time_window ?? undefined,
-        createdAt: b.created_at,
-        serviceName: b.service_name ?? undefined,
-        zipCode: b.zip_code ?? undefined,
-        contractorId: b.contractor_id ?? undefined,
-      }));
-
-      // Batch-fetch contractor names for bookings that have a contractor_id
-      const contractorIds = [...new Set(mapped.map((b) => b.contractorId).filter(Boolean))] as string[];
-      if (contractorIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", contractorIds);
-
-        const nameMap: Record<string, string> = {};
-        (profiles ?? []).forEach((p) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const pp = p as any;
-          nameMap[pp.id] = pp.full_name ?? "—";
-        });
-
-        mapped.forEach((b) => {
-          if (b.contractorId) b.contractorName = nameMap[b.contractorId] ?? "—";
-        });
-      }
-
-      setBookings(mapped);
+      const { bookings: list, total: count } = await res.json();
+      setBookings(list ?? []);
       setTotal(count ?? 0);
     } catch (err) {
       console.error("Error fetching bookings:", err);
@@ -129,7 +80,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, page]);
+  }, [statusFilter, page, locale]);
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
 

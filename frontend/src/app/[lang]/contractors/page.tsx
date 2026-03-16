@@ -71,7 +71,7 @@ export default async function ContractorsPage({
                             {isEs ? 'Iniciar sesión' : 'Log in'}
                         </Link>
                         <Link
-                            href={`/${locale}/register`}
+                            href={`/${locale}/register?next=/${locale}/contractors/apply`}
                             className="px-4 py-2 text-sm font-semibold bg-[#D0B078] text-black rounded-lg hover:bg-[#c4a068] transition-colors"
                         >
                             {isEs ? 'Aplicar ahora' : 'Apply now'}
@@ -105,7 +105,7 @@ export default async function ContractorsPage({
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                         <Link
-                            href={`/${locale}/register`}
+                            href={`/${locale}/register?next=/${locale}/contractors/apply`}
                             className="btn-primary px-8 py-4 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)]"
                         >
                             {isEs ? 'Crea tu cuenta y aplica' : 'Create account & apply'}
@@ -227,7 +227,7 @@ export default async function ContractorsPage({
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link
-                            href={`/${locale}/register`}
+                            href={`/${locale}/register?next=/${locale}/contractors/apply`}
                             className="btn-primary px-8 py-4 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)]"
                         >
                             {isEs ? 'Aplicar ahora' : 'Apply now'}

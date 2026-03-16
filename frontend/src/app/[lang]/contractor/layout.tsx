@@ -26,8 +26,10 @@ export default function ContractorLayout({
     // Auth guard — contractor or admin only; pending contractors go to pending page
     useEffect(() => {
         if (authLoading) return;
+        // Skip redirect if already on the contractor login page
+        if (pathname?.endsWith('/contractor/login')) return;
         if (!profile || (profile.role !== 'contractor' && profile.role !== 'admin')) {
-            router.replace(`/${lang}`);
+            router.replace(`/${lang}/contractor/login`);
             return;
         }
         if (profile.role === 'contractor' && profile.approval_status !== 'approved') {
@@ -54,6 +56,10 @@ export default function ContractorLayout({
 
     // Notifications Hook — must be before any early return
     const { notifications, dismissToast } = useNotifications();
+
+    // Login page renders without the nav shell
+    const isLoginPage = pathname?.endsWith('/contractor/login');
+    if (isLoginPage) return <>{children}</>;
 
     if (authLoading || !profile || (profile.role !== 'contractor' && profile.role !== 'admin') ||
         (profile.role === 'contractor' && profile.approval_status !== 'approved')) {
@@ -99,6 +105,23 @@ export default function ContractorLayout({
                                 <span className="text-yellow-400">✦</span>
                                 <span>Rubens Detail</span>
                             </Link>
+
+                            {/* Role identity badge */}
+                            <div className="hidden sm:flex items-center gap-2 mr-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                <div className="w-6 h-6 rounded-full bg-yellow-400/10 flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <div className="leading-none">
+                                    <p className="text-xs font-medium text-white truncate max-w-[120px]">
+                                        {profile?.full_name || '—'}
+                                    </p>
+                                    <span className="text-[10px] font-semibold text-yellow-400 uppercase tracking-wider">
+                                        {lang === 'es' ? 'Técnico' : 'Technician'}
+                                    </span>
+                                </div>
+                            </div>
 
                             {/* Nav Links — hidden on mobile (bottom nav handles it) */}
                             <div className="hidden sm:flex items-center space-x-1">
