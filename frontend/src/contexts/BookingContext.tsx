@@ -80,6 +80,7 @@ export interface VehicleInfo {
   model: string;
   year: string;
   color: string;
+  type?: 'sedan' | 'suv' | 'truck' | 'coupe' | 'van' | 'other';
 }
 
 interface BookingContextType {

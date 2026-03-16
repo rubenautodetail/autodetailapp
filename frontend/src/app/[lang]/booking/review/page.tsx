@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { useBooking, CustomerInfo } from "@/contexts";
+import { useBooking, useBookingStatus, CustomerInfo } from "@/contexts";
 import { PricingSummary, ProgressIndicator } from "@/components/booking";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -36,18 +36,43 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     previousStep,
   } = useBooking();
 
+  const { vehicles, addVehicle } = useBookingStatus();
+
   const [name, setName] = useState(customerInfo?.name || "");
   const [email, setEmail] = useState(customerInfo?.email || "");
   const [phone, setPhone] = useState(customerInfo?.phone || "");
   const [specialNotes, setSpecialNotes] = useState(customerInfo?.specialNotes || "");
 
-  // Optional vehicle fields
   const [vehicleMake, setVehicleMake] = useState(vehicleInfo?.make || "");
   const [vehicleModel, setVehicleModel] = useState(vehicleInfo?.model || "");
   const [vehicleYear, setVehicleYear] = useState(vehicleInfo?.year || "");
   const [vehicleColor, setVehicleColor] = useState(vehicleInfo?.color || "");
+  const [vehicleType, setVehicleType] = useState<any>(vehicleInfo?.type || "sedan");
+
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("new");
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Auto-select first vehicle from garage if available and no vehicle selected yet
+  useEffect(() => {
+    if (vehicles.length > 0 && selectedVehicleId === "new" && !vehicleMake) {
+      setSelectedVehicleId(vehicles[0].id);
+    }
+  }, [vehicles, selectedVehicleId, vehicleMake]);
+
+  // Sync fields when a garage vehicle is selected
+  useEffect(() => {
+    if (selectedVehicleId !== "new") {
+      const v = vehicles.find(v => v.id === selectedVehicleId);
+      if (v) {
+        setVehicleMake(v.make);
+        setVehicleModel(v.model);
+        setVehicleYear(v.year);
+        setVehicleColor(v.color);
+        setVehicleType(v.type);
+      }
+    }
+  }, [selectedVehicleId, vehicles]);
 
   // Redirect if prerequisites not met
   useEffect(() => {
@@ -86,6 +111,14 @@ export default function ReviewPage({ params }: ReviewPageProps) {
       newErrors.phone = locale === "es" ? "Teléfono inválido" : "Invalid phone";
     }
 
+    if (selectedVehicleId === "new") {
+      if (!vehicleMake.trim()) newErrors.vehicleMake = locale === "es" ? "Marca requerida" : "Make required";
+      if (!vehicleModel.trim()) newErrors.vehicleModel = locale === "es" ? "Modelo requerido" : "Model required";
+      if (!vehicleYear.trim()) newErrors.vehicleYear = locale === "es" ? "Año requerido" : "Year required";
+      if (!vehicleColor.trim()) newErrors.vehicleColor = locale === "es" ? "Color requerido" : "Color required";
+      if (!vehicleType) newErrors.vehicleType = locale === "es" ? "Tipo requerido" : "Type required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -104,14 +137,42 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     setPhone(formatted);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!validateForm()) {
       return;
     }
 
+    let finalVehicle = { 
+      make: vehicleMake, 
+      model: vehicleModel, 
+      year: vehicleYear, 
+      color: vehicleColor,
+      type: vehicleType 
+    };
+    
+    if (selectedVehicleId !== "new") {
+      const existingVehicle = vehicles.find(v => v.id === selectedVehicleId);
+      if (existingVehicle) {
+        finalVehicle = { 
+          make: existingVehicle.make, 
+          model: existingVehicle.model, 
+          year: existingVehicle.year, 
+          color: existingVehicle.color,
+          type: existingVehicle.type 
+        };
+      }
+    } else {
+      // It's a new vehicle, save it to the garage
+      try {
+        await addVehicle({ ...finalVehicle, licensePlate: '' });
+      } catch (e) {
+        console.error("Failed to add vehicle to garage", e);
+      }
+    }
+
     // Save to context
     setCustomerInfo({ name, email, phone, specialNotes });
-    setVehicleInfo({ make: vehicleMake, model: vehicleModel, year: vehicleYear, color: vehicleColor });
+    setVehicleInfo(finalVehicle);
 
     nextStep();
     router.push(`/${locale}/booking/payment`);
@@ -125,6 +186,16 @@ export default function ReviewPage({ params }: ReviewPageProps) {
       phone,
       specialNotes,
     });
+
+    if (selectedVehicleId === "new") {
+      setVehicleInfo({ 
+        make: vehicleMake, 
+        model: vehicleModel, 
+        year: vehicleYear, 
+        color: vehicleColor,
+        type: vehicleType 
+      });
+    }
 
     previousStep();
     router.push(`/${locale}/booking/schedule`);
@@ -290,7 +361,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
               </div>
             </Card>
 
-            {/* Vehicle Information (optional) */}
+            {/* Vehicle Information */}
             <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
               <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
@@ -300,66 +371,138 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   </svg>
                 </div>
                 {locale === "es" ? "Detalles del Vehículo" : "Vehicle Details"}
-                <span className="text-xs font-normal text-[#5E698F] ml-1">
-                  ({locale === "es" ? "Opcional" : "Optional"})
-                </span>
               </h3>
               <p className="text-sm text-[#5E698F] mb-6">
                 {locale === "es"
-                  ? "Ayuda a tu técnico a prepararse. Puedes omitir esto si lo prefieres."
-                  : "Helps your technician prepare. You can skip this if you prefer."}
+                  ? "Ayuda a tu técnico a prepararse."
+                  : "Helps your technician prepare."}
               </p>
-              <div className="grid md:grid-cols-2 gap-5">
-                <div>
+
+              {vehicles.length > 0 && (
+                <div className="mb-6">
                   <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
-                    {locale === "es" ? "Marca" : "Make"}
+                    {locale === "es" ? "Seleccionar del garaje" : "Select from garage"}
                   </label>
-                  <input
-                    type="text"
-                    value={vehicleMake}
-                    onChange={(e) => setVehicleMake(e.target.value)}
-                    placeholder={locale === "es" ? "Toyota, Honda..." : "Toyota, Honda..."}
-                    className="w-full px-4 py-3 bg-[#1A2142] border border-[#2C355E] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F]"
-                  />
+                  <select
+                    value={selectedVehicleId}
+                    onChange={(e) => setSelectedVehicleId(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#1A2142] border border-[#2C355E] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors"
+                  >
+                    <option value="new">{locale === "es" ? "+ Añadir nuevo vehículo" : "+ Add new vehicle"}</option>
+                    {vehicles.map(v => (
+                      <option key={v.id} value={v.id}>
+                        {v.year} {v.make} {v.model} ({v.color})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
-                    {locale === "es" ? "Modelo" : "Model"}
-                  </label>
-                  <input
-                    type="text"
-                    value={vehicleModel}
-                    onChange={(e) => setVehicleModel(e.target.value)}
-                    placeholder={locale === "es" ? "Camry, Civic..." : "Camry, Civic..."}
-                    className="w-full px-4 py-3 bg-[#1A2142] border border-[#2C355E] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F]"
-                  />
+              )}
+
+              {selectedVehicleId === "new" && (
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
+                      {locale === "es" ? "Marca" : "Make"}
+                      <span className="text-[#D0B078] ml-1">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleMake}
+                      onChange={(e) => {
+                        setVehicleMake(e.target.value);
+                        if (errors.vehicleMake) setErrors({ ...errors, vehicleMake: "" });
+                      }}
+                      placeholder={locale === "es" ? "Toyota, Honda..." : "Toyota, Honda..."}
+                      className={`w-full px-4 py-3 bg-[#1A2142] border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F] ${errors.vehicleMake ? "border-red-500/50" : "border-[#2C355E]"}`}
+                    />
+                    {errors.vehicleMake && <p className="mt-1 text-sm text-red-400">{errors.vehicleMake}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
+                      {locale === "es" ? "Modelo" : "Model"}
+                      <span className="text-[#D0B078] ml-1">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleModel}
+                      onChange={(e) => {
+                        setVehicleModel(e.target.value);
+                        if (errors.vehicleModel) setErrors({ ...errors, vehicleModel: "" });
+                      }}
+                      placeholder={locale === "es" ? "Camry, Civic..." : "Camry, Civic..."}
+                      className={`w-full px-4 py-3 bg-[#1A2142] border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F] ${errors.vehicleModel ? "border-red-500/50" : "border-[#2C355E]"}`}
+                    />
+                    {errors.vehicleModel && <p className="mt-1 text-sm text-red-400">{errors.vehicleModel}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
+                      {locale === "es" ? "Año" : "Year"}
+                      <span className="text-[#D0B078] ml-1">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleYear}
+                      onChange={(e) => {
+                        setVehicleYear(e.target.value);
+                        if (errors.vehicleYear) setErrors({ ...errors, vehicleYear: "" });
+                      }}
+                      placeholder="2020"
+                      maxLength={4}
+                      className={`w-full px-4 py-3 bg-[#1A2142] border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F] ${errors.vehicleYear ? "border-red-500/50" : "border-[#2C355E]"}`}
+                    />
+                    {errors.vehicleYear && <p className="mt-1 text-sm text-red-400">{errors.vehicleYear}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
+                      {locale === "es" ? "Color" : "Color"}
+                      <span className="text-[#D0B078] ml-1">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleColor}
+                      onChange={(e) => {
+                        setVehicleColor(e.target.value);
+                        if (errors.vehicleColor) setErrors({ ...errors, vehicleColor: "" });
+                      }}
+                      placeholder={locale === "es" ? "Blanco, Negro..." : "White, Black..."}
+                      className={`w-full px-4 py-3 bg-[#1A2142] border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F] ${errors.vehicleColor ? "border-red-500/50" : "border-[#2C355E]"}`}
+                    />
+                    {errors.vehicleColor && <p className="mt-1 text-sm text-red-400">{errors.vehicleColor}</p>}
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
+                      {locale === "es" ? "Tipo de Vehículo" : "Vehicle Type"}
+                      <span className="text-[#D0B078] ml-1">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {[
+                        { id: 'sedan', label: 'Sedan', labelEs: 'Sedán' },
+                        { id: 'suv', label: 'SUV', labelEs: 'SUV' },
+                        { id: 'truck', label: 'Truck', labelEs: 'Camioneta' },
+                        { id: 'coupe', label: 'Coupe', labelEs: 'Coupé' },
+                        { id: 'van', label: 'Van', labelEs: 'Van/Minivan' },
+                        { id: 'other', label: 'Other', labelEs: 'Otro' },
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setVehicleType(t.id as any)}
+                          className={`
+                            px-4 py-3 rounded-xl border text-sm font-medium transition-all
+                            ${vehicleType === t.id
+                              ? "bg-[#D0B078] text-[#131835] border-[#D0B078]"
+                              : "bg-[#1A2142] text-[#A5B0D1] border-[#2C355E] hover:border-[#D0B078]/50"
+                            }
+                          `}
+                        >
+                          {locale === "es" ? t.labelEs : t.label}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.vehicleType && <p className="mt-1 text-sm text-red-400">{errors.vehicleType}</p>}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
-                    {locale === "es" ? "Año" : "Year"}
-                  </label>
-                  <input
-                    type="text"
-                    value={vehicleYear}
-                    onChange={(e) => setVehicleYear(e.target.value)}
-                    placeholder="2020"
-                    maxLength={4}
-                    className="w-full px-4 py-3 bg-[#1A2142] border border-[#2C355E] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
-                    {locale === "es" ? "Color" : "Color"}
-                  </label>
-                  <input
-                    type="text"
-                    value={vehicleColor}
-                    onChange={(e) => setVehicleColor(e.target.value)}
-                    placeholder={locale === "es" ? "Blanco, Negro..." : "White, Black..."}
-                    className="w-full px-4 py-3 bg-[#1A2142] border border-[#2C355E] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent transition-colors placeholder:text-[#5E698F]"
-                  />
-                </div>
-              </div>
+              )}
             </Card>
 
             {/* Booking Summary */}

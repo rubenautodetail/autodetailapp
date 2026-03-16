@@ -206,6 +206,50 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         };
     }, [user, user?.id, user?.email]);
 
+    // Sync guest vehicles when user logs in
+    useEffect(() => {
+        if (!user) return;
+
+        const stored = typeof window !== 'undefined' ? localStorage.getItem('guest_vehicles') : null;
+        if (!stored) return;
+
+        let guestVehicles: Vehicle[] = [];
+        try {
+            guestVehicles = JSON.parse(stored);
+        } catch (e) {
+            console.error("Failed to parse guest vehicles", e);
+            return;
+        }
+        
+        if (guestVehicles.length === 0) return;
+        
+        const userId = user.id;
+
+        async function syncVehicles() {
+            const supabase = createClient();
+            for (const v of guestVehicles) {
+                // Check if vehicle already exists to prevent duplicates (optional but good)
+                await supabase.from('vehicles').insert({
+                    user_id: userId,
+                    make: v.make,
+                    model: v.model,
+                    year: parseInt(v.year),
+                    color: v.color,
+                    license_plate: v.licensePlate || '',
+                    type: v.type
+                });
+            }
+            localStorage.removeItem('guest_vehicles');
+            addNotification({ 
+                title: 'Garage Synced', 
+                message: `${guestVehicles.length} vehicles from your guest session were added to your account.`, 
+                type: 'success' 
+            });
+        }
+
+        syncVehicles();
+    }, [user]);
+
     // --- Notification Methods ---
     const addNotification = (notification: Omit<ToastMessage, 'id'>) => {
         const id = Math.random().toString(36).substr(2, 9);

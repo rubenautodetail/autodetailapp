@@ -30,12 +30,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
     }
 
-    // Require authenticated user — no guest bookings
+    // Optional authentication — allow guest bookings
     const supabaseAuth = await createClient();
     const { data: { user } } = await supabaseAuth.auth.getUser();
-    if (!user) {
-        return NextResponse.json({ error: 'Authentication required. Please sign in to book.' }, { status: 401 });
-    }
 
     let body: {
         date?: string;
@@ -99,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceClient();
     const confirmationCode = generateConfirmationCode();
-    const userId = user.id;
+    const userId = user?.id || null;
 
     // ── Step 1: Create booking ────────────────────────────────────────────────
     const { data: booking, error: bookingError } = await supabase
