@@ -43,10 +43,23 @@ export default async function LandingPage({
     const { lang } = await params;
     const locale = i18n.locales.includes(lang as 'en' | 'es') ? (lang as 'en' | 'es') : 'en';
 
-    // Server-side auth check — redirect logged-in users to dashboard
+    // Server-side auth check — redirect logged-in users to their role-specific dashboard
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) redirect(`/${locale}/dashboard`);
+    if (user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, approval_status')
+            .eq('id', user.id)
+            .single();
+        const role = (profile as { role?: string } | null)?.role;
+        const approval = (profile as { approval_status?: string } | null)?.approval_status;
+        if (role === 'admin') redirect(`/${locale}/admin`);
+        if (role === 'contractor') {
+            redirect(approval === 'approved' ? `/${locale}/contractor/dashboard` : `/${locale}/contractor/pending`);
+        }
+        redirect(`/${locale}/dashboard`);
+    }
 
     const [dict, hygraph] = await Promise.all([
         getDictionary(locale),

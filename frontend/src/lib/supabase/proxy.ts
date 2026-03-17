@@ -91,19 +91,20 @@ export async function updateSession(request: NextRequest) {
 
     // ─── Redirect unauthenticated users ───────────────────────────────────────
 
-    // Enforce authentication for protected routes only
+    // Enforce authentication for ALL protected routes (including booking)
     const isCustomerRoute = path.includes('/dashboard') || path.includes('/customer')
-    const isProtectedRoute = isContractorRoute || isAdminRoute || isCustomerRoute
-    if (!isPublicApi && !isAuthPage && !isLandingPage && !isBookingRoute && isProtectedRoute) {
+    const isProtectedRoute = isContractorRoute || isAdminRoute || isCustomerRoute || isBookingRoute
+    if (!isPublicApi && !isAuthPage && !isLandingPage && isProtectedRoute) {
         if (!user) {
             if (path.startsWith('/api/')) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
             }
             const loginUrl = request.nextUrl.clone()
-            // Admin routes get the admin login page; all others go to the standard login
             loginUrl.pathname = isAdminRoute
                 ? `/${locale}/admin/login`
-                : `/${locale}/login`
+                : isContractorRoute
+                    ? `/${locale}/contractor/login`
+                    : `/${locale}/login`
             loginUrl.searchParams.set('next', path)
             return NextResponse.redirect(loginUrl)
         }
@@ -133,19 +134,29 @@ export async function updateSession(request: NextRequest) {
         // Admin routes: must have role='admin'
         if (isAdminRoute && role !== 'admin') {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-            const homeUrl = request.nextUrl.clone()
-            homeUrl.pathname = `/${locale}`
-            homeUrl.search = ''
-            return NextResponse.redirect(homeUrl)
+            const redirectUrl = request.nextUrl.clone()
+            redirectUrl.search = ''
+            // Send user to their own area, not someone else's
+            if (role === 'contractor') {
+                redirectUrl.pathname = `/${locale}/contractor/dashboard`
+            } else {
+                redirectUrl.pathname = `/${locale}/dashboard`
+            }
+            return NextResponse.redirect(redirectUrl)
         }
 
         // Contractor pages: must have role='contractor' or 'admin'
         if (isContractorRoute && role !== 'contractor' && role !== 'admin') {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-            const homeUrl = request.nextUrl.clone()
-            homeUrl.pathname = `/${locale}`
-            homeUrl.search = ''
-            return NextResponse.redirect(homeUrl)
+            const redirectUrl = request.nextUrl.clone()
+            redirectUrl.search = ''
+            // Send user to their own area
+            if (role === 'admin') {
+                redirectUrl.pathname = `/${locale}/admin`
+            } else {
+                redirectUrl.pathname = `/${locale}/dashboard`
+            }
+            return NextResponse.redirect(redirectUrl)
         }
 
         // Contractor approval check — pending contractors see the pending page only

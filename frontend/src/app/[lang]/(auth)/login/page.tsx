@@ -16,8 +16,7 @@ const t = {
         noAccount: "Don't have an account?",
         register: "Create one",
         forgotPassword: "Forgot password?",
-        guestHint: "Just browsing? You can book without an account.",
-        bookAsGuest: "Book as guest",
+        contractorLink: "Technician? Sign in here",
     },
     es: {
         title: "Bienvenido",
@@ -28,8 +27,7 @@ const t = {
         noAccount: "¿No tienes cuenta?",
         register: "Crear una",
         forgotPassword: "¿Olvidaste tu contraseña?",
-        guestHint: "¿Solo explorando? Puedes reservar sin cuenta.",
-        bookAsGuest: "Reservar como invitado",
+        contractorLink: "¿Técnico? Inicia sesión aquí",
     },
 };
 
@@ -151,11 +149,10 @@ function LoginForm() {
                     </div>
                 </div>
 
-                {/* Guest CTA */}
-                <div className="mt-4 text-center p-4 rounded-xl bg-[var(--card)]/60 border border-[var(--divider)]">
-                    <p className="text-xs text-[var(--text-secondary)] mb-2">{dict.guestHint}</p>
-                    <Link href={`/${lang}/booking/select`} className="text-sm font-medium text-[var(--accent)] hover:underline">
-                        {dict.bookAsGuest} →
+                {/* Contractor link */}
+                <div className="mt-4 text-center">
+                    <Link href={`/${lang}/contractor/login`} className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors">
+                        {dict.contractorLink} →
                     </Link>
                 </div>
             </div>

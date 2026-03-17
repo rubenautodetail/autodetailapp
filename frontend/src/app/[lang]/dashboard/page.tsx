@@ -24,8 +24,21 @@ export default function DashboardPage() {
     const params = useParams();
     const locale = (params?.lang as string) || 'en';
     const router = useRouter();
-    const { user, profile } = useAuth();
+    const { user, profile, isLoading: authLoading } = useAuth();
     const { setService, addAddOn, removeAddOn, selectedAddOns, resetBooking } = useBooking();
+
+    // Auth guard — redirect to login if not authenticated, or to correct dashboard if wrong role
+    useEffect(() => {
+        if (authLoading) return;
+        if (!user) { router.replace(`/${locale}/login`); return; }
+        if (profile?.role === 'contractor') {
+            router.replace(profile.approval_status === 'approved'
+                ? `/${locale}/contractor/dashboard`
+                : `/${locale}/contractor/pending`);
+            return;
+        }
+        if (profile?.role === 'admin') { router.replace(`/${locale}/admin`); return; }
+    }, [authLoading, user, profile, locale, router]);
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [bookings, setBookings] = useState<any[]>([]);
     const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);

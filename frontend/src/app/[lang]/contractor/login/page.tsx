@@ -26,10 +26,8 @@ export default function ContractorLoginPage() {
           ? `/${lang}/contractor/dashboard`
           : `/${lang}/contractor/pending`
       );
-    } else if (profile.role === "admin") {
-      router.replace(`/${lang}/admin`);
     } else {
-      // Regular user trying contractor login — show error, stop spinner
+      // Non-contractor (admin or regular user) — show error, stop spinner
       setLoading(false);
       setError(
         isEs
