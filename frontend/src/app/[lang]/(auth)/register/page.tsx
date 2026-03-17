@@ -13,12 +13,14 @@ export default function RegisterPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [confirmedEmail, setConfirmedEmail] = useState("");
     const router = useRouter();
     const params = useParams();
+    const lang = (params.lang as string) || "en";
     const next = typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("next")
         : null;
-    const redirectTo = next || `/${params.lang}/dashboard`;
+    const redirectTo = next || `/${lang}/dashboard`;
 
     useEffect(() => {
         if (!isLoading && user) {
@@ -32,8 +34,12 @@ export default function RegisterPage() {
         setError("");
 
         try {
-            await register(name, email, password);
-            router.push(redirectTo);
+            const { needsEmailConfirmation } = await register(name, email, password, lang);
+            if (needsEmailConfirmation) {
+                setConfirmedEmail(email);
+            } else {
+                router.push(redirectTo);
+            }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to create account.");
         } finally {
@@ -41,22 +47,52 @@ export default function RegisterPage() {
         }
     };
 
+    // Email confirmation pending state
+    if (confirmedEmail) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
+                <div className="w-full max-w-sm bg-[var(--card)] p-8 rounded-2xl shadow-[var(--shadow-card)] border border-[var(--divider)] text-center">
+                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                        {lang === "es" ? "Revisa tu correo" : "Check your email"}
+                    </h2>
+                    <p className="text-[var(--text-secondary)] text-sm mb-1">
+                        {lang === "es" ? "Enviamos un enlace de confirmación a" : "We sent a confirmation link to"}
+                    </p>
+                    <p className="text-[var(--text-primary)] font-medium text-sm mb-6">{confirmedEmail}</p>
+                    <p className="text-[var(--text-secondary)] text-xs mb-6">
+                        {lang === "es"
+                            ? "Haz clic en el enlace del correo para activar tu cuenta."
+                            : "Click the link in the email to activate your account."}
+                    </p>
+                    <Link href={`/${lang}/login`} className="text-[var(--accent)] text-sm hover:underline">
+                        {lang === "es" ? "Regresar al inicio de sesión" : "Back to Login"}
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)] transition-colors duration-200">
             <div className="w-full max-w-sm bg-[var(--card)] p-8 rounded-2xl shadow-[var(--shadow-card)] border border-[var(--divider)]">
                 <div className="text-center mb-8">
                     <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
-                        Create Account
+                        {lang === "es" ? "Crear cuenta" : "Create Account"}
                     </h1>
                     <p className="text-[var(--text-secondary)] text-sm">
-                        Join using your email to request services
+                        {lang === "es" ? "Regístrate con tu correo para solicitar servicios" : "Join using your email to request services"}
                     </p>
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase tracking-wider">
-                            Full Name
+                            {lang === "es" ? "Nombre completo" : "Full Name"}
                         </label>
                         <input
                             type="text"
@@ -70,7 +106,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase tracking-wider">
-                            Email
+                            {lang === "es" ? "Correo electrónico" : "Email"}
                         </label>
                         <input
                             type="email"
@@ -84,7 +120,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase tracking-wider">
-                            Password
+                            {lang === "es" ? "Contraseña" : "Password"}
                         </label>
                         <input
                             type="password"
@@ -111,19 +147,19 @@ export default function RegisterPage() {
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            "Create Account"
+                            lang === "es" ? "Crear cuenta" : "Create Account"
                         )}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
                     <p className="text-sm text-[var(--text-secondary)]">
-                        Already have an account?{" "}
+                        {lang === "es" ? "¿Ya tienes una cuenta?" : "Already have an account?"}{" "}
                         <Link
-                            href={`/${params.lang}/login`}
+                            href={`/${lang}/login`}
                             className="text-[var(--accent)] hover:underline font-medium"
                         >
-                            Sign In
+                            {lang === "es" ? "Iniciar sesión" : "Sign In"}
                         </Link>
                     </p>
                 </div>

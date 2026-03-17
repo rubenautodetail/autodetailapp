@@ -43,11 +43,7 @@ export default async function LandingPage({
     const { lang } = await params;
     const locale = i18n.locales.includes(lang as 'en' | 'es') ? (lang as 'en' | 'es') : 'en';
 
-    // Server-side auth check — redirect logged-in customers to dashboard
-    // Admin and contractor users access their portals directly via /admin or /contractor/login
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) redirect(`/${locale}/dashboard`);
+    // No auto-redirect — authenticated users can still view the landing page
 
     const [dict, hygraph] = await Promise.all([
         getDictionary(locale),
@@ -96,6 +92,17 @@ export default async function LandingPage({
                         backgroundSize: '64px 64px',
                     }}
                 />
+
+                {/* Nav bar */}
+                <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full">
+                    <span className="text-white/60 text-sm font-medium">{dict.common.siteName}</span>
+                    <Link
+                        href={`/${locale}/contractor/login`}
+                        className="text-xs font-medium text-[#D0B078] border border-[#D0B078]/30 rounded-full px-4 py-1.5 hover:bg-[#D0B078]/10 transition-colors"
+                    >
+                        {locale === 'es' ? '¿Eres contratista? Inicia sesión' : 'Contractor login'}
+                    </Link>
+                </div>
 
                 <div className="relative z-10 w-full max-w-2xl mx-auto text-center space-y-8">
                     {/* Badge */}
@@ -374,6 +381,9 @@ export default async function LandingPage({
                         </Link>
                         <Link href={`/${locale}/contractors`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Trabaja con nosotros' : 'Work with us'}
+                        </Link>
+                        <Link href={`/${locale}/contractor/login`} className="hover:text-white/60 transition-colors">
+                            {locale === 'es' ? 'Acceso contratistas' : 'Contractor login'}
                         </Link>
                         <Link href={`/${locale}/login`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Iniciar sesión' : 'Log in'}

@@ -185,10 +185,21 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const handleDateSelect = (date: Date) => {
     if (!isDateAvailable(date)) return;
     setTempSelectedDate(date);
-    setTempSelectedWindow(null); // Reset time window when date changes
+    setTempSelectedWindow(null);
+  };
+
+  const isTimeWindowAvailable = (window: typeof TIME_WINDOWS[0]): boolean => {
+    if (!tempSelectedDate) return true;
+    const today = new Date();
+    const isToday = tempSelectedDate.toDateString() === today.toDateString();
+    if (!isToday) return true;
+    // Require at least 1 hour lead time
+    const slotHour = parseInt(window.slot.split(":")[0], 10);
+    return slotHour > today.getHours() + 1;
   };
 
   const handleWindowSelect = (window: typeof TIME_WINDOWS[0]) => {
+    if (!isTimeWindowAvailable(window)) return;
     setTempSelectedWindow(window);
   };
 
@@ -349,17 +360,21 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                 <div className="grid md:grid-cols-3 gap-4">
                   {TIME_WINDOWS.map((window) => {
                     const isSelected = tempSelectedWindow?.slot === window.slot;
+                    const isAvailable = isTimeWindowAvailable(window);
                     const label = locale === "es" ? window.labelEs : window.label;
 
                     return (
                       <button
                         key={window.slot}
                         onClick={() => handleWindowSelect(window)}
+                        disabled={!isAvailable}
                         className={`
                           p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group
-                          ${isSelected
-                            ? "border-[#D0B078] bg-[#D0B078]/10 ring-1 ring-[#D0B078]"
-                            : "border-[#2C355E] bg-white/5 hover:bg-white/10 hover:border-[#D0B078]/30"
+                          ${!isAvailable
+                            ? "border-[#2C355E] bg-transparent opacity-40 cursor-not-allowed"
+                            : isSelected
+                              ? "border-[#D0B078] bg-[#D0B078]/10 ring-1 ring-[#D0B078]"
+                              : "border-[#2C355E] bg-white/5 hover:bg-white/10 hover:border-[#D0B078]/30"
                           }
                         `}
                       >
@@ -375,8 +390,10 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
                         <div className="text-center mt-2 mb-1">
                           <p className={`font-bold text-lg mb-1 transition-colors ${isSelected ? 'text-[#D0B078]' : 'text-white'}`}>{label}</p>
-                          <p className={`text-xs flex justify-center items-center gap-1 opacity-80 ${isSelected ? 'text-[#D0B078]' : 'text-[#5E698F] group-hover:text-green-400'}`}>
-                            {locale === "es" ? "Disponible" : "Available"}
+                          <p className={`text-xs flex justify-center items-center gap-1 opacity-80 ${!isAvailable ? 'text-[#5E698F]' : isSelected ? 'text-[#D0B078]' : 'text-[#5E698F] group-hover:text-green-400'}`}>
+                            {!isAvailable
+                              ? (locale === "es" ? "Pasado" : "Passed")
+                              : (locale === "es" ? "Disponible" : "Available")}
                           </p>
                         </div>
                       </button>

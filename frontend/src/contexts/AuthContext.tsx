@@ -18,7 +18,7 @@ interface AuthContextType {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, lang?: string) => Promise<{ needsEmailConfirmation: boolean }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Action: Register with Supabase
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, lang = 'en'): Promise<{ needsEmailConfirmation: boolean }> => {
     const siteUrl = typeof window !== 'undefined'
       ? window.location.origin
       : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
@@ -109,26 +109,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: {
           full_name: name,
         },
-        emailRedirectTo: `${siteUrl}/api/auth/callback`,
+        // After email confirmation, send user to their dashboard
+        emailRedirectTo: `${siteUrl}/api/auth/callback?next=/${lang}/dashboard`,
       },
     });
 
     if (error) throw error;
 
-    // Create profile row immediately so middleware can check role on first login
+    // Create profile row via service-role API route (anon key can't write with RLS enabled)
     if (data.user?.id) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: data.user.id,
-          full_name: name,
-          role: 'user',
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
-
-      if (profileError) {
-        console.warn('Profile creation failed (non-critical):', profileError.message);
-      }
+      fetch('/api/auth/create-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: data.user.id, name }),
+      }).catch((err) => console.warn('Profile creation failed (non-critical):', err));
     }
 
     // Fire welcome email immediately after signup (non-blocking — won't break registration if it fails)
@@ -141,6 +135,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         userId: data.user?.id,
       }),
     }).catch((err) => console.warn('Welcome email failed (non-critical):', err));
+
+    // If session is null, Supabase requires email confirmation before the user is signed in
+    return { needsEmailConfirmation: !data.session };
   };
 
   // Action: Logout

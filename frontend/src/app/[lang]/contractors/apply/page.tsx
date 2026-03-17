@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,27 +36,16 @@ export default function ContractorApplyPage() {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const licenseRef = useRef<HTMLInputElement>(null);
-    const insuranceRef = useRef<HTMLInputElement>(null);
-    const bizLicenseRef = useRef<HTMLInputElement>(null);
-
-    // Redirect if not authenticated — middleware also handles this, but belt-and-suspenders
-    if (!isLoading && !user) {
-        router.replace(`/${lang}/login?next=/${lang}/contractors/apply`);
-        return null;
-    }
-
-    // If already a contractor (approved), redirect to dashboard
-    if (!isLoading && profile?.role === "contractor" && profile?.approval_status === "approved") {
-        router.replace(`/${lang}/contractor/dashboard`);
-        return null;
-    }
-
-    // Already submitted an application
-    if (!isLoading && profile?.approval_status === "pending") {
-        router.replace(`/${lang}/contractor/pending`);
-        return null;
-    }
+    useEffect(() => {
+        if (isLoading) return;
+        if (!user) {
+            router.replace(`/${lang}/login?next=/${lang}/contractors/apply`);
+        } else if (profile?.role === "contractor" && profile?.approval_status === "approved") {
+            router.replace(`/${lang}/contractor/dashboard`);
+        } else if (profile?.approval_status === "pending") {
+            router.replace(`/${lang}/contractor/pending`);
+        }
+    }, [isLoading, user, profile, lang, router]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -64,24 +53,14 @@ export default function ContractorApplyPage() {
         setSubmitting(true);
 
         try {
-            const fd = new FormData();
-            Object.entries(values).forEach(([k, v]) => {
-                if (k === "serviceZipCodes") {
-                    const zips = v.split(",").map((z) => z.trim()).filter(Boolean);
-                    fd.append("serviceZipCodes", JSON.stringify(zips));
-                } else {
-                    fd.append(k, v);
-                }
+            const serviceZipCodes = (values.serviceZipCodes || "")
+                .split(",").map((z) => z.trim()).filter(Boolean);
+
+            const res = await fetch("/api/contractors/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...values, serviceZipCodes }),
             });
-
-            const license = licenseRef.current?.files?.[0];
-            const insurance = insuranceRef.current?.files?.[0];
-            const bizLicense = bizLicenseRef.current?.files?.[0];
-            if (license) fd.append("driversLicense", license);
-            if (insurance) fd.append("vehicleInsurance", insurance);
-            if (bizLicense) fd.append("businessLicense", bizLicense);
-
-            const res = await fetch("/api/contractors/register", { method: "POST", body: fd });
             const json = await res.json();
 
             if (!res.ok) throw new Error(json.error || "Submission failed");
@@ -95,6 +74,14 @@ export default function ContractorApplyPage() {
             setSubmitting(false);
         }
     }
+
+    // Show nothing while auth is loading or a redirect is pending
+    const redirectPending = !isLoading && (
+        !user ||
+        (profile?.role === "contractor" && profile?.approval_status === "approved") ||
+        profile?.approval_status === "pending"
+    );
+    if (isLoading || redirectPending) return null;
 
     if (submitted) {
         return (
@@ -161,33 +148,6 @@ export default function ContractorApplyPage() {
                             />
                         </div>
                     ))}
-
-                    {/* Document uploads */}
-                    <div className="pt-2 space-y-4">
-                        <p className="text-xs font-medium text-white/60 uppercase tracking-widest">
-                            {isEs ? "Documentos requeridos" : "Required documents"}
-                        </p>
-
-                        {[
-                            { ref: licenseRef, label: "Driver's License", labelEs: "Licencia de conducir", name: "driversLicense", required: true },
-                            { ref: insuranceRef, label: "Vehicle Insurance", labelEs: "Seguro vehicular", name: "vehicleInsurance", required: true },
-                            { ref: bizLicenseRef, label: "Business / Occupational License", labelEs: "Licencia de negocio", name: "businessLicense", required: false },
-                        ].map((doc) => (
-                            <div key={doc.name} className="space-y-1.5">
-                                <label className="block text-xs text-white/50">
-                                    {isEs ? doc.labelEs : doc.label}
-                                    {doc.required && <span className="text-[#D0B078] ml-1">*</span>}
-                                </label>
-                                <input
-                                    ref={doc.ref}
-                                    type="file"
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                    required={doc.required}
-                                    className="block w-full text-sm text-white/50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:text-xs file:font-medium hover:file:bg-white/20 file:cursor-pointer"
-                                />
-                            </div>
-                        ))}
-                    </div>
 
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400">

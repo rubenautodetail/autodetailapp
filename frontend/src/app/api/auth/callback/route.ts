@@ -10,10 +10,17 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    const next = searchParams.get('next') ?? '/en'
+    const rawNext = searchParams.get('next') ?? '/en'
+
+    // Prevent open redirect — only allow relative paths
+    const next = rawNext.startsWith('/') ? rawNext : '/en'
+
+    // Extract locale from `next` for error redirects (e.g. /es/reset-password → es)
+    const localeMatch = next.match(/^\/(en|es)(\/|$)/)
+    const locale = localeMatch ? localeMatch[1] : 'en'
 
     if (!code) {
-        return NextResponse.redirect(`${origin}/en/login`)
+        return NextResponse.redirect(`${origin}/${locale}/login`)
     }
 
     const cookieStore = await cookies()
@@ -34,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
-        return NextResponse.redirect(`${origin}/en/login?error=auth_failed`)
+        return NextResponse.redirect(`${origin}/${locale}/login?error=auth_failed`)
     }
 
     return NextResponse.redirect(`${origin}${next}`)
