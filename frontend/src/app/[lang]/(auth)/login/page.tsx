@@ -47,8 +47,8 @@ function LoginForm() {
     // Role-based redirect after login
     useEffect(() => {
         if (isLoading || !user || !profile) return;
-        const redirectTo = searchParams.get("redirectTo");
-        if (redirectTo) { router.replace(redirectTo); return; }
+        const next = searchParams.get("next");
+        if (next && next.startsWith("/")) { router.replace(next); return; }
         if (profile.role === "admin") router.replace(`/${lang}/admin`);
         else if (profile.role === "contractor") router.replace(`/${lang}/contractor/dashboard`);
         else router.replace(`/${lang}/dashboard`);
@@ -142,7 +142,10 @@ function LoginForm() {
                     <div className="mt-5 text-center">
                         <p className="text-sm text-[var(--text-secondary)]">
                             {dict.noAccount}{" "}
-                            <Link href={`/${lang}/register`} className="text-[var(--accent)] hover:underline font-medium">
+                            <Link
+                                href={`/${lang}/register${searchParams.get("next") ? `?next=${searchParams.get("next")}` : ""}`}
+                                className="text-[var(--accent)] hover:underline font-medium"
+                            >
                                 {dict.register}
                             </Link>
                         </p>
