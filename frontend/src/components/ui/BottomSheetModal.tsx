@@ -46,22 +46,22 @@ export default function BottomSheetModal({
             />
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-lg bg-[var(--card)] rounded-t-3xl sm:rounded-3xl shadow-2xl transform transition-transform duration-300 ease-out max-h-[90vh] flex flex-col">
+            <div className="relative w-full max-w-lg bg-[#1A2142] rounded-t-3xl sm:rounded-3xl shadow-2xl transform transition-transform duration-300 ease-out max-h-[90vh] flex flex-col">
                 {/* Drag Handle (Mobile only visually) */}
                 <div className="w-full h-6 flex items-center justify-center sm:hidden">
-                    <div className="w-12 h-1.5 rounded-full bg-[var(--divider)]" />
+                    <div className="w-12 h-1.5 rounded-full bg-[#2C355E]" />
                 </div>
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 pb-4 border-b border-[var(--divider)]">
-                    <h2 className="text-xl font-bold text-[var(--text-primary)]">
+                <div className="flex items-center justify-between px-6 pb-4 border-b border-[#2C355E]">
+                    <h2 className="text-xl font-bold text-white">
                         {title}
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full hover:bg-[var(--background)] transition-colors"
+                        className="p-2 rounded-full hover:bg-[#131835] transition-colors"
                     >
-                        <X className="w-5 h-5 text-[var(--text-secondary)]" />
+                        <X className="w-5 h-5 text-[#A5B0D1]" />
                     </button>
                 </div>
 
@@ -72,7 +72,7 @@ export default function BottomSheetModal({
 
                 {/* Sticky Footer */}
                 {footer && (
-                    <div className="p-6 border-t border-[var(--divider)] bg-[var(--card)]">
+                    <div className="p-6 border-t border-[#2C355E] bg-[#1A2142]">
                         {footer}
                     </div>
                 )}

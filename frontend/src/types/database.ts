@@ -164,12 +164,16 @@ export interface Database {
                     id: number
                     document_id: string | null
                     name: string
+                    name_es: string | null
                     slug: string | null
                     description: string | null
+                    description_es: string | null
                     base_price: string | number
                     duration_minutes: number | null
                     checklist: Json | null
                     sort_order: number | null
+                    is_active: boolean | null
+                    stripe_product_id: string | null
                     created_at: string
                     updated_at: string
                     published_at: string | null
@@ -179,12 +183,16 @@ export interface Database {
                     id?: number
                     document_id?: string | null
                     name: string
+                    name_es?: string | null
                     slug?: string | null
                     description?: string | null
+                    description_es?: string | null
                     base_price: string | number
                     duration_minutes?: number | null
                     checklist?: Json | null
                     sort_order?: number | null
+                    is_active?: boolean | null
+                    stripe_product_id?: string | null
                     created_at?: string
                     updated_at?: string
                     published_at?: string | null
@@ -194,12 +202,16 @@ export interface Database {
                     id?: number
                     document_id?: string | null
                     name?: string
+                    name_es?: string | null
                     slug?: string | null
                     description?: string | null
+                    description_es?: string | null
                     base_price?: string | number
                     duration_minutes?: number | null
                     checklist?: Json | null
                     sort_order?: number | null
+                    is_active?: boolean | null
+                    stripe_product_id?: string | null
                     created_at?: string
                     updated_at?: string
                     published_at?: string | null

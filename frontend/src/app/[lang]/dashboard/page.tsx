@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { MapPin, Plus, ArrowRight, Sparkles } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { MapPin, Plus, ArrowRight, Sparkles, Clock, Check } from "lucide-react";
 import Header from "@/components/dashboard/Header";
 import ServiceCarousel from "@/components/dashboard/ServiceCarousel";
 import { BookingCard } from "@/components/dashboard/BookingCard";
@@ -14,19 +14,25 @@ import { Vehicle } from "@/contexts/BookingStatusContext";
 import { createClient } from "@/lib/supabase/client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useBooking } from "@/contexts/BookingContext";
 import { Database } from "@/types/database";
 
-type Booking = Database["public"]["Tables"]["bookings"]["Row"];
+type DbService = Database["public"]["Tables"]["services"]["Row"];
+type DbAddOn = Database["public"]["Tables"]["add_ons"]["Row"];
 
 export default function DashboardPage() {
     const params = useParams();
     const locale = (params?.lang as string) || 'en';
-    const { user, profile, isLoading: authLoading } = useAuth();
+    const router = useRouter();
+    const { user, profile } = useAuth();
+    const { setService, addAddOn, removeAddOn, selectedAddOns, resetBooking } = useBooking();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [bookings, setBookings] = useState<any[]>([]);
     const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
-    const [selectedService, setSelectedService] = useState<number | null>(null);
+    const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+    const [allServices, setAllServices] = useState<DbService[]>([]);
+    const [allAddOns, setAllAddOns] = useState<DbAddOn[]>([]);
     const supabase = createClient();
     const userEmailRef = useRef<string | undefined>(undefined);
 
@@ -113,16 +119,71 @@ export default function DashboardPage() {
         return () => { supabase.removeChannel(channel); };
     }, [user?.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Fetch services and add-ons for the modal
+    useEffect(() => {
+        async function fetchCatalog() {
+            const [{ data: svc }, { data: addons }] = await Promise.all([
+                supabase.from("services").select("*").eq("is_active", true).order("sort_order"),
+                supabase.from("add_ons").select("*").eq("is_active", true).order("sort_order"),
+            ]);
+            setAllServices(svc || []);
+            setAllAddOns(addons || []);
+        }
+        fetchCatalog();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const selectedServiceData = allServices.find(s => s.id === selectedServiceId);
+
     const handleServiceSelect = (id: number) => {
-        setSelectedService(id);
+        setSelectedServiceId(id);
     };
 
     const handleCloseModal = () => {
-        setSelectedService(null);
+        setSelectedServiceId(null);
     };
 
+    const isAddOnSelected = (addOnId: number) =>
+        selectedAddOns.some(a => String(a.id) === String(addOnId));
+
+    const toggleAddOn = (addOn: DbAddOn) => {
+        if (isAddOnSelected(addOn.id)) {
+            removeAddOn(addOn.id);
+        } else {
+            addAddOn({
+                id: addOn.id,
+                documentId: String(addOn.id),
+                name: (locale === 'es' && addOn.name_es) ? addOn.name_es : addOn.name,
+                price: Number(addOn.price),
+                description: addOn.description || '',
+            });
+        }
+    };
+
+    const handleContinueBooking = () => {
+        if (!selectedServiceData) return;
+        // Capture current add-on selections before reset clears them
+        const currentAddOns = [...selectedAddOns];
+        resetBooking();
+        setService({
+            id: selectedServiceData.id,
+            documentId: String(selectedServiceData.id),
+            name: (locale === 'es' && selectedServiceData.name_es) ? selectedServiceData.name_es : selectedServiceData.name,
+            description: selectedServiceData.description || '',
+            basePrice: Number(selectedServiceData.base_price),
+            duration: selectedServiceData.duration_minutes || 60,
+        });
+        // Re-add the add-ons the user selected in the modal
+        currentAddOns.forEach(a => addAddOn(a));
+        setSelectedServiceId(null);
+        router.push(`/${locale}/booking/location`);
+    };
+
+    const modalTotal = selectedServiceData
+        ? Number(selectedServiceData.base_price) + selectedAddOns.reduce((sum, a) => sum + a.price, 0)
+        : 0;
+
     return (
-        <div className="min-h-screen bg-[var(--background)]">
+        <div className="min-h-screen bg-[#131835]">
             <div className="px-6">
                 <Header profileName={profile?.full_name || 'Guest'} />
             </div>
@@ -130,7 +191,7 @@ export default function DashboardPage() {
             <main className="space-y-6 md:space-y-8 pb-8">
                 {/* Special Offer Banner */}
                 <section className="px-6">
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[var(--accent)] to-purple-600 p-6 text-white shadow-lg">
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#7c3aed] to-[#2563eb] p-6 text-white shadow-lg">
                         <div className="relative z-10">
                             <div className="flex items-center gap-2 mb-2">
                                 <Sparkles className="w-5 h-5 text-yellow-300" />
@@ -138,7 +199,7 @@ export default function DashboardPage() {
                             </div>
                             <h3 className="text-2xl font-bold mb-1">Get 20% Off Ceramic</h3>
                             <p className="text-white/90 mb-4 text-sm max-w-[80%]">Protect your car for the rainy season. Valid until Friday.</p>
-                            <button className="bg-white text-[var(--accent)] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors">
+                            <button className="bg-white text-[#D0B078] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors">
                                 Claim Offer
                             </button>
                         </div>
@@ -151,10 +212,10 @@ export default function DashboardPage() {
                 {/* Service Selection */}
                 <section>
                     <div className="flex items-center justify-between mb-4 px-6">
-                        <h2 className="text-lg font-bold text-[var(--text-primary)]">
+                        <h2 className="text-lg font-bold text-white">
                             Book a Service
                         </h2>
-                        <Link href={`/${locale}/booking/select`} className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent)]/80 transition-colors flex items-center">
+                        <Link href={`/${locale}/booking/select`} className="text-sm font-medium text-[#D0B078] hover:text-[#D0B078]/80 transition-colors flex items-center">
                             See All <ArrowRight className="w-4 h-4 ml-1" />
                         </Link>
                     </div>
@@ -164,7 +225,7 @@ export default function DashboardPage() {
                 {/* Recent Activity / Current Booking */}
                 <section>
                     <div className="flex items-center justify-between mb-4 px-6">
-                        <h2 className="text-lg font-bold text-[var(--text-primary)]">
+                        <h2 className="text-lg font-bold text-white">
                             Recent Activity
                         </h2>
                     </div>
@@ -172,7 +233,7 @@ export default function DashboardPage() {
                         {isLoadingBookings ? (
                             Array.from({ length: 1 }).map((_, i) => (
                                 <div key={i} className="min-w-[85vw] md:min-w-[400px] animate-pulse">
-                                    <div className="h-32 bg-gray-200 rounded-2xl"></div>
+                                    <div className="h-32 bg-white/10 rounded-2xl"></div>
                                 </div>
                             ))
                         ) : bookings.length > 0 ? (
@@ -182,7 +243,7 @@ export default function DashboardPage() {
                                 </div>
                             ))
                         ) : (
-                            <div className="px-6 py-6 text-center text-[var(--text-secondary)] bg-[var(--card)] rounded-2xl border border-dashed border-[var(--divider)] flex-1 min-w-[85vw]">
+                            <div className="px-6 py-6 text-center text-[#A5B0D1] bg-[#1A2142] rounded-2xl border border-dashed border-[#2C355E] flex-1 min-w-[85vw]">
                                 <p className="text-sm">No recent bookings found</p>
                             </div>
                         )}
@@ -192,10 +253,10 @@ export default function DashboardPage() {
                 {/* My Vehicles */}
                 <section>
                     <div className="flex items-center justify-between mb-4 px-6">
-                        <h2 className="text-lg font-bold text-[var(--text-primary)]">
+                        <h2 className="text-lg font-bold text-white">
                             My Garage
                         </h2>
-                        <button className="w-8 h-8 rounded-full bg-[var(--card)] border border-[var(--divider)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors">
+                        <button className="w-8 h-8 rounded-full bg-[#1A2142] border border-[#2C355E] flex items-center justify-center text-[#A5B0D1] hover:text-[#D0B078] transition-colors">
                             <Plus className="w-4 h-4" />
                         </button>
                     </div>
@@ -204,7 +265,7 @@ export default function DashboardPage() {
                         {isLoadingVehicles ? (
                             Array.from({ length: 2 }).map((_, i) => (
                                 <div key={i} className="min-w-[80vw] md:min-w-[350px] animate-pulse">
-                                    <div className="h-40 bg-gray-200 rounded-2xl"></div>
+                                    <div className="h-40 bg-white/10 rounded-2xl"></div>
                                 </div>
                             ))
                         ) : vehicles.length > 0 ? (
@@ -218,13 +279,13 @@ export default function DashboardPage() {
                                 </div>
                             ))
                         ) : (
-                            <div className="px-6 py-8 text-center text-[var(--text-secondary)] bg-[var(--card)] rounded-2xl border border-dashed border-[var(--divider)] flex-1 min-w-[80vw] mx-6">
+                            <div className="px-6 py-8 text-center text-[#A5B0D1] bg-[#1A2142] rounded-2xl border border-dashed border-[#2C355E] flex-1 min-w-[80vw] mx-6">
                                 <p className="text-sm">No vehicles added yet</p>
                             </div>
                         )}
                         {/* Add Vehicle Card Placeholder */}
                         <div className="min-w-[100px] flex items-center justify-center">
-                            <button className="w-12 h-12 rounded-full bg-[var(--card)] border border-[var(--divider)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent)] shadow-sm">
+                            <button className="w-12 h-12 rounded-full bg-[#1A2142] border border-[#2C355E] flex items-center justify-center text-[#A5B0D1] hover:text-[#D0B078] shadow-sm">
                                 <Plus className="w-6 h-6" />
                             </button>
                         </div>
@@ -233,21 +294,21 @@ export default function DashboardPage() {
 
                 {/* Location Card (Compact) */}
                 <section className="px-6">
-                    <div className="bg-[var(--card)] rounded-2xl p-4 border border-[var(--divider)] shadow-sm flex items-center justify-between">
+                    <div className="bg-[#1A2142] rounded-2xl p-4 border border-[#2C355E] shadow-sm flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
-                                <MapPin className="w-5 h-5 text-[var(--accent)]" />
+                            <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center shrink-0">
+                                <MapPin className="w-5 h-5 text-[#D0B078]" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                                <h3 className="text-sm font-bold text-white">
                                     Current Location
                                 </h3>
-                                <p className="text-xs text-[var(--text-secondary)]">
+                                <p className="text-xs text-[#A5B0D1]">
                                     123 Biscayne Blvd, Miami
                                 </p>
                             </div>
                         </div>
-                        <button className="text-xs font-bold text-[var(--accent)] px-3 py-1.5 rounded-lg bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 transition-colors">
+                        <button className="text-xs font-bold text-[#D0B078] px-3 py-1.5 rounded-lg bg-[#D0B078]/5 hover:bg-[#D0B078]/10 transition-colors">
                             Change
                         </button>
                     </div>
@@ -256,42 +317,87 @@ export default function DashboardPage() {
 
             {/* Service Detail Modal */}
             <BottomSheetModal
-                isOpen={!!selectedService}
+                isOpen={!!selectedServiceData}
                 onClose={handleCloseModal}
-                title="Premium Gloss"
+                title={(locale === 'es' && selectedServiceData?.name_es) ? selectedServiceData.name_es : (selectedServiceData?.name || '')}
                 footer={
-                    <Link href={`/${locale}/booking/location`} className="block w-full text-center py-4 rounded-xl bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all">
-                        Continue - $140
-                    </Link>
+                    <button
+                        onClick={handleContinueBooking}
+                        className="block w-full text-center py-4 rounded-xl bg-[#D0B078] text-white font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all"
+                    >
+                        {locale === 'es' ? 'Continuar' : 'Continue'} — ${modalTotal.toFixed(2)}
+                    </button>
                 }
             >
-                <div className="space-y-6">
-                    {/* Image Slider Placeholder */}
-                    <div className="w-full h-48 bg-gray-200 rounded-xl animate-pulse"></div>
-
-                    <div className="flex justify-between text-sm text-[var(--text-secondary)]">
-                        <span>⏱ 2.5 Hours</span>
-                        <span>⭐️ 4.9 (120 reviews)</span>
-                    </div>
-
-                    <p className="text-[var(--text-secondary)] leading-relaxed">
-                        Our signature maintenance detail. Includes full exterior hand wash, clay bar treatment, premium wax application, deep wheel cleaning, and comprehensive interior vacuum and wipe down.
-                    </p>
-
-                    <div>
-                        <h3 className="font-semibold mb-3 text-[var(--text-primary)]">Add-ons</h3>
-                        <div className="space-y-2">
-                            <label className="flex items-center justify-between p-3 rounded-lg border border-[var(--divider)]">
-                                <span className="text-sm">Engine Bay Detail</span>
-                                <input type="checkbox" className="w-5 h-5 accent-[var(--accent)]" />
-                            </label>
-                            <label className="flex items-center justify-between p-3 rounded-lg border border-[var(--divider)]">
-                                <span className="text-sm">Pet Hair Removal</span>
-                                <input type="checkbox" className="w-5 h-5 accent-[var(--accent)]" />
-                            </label>
+                {selectedServiceData && (
+                    <div className="space-y-5">
+                        {/* Service info */}
+                        <div className="flex items-center gap-3 text-sm text-[#A5B0D1]">
+                            <span className="flex items-center gap-1.5">
+                                <Clock className="w-4 h-4" />
+                                {selectedServiceData.duration_minutes || 60} min
+                            </span>
+                            <span className="text-[#D0B078] font-bold text-lg ml-auto">
+                                ${Number(selectedServiceData.base_price).toFixed(2)}
+                            </span>
                         </div>
+
+                        {selectedServiceData.description && (
+                            <p className="text-[#A5B0D1] text-sm leading-relaxed">
+                                {(locale === 'es' && selectedServiceData.description_es) ? selectedServiceData.description_es : selectedServiceData.description}
+                            </p>
+                        )}
+
+                        {/* Add-ons */}
+                        {allAddOns.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold mb-3 text-white">
+                                    {locale === 'es' ? 'Extras' : 'Add-ons'}
+                                </h3>
+                                <div className="space-y-2">
+                                    {allAddOns.map((addOn) => {
+                                        const selected = isAddOnSelected(addOn.id);
+                                        return (
+                                            <button
+                                                key={addOn.id}
+                                                type="button"
+                                                onClick={() => toggleAddOn(addOn)}
+                                                className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                                                    selected
+                                                        ? 'border-[#D0B078] bg-[#D0B078]/5'
+                                                        : 'border-[#2C355E] hover:border-[#D0B078]/30'
+                                                }`}
+                                            >
+                                                <div className="text-left">
+                                                    <span className="text-sm font-medium text-white">
+                                                        {(locale === 'es' && addOn.name_es) ? addOn.name_es : addOn.name}
+                                                    </span>
+                                                    {addOn.description && (
+                                                        <p className="text-xs text-[#A5B0D1] mt-0.5">
+                                                            {(locale === 'es' && addOn.description_es) ? addOn.description_es : addOn.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 ml-3 shrink-0">
+                                                    <span className="text-sm font-semibold text-white">
+                                                        +${Number(addOn.price).toFixed(2)}
+                                                    </span>
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                                        selected
+                                                            ? 'bg-[#D0B078] border-[#D0B078]'
+                                                            : 'border-[#2C355E]'
+                                                    }`}>
+                                                        {selected && <Check className="w-3 h-3 text-white" />}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
+                )}
             </BottomSheetModal>
         </div>
     );

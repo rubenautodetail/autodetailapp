@@ -110,7 +110,9 @@ export async function updateSession(request: NextRequest) {
     }
 
     // ─── Redirect authenticated users away from auth pages ────────────────────
-    if (user && isAuthPage) {
+    // Skip contractor login — it has its own role-based redirect logic
+    const isContractorLogin = path.includes('/contractor/login')
+    if (user && isAuthPage && !isContractorLogin) {
         const homeUrl = request.nextUrl.clone()
         homeUrl.pathname = `/${locale}`
         homeUrl.search = ''
@@ -118,7 +120,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // ─── Role enforcement for admin & contractor pages ─────────────────────────
-    if (user && (isAdminRoute || isContractorRoute)) {
+    if (user && (isAdminRoute || (isContractorRoute && !isContractorLogin))) {
         // Fetch role from profiles (single lightweight query)
         const { data: profile } = await supabase
             .from('profiles')

@@ -19,6 +19,7 @@ export default function ServiceCarousel({ onSelectService }: { onSelectService: 
                 const { data, error } = await supabase
                     .from("services")
                     .select("*")
+                    .eq("is_active", true)
                     .order("sort_order", { ascending: true });
 
                 if (error) throw error;
@@ -42,7 +43,7 @@ export default function ServiceCarousel({ onSelectService }: { onSelectService: 
             >
                 {isLoading ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="min-w-[280px] h-64 animate-pulse bg-gray-200 rounded-3xl" />
+                        <div key={i} className="min-w-[280px] h-64 animate-pulse bg-white/10 rounded-3xl" />
                     ))
                 ) : services.map((service) => (
                     <ServiceCard
