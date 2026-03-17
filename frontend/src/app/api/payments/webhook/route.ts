@@ -45,9 +45,27 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    console.log(`Webhook received: ${event.type}`);
-
     const supabase = createServiceClient();
+
+    // Idempotency: skip events we've already processed (handles Stripe retries)
+    const { data: existing } = await supabase
+        .from('webhook_events')
+        .select('id')
+        .eq('stripe_event_id', event.id)
+        .maybeSingle();
+
+    if (existing) {
+        return NextResponse.json({ received: true, skipped: true });
+    }
+
+    // Record this event before processing to prevent race condition on concurrent retries
+    try {
+        await supabase.from('webhook_events').insert({ stripe_event_id: event.id, type: event.type });
+    } catch {
+        // Non-fatal if table doesn't exist yet — status guards below still protect against duplicates
+    }
+
+    console.log(`Webhook received: ${event.type}`);
 
     switch (event.type) {
         case 'payment_intent.amount_capturable_updated': {

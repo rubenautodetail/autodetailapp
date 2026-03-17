@@ -47,6 +47,30 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
         }
 
+        // Alert admin for bookings approaching the 7-day Stripe void window (> 6 days old)
+        const sixDayCutoff = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: expiringBookings } = await supabase
+            .from('bookings')
+            .select('id, confirmation_code')
+            .eq('payment_status', 'authorized')
+            .lt('created_at', sixDayCutoff);
+
+        if (expiringBookings && expiringBookings.length > 0) {
+            const ids = expiringBookings.map((b: Record<string, unknown>) => b.confirmation_code).join(', ');
+            console.error(`URGENT: ${expiringBookings.length} booking(s) approaching 7-day Stripe void window: ${ids}`);
+            // Insert admin notifications for each expiring booking
+            await supabase.from('notifications').insert(
+                expiringBookings.map((b: Record<string, unknown>) => ({
+                    user_id: null,
+                    type: 'admin.expiring_payment',
+                    title: 'Payment About to Expire',
+                    message: `Booking #${b.confirmation_code} has an authorized payment that will void in <24h. Capture or cancel now.`,
+                    booking_id: b.id,
+                    is_read: false,
+                }))
+            );
+        }
+
         if (!staleBookings || staleBookings.length === 0) {
             return NextResponse.json({ processed: 0, message: 'No stale bookings found' });
         }

@@ -69,11 +69,9 @@
 
 ## HIGH ISSUES (4)
 
-### HIGH-01: Stripe Connect Not Implemented
-- **Files:** `lib/stripe/server.ts`, `/api/payments/create-intent/route.ts`
-- **Status:** All funds go to platform account. Contractor payouts are manual.
-- **Risk:** No automated payouts; contractors can't see earnings; error-prone manual transfers
-- **Fix:** Implement `transfer_data.destination` + `application_fee_amount` on payment intents
+### HIGH-01: Stripe Connect — BY DESIGN
+- **Decision:** All funds captured to platform account. Contractor payouts are handled manually outside of Stripe.
+- **Status:** ✅ Closed — not a gap.
 
 ### HIGH-02: 8 Admin API Routes Missing Error Handling
 - **Routes:** `/admin/bookings/detail`, `/admin/bookings/list`, `/admin/contractors/{approve,reject,list}`, `/admin/payments/list`, `/admin/stats`, `/auth/callback`
