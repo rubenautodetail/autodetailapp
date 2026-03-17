@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type RequestStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
@@ -68,14 +69,19 @@ function mapBookingToRequest(booking: any): ServiceRequest {
 export function ContractorProvider({ children }: { children: ReactNode }) {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { profile } = useAuth();
+  const contractorId = profile?.id;
 
-  // Initial Fetch
+  // Initial Fetch — only this contractor's bookings
   useEffect(() => {
+    if (!contractorId) return;
+
     async function fetchBookings() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('bookings')
         .select('*')
+        .eq('contractor_id', contractorId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -88,13 +94,13 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
 
     fetchBookings();
 
-    // Set up Real-time subscription
+    // Real-time subscription — filtered to this contractor's bookings only
     const supabase = createClient();
     const channel = supabase
-      .channel('bookings-realtime')
+      .channel(`bookings-contractor-${contractorId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bookings' },
+        { event: '*', schema: 'public', table: 'bookings', filter: `contractor_id=eq.${contractorId}` },
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newRequest = mapBookingToRequest(payload.new);
@@ -114,7 +120,7 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [contractorId]);
 
   const updateStatus = async (id: string, status: RequestStatus) => {
     const supabase = createClient();
@@ -126,10 +132,12 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
     ));
 
     // IDs are UUIDs — do NOT use parseInt which returns NaN for UUIDs
+    // Ownership check: only update bookings assigned to this contractor
     const { error } = await supabase
       .from('bookings')
       .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('contractor_id', contractorId);
 
     if (error) {
       console.error('Error updating status:', error);

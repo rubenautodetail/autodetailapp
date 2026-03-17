@@ -34,28 +34,41 @@ export async function POST(req: NextRequest) {
         }
 
         let customerId = 'guest';
+        let verifiedAmount = amount;
 
-        // Look up the booking to get customer email for metadata.
+        // Look up the booking to validate amount and get customer email.
         if (bookingId && bookingId !== 'temp_booking' && bookingId !== 'temp_booking_id') {
             try {
                 const supabase = createServiceClient();
                 const { data: booking } = await supabase
                     .from('bookings')
-                    .select('customer_email')
+                    .select('customer_email, total_amount')
                     .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
                     .single();
 
                 if (booking?.customer_email) {
                     customerId = booking.customer_email;
                 }
+
+                // Server-side amount validation: use the booking's total, not client-provided amount
+                if (booking?.total_amount) {
+                    const dbAmount = Math.round(Number(booking.total_amount) * 100); // cents
+                    if (Math.abs(dbAmount - amount) > 1) {
+                        return NextResponse.json(
+                            { error: 'Amount mismatch. Please refresh and try again.' },
+                            { status: 400 }
+                        );
+                    }
+                    verifiedAmount = dbAmount;
+                }
             } catch {
-                // Non-fatal: continue with 'guest' customerId
+                // Non-fatal: continue with client-provided amount for temp bookings
             }
         }
 
         // Create Stripe PaymentIntent (idempotent — safe to retry).
         const paymentIntent = await createPaymentIntent({
-            amount,
+            amount: verifiedAmount,
             bookingId: bookingId || 'test_booking',
             customerId,
             currency,

@@ -11,11 +11,11 @@ export async function POST(req: NextRequest) {
     try {
         const payload = await req.json();
 
-        // Optional: verify a webhook secret from the headers
-        // const secret = req.headers.get('x-webhook-secret');
-        // if (secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
-        //     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        // }
+        // Verify webhook secret — reject spoofed events
+        const secret = req.headers.get('x-webhook-secret');
+        if (process.env.SUPABASE_WEBHOOK_SECRET && secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         if (payload.type === 'INSERT' && payload.table === 'users' && payload.schema === 'auth') {
             const record = payload.record;

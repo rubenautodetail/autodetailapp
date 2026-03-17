@@ -115,6 +115,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) throw error;
 
+    // Create profile row immediately so middleware can check role on first login
+    if (data.user?.id) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          full_name: name,
+          role: 'user',
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+
+      if (profileError) {
+        console.warn('Profile creation failed (non-critical):', profileError.message);
+      }
+    }
+
     // Fire welcome email immediately after signup (non-blocking — won't break registration if it fails)
     fetch('/api/auth/send-welcome', {
       method: 'POST',

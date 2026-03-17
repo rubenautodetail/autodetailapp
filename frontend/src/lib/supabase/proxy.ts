@@ -135,6 +135,22 @@ export async function updateSession(request: NextRequest) {
 
         const role = (profile as { role?: string } | null)?.role
 
+        // No profile row yet (e.g., just registered) — send to appropriate login
+        if (!profile) {
+            if (isAdminRoute) {
+                const loginUrl = request.nextUrl.clone()
+                loginUrl.pathname = `/${locale}/admin/login`
+                loginUrl.search = ''
+                return NextResponse.redirect(loginUrl)
+            }
+            if (isContractorRoute) {
+                const loginUrl = request.nextUrl.clone()
+                loginUrl.pathname = `/${locale}/contractor/login`
+                loginUrl.search = ''
+                return NextResponse.redirect(loginUrl)
+            }
+        }
+
         // Admin routes: must have role='admin' — wrong role goes back to admin login
         if (isAdminRoute && role !== 'admin') {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
