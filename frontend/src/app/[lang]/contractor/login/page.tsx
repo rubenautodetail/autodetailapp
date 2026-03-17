@@ -17,15 +17,15 @@ export default function ContractorLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in as contractor
+  // Redirect already-logged-in users (e.g. back-navigation after session restore)
   useEffect(() => {
     if (isLoading || !user || !profile) return;
     if (profile.role === "contractor") {
-      if (profile.approval_status === "approved") {
-        router.replace(`/${lang}/contractor/dashboard`);
-      } else {
-        router.replace(`/${lang}/contractor/pending`);
-      }
+      router.replace(
+        profile.approval_status === "approved"
+          ? `/${lang}/contractor/dashboard`
+          : `/${lang}/contractor/pending`
+      );
     } else if (profile.role === "admin") {
       router.replace(`/${lang}/admin`);
     }
@@ -38,14 +38,14 @@ export default function ContractorLoginPage() {
 
     try {
       await login(email, password);
-      // Redirect is handled by the useEffect above once profile loads
+      // Don't navigate here — let the useEffect handle redirect once
+      // AuthContext finishes loading the profile after authentication.
     } catch {
       setError(
         isEs
           ? "Correo o contraseña incorrectos."
           : "Incorrect email or password."
       );
-    } finally {
       setLoading(false);
     }
   };
