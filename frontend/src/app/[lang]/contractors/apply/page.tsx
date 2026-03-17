@@ -24,6 +24,13 @@ const FIELDS: Field[] = [
     { label: "Service ZIP Codes (comma-separated)", labelEs: "Códigos ZIP de servicio (separados por coma)", name: "serviceZipCodes", type: "text", placeholder: "33101, 33109, 33125", placeholderEs: "33101, 33109, 33125", required: true },
 ];
 
+const PAYMENT_OPTIONS = [
+    { value: "direct_deposit", label: "Direct Deposit (Bank Account)", labelEs: "Depósito Directo (Cuenta Bancaria)" },
+    { value: "zelle",          label: "Zelle",                         labelEs: "Zelle" },
+    { value: "check",          label: "Check",                         labelEs: "Cheque" },
+    { value: "cash",           label: "Cash",                          labelEs: "Efectivo" },
+];
+
 export default function ContractorApplyPage() {
     const pathname = usePathname();
     const router = useRouter();
@@ -59,7 +66,16 @@ export default function ContractorApplyPage() {
             const res = await fetch("/api/contractors/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...values, serviceZipCodes }),
+                body: JSON.stringify({
+                    ...values,
+                    serviceZipCodes,
+                    paymentPreference:   values.paymentPreference   || "",
+                    zelleContact:        values.zelleContact         || "",
+                    bankName:            values.bankName             || "",
+                    bankAccountNumber:   values.bankAccountNumber    || "",
+                    bankRoutingNumber:   values.bankRoutingNumber    || "",
+                    bankAccountType:     values.bankAccountType      || "",
+                }),
             });
             const json = await res.json();
 
@@ -148,6 +164,94 @@ export default function ContractorApplyPage() {
                             />
                         </div>
                     ))}
+
+                    {/* Payment preference */}
+                    <div className="space-y-1.5">
+                        <label className="block text-xs font-medium text-white/60 uppercase tracking-widest">
+                            {isEs ? "Método de pago preferido" : "Preferred Payment Method"}
+                            <span className="text-[#D0B078] ml-1">*</span>
+                        </label>
+                        <select
+                            required
+                            value={values.paymentPreference || ""}
+                            onChange={(e) => setValues((v) => ({ ...v, paymentPreference: e.target.value }))}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D0B078]/50 focus:ring-1 focus:ring-[#D0B078]/20 transition appearance-none"
+                        >
+                            <option value="" disabled className="bg-gray-900">
+                                {isEs ? "Selecciona una opción..." : "Select an option..."}
+                            </option>
+                            {PAYMENT_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value} className="bg-gray-900">
+                                    {isEs ? opt.labelEs : opt.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Zelle details */}
+                    {values.paymentPreference === "zelle" && (
+                        <div className="space-y-1.5">
+                            <label className="block text-xs font-medium text-white/60 uppercase tracking-widest">
+                                {isEs ? "Teléfono o correo de Zelle" : "Zelle Phone or Email"}
+                                <span className="text-[#D0B078] ml-1">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                placeholder={isEs ? "+1 (305) 000-0000 o tu@correo.com" : "+1 (305) 000-0000 or you@email.com"}
+                                value={values.zelleContact || ""}
+                                onChange={(e) => setValues((v) => ({ ...v, zelleContact: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#D0B078]/50 focus:ring-1 focus:ring-[#D0B078]/20 transition"
+                            />
+                        </div>
+                    )}
+
+                    {/* Bank account details */}
+                    {values.paymentPreference === "direct_deposit" && (
+                        <div className="space-y-4 border border-white/10 rounded-xl p-4">
+                            <p className="text-xs text-white/50 uppercase tracking-widest font-medium">
+                                {isEs ? "Información bancaria" : "Bank Account Details"}
+                            </p>
+                            {[
+                                { name: "bankName",          label: "Bank Name",           labelEs: "Nombre del banco",         placeholder: "Chase, Bank of America...", required: true  },
+                                { name: "bankAccountNumber", label: "Account Number",       labelEs: "Número de cuenta",         placeholder: "••••••••••••",             required: true  },
+                                { name: "bankRoutingNumber", label: "Routing Number",       labelEs: "Número de ruta",           placeholder: "9 digits",                 required: true  },
+                            ].map((f) => (
+                                <div key={f.name} className="space-y-1.5">
+                                    <label className="block text-xs font-medium text-white/60 uppercase tracking-widest">
+                                        {isEs ? f.labelEs : f.label}
+                                        {f.required && <span className="text-[#D0B078] ml-1">*</span>}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required={f.required}
+                                        placeholder={f.placeholder}
+                                        value={values[f.name] || ""}
+                                        onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#D0B078]/50 focus:ring-1 focus:ring-[#D0B078]/20 transition"
+                                    />
+                                </div>
+                            ))}
+                            <div className="space-y-1.5">
+                                <label className="block text-xs font-medium text-white/60 uppercase tracking-widest">
+                                    {isEs ? "Tipo de cuenta" : "Account Type"}
+                                    <span className="text-[#D0B078] ml-1">*</span>
+                                </label>
+                                <select
+                                    required
+                                    value={values.bankAccountType || ""}
+                                    onChange={(e) => setValues((v) => ({ ...v, bankAccountType: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D0B078]/50 focus:ring-1 focus:ring-[#D0B078]/20 transition appearance-none"
+                                >
+                                    <option value="" disabled className="bg-gray-900">
+                                        {isEs ? "Selecciona..." : "Select..."}
+                                    </option>
+                                    <option value="checking" className="bg-gray-900">{isEs ? "Cuenta corriente" : "Checking"}</option>
+                                    <option value="savings"  className="bg-gray-900">{isEs ? "Cuenta de ahorros" : "Savings"}</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400">

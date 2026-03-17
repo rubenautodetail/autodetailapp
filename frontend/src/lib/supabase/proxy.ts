@@ -14,6 +14,19 @@ function getLocale(path: string): Locale {
     return (VALID_LOCALES as readonly string[]).includes(candidate ?? '') ? candidate as Locale : 'en'
 }
 
+/**
+ * Create a redirect response that forwards all Supabase session cookies.
+ * Without this, refreshed tokens are lost when middleware returns a redirect,
+ * causing a stale-cookie loop that only clears in incognito mode.
+ */
+function cookiedRedirect(supabaseResponse: NextResponse, destination: URL): NextResponse {
+    const redirect = NextResponse.redirect(destination)
+    supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
+        redirect.cookies.set(name, value)
+    })
+    return redirect
+}
+
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({ request })
 
@@ -48,50 +61,40 @@ export async function updateSession(request: NextRequest) {
 
     // ─── Route classification ──────────────────────────────────────────────────
 
-    // Public API routes that never require auth
-    // Note: /api/admin/* and /api/contractors/register are excluded here —
-    // those routes run their own auth checks internally.
     const isPublicApi =
         path.startsWith('/api/auth/') ||
         path.startsWith('/api/booking/validate-zip') ||
         path.startsWith('/api/booking/availability') ||
-        path.startsWith('/api/booking/approve') ||   // email-link code-protected
-        path.startsWith('/api/admin/') ||            // route handlers own their auth
-        path === '/api/contractors/register'         // applicant has role='user', route checks auth itself
+        path.startsWith('/api/booking/approve') ||
+        path.startsWith('/api/services/') ||        // public service catalog
+        path.startsWith('/api/admin/') ||
+        path === '/api/contractors/register'
 
-    // Auth pages (login / register)
     const isAuthPage =
         path.includes('/login') ||
         path.includes('/register')
 
-    // Landing page — always public (root locale paths like /en or /en/)
     const isLandingPage =
         path === `/${locale}` ||
         path === `/${locale}/` ||
         path === '/' ||
         path === ''
 
-    // Any booking page or API (requires authenticated customer)
-    // Use regex to avoid false-match on /admin/bookings (which also contains '/booking')
     const isBookingRoute =
         (/\/[a-z]{2}\/booking(\/|$)/.test(path) && !path.includes('/booking/approve')) ||
         path.startsWith('/api/booking/create') ||
         path.startsWith('/api/payments/')
 
-    // Contractor-facing pages & APIs
-    // Use regex to avoid false-match on /contractors (public landing) — only match /contractor/ or /contractor end
     const isContractorRoute =
         /\/[a-z]{2}\/contractor(\/|$)/.test(path) ||
         path.startsWith('/api/contractors/')
 
-    // Admin-facing pages & APIs (exclude /admin/login — it's an auth page)
     const isAdminRoute =
         (path.includes('/admin') && !path.includes('/admin/login')) ||
         path.startsWith('/api/admin/')
 
     // ─── Redirect unauthenticated users ───────────────────────────────────────
 
-    // Enforce authentication for ALL protected routes (including booking)
     const isCustomerRoute = path.includes('/dashboard') || path.includes('/customer')
     const isProtectedRoute = isContractorRoute || isAdminRoute || isCustomerRoute || isBookingRoute
     if (!isPublicApi && !isAuthPage && !isLandingPage && isProtectedRoute) {
@@ -106,14 +109,11 @@ export async function updateSession(request: NextRequest) {
                     ? `/${locale}/contractor/login`
                     : `/${locale}/login`
             loginUrl.searchParams.set('next', path)
-            return NextResponse.redirect(loginUrl)
+            return cookiedRedirect(supabaseResponse, loginUrl)
         }
     }
 
-    // ─── Redirect authenticated users away from auth pages ────────────────────
-    // Each login page handles its own post-login redirect via useEffect,
-    // so we only skip middleware redirect for login pages (let them handle it).
-    // For /register, redirect to home since they already have an account.
+    // ─── Redirect authenticated users away from /register ─────────────────────
     const isContractorLogin = path.includes('/contractor/login')
     const isAdminLogin = path.includes('/admin/login')
     const isAnyLoginPage = isContractorLogin || isAdminLogin || path.endsWith('/login')
@@ -126,12 +126,11 @@ export async function updateSession(request: NextRequest) {
         } else {
             dest.pathname = `/${locale}`
         }
-        return NextResponse.redirect(dest)
+        return cookiedRedirect(supabaseResponse, dest)
     }
 
-    // ─── Role enforcement for admin & contractor pages (skip login pages — they show access denied) ──
+    // ─── Role enforcement for admin & contractor pages ─────────────────────────
     if (user && ((isAdminRoute && !isAdminLogin) || (isContractorRoute && !isContractorLogin))) {
-        // Fetch role from profiles (single lightweight query)
         const { data: profile } = await supabase
             .from('profiles')
             .select('role, approval_status')
@@ -140,41 +139,37 @@ export async function updateSession(request: NextRequest) {
 
         const role = (profile as { role?: string } | null)?.role
 
-        // No profile row yet (e.g., just registered) — send to appropriate login
         if (!profile) {
             if (isAdminRoute) {
                 const loginUrl = request.nextUrl.clone()
                 loginUrl.pathname = `/${locale}/admin/login`
                 loginUrl.search = ''
-                return NextResponse.redirect(loginUrl)
+                return cookiedRedirect(supabaseResponse, loginUrl)
             }
             if (isContractorRoute) {
                 const loginUrl = request.nextUrl.clone()
                 loginUrl.pathname = `/${locale}/contractor/login`
                 loginUrl.search = ''
-                return NextResponse.redirect(loginUrl)
+                return cookiedRedirect(supabaseResponse, loginUrl)
             }
         }
 
-        // Admin routes: must have role='admin' — wrong role goes back to admin login
         if (isAdminRoute && role !== 'admin') {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             const loginUrl = request.nextUrl.clone()
             loginUrl.pathname = `/${locale}/admin/login`
             loginUrl.search = ''
-            return NextResponse.redirect(loginUrl)
+            return cookiedRedirect(supabaseResponse, loginUrl)
         }
 
-        // Contractor pages: must have role='contractor' or 'admin' — wrong role goes back to contractor login
         if (isContractorRoute && role !== 'contractor' && role !== 'admin') {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             const loginUrl = request.nextUrl.clone()
             loginUrl.pathname = `/${locale}/contractor/login`
             loginUrl.search = ''
-            return NextResponse.redirect(loginUrl)
+            return cookiedRedirect(supabaseResponse, loginUrl)
         }
 
-        // Contractor approval check — pending contractors see the pending page only
         const approvalStatus = (profile as { approval_status?: string } | null)?.approval_status
         if (
             isContractorRoute &&
@@ -185,7 +180,7 @@ export async function updateSession(request: NextRequest) {
             const pendingUrl = request.nextUrl.clone()
             pendingUrl.pathname = `/${locale}/contractor/pending`
             pendingUrl.search = ''
-            return NextResponse.redirect(pendingUrl)
+            return cookiedRedirect(supabaseResponse, pendingUrl)
         }
     }
 

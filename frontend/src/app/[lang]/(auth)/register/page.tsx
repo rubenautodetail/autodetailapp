@@ -17,10 +17,15 @@ export default function RegisterPage() {
     const router = useRouter();
     const params = useParams();
     const lang = (params.lang as string) || "en";
+
+    // Read `next` once, safely (window only exists in browser)
     const next = typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("next")
         : null;
     const redirectTo = next || `/${lang}/dashboard`;
+
+    const isContractorFlow = !!next?.includes("contractors/apply");
+    const isEs = lang === "es";
 
     useEffect(() => {
         if (!isLoading && user) {
@@ -34,7 +39,8 @@ export default function RegisterPage() {
         setError("");
 
         try {
-            const { needsEmailConfirmation } = await register(name, email, password, lang);
+            // Pass `next` so the confirmation email redirects to the right destination
+            const { needsEmailConfirmation } = await register(name, email, password, lang, redirectTo);
             if (needsEmailConfirmation) {
                 setConfirmedEmail(email);
             } else {
@@ -47,7 +53,7 @@ export default function RegisterPage() {
         }
     };
 
-    // Email confirmation pending state
+    // ── Email confirmation pending ─────────────────────────────────────────────
     if (confirmedEmail) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
@@ -58,41 +64,63 @@ export default function RegisterPage() {
                         </svg>
                     </div>
                     <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-                        {lang === "es" ? "Revisa tu correo" : "Check your email"}
+                        {isEs ? "Revisa tu correo" : "Check your email"}
                     </h2>
                     <p className="text-[var(--text-secondary)] text-sm mb-1">
-                        {lang === "es" ? "Enviamos un enlace de confirmación a" : "We sent a confirmation link to"}
+                        {isEs ? "Enviamos un enlace de confirmación a" : "We sent a confirmation link to"}
                     </p>
-                    <p className="text-[var(--text-primary)] font-medium text-sm mb-6">{confirmedEmail}</p>
-                    <p className="text-[var(--text-secondary)] text-xs mb-6">
-                        {lang === "es"
+                    <p className="text-[var(--text-primary)] font-medium text-sm mb-4">{confirmedEmail}</p>
+                    <p className="text-[var(--text-secondary)] text-xs mb-2">
+                        {isEs
                             ? "Haz clic en el enlace del correo para activar tu cuenta."
                             : "Click the link in the email to activate your account."}
                     </p>
-                    <Link href={`/${lang}/login`} className="text-[var(--accent)] text-sm hover:underline">
-                        {lang === "es" ? "Regresar al inicio de sesión" : "Back to Login"}
+                    {isContractorFlow && (
+                        <p className="text-[var(--text-secondary)] text-xs mb-6 font-medium">
+                            {isEs
+                                ? "Después de confirmar, serás redirigido al formulario de solicitud."
+                                : "After confirming, you'll be taken directly to the contractor application form."}
+                        </p>
+                    )}
+                    <Link
+                        href={`/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+                        className="text-[var(--accent)] text-sm hover:underline"
+                    >
+                        {isEs ? "Ya confirmé, iniciar sesión" : "Already confirmed? Sign in"}
                     </Link>
                 </div>
             </div>
         );
     }
 
+    // ── Register form ─────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)] transition-colors duration-200">
             <div className="w-full max-w-sm bg-[var(--card)] p-8 rounded-2xl shadow-[var(--shadow-card)] border border-[var(--divider)]">
                 <div className="text-center mb-8">
+                    {isContractorFlow && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-medium mb-4">
+                            {isEs ? "Solicitud de contratista" : "Contractor application"}
+                        </div>
+                    )}
                     <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
-                        {lang === "es" ? "Crear cuenta" : "Create Account"}
+                        {isEs ? "Crear cuenta" : "Create Account"}
                     </h1>
                     <p className="text-[var(--text-secondary)] text-sm">
-                        {lang === "es" ? "Regístrate con tu correo para solicitar servicios" : "Join using your email to request services"}
+                        {isContractorFlow
+                            ? (isEs
+                                ? "Crea tu cuenta para continuar con la solicitud de contratista."
+                                : "Create your account to continue with the contractor application.")
+                            : (isEs
+                                ? "Regístrate con tu correo para solicitar servicios"
+                                : "Join using your email to request services")}
                     </p>
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase tracking-wider">
-                            {lang === "es" ? "Nombre completo" : "Full Name"}
+                            {isEs ? "Nombre completo" : "Full Name"}
                         </label>
                         <input
                             type="text"
@@ -106,7 +134,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase tracking-wider">
-                            {lang === "es" ? "Correo electrónico" : "Email"}
+                            {isEs ? "Correo electrónico" : "Email"}
                         </label>
                         <input
                             type="email"
@@ -120,7 +148,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase tracking-wider">
-                            {lang === "es" ? "Contraseña" : "Password"}
+                            {isEs ? "Contraseña" : "Password"}
                         </label>
                         <input
                             type="password"
@@ -147,19 +175,21 @@ export default function RegisterPage() {
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            lang === "es" ? "Crear cuenta" : "Create Account"
+                            isEs
+                                ? (isContractorFlow ? "Crear cuenta y continuar →" : "Crear cuenta")
+                                : (isContractorFlow ? "Create account & continue →" : "Create Account")
                         )}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
                     <p className="text-sm text-[var(--text-secondary)]">
-                        {lang === "es" ? "¿Ya tienes una cuenta?" : "Already have an account?"}{" "}
+                        {isEs ? "¿Ya tienes una cuenta?" : "Already have an account?"}{" "}
                         <Link
-                            href={`/${lang}/login`}
+                            href={`/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
                             className="text-[var(--accent)] hover:underline font-medium"
                         >
-                            {lang === "es" ? "Iniciar sesión" : "Sign In"}
+                            {isEs ? "Iniciar sesión" : "Sign In"}
                         </Link>
                     </p>
                 </div>

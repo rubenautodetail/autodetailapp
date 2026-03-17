@@ -78,6 +78,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
         inactive: isEs ? "Inactivo" : "Inactive",
         edit: isEs ? "Editar" : "Edit",
         deactivate: isEs ? "Desactivar" : "Deactivate",
+        deleteItem: isEs ? "Eliminar" : "Delete",
         save: isEs ? "Guardar" : "Save",
         cancel: isEs ? "Cancelar" : "Cancel",
         stripeSync: isEs ? "Sincronizado con Stripe" : "Synced with Stripe",
@@ -155,6 +156,16 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
     async function handleDeactivate(id: number, type: 'service' | 'addon') {
         if (!confirm(isEs ? '¿Desactivar este elemento?' : 'Deactivate this item?')) return;
         const url = `/api/admin/services/${id}?type=${type === 'addon' ? 'addon' : 'service'}`;
+        await adminFetch(url, { method: 'DELETE' });
+        fetchData();
+    }
+
+    async function handleDelete(id: number, type: 'service' | 'addon') {
+        if (!confirm(isEs
+            ? '¿Eliminar permanentemente? Esta acción no se puede deshacer.'
+            : 'Permanently delete? This cannot be undone.'
+        )) return;
+        const url = `/api/admin/services/${id}?type=${type === 'addon' ? 'addon' : 'service'}&permanent=true`;
         await adminFetch(url, { method: 'DELETE' });
         fetchData();
     }
@@ -288,11 +299,17 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                                     {item.is_active && (
                                                         <button
                                                             onClick={() => handleDeactivate(item.id, tab === 'services' ? 'service' : 'addon')}
-                                                            className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                                                            className="px-3 py-1.5 text-xs font-medium text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors"
                                                         >
                                                             {t.deactivate}
                                                         </button>
                                                     )}
+                                                    <button
+                                                        onClick={() => handleDelete(item.id, tab === 'services' ? 'service' : 'addon')}
+                                                        className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                                                    >
+                                                        {t.deleteItem}
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -328,7 +345,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                     type="text"
                                     value={editItem.name ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
                                 />
                             </FormField>
 
@@ -337,7 +354,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                     type="text"
                                     value={editItem.name_es ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, name_es: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
                                 />
                             </FormField>
 
@@ -356,7 +373,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                             setEditItem({ ...editItem, price: e.target.value } as EditItem);
                                         }
                                     }}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
                                 />
                             </FormField>
 
@@ -366,7 +383,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                     min="0"
                                     value={editItem.duration_minutes ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, duration_minutes: parseInt(e.target.value) || null })}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
                                 />
                             </FormField>
 
@@ -375,7 +392,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                     rows={2}
                                     value={editItem.description ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 resize-none"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 resize-none"
                                 />
                             </FormField>
 
@@ -384,7 +401,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                     rows={2}
                                     value={editItem.description_es ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, description_es: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 resize-none"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 resize-none"
                                 />
                             </FormField>
 
@@ -393,7 +410,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                     type="number"
                                     value={editItem.sort_order ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, sort_order: parseInt(e.target.value) || 10 })}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
                                 />
                             </FormField>
 

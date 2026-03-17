@@ -38,6 +38,16 @@ interface Booking {
     profiles: ContractorProfile | null;
 }
 
+interface CatalogItem {
+    id: number;
+    name: string;
+    name_es: string | null;
+    description: string | null;
+    duration_minutes: number | null;
+    price: number; // normalised — base_price for services, price for add-ons
+    itemType: 'service' | 'addon';
+}
+
 // ── Step config ───────────────────────────────────────────────────────────────
 
 type StepKey = 'confirmed' | 'assigned' | 'enRoute' | 'inProgress' | 'complete';
@@ -50,27 +60,27 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-    { key: 'confirmed', labelEn: 'Booking Confirmed', labelEs: 'Reserva Confirmada', icon: 'check' },
-    { key: 'assigned', labelEn: 'Contractor Assigned', labelEs: 'Técnico Asignado', icon: 'check' },
-    { key: 'enRoute', labelEn: 'On The Way', labelEs: 'En Camino', icon: 'truck' },
-    { key: 'inProgress', labelEn: 'Service In Progress', labelEs: 'Servicio en Progreso', icon: 'wrench' },
-    { key: 'complete', labelEn: 'Service Complete', labelEs: 'Servicio Completado', icon: 'star' },
+    { key: 'confirmed',   labelEn: 'Booking Confirmed',    labelEs: 'Reserva Confirmada',    icon: 'check'  },
+    { key: 'assigned',    labelEn: 'Contractor Assigned',  labelEs: 'Técnico Asignado',      icon: 'check'  },
+    { key: 'enRoute',     labelEn: 'On The Way',           labelEs: 'En Camino',             icon: 'truck'  },
+    { key: 'inProgress',  labelEn: 'Service In Progress',  labelEs: 'Servicio en Progreso',  icon: 'wrench' },
+    { key: 'complete',    labelEn: 'Service Complete',     labelEs: 'Servicio Completado',   icon: 'star'   },
 ];
 
-// Returns index of the CURRENT (active/pulsing) step (0-based)
+const ACTIVE_STATUSES: BookingStatus[] = ['confirmed', 'en_route', 'in_progress'];
+
 function getActiveStepIndex(status: BookingStatus): number {
     switch (status) {
-        case 'pending_assignment': return 1; // step 2 active
-        case 'confirmed':          return 2; // step 3 active
-        case 'en_route':           return 2; // step 3 pulsing
-        case 'in_progress':        return 3; // step 4 active
+        case 'pending_assignment': return 1;
+        case 'confirmed':          return 2;
+        case 'en_route':           return 2;
+        case 'in_progress':        return 3;
         case 'pending_approval':
-        case 'completed':          return 4; // step 5 complete
+        case 'completed':          return 4;
         default:                   return 0;
     }
 }
 
-// Steps that are fully complete (green checkmark) vs active vs upcoming
 function getStepState(
     stepIdx: number,
     activeIdx: number,
@@ -78,7 +88,6 @@ function getStepState(
 ): 'complete' | 'active' | 'upcoming' {
     if (stepIdx < activeIdx) return 'complete';
     if (stepIdx === activeIdx) {
-        // step 5 (idx 4) is fully complete for pending_approval / completed
         if (status === 'pending_approval' || status === 'completed') return 'complete';
         return 'active';
     }
@@ -125,15 +134,22 @@ function StarIcon({ className }: { className?: string }) {
     );
 }
 
+function PlusIcon({ className }: { className?: string }) {
+    return (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+    );
+}
+
 function StepIcon({ icon, state }: { icon: Step['icon']; state: 'complete' | 'active' | 'upcoming' }) {
     const iconClass = `w-5 h-5 ${state === 'upcoming' ? 'text-gray-600' : 'text-white'}`;
-    if (state === 'complete' && icon === 'check') return <CheckIcon className={iconClass} />;
     if (state === 'complete') return <CheckIcon className={iconClass} />;
     switch (icon) {
-        case 'truck':   return <TruckIcon className={iconClass} />;
-        case 'wrench':  return <WrenchIcon className={iconClass} />;
-        case 'star':    return <StarIcon className={iconClass} />;
-        default:        return <CheckIcon className={iconClass} />;
+        case 'truck':  return <TruckIcon className={iconClass} />;
+        case 'wrench': return <WrenchIcon className={iconClass} />;
+        case 'star':   return <StarIcon className={iconClass} />;
+        default:       return <CheckIcon className={iconClass} />;
     }
 }
 
@@ -144,10 +160,20 @@ export default function TrackBookingPage() {
     const router = useRouter();
     const bookingId = (params.id as string).replace('%3A', ':');
     const lang = (params.lang as string) || 'en';
+    const isEs = lang === 'es';
 
-    const [booking, setBooking] = useState<Booking | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [booking, setBooking]     = useState<Booking | null>(null);
+    const [loading, setLoading]     = useState(true);
+    const [error, setError]         = useState('');
+
+    // Add-service state
+    const [catalog, setCatalog]                 = useState<{ services: CatalogItem[]; addOns: CatalogItem[] } | null>(null);
+    const [showAddService, setShowAddService]   = useState(false);
+    const [catalogTab, setCatalogTab]           = useState<'services' | 'addons'>('addons');
+    const [selectedItems, setSelectedItems]     = useState<CatalogItem[]>([]);
+    const [addLoading, setAddLoading]           = useState(false);
+    const [addSuccess, setAddSuccess]           = useState(false);
+    const [addError, setAddError]               = useState('');
 
     const fetchBooking = useCallback(async () => {
         const supabase = createClient();
@@ -158,37 +184,58 @@ export default function TrackBookingPage() {
             .single();
 
         if (fetchError || !data) {
-            setError(lang === 'es' ? 'Reserva no encontrada.' : 'Booking not found.');
+            setError(isEs ? 'Reserva no encontrada.' : 'Booking not found.');
         } else {
             setBooking(data as Booking);
         }
         setLoading(false);
-    }, [bookingId, lang]);
+    }, [bookingId, isEs]);
 
-    // Initial fetch + realtime subscription
+    // Fetch catalog when booking is active
+    const fetchCatalog = useCallback(async () => {
+        try {
+            const res = await fetch('/api/services/available');
+            if (!res.ok) return;
+            const json = await res.json();
+            setCatalog({
+                services: (json.services ?? []).map((s: Record<string, unknown>) => ({
+                    id: s.id,
+                    name: s.name,
+                    name_es: s.name_es ?? null,
+                    description: s.description ?? null,
+                    duration_minutes: s.duration_minutes ?? null,
+                    price: Number(s.base_price),
+                    itemType: 'service' as const,
+                })),
+                addOns: (json.addOns ?? []).map((a: Record<string, unknown>) => ({
+                    id: a.id,
+                    name: a.name,
+                    name_es: a.name_es ?? null,
+                    description: a.description ?? null,
+                    duration_minutes: a.duration_minutes ?? null,
+                    price: Number(a.price),
+                    itemType: 'addon' as const,
+                })),
+            });
+        } catch {
+            // Non-fatal — catalog just won't show
+        }
+    }, []);
+
     useEffect(() => {
         fetchBooking();
 
         const supabase = createClient();
         let channel: RealtimeChannel;
 
-        // Resolve the numeric id first so we can filter correctly
         const numericId = Number(bookingId);
         if (!isNaN(numericId)) {
             channel = supabase
                 .channel(`booking-track-${bookingId}`)
                 .on(
                     'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'bookings',
-                        filter: `id=eq.${numericId}`,
-                    },
-                    () => {
-                        // Re-fetch to get the joined contractor profile too
-                        fetchBooking();
-                    },
+                    { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `id=eq.${numericId}` },
+                    () => { fetchBooking(); },
                 )
                 .subscribe();
         }
@@ -198,6 +245,61 @@ export default function TrackBookingPage() {
         };
     }, [bookingId, fetchBooking]);
 
+    // Load catalog once booking status is known and active
+    useEffect(() => {
+        if (!booking) return;
+        if (ACTIVE_STATUSES.includes(booking.status as BookingStatus)) {
+            fetchCatalog();
+        }
+    }, [booking?.status, fetchCatalog]);
+
+    const toggleItem = (item: CatalogItem) => {
+        setSelectedItems((prev) => {
+            const exists = prev.some((s) => s.id === item.id && s.itemType === item.itemType);
+            return exists
+                ? prev.filter((s) => !(s.id === item.id && s.itemType === item.itemType))
+                : [...prev, item];
+        });
+    };
+
+    const closeModal = () => {
+        setShowAddService(false);
+        setSelectedItems([]);
+        setAddError('');
+    };
+
+    const handleAddService = async () => {
+        if (!booking || selectedItems.length === 0) return;
+        setAddLoading(true);
+        setAddError('');
+        try {
+            const res = await fetch('/api/booking/add-service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bookingId,
+                    confirmationCode: booking.confirmation_code,
+                    items: selectedItems.map((i) => ({
+                        id: i.id,
+                        type: i.itemType,
+                        name: i.name,
+                        name_es: i.name_es,
+                        price: i.price,
+                    })),
+                }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || 'Failed to add services');
+            closeModal();
+            setAddSuccess(true);
+            await fetchBooking();
+        } catch (err) {
+            setAddError((err as Error).message);
+        } finally {
+            setAddLoading(false);
+        }
+    };
+
     // ── Loading ──────────────────────────────────────────────────────────────
     if (loading) {
         return (
@@ -205,7 +307,7 @@ export default function TrackBookingPage() {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
                     <p className="mt-4 text-gray-400 text-sm">
-                        {lang === 'es' ? 'Cargando seguimiento...' : 'Loading tracking...'}
+                        {isEs ? 'Cargando seguimiento...' : 'Loading tracking...'}
                     </p>
                 </div>
             </div>
@@ -224,14 +326,14 @@ export default function TrackBookingPage() {
                         </svg>
                     </div>
                     <h2 className="text-lg font-bold text-white mb-2">
-                        {lang === 'es' ? 'No Encontrado' : 'Not Found'}
+                        {isEs ? 'No Encontrado' : 'Not Found'}
                     </h2>
                     <p className="text-gray-400 text-sm mb-6">{error}</p>
                     <button
                         onClick={() => router.push(`/${lang}`)}
                         className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-500 transition-colors"
                     >
-                        {lang === 'es' ? 'Volver al Inicio' : 'Return to Home'}
+                        {isEs ? 'Volver al Inicio' : 'Return to Home'}
                     </button>
                 </div>
             </div>
@@ -243,6 +345,8 @@ export default function TrackBookingPage() {
     const contractorName = booking.profiles?.full_name ?? null;
     const showContractor = status !== 'pending_assignment' && contractorName;
     const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_PHONE ?? '';
+    const canAddServices = ACTIVE_STATUSES.includes(status) && catalog !== null;
+    const selectedTotal = selectedItems.reduce((s, i) => s + i.price, 0);
 
     return (
         <div className="min-h-screen bg-gray-950 text-white pb-24">
@@ -250,14 +354,14 @@ export default function TrackBookingPage() {
             <div className="bg-gray-900 border-b border-gray-800 px-4 py-5">
                 <div className="max-w-lg mx-auto">
                     <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-                        {lang === 'es' ? 'Seguimiento de Reserva' : 'Booking Tracking'}
+                        {isEs ? 'Seguimiento de Reserva' : 'Booking Tracking'}
                     </p>
                     <h1 className="text-xl font-bold text-white truncate">
-                        {booking.service_name ?? (lang === 'es' ? 'Servicio de Detallado' : 'Detail Service')}
+                        {booking.service_name ?? (isEs ? 'Servicio de Detallado' : 'Detail Service')}
                     </h1>
                     {booking.confirmation_code && (
                         <p className="text-sm text-gray-400 mt-1">
-                            {lang === 'es' ? 'Código: ' : 'Code: '}
+                            {isEs ? 'Código: ' : 'Code: '}
                             <span className="font-mono text-blue-400 font-semibold">
                                 {booking.confirmation_code}
                             </span>
@@ -273,17 +377,13 @@ export default function TrackBookingPage() {
             <div className="max-w-lg mx-auto px-4 py-8 space-y-8">
                 {/* ── Timeline ────────────────────────────────────────────── */}
                 <div className="relative">
-                    {/* Vertical connector line */}
                     <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-800" aria-hidden="true" />
-
                     <ol className="space-y-0">
                         {STEPS.map((step, idx) => {
                             const state = getStepState(idx, activeIdx, status);
                             const isLast = idx === STEPS.length - 1;
-
                             return (
                                 <li key={step.key} className={`relative flex items-start gap-4 ${isLast ? '' : 'pb-8'}`}>
-                                    {/* Circle */}
                                     <div className="relative z-10 flex-shrink-0">
                                         {state === 'complete' && (
                                             <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center ring-4 ring-gray-950">
@@ -301,24 +401,22 @@ export default function TrackBookingPage() {
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Label */}
                                     <div className="pt-2 min-w-0">
                                         <p className={`text-sm font-semibold leading-tight ${
                                             state === 'complete' ? 'text-green-400' :
                                             state === 'active'   ? 'text-white' :
                                                                    'text-gray-600'
                                         }`}>
-                                            {lang === 'es' ? step.labelEs : step.labelEn}
+                                            {isEs ? step.labelEs : step.labelEn}
                                         </p>
                                         {state === 'active' && (
                                             <p className="text-xs text-blue-400 mt-0.5">
-                                                {lang === 'es' ? 'En curso...' : 'In progress...'}
+                                                {isEs ? 'En curso...' : 'In progress...'}
                                             </p>
                                         )}
                                         {state === 'complete' && (
                                             <p className="text-xs text-green-600 mt-0.5">
-                                                {lang === 'es' ? 'Completado' : 'Done'}
+                                                {isEs ? 'Completado' : 'Done'}
                                             </p>
                                         )}
                                     </div>
@@ -339,10 +437,9 @@ export default function TrackBookingPage() {
                         </div>
                         <div className="min-w-0">
                             <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">
-                                {lang === 'es' ? 'Tu Técnico' : 'Your Technician'}
+                                {isEs ? 'Tu Técnico' : 'Your Technician'}
                             </p>
                             <p className="font-semibold text-white truncate">{contractorName}</p>
-                            {/* Rating placeholder */}
                             <div className="flex items-center gap-1 mt-0.5">
                                 {[1, 2, 3, 4, 5].map((s) => (
                                     <svg key={s} className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -358,16 +455,16 @@ export default function TrackBookingPage() {
                 {/* ── Booking info ─────────────────────────────────────────── */}
                 <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5 space-y-3">
                     <h2 className="text-sm font-semibold text-gray-300">
-                        {lang === 'es' ? 'Detalles de la Reserva' : 'Booking Details'}
+                        {isEs ? 'Detalles de la Reserva' : 'Booking Details'}
                     </h2>
                     {[
                         {
-                            label: lang === 'es' ? 'Dirección' : 'Address',
+                            label: isEs ? 'Dirección' : 'Address',
                             value: [booking.address, booking.city, booking.state, booking.zip_code]
                                 .filter(Boolean).join(', ') || '—',
                         },
                         {
-                            label: lang === 'es' ? 'Total' : 'Total',
+                            label: isEs ? 'Total' : 'Total',
                             value: `$${Number(booking.total_amount).toFixed(2)}`,
                             highlight: true,
                         },
@@ -381,13 +478,53 @@ export default function TrackBookingPage() {
                     ))}
                 </div>
 
+                {/* ── Add Service / Add-on ─────────────────────────────────── */}
+                {canAddServices && (
+                    <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
+                        <div className="flex items-start gap-3 mb-3">
+                            <div className="w-9 h-9 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <PlusIcon className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-white">
+                                    {isEs ? 'Añadir Servicios' : 'Add to Your Service'}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {isEs
+                                        ? 'Agrega servicios o complementos mientras trabajamos en tu auto.'
+                                        : 'Request extra services or add-ons while we work on your car.'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {addSuccess ? (
+                            <div className="flex items-center gap-2 text-green-400 text-sm py-1">
+                                <CheckIcon className="w-4 h-4 flex-shrink-0" />
+                                <span>
+                                    {isEs
+                                        ? '¡Servicios agregados! Tu técnico fue notificado.'
+                                        : 'Services added! Your technician was notified.'}
+                                </span>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowAddService(true)}
+                                className="w-full py-2.5 rounded-xl border border-gray-700 text-gray-300 text-sm font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <PlusIcon className="w-4 h-4" />
+                                {isEs ? 'Agregar Servicio / Complemento' : 'Add Service / Add-on'}
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 {/* ── Approve CTA (when pending_approval) ─────────────────── */}
                 {status === 'pending_approval' && (
                     <button
                         onClick={() => router.push(`/${lang}/booking/${bookingId}/approve`)}
                         className="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-500 transition-colors text-base"
                     >
-                        {lang === 'es' ? 'Aprobar Servicio ✓' : 'Approve Service ✓'}
+                        {isEs ? 'Aprobar Servicio ✓' : 'Approve Service ✓'}
                     </button>
                 )}
             </div>
@@ -404,15 +541,139 @@ export default function TrackBookingPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                     d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
-                            {lang === 'es' ? '¿Necesitas Ayuda? Llama a Soporte' : 'Need Help? Call Support'}
+                            {isEs ? '¿Necesitas Ayuda? Llama a Soporte' : 'Need Help? Call Support'}
                         </a>
                     ) : (
                         <p className="text-center text-gray-600 text-sm">
-                            {lang === 'es' ? 'Soporte disponible durante el servicio.' : 'Support available during service.'}
+                            {isEs ? 'Soporte disponible durante el servicio.' : 'Support available during service.'}
                         </p>
                     )}
                 </div>
             </div>
+
+            {/* ── Add Service Modal ────────────────────────────────────────── */}
+            {showAddService && catalog && (
+                <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+                    <div className="bg-gray-900 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl border border-gray-800 max-h-[85vh] flex flex-col">
+
+                        {/* Modal header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
+                            <h3 className="font-semibold text-white">
+                                {isEs ? 'Agregar a Tu Servicio' : 'Add to Your Service'}
+                            </h3>
+                            <button
+                                onClick={closeModal}
+                                className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex border-b border-gray-800 px-5 flex-shrink-0">
+                            {(['addons', 'services'] as const).map((t) => (
+                                <button
+                                    key={t}
+                                    onClick={() => setCatalogTab(t)}
+                                    className={`py-3 text-sm font-medium mr-6 border-b-2 transition-colors ${
+                                        catalogTab === t
+                                            ? 'border-blue-500 text-blue-400'
+                                            : 'border-transparent text-gray-500 hover:text-gray-300'
+                                    }`}
+                                >
+                                    {t === 'services'
+                                        ? (isEs ? 'Servicios' : 'Services')
+                                        : (isEs ? 'Complementos' : 'Add-ons')}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Items list */}
+                        <div className="overflow-y-auto flex-1 p-5 space-y-3">
+                            {(catalogTab === 'services' ? catalog.services : catalog.addOns).length === 0 ? (
+                                <p className="text-center text-gray-600 text-sm py-8">
+                                    {isEs ? 'No hay opciones disponibles.' : 'No options available.'}
+                                </p>
+                            ) : (
+                                (catalogTab === 'services' ? catalog.services : catalog.addOns).map((item) => {
+                                    const displayName = (isEs && item.name_es) ? item.name_es : item.name;
+                                    const isSelected = selectedItems.some(
+                                        (s) => s.id === item.id && s.itemType === item.itemType,
+                                    );
+                                    return (
+                                        <button
+                                            key={`${item.itemType}-${item.id}`}
+                                            onClick={() => toggleItem(item)}
+                                            className={`w-full text-left p-4 rounded-xl border transition-all ${
+                                                isSelected
+                                                    ? 'border-blue-500 bg-blue-500/10'
+                                                    : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-white">{displayName}</p>
+                                                    {item.duration_minutes && (
+                                                        <p className="text-xs text-gray-500 mt-0.5">
+                                                            {item.duration_minutes} min
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <span className="text-sm font-semibold text-green-400">
+                                                        +${item.price.toFixed(2)}
+                                                    </span>
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                                        isSelected
+                                                            ? 'border-blue-500 bg-blue-500'
+                                                            : 'border-gray-600'
+                                                    }`}>
+                                                        {isSelected && <CheckIcon className="w-3 h-3 text-white" />}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Footer — shown when items are selected */}
+                        {selectedItems.length > 0 && (
+                            <div className="border-t border-gray-800 px-5 py-4 flex-shrink-0">
+                                {addError && (
+                                    <p className="text-red-400 text-xs mb-3">{addError}</p>
+                                )}
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-sm text-gray-400">
+                                        {selectedItems.length}{' '}
+                                        {isEs ? 'seleccionado(s)' : `item${selectedItems.length > 1 ? 's' : ''} selected`}
+                                    </span>
+                                    <span className="text-lg font-bold text-white">
+                                        +${selectedTotal.toFixed(2)}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={handleAddService}
+                                    disabled={addLoading}
+                                    className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-500 transition-colors disabled:opacity-60"
+                                >
+                                    {addLoading
+                                        ? (isEs ? 'Procesando...' : 'Processing...')
+                                        : (isEs ? 'Confirmar y Agregar' : 'Confirm & Add')}
+                                </button>
+                                <p className="text-xs text-gray-600 text-center mt-2">
+                                    {isEs
+                                        ? 'El monto adicional se cobrará al aprobar el servicio.'
+                                        : 'Additional amount will be collected when you approve the service.'}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

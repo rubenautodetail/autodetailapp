@@ -41,9 +41,26 @@ export async function POST(req: NextRequest) {
         const fullName = fullNameVal.trim();
         const email = emailVal.trim();
         const phone = phoneVal.trim();
-        const address = typeof body.address === 'string' ? body.address : '';
-        const businessName = typeof body.businessName === 'string' ? body.businessName : '';
+        const address = typeof body.address === 'string' ? body.address.trim() : '';
+        const businessName = typeof body.businessName === 'string' ? body.businessName.trim() : '';
         const serviceZipCodes = Array.isArray(body.serviceZipCodes) ? body.serviceZipCodes as string[] : [];
+        const paymentPreference = typeof body.paymentPreference === 'string' ? body.paymentPreference.trim() : '';
+
+        const VALID_PAYMENT = ['direct_deposit', 'zelle', 'check', 'cash'];
+        if (paymentPreference && !VALID_PAYMENT.includes(paymentPreference)) {
+            return NextResponse.json({ error: 'Invalid payment preference.' }, { status: 400 });
+        }
+
+        const zelleContact      = typeof body.zelleContact      === 'string' ? body.zelleContact.trim()      : '';
+        const bankName          = typeof body.bankName          === 'string' ? body.bankName.trim()          : '';
+        const bankAccountNumber = typeof body.bankAccountNumber === 'string' ? body.bankAccountNumber.trim() : '';
+        const bankRoutingNumber = typeof body.bankRoutingNumber === 'string' ? body.bankRoutingNumber.trim() : '';
+        const bankAccountType   = typeof body.bankAccountType   === 'string' ? body.bankAccountType.trim()   : '';
+
+        const VALID_ACCOUNT_TYPES = ['checking', 'savings'];
+        if (bankAccountType && !VALID_ACCOUNT_TYPES.includes(bankAccountType)) {
+            return NextResponse.json({ error: 'Invalid bank account type.' }, { status: 400 });
+        }
 
         // Mark this user's profile as a pending contractor application.
         // Use upsert so the row is created if it doesn't exist yet (e.g. if create-profile
@@ -59,6 +76,15 @@ export async function POST(req: NextRequest) {
                     approval_status: 'pending',
                     full_name: fullName,
                     phone,
+                    address: address || null,
+                    business_name: businessName || null,
+                    service_area_zips: serviceZipCodes.length ? serviceZipCodes : null,
+                    payment_preference: paymentPreference || null,
+                    zelle_contact: zelleContact || null,
+                    bank_name: bankName || null,
+                    bank_account_number: bankAccountNumber || null,
+                    bank_routing_number: bankRoutingNumber || null,
+                    bank_account_type: bankAccountType || null,
                     updated_at: new Date().toISOString(),
                 },
                 { onConflict: 'id', ignoreDuplicates: false }

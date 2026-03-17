@@ -69,6 +69,14 @@ export async function DELETE(
     const table = type === 'addon' ? 'add_ons' : 'services';
 
     const supabase = createServiceClient();
+    const permanent = new URL(req.url).searchParams.get('permanent') === 'true';
+
+    if (permanent) {
+        const { error } = await supabase.from(table).delete().eq('id', id);
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ success: true });
+    }
+
     // Soft-delete: set is_active = false
     const { error } = await supabase.from(table).update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

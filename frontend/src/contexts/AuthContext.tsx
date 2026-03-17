@@ -18,7 +18,7 @@ interface AuthContextType {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, lang?: string) => Promise<{ needsEmailConfirmation: boolean }>;
+  register: (name: string, email: string, password: string, lang?: string, next?: string) => Promise<{ needsEmailConfirmation: boolean }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -97,10 +97,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Action: Register with Supabase
-  const register = async (name: string, email: string, password: string, lang = 'en'): Promise<{ needsEmailConfirmation: boolean }> => {
+  const register = async (name: string, email: string, password: string, lang = 'en', next?: string): Promise<{ needsEmailConfirmation: boolean }> => {
     const siteUrl = typeof window !== 'undefined'
       ? window.location.origin
       : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+
+    // Use the caller-supplied `next` so the confirmation email lands on the right page
+    // (e.g. /en/contractors/apply instead of the generic dashboard)
+    const postConfirmRedirect = next && next.startsWith('/') ? next : `/${lang}/dashboard`;
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -109,8 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: {
           full_name: name,
         },
-        // After email confirmation, send user to their dashboard
-        emailRedirectTo: `${siteUrl}/api/auth/callback?next=/${lang}/dashboard`,
+        emailRedirectTo: `${siteUrl}/api/auth/callback?next=${encodeURIComponent(postConfirmRedirect)}`,
       },
     });
 
