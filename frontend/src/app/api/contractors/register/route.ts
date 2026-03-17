@@ -45,21 +45,27 @@ export async function POST(req: NextRequest) {
         const businessName = typeof body.businessName === 'string' ? body.businessName : '';
         const serviceZipCodes = Array.isArray(body.serviceZipCodes) ? body.serviceZipCodes as string[] : [];
 
-        // Mark this user's profile as a pending contractor application
+        // Mark this user's profile as a pending contractor application.
+        // Use upsert so the row is created if it doesn't exist yet (e.g. if create-profile
+        // failed silently during registration). ignoreDuplicates:false ensures role/status
+        // are always written even when the row already exists.
         const supabase = createServiceClient();
         const { error: updateError } = await supabase
             .from('profiles')
-            .update({
-                role: 'contractor',
-                approval_status: 'pending',
-                full_name: fullName,
-                phone,
-                updated_at: new Date().toISOString(),
-            })
-            .eq('id', user.id);
+            .upsert(
+                {
+                    id: user.id,
+                    role: 'contractor',
+                    approval_status: 'pending',
+                    full_name: fullName,
+                    phone,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: 'id', ignoreDuplicates: false }
+            );
 
         if (updateError) {
-            console.error('Profile update failed:', updateError.message);
+            console.error('Profile upsert failed:', updateError.message);
             return NextResponse.json({ error: 'Failed to save application. Please try again.' }, { status: 500 });
         }
 
