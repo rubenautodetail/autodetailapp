@@ -73,49 +73,6 @@ export async function capturePaymentIntent(paymentIntentId: string) {
     return stripe.paymentIntents.capture(paymentIntentId);
 }
 
-/**
- * Transfer contractor payout to their connected Stripe Express account.
- *
- * Called after a successful capture. Platform retains PLATFORM_FEE_PERCENTAGE
- * (default 15%) and the remainder is transferred to the contractor.
- *
- * @param totalAmountCents  - Full booking amount in cents (already captured)
- * @param connectedAccountId - Contractor's Stripe Express account ID
- * @param bookingId          - Used as idempotency key to prevent duplicate transfers
- */
-export async function transferToContractor({
-    totalAmountCents,
-    connectedAccountId,
-    bookingId,
-}: {
-    totalAmountCents: number;
-    connectedAccountId: string;
-    bookingId: string;
-}) {
-    const feePercent = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE ?? '15');
-    const platformFeeCents = Math.round(totalAmountCents * (feePercent / 100));
-    const contractorPayoutCents = totalAmountCents - platformFeeCents;
-
-    if (contractorPayoutCents <= 0) {
-        throw new Error(`Contractor payout is zero or negative (total: ${totalAmountCents} cents, fee: ${feePercent}%)`);
-    }
-
-    const transfer = await stripe.transfers.create(
-        {
-            amount: contractorPayoutCents,
-            currency: 'usd',
-            destination: connectedAccountId,
-            metadata: { bookingId },
-        },
-        { idempotencyKey: `transfer-${bookingId}` }
-    );
-
-    return {
-        transferId: transfer.id,
-        contractorPayoutCents,
-        platformFeeCents,
-    };
-}
 
 /**
  * Verify a Stripe webhook signature and return the parsed event.
