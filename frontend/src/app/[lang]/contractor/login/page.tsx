@@ -28,8 +28,16 @@ export default function ContractorLoginPage() {
       );
     } else if (profile.role === "admin") {
       router.replace(`/${lang}/admin`);
+    } else {
+      // Regular user trying contractor login — show error, stop spinner
+      setLoading(false);
+      setError(
+        isEs
+          ? "Esta cuenta no tiene acceso de contratista. Aplica primero."
+          : "This account doesn't have contractor access. Apply first."
+      );
     }
-  }, [isLoading, user, profile, lang, router]);
+  }, [isLoading, user, profile, lang, router, isEs]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

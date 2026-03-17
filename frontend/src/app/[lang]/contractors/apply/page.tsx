@@ -29,7 +29,7 @@ export default function ContractorApplyPage() {
     const router = useRouter();
     const lang = pathname.split("/")[1] || "en";
     const isEs = lang === "es";
-    const { user, profile, isLoading } = useAuth();
+    const { user, profile, isLoading, refreshProfile } = useAuth();
 
     const [values, setValues] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
@@ -86,6 +86,8 @@ export default function ContractorApplyPage() {
 
             if (!res.ok) throw new Error(json.error || "Submission failed");
 
+            // Refresh profile so AuthContext knows role changed to contractor
+            await refreshProfile();
             setSubmitted(true);
         } catch (err) {
             setError((err as Error).message);

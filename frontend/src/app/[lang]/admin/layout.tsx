@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div className="grid grid-cols-6 h-16">
+        <div className="grid grid-cols-7 h-16">
           {NAV.map((item) => {
             const active = isActive(item.segment, item.exact);
             return (
@@ -131,6 +131,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          <button
+            onClick={handleLogout}
+            className="relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-red-400 active:text-red-600 transition-colors"
+          >
+            <span className="text-lg leading-none">🚪</span>
+            <span className="truncate w-full text-center px-0.5">{isEs ? "Salir" : "Logout"}</span>
+          </button>
         </div>
       </nav>
 

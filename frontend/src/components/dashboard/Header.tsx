@@ -5,8 +5,9 @@ import { User, Menu } from "lucide-react";
 import { useState } from "react";
 
 export default function Header({ profileName }: { profileName?: string }) {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
 
     // Extract first name from prop or metadata or use default
     const firstName = profileName || user?.user_metadata?.full_name?.split(" ")[0] || "Guest";
@@ -54,7 +55,21 @@ export default function Header({ profileName }: { profileName?: string }) {
                             <span className="block py-2 text-[#A5B0D1] border-b border-[#2C355E] opacity-50">My Vehicles (coming soon)</span>
                             <span className="block py-2 text-[#A5B0D1] border-b border-[#2C355E] opacity-50">My Orders (coming soon)</span>
                             <span className="block py-2 text-[#A5B0D1] border-b border-[#2C355E] opacity-50">Payment Methods (coming soon)</span>
-                            <button className="block w-full text-left py-2 text-red-400 hover:bg-red-400/10 px-2 -ml-2 rounded">Logout</button>
+                            <button
+                                disabled={loggingOut}
+                                onClick={async () => {
+                                    setLoggingOut(true);
+                                    try {
+                                        await logout();
+                                        window.location.href = `/${window.location.pathname.split('/')[1] || 'en'}/login`;
+                                    } catch {
+                                        window.location.href = '/en/login';
+                                    }
+                                }}
+                                className="block w-full text-left py-2 text-red-400 hover:bg-red-400/10 px-2 -ml-2 rounded"
+                            >
+                                {loggingOut ? "Logging out..." : "Logout"}
+                            </button>
                         </nav>
                     </div>
                 </div>
