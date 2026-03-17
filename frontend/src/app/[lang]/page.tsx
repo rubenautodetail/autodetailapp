@@ -305,12 +305,20 @@ export default async function LandingPage({
                                     : 'Keep 85% per job, set your schedule, and grow your business on our platform.'}
                             </p>
                         </div>
-                        <Link
-                            href={`/${locale}/contractors`}
-                            className="shrink-0 btn-primary px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)] whitespace-nowrap"
-                        >
-                            {locale === 'es' ? 'Trabaja con nosotros →' : 'Work with us →'}
-                        </Link>
+                        <div className="shrink-0 flex flex-col sm:flex-row gap-3">
+                            <Link
+                                href={`/${locale}/register?next=/${locale}/contractors/apply`}
+                                className="btn-primary px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)] whitespace-nowrap text-center"
+                            >
+                                {locale === 'es' ? 'Crear cuenta y aplicar →' : 'Create account & apply →'}
+                            </Link>
+                            <Link
+                                href={`/${locale}/login?next=/${locale}/contractors/apply`}
+                                className="px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all whitespace-nowrap text-center"
+                            >
+                                {locale === 'es' ? 'Ya tengo cuenta' : 'I have an account'}
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </section>
