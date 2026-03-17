@@ -111,17 +111,21 @@ export async function updateSession(request: NextRequest) {
     }
 
     // ─── Redirect authenticated users away from auth pages ────────────────────
-    // Skip contractor login — it has its own role-based redirect logic
+    // Each login page handles its own post-login redirect via useEffect,
+    // so we only skip middleware redirect for login pages (let them handle it).
+    // For /register, redirect to home since they already have an account.
     const isContractorLogin = path.includes('/contractor/login')
-    if (user && isAuthPage && !isContractorLogin) {
+    const isAdminLogin = path.includes('/admin/login')
+    const isAnyLoginPage = isContractorLogin || isAdminLogin || path.endsWith('/login')
+    if (user && isAuthPage && !isAnyLoginPage) {
         const homeUrl = request.nextUrl.clone()
         homeUrl.pathname = `/${locale}`
         homeUrl.search = ''
         return NextResponse.redirect(homeUrl)
     }
 
-    // ─── Role enforcement for admin & contractor pages ─────────────────────────
-    if (user && (isAdminRoute || (isContractorRoute && !isContractorLogin))) {
+    // ─── Role enforcement for admin & contractor pages (skip login pages — they show access denied) ──
+    if (user && ((isAdminRoute && !isAdminLogin) || (isContractorRoute && !isContractorLogin))) {
         // Fetch role from profiles (single lightweight query)
         const { data: profile } = await supabase
             .from('profiles')
@@ -131,32 +135,22 @@ export async function updateSession(request: NextRequest) {
 
         const role = (profile as { role?: string } | null)?.role
 
-        // Admin routes: must have role='admin'
+        // Admin routes: must have role='admin' — wrong role goes back to admin login
         if (isAdminRoute && role !== 'admin') {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-            const redirectUrl = request.nextUrl.clone()
-            redirectUrl.search = ''
-            // Send user to their own area, not someone else's
-            if (role === 'contractor') {
-                redirectUrl.pathname = `/${locale}/contractor/dashboard`
-            } else {
-                redirectUrl.pathname = `/${locale}/dashboard`
-            }
-            return NextResponse.redirect(redirectUrl)
+            const loginUrl = request.nextUrl.clone()
+            loginUrl.pathname = `/${locale}/admin/login`
+            loginUrl.search = ''
+            return NextResponse.redirect(loginUrl)
         }
 
-        // Contractor pages: must have role='contractor' or 'admin'
+        // Contractor pages: must have role='contractor' or 'admin' — wrong role goes back to contractor login
         if (isContractorRoute && role !== 'contractor' && role !== 'admin') {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-            const redirectUrl = request.nextUrl.clone()
-            redirectUrl.search = ''
-            // Send user to their own area
-            if (role === 'admin') {
-                redirectUrl.pathname = `/${locale}/admin`
-            } else {
-                redirectUrl.pathname = `/${locale}/dashboard`
-            }
-            return NextResponse.redirect(redirectUrl)
+            const loginUrl = request.nextUrl.clone()
+            loginUrl.pathname = `/${locale}/contractor/login`
+            loginUrl.search = ''
+            return NextResponse.redirect(loginUrl)
         }
 
         // Contractor approval check — pending contractors see the pending page only
