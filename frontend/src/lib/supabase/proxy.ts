@@ -118,10 +118,15 @@ export async function updateSession(request: NextRequest) {
     const isAdminLogin = path.includes('/admin/login')
     const isAnyLoginPage = isContractorLogin || isAdminLogin || path.endsWith('/login')
     if (user && isAuthPage && !isAnyLoginPage) {
-        const homeUrl = request.nextUrl.clone()
-        homeUrl.pathname = `/${locale}`
-        homeUrl.search = ''
-        return NextResponse.redirect(homeUrl)
+        const next = request.nextUrl.searchParams.get('next')
+        const dest = request.nextUrl.clone()
+        dest.search = ''
+        if (next && next.startsWith('/')) {
+            dest.pathname = next
+        } else {
+            dest.pathname = `/${locale}`
+        }
+        return NextResponse.redirect(dest)
     }
 
     // ─── Role enforcement for admin & contractor pages (skip login pages — they show access denied) ──
