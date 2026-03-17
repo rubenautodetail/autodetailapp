@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { capturePaymentIntent } from '@/lib/stripe/server';
+import { capturePaymentIntent, transferToContractor } from '@/lib/stripe/server';
 import { createServiceClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         // Look up booking to get payment intent ID, status, and contractor info.
         const { data: booking, error } = await supabase
             .from('bookings')
-            .select('payment_intent_id, payment_status, contractor_id, total_amount, service_fee, service_name')
+            .select('payment_intent_id, payment_status, contractor_id, total_amount, service_fee, service_name, confirmation_code')
             .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
             .single();
 
@@ -86,20 +86,66 @@ export async function POST(req: NextRequest) {
             .update({ payment_status: 'paid' })
             .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
 
-        // Notify contractor of payment if they are assigned to this booking.
+        // ── Stripe Connect transfer ───────────────────────────────────────────
+        // Transfer contractor payout to their Express account (if onboarded).
+        let transferId: string | null = null;
+        let contractorPayoutCents = 0;
+
+        if (booking.contractor_id) {
+            const { data: contractorProfile } = await supabase
+                .from('profiles')
+                .select('stripe_account_id, onboarding_complete')
+                .eq('id', booking.contractor_id)
+                .single();
+
+            const stripeAccountId = (contractorProfile as Record<string, unknown> | null)?.stripe_account_id as string | null;
+            const onboardingComplete = (contractorProfile as Record<string, unknown> | null)?.onboarding_complete as boolean | null;
+
+            if (stripeAccountId && onboardingComplete) {
+                try {
+                    const totalAmountCents = Math.round(Number(booking.total_amount ?? 0) * 100);
+                    const result = await transferToContractor({
+                        totalAmountCents,
+                        connectedAccountId: stripeAccountId,
+                        bookingId: safeBookingId,
+                    });
+                    transferId = result.transferId;
+                    contractorPayoutCents = result.contractorPayoutCents;
+
+                    // Persist transfer ID for audit trail
+                    await supabase
+                        .from('bookings')
+                        .update({ stripe_transfer_id: transferId } as Record<string, unknown>)
+                        .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
+                } catch (transferErr) {
+                    // Non-fatal: capture succeeded; flag for manual payout resolution
+                    console.error('Stripe transfer failed (capture succeeded):', transferErr);
+                    // TODO: alert admin that manual payout is needed for this booking
+                }
+            }
+        }
+
+        // ── Contractor notification ───────────────────────────────────────────
         if (booking.contractor_id) {
             const totalAmount = Number(booking.total_amount ?? 0);
-            const serviceFee = Number(booking.service_fee ?? 0);
-            const contractorPayout = (totalAmount - serviceFee).toFixed(2);
+            const payoutAmount = contractorPayoutCents > 0
+                ? (contractorPayoutCents / 100).toFixed(2)
+                : (() => {
+                    const fee = Number(booking.service_fee ?? 0);
+                    return (totalAmount - fee).toFixed(2);
+                })();
             const serviceName = booking.service_name ?? 'Detailing Service';
+            const transferred = contractorPayoutCents > 0;
 
             const { error: notifError } = await supabase
                 .from('notifications')
                 .insert({
                     user_id: booking.contractor_id,
                     type: 'success' as const,
-                    title: '💰 Payment Received',
-                    message: `Your payment of $${contractorPayout} for the ${serviceName} job has been processed.`,
+                    title: 'Payment Received',
+                    message: transferred
+                        ? `$${payoutAmount} for the ${serviceName} job has been transferred to your Stripe account.`
+                        : `Your payment of $${payoutAmount} for the ${serviceName} job has been processed.`,
                     booking_id: bookingId,
                     is_read: false,
                     link: `/contractor/jobs/${safeBookingId}`,
@@ -113,6 +159,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             status: paymentIntent.status,
+            transferId,
         });
     } catch (error) {
         console.error('Capture payment error:', error);
