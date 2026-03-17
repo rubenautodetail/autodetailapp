@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const supabase = createServiceClient();
     const { error } = await supabase.from("profiles").upsert(
       { id: userId, full_name: name, role: "user", updated_at: new Date().toISOString() },
-      { onConflict: "id" }
+      { onConflict: "id", ignoreDuplicates: true }
     );
 
     if (error) throw error;
