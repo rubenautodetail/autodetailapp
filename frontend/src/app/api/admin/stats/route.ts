@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     }, 0);
 
   const activeContractors = profileList.filter(
-    (p) => p.role === "contractor"
+    (p) => p.role === "contractor" && p.approval_status === "approved"
   ).length;
 
   // Pending = applicants waiting for admin approval

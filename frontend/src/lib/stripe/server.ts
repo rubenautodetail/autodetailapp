@@ -28,21 +28,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
  * Idempotency: pass bookingId so that retrying the same request returns the
  * same PaymentIntent instead of creating a duplicate charge.
  *
- * No platform fee — full amount goes to contractor on capture.
+ * All funds go to the platform account. Contractor payouts are handled
+ * manually by admin outside of Stripe Connect.
  */
 export async function createPaymentIntent({
     amount,
     bookingId,
     customerId = 'guest',
     currency = 'usd',
-    contractorStripeAccountId,
 }: {
     amount: number;
     bookingId: string;
     customerId?: string;
     currency?: string;
-    /** profiles.stripe_account_id — routes funds directly to contractor on capture */
-    contractorStripeAccountId?: string;
 }) {
     const createParams: Stripe.PaymentIntentCreateParams = {
         amount,
@@ -51,11 +49,6 @@ export async function createPaymentIntent({
         automatic_payment_methods: { enabled: true },
         metadata: { bookingId, customerId },
     };
-
-    // Route full amount to contractor via Stripe Connect — no platform fee deducted.
-    if (contractorStripeAccountId) {
-        createParams.transfer_data = { destination: contractorStripeAccountId };
-    }
 
     // Idempotency key: scoped to bookingId so retries don't double-charge.
     const paymentIntent = await stripe.paymentIntents.create(createParams, {
@@ -71,9 +64,6 @@ export async function createPaymentIntent({
 
 /**
  * Capture previously authorized payment funds.
- *
- * If the PaymentIntent was created with transfer_data, Stripe automatically
- * transfers (amount - application_fee_amount) to the contractor's account.
  *
  * Throws a Stripe error if the PaymentIntent has been voided (> 7 days old)
  * or is in an uncapturable state — callers must handle this and revert

@@ -110,37 +110,32 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-20 bg-white border-b border-gray-200 flex overflow-x-auto">
-        {NAV.map((item) => {
-          const active = isActive(item.segment, item.exact);
-          return (
-            <Link
-              key={item.segment}
-              href={`/${lang}/${item.segment}`}
-              className={`flex flex-col items-center gap-0.5 px-4 py-3 text-xs font-medium whitespace-nowrap transition-colors border-b-2 ${
-                active
-                  ? "border-blue-600 text-blue-700"
-                  : "border-transparent text-gray-500 hover:text-gray-900"
-              }`}
-            >
-              <span className="text-base">{item.icon}</span>
-              {isEs ? item.labelEs : item.label}
-            </Link>
-          );
-        })}
-        {/* Logout on mobile */}
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center gap-0.5 px-4 py-3 text-xs font-medium whitespace-nowrap transition-colors border-b-2 border-transparent text-red-500 hover:text-red-700 ml-auto"
-        >
-          <span className="text-base">🚪</span>
-          {isEs ? "Salir" : "Log out"}
-        </button>
-      </div>
+      {/* Mobile bottom tab bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div className="grid grid-cols-6 h-16">
+          {NAV.map((item) => {
+            const active = isActive(item.segment, item.exact);
+            return (
+              <Link
+                key={item.segment}
+                href={`/${lang}/${item.segment}`}
+                className={`relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                  active
+                    ? "text-blue-600"
+                    : "text-gray-400 active:text-gray-600"
+                }`}
+              >
+                {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full" />}
+                <span className={`text-lg leading-none transition-transform ${active ? "scale-110" : ""}`}>{item.icon}</span>
+                <span className="truncate w-full text-center px-0.5">{isEs ? item.labelEs : item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* Main content */}
-      <main className="flex-1 md:ml-56 pt-[56px] md:pt-0 min-h-screen">
+      <main className="flex-1 md:ml-56 pb-20 md:pb-0 min-h-screen">
         {children}
       </main>
     </div>

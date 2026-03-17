@@ -34,36 +34,22 @@ export async function POST(req: NextRequest) {
         }
 
         let customerId = 'guest';
-        let contractorStripeAccountId: string | undefined;
 
-        // Look up the booking to get customer email and (if assigned) contractor Stripe account.
+        // Look up the booking to get customer email for metadata.
         if (bookingId && bookingId !== 'temp_booking' && bookingId !== 'temp_booking_id') {
             try {
                 const supabase = createServiceClient();
                 const { data: booking } = await supabase
                     .from('bookings')
-                    .select('customer_email, document_id, contractor_id')
+                    .select('customer_email')
                     .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
                     .single();
 
                 if (booking?.customer_email) {
                     customerId = booking.customer_email;
                 }
-
-                // If a contractor is already assigned, fetch their Stripe account for Connect routing.
-                if (booking?.contractor_id) {
-                    const { data: contractor } = await supabase
-                        .from('profiles')
-                        .select('stripe_account_id')
-                        .eq('id', booking.contractor_id)
-                        .single();
-
-                    if (contractor?.stripe_account_id) {
-                        contractorStripeAccountId = contractor.stripe_account_id;
-                    }
-                }
             } catch {
-                // Non-fatal: continue without Connect routing
+                // Non-fatal: continue with 'guest' customerId
             }
         }
 
@@ -73,7 +59,6 @@ export async function POST(req: NextRequest) {
             bookingId: bookingId || 'test_booking',
             customerId,
             currency,
-            contractorStripeAccountId,
         });
 
         // Persist payment intent ID on the booking.

@@ -88,143 +88,129 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
-          <p className="text-sm text-gray-500">Rubens Auto Detail</p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Link
-            href={`/${locale}/admin/contractors`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            {t.manageContractors}
-          </Link>
-          <Link
-            href={`/${locale}/admin/bookings`}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-          >
-            {t.manageBookings}
-          </Link>
-          <Link
-            href={`/${locale}/admin/users`}
-            className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors"
-          >
-            {locale === "es" ? "👥 Usuarios" : "👥 Users"}
-          </Link>
-          <Link
-            href={`/${locale}/admin/payments`}
-            className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
-          >
-            {locale === "es" ? "💳 Pagos" : "💳 Payments"}
-          </Link>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.title}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Rubens Auto Detail</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
             {error}
           </div>
         )}
 
         {/* Stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <StatCard
-            label={locale === "es" ? "Contratistas Pendientes" : "Pending Contractors"}
+            label={locale === "es" ? "Pendientes" : "Pending"}
             value={stats?.contractors.pending ?? "—"}
             color="yellow"
             icon="⏳"
           />
           <StatCard
-            label={locale === "es" ? "Contratistas Activos" : "Active Contractors"}
+            label={locale === "es" ? "Activos" : "Active"}
             value={stats?.contractors.active ?? "—"}
             color="green"
             icon="✅"
           />
           <StatCard
-            label={locale === "es" ? "Reservas Activas" : "Active Bookings"}
+            label={locale === "es" ? "Reservas" : "Bookings"}
             value={stats?.bookings.pending ?? "—"}
             color="blue"
             icon="📅"
           />
           <StatCard
-            label={locale === "es" ? "Ingresos Totales" : "Total Revenue"}
-            value={stats ? `$${stats.revenue.total.toFixed(2)}` : "—"}
+            label={locale === "es" ? "Ingresos" : "Revenue"}
+            value={stats ? `$${stats.revenue.total.toFixed(0)}` : "—"}
             color="purple"
             icon="💰"
           />
         </div>
 
-        {/* Two-column layout */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Quick actions — mobile-friendly card grid */}
+        <div>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            {t.quickActions}
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Link href={`/${locale}/admin/contractors`} className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-2xl sm:text-3xl mb-2 opacity-90">🔧</div>
+              <div className="text-sm sm:text-base font-semibold">{t.manageContractors}</div>
+              {(stats?.contractors.pending ?? 0) > 0 && (
+                <span className="absolute top-3 right-3 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
+                  {stats?.contractors.pending}
+                </span>
+              )}
+            </Link>
+            <Link href={`/${locale}/admin/bookings`} className="group rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-2xl sm:text-3xl mb-2 opacity-90">📅</div>
+              <div className="text-sm sm:text-base font-semibold">{t.manageBookings}</div>
+            </Link>
+            <Link href={`/${locale}/admin/users`} className="group rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-2xl sm:text-3xl mb-2 opacity-90">👥</div>
+              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Usuarios" : "Users"}</div>
+            </Link>
+            <Link href={`/${locale}/admin/payments`} className="group rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-2xl sm:text-3xl mb-2 opacity-90">💳</div>
+              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Pagos" : "Payments"}</div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Pending contractors alert */}
+        {(stats?.contractors.pending ?? 0) > 0 && (
+          <Link
+            href={`/${locale}/admin/contractors?status=pending`}
+            className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl hover:bg-yellow-100 transition-colors"
+          >
+            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-lg">⚡</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-yellow-900">
+                {stats?.contractors.pending} {t.reviewApplications}
+              </p>
+              <p className="text-xs text-yellow-700 mt-0.5">
+                {locale === "es" ? "Solicitudes esperando aprobación" : "Applications waiting for approval"}
+              </p>
+            </div>
+            <svg className="w-5 h-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        )}
+
+        {/* Summary cards */}
+        <div className="grid sm:grid-cols-2 gap-4">
           {/* Contractor summary */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">{t.contractors}</h2>
-              <Link
-                href={`/${locale}/admin/contractors`}
-                className="text-sm text-blue-600 hover:underline font-medium"
-              >
+              <h2 className="text-base font-semibold text-gray-900">{t.contractors}</h2>
+              <Link href={`/${locale}/admin/contractors`} className="text-xs text-blue-600 hover:underline font-medium">
                 {locale === "es" ? "Ver todos →" : "View all →"}
               </Link>
             </div>
-            <div className="space-y-3">
-              <SummaryRow
-                label={t.total}
-                value={stats?.contractors.total ?? 0}
-                color="gray"
-              />
-              <SummaryRow
-                label={t.pending}
-                value={stats?.contractors.pending ?? 0}
-                color="yellow"
-                highlight={stats?.contractors.pending ? stats.contractors.pending > 0 : false}
-              />
-              <SummaryRow
-                label={t.active}
-                value={stats?.contractors.active ?? 0}
-                color="green"
-              />
+            <div className="space-y-2">
+              <SummaryRow label={t.total} value={stats?.contractors.total ?? 0} color="gray" />
+              <SummaryRow label={t.pending} value={stats?.contractors.pending ?? 0} color="yellow" highlight={(stats?.contractors.pending ?? 0) > 0} />
+              <SummaryRow label={t.active} value={stats?.contractors.active ?? 0} color="green" />
             </div>
-            {stats?.contractors.pending ? (
-              <Link
-                href={`/${locale}/admin/contractors?status=pending`}
-                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors"
-              >
-                ⚡ {stats.contractors.pending} {t.reviewApplications}
-              </Link>
-            ) : null}
           </div>
 
           {/* Booking summary */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">{t.bookings}</h2>
-              <Link
-                href={`/${locale}/admin/bookings`}
-                className="text-sm text-blue-600 hover:underline font-medium"
-              >
+              <h2 className="text-base font-semibold text-gray-900">{t.bookings}</h2>
+              <Link href={`/${locale}/admin/bookings`} className="text-xs text-blue-600 hover:underline font-medium">
                 {locale === "es" ? "Ver todos →" : "View all →"}
               </Link>
             </div>
-            <div className="space-y-3">
-              <SummaryRow
-                label={t.total}
-                value={stats?.bookings.total ?? 0}
-                color="gray"
-              />
-              <SummaryRow
-                label={t.pending}
-                value={stats?.bookings.pending ?? 0}
-                color="blue"
-              />
-              <SummaryRow
-                label={t.completed}
-                value={stats?.bookings.completed ?? 0}
-                color="green"
-              />
+            <div className="space-y-2">
+              <SummaryRow label={t.total} value={stats?.bookings.total ?? 0} color="gray" />
+              <SummaryRow label={t.pending} value={stats?.bookings.pending ?? 0} color="blue" />
+              <SummaryRow label={t.completed} value={stats?.bookings.completed ?? 0} color="green" />
             </div>
           </div>
         </div>
