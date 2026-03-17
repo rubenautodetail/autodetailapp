@@ -15,25 +15,35 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = await req.json();
+    let userId: string;
+    try {
+        ({ userId } = await req.json());
+    } catch {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
     if (!userId) {
         return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
-    const supabase = createServiceClient();
-    const { error } = await supabase
-        .from('profiles')
-        .update({
-            role: 'contractor',
-            approval_status: 'approved',
-            updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
+    try {
+        const supabase = createServiceClient();
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                role: 'contractor',
+                approval_status: 'approved',
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
 
-    if (error) {
-        console.error('Approve contractor error:', error);
-        return NextResponse.json({ error: 'Failed to approve contractor' }, { status: 500 });
+        if (error) {
+            console.error('Approve contractor error:', error);
+            return NextResponse.json({ error: 'Failed to approve contractor' }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        console.error('Approve contractor unexpected error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    return NextResponse.json({ success: true });
 }

@@ -16,26 +16,31 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const status = new URL(req.url).searchParams.get('status') || 'all';
-    const supabase = createServiceClient();
+    try {
+        const status = new URL(req.url).searchParams.get('status') || 'all';
+        const supabase = createServiceClient();
 
-    const cols = 'id,full_name,email,phone,role,approval_status,stripe_account_id,onboarding_complete,rating,total_jobs_completed,created_at';
+        const cols = 'id,full_name,email,phone,role,approval_status,stripe_account_id,onboarding_complete,rating,total_jobs_completed,created_at';
 
-    let query = supabase.from('profiles').select(cols).order('created_at', { ascending: false });
+        let query = supabase.from('profiles').select(cols).order('created_at', { ascending: false });
 
-    if (status === 'pending') {
-        query = query.eq('approval_status', 'pending');
-    } else if (status === 'active') {
-        query = query.eq('role', 'contractor').eq('approval_status', 'approved');
-    } else if (status === 'rejected') {
-        query = query.eq('approval_status', 'rejected');
-    } else {
-        // All: approved contractors + pending/rejected applicants
-        query = query.or("role.eq.contractor,approval_status.in.(pending,rejected)");
+        if (status === 'pending') {
+            query = query.eq('approval_status', 'pending');
+        } else if (status === 'active') {
+            query = query.eq('role', 'contractor').eq('approval_status', 'approved');
+        } else if (status === 'rejected') {
+            query = query.eq('approval_status', 'rejected');
+        } else {
+            // All: approved contractors + pending/rejected applicants
+            query = query.or("role.eq.contractor,approval_status.in.(pending,rejected)");
+        }
+
+        const { data, error } = await query;
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+        return NextResponse.json({ data: data ?? [], total: data?.length ?? 0 });
+    } catch (err) {
+        console.error('admin/contractors list error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const { data, error } = await query;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    return NextResponse.json({ data: data ?? [], total: data?.length ?? 0 });
 }

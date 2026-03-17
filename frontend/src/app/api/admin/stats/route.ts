@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  try {
   const supabase = createServiceClient();
 
   const [{ data: bookings }, { data: profiles }] = await Promise.all([
@@ -62,4 +63,8 @@ export async function GET(req: NextRequest) {
     },
     revenue: { total: totalRevenue },
   });
+  } catch (err) {
+    console.error('admin/stats error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

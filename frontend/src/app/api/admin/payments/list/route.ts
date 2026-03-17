@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  try {
   const db = createServiceClient();
 
   const { data: bookings, error } = await db
@@ -59,4 +60,8 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({ jobs });
+  } catch (err) {
+    console.error('admin/payments/list error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

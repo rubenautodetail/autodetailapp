@@ -14,11 +14,13 @@ export async function GET(req: NextRequest) {
 
   const db = createServiceClient();
 
-  const { data, error } = await db
-    .from("bookings")
-    .select("*")
-    .eq("id", id)
-    .single();
+  let data, error;
+  try {
+    ({ data, error } = await db.from("bookings").select("*").eq("id", id).single());
+  } catch (err) {
+    console.error('admin/bookings/detail: query threw:', err);
+    return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
+  }
 
   if (error || !data) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });

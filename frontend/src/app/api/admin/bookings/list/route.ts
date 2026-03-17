@@ -28,7 +28,14 @@ export async function GET(req: NextRequest) {
     query = query.eq("status", status);
   }
 
-  const { data, count, error } = await query;
+  let data, count, error;
+  try {
+    ({ data, count, error } = await query);
+  } catch (err) {
+    console.error('admin/bookings/list: query threw:', err);
+    return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
+  }
+
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -39,16 +46,20 @@ export async function GET(req: NextRequest) {
   let nameMap: Record<string, string> = {};
 
   if (contractorIds.length > 0) {
-    const { data: profiles } = await db
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", contractorIds);
+    try {
+      const { data: profiles } = await db
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", contractorIds);
 
-    (profiles ?? []).forEach((p) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pp = p as any;
-      nameMap[pp.id] = pp.full_name ?? "—";
-    });
+      (profiles ?? []).forEach((p) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pp = p as any;
+        nameMap[pp.id] = pp.full_name ?? "—";
+      });
+    } catch {
+      // Non-fatal — proceed without contractor names
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
