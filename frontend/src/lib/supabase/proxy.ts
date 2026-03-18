@@ -87,7 +87,7 @@ export async function updateSession(request: NextRequest) {
 
     const isContractorRoute =
         /\/[a-z]{2}\/contractor(\/|$)/.test(path) ||
-        path.startsWith('/api/contractors/')
+        (path.startsWith('/api/contractors/') && path !== '/api/contractors/register')
 
     const isAdminRoute =
         (path.includes('/admin') && !path.includes('/admin/login')) ||
