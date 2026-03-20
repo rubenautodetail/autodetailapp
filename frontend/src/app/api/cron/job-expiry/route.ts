@@ -3,6 +3,7 @@
 // and alerts admin + re-notifies all available contractors.
 //
 // Security: Requires Authorization: Bearer <CRON_SECRET> header.
+// QStash: POST with body containing { cron_secret: "..." }
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';

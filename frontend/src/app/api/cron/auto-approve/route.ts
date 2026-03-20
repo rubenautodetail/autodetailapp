@@ -8,8 +8,8 @@
 // and capture will throw — those are handled below by marking status 'cancelled'.
 //
 // Trigger this via:
-//   - Vercel Cron Jobs (vercel.json): hourly "0 * * * *"
-//   - Upstash QStash
+//   - Vercel Cron Jobs (vercel.json): daily (not hourly on Hobby)
+//   - Upstash QStash: every minute (* * * * *) or hourly (0 * * * *)
 //   - Railway cron
 //
 // Security: Requires CRON_SECRET header to prevent unauthorized access.

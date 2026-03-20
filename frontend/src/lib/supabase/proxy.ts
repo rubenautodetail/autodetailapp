@@ -111,10 +111,13 @@ export async function updateSession(request: NextRequest) {
     }
 
     // ─── Redirect authenticated users away from /register ─────────────────────
+    // But allow if next param points to contractor application flow
     const isContractorLogin = path.includes('/contractor/login')
     const isAdminLogin = path.includes('/admin/login')
     const isAnyLoginPage = isContractorLogin || isAdminLogin || path.endsWith('/login')
-    if (user && isAuthPage && !isAnyLoginPage) {
+    const nextParam = request.nextUrl.searchParams.get('next')
+    const isContractorApplicationFlow = nextParam?.includes('/contractors/apply')
+    if (user && isAuthPage && !isAnyLoginPage && !isContractorApplicationFlow) {
         const next = request.nextUrl.searchParams.get('next')
         const dest = request.nextUrl.clone()
         dest.search = ''

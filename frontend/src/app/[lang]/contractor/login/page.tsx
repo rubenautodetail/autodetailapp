@@ -130,7 +130,7 @@ export default function ContractorLoginPage() {
           <p className="text-white/30 text-sm">
             {isEs ? "¿Nuevo técnico?" : "New technician?"}{" "}
             <Link
-              href={`/${lang}/contractors/apply`}
+              href={`/${lang}/register?next=/${lang}/contractors/apply`}
               className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
             >
               {isEs ? "Aplica aquí" : "Apply here"}
