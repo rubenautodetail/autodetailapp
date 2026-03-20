@@ -70,7 +70,7 @@ export default async function ContractorsPage({
             <nav className="border-b border-white/5 px-6 py-4">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <Link href={`/${locale}`} className="flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={240} height={64} className="w-auto h-12 sm:h-16 opacity-100 drop-shadow-md" />
+                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={360} height={96} className="w-auto h-16 sm:h-24 opacity-100 drop-shadow-md" />
                     </Link>
                     <div className="flex items-center gap-4">
                         <Link
@@ -300,7 +300,7 @@ export default async function ContractorsPage({
             <footer className="border-t border-white/5 py-8 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
                     <div className="flex flex-col items-center sm:items-start gap-3">
-                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={180} height={48} className="w-auto h-8 sm:h-10 opacity-70" />
+                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={270} height={72} className="w-auto h-12 sm:h-16 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>
                         <p>
                             {isEs ? 'Diseñado por' : 'Designed by'}{' '}
