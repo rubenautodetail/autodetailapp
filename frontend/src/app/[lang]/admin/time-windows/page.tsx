@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { adminFetch } from "@/lib/adminFetch";
 
@@ -302,7 +302,7 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
                             }
                           }}
                           className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
-                          disabled={showForm && editWindow && editWindow.id !== window.id}
+                          disabled={!!(showForm && editWindow && editWindow.id !== window.id)}
                         />
                       </td>
                       <td className="px-6 py-3">
@@ -316,7 +316,7 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
                             }
                           }}
                           className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
-                          disabled={showForm && editWindow && editWindow.id !== window.id}
+                          disabled={!!(showForm && editWindow && editWindow.id !== window.id)}
                         />
                       </td>
                       <td className="px-6 py-3">

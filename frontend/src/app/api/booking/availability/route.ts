@@ -11,6 +11,7 @@ interface TimeWindow {
   slot: string; // HH:MM format
   label: string;
   label_es: string;
+  is_active?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
                     slot: w.slot,
                     label: w.label,
                     label_es: w.label_es || w.label,
+                    is_active: w.is_active,
                 }));
             }
         } catch (timeWindowError) {
