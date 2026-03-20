@@ -150,6 +150,10 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
               <div className="text-2xl sm:text-3xl mb-2 opacity-90">📅</div>
               <div className="text-sm sm:text-base font-semibold">{t.manageBookings}</div>
             </Link>
+            <Link href={`/${locale}/admin/schedule`} className="group rounded-xl bg-gradient-to-br from-green-500 to-green-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-2xl sm:text-3xl mb-2 opacity-90">📆</div>
+              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Horarios" : "Schedules"}</div>
+            </Link>
             <Link href={`/${locale}/admin/users`} className="group rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
               <div className="text-2xl sm:text-3xl mb-2 opacity-90">👥</div>
               <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Usuarios" : "Users"}</div>
