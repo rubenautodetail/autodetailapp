@@ -105,7 +105,9 @@ export async function acceptJob(bookingId: string, token?: string): Promise<{ su
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to accept job: ${response.status}`);
+        const body = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const msg = (body as { error?: string }).error || `Failed to accept job: ${response.status}`;
+        throw new Error(msg);
     }
 
     return response.json();

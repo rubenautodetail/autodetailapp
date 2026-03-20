@@ -380,7 +380,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                 <h1 className="text-2xl font-bold text-white mb-4">{t.accessDenied}</h1>
                 <p className="text-[#A5B0D1] mb-8 text-center max-w-sm">{t.accessDeniedSub}</p>
                 <Link
-                    href={`/${lang}/login`}
+                    href={`/${lang}/contractor/login`}
                     className="px-6 py-3 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 transition-opacity"
                 >
                     {t.logIn}

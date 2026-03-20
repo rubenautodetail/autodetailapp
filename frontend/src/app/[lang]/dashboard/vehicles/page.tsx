@@ -1,12 +1,26 @@
 "use client";
- 
+
 import { ArrowLeft, Plus, Car, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useBookingStatus } from "@/contexts";
 import { useState } from "react";
 
+type VehicleType = "sedan" | "suv" | "truck" | "coupe" | "van" | "other";
+
+const VEHICLE_TYPES: { id: VehicleType; en: string; es: string }[] = [
+    { id: 'sedan', en: 'Sedan', es: 'Sedán' },
+    { id: 'suv', en: 'SUV', es: 'SUV' },
+    { id: 'truck', en: 'Truck', es: 'Camioneta' },
+    { id: 'coupe', en: 'Coupe', es: 'Coupé' },
+    { id: 'van', en: 'Van', es: 'Van' },
+    { id: 'other', en: 'Other', es: 'Otro' },
+];
+
 export default function MyVehiclesPage() {
     const router = useRouter();
+    const params = useParams();
+    const locale = (params?.lang as string) || 'en';
+    const isEs = locale === 'es';
     const { vehicles, removeVehicle, addVehicle } = useBookingStatus();
     const [isAdding, setIsAdding] = useState(false);
 
@@ -15,11 +29,11 @@ export default function MyVehiclesPage() {
     const [model, setModel] = useState("");
     const [year, setYear] = useState("");
     const [color, setColor] = useState("");
-    const [type, setType] = useState<any>("sedan");
+    const [type, setType] = useState<VehicleType>("sedan");
 
     const handleAddVehicle = async () => {
         if (!make || !model || !year || !color) return;
-        
+
         await addVehicle({
             make,
             model,
@@ -28,12 +42,13 @@ export default function MyVehiclesPage() {
             type,
             licensePlate: ""
         });
-        
+
         setIsAdding(false);
         setMake("");
         setModel("");
         setYear("");
         setColor("");
+        setType("sedan");
     };
 
     return (
@@ -45,7 +60,7 @@ export default function MyVehiclesPage() {
                 >
                     <ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
                 </button>
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">My Vehicles</h1>
+                <h1 className="text-2xl font-bold text-[var(--text-primary)]">{isEs ? 'Mis Vehículos' : 'My Vehicles'}</h1>
             </header>
 
             <div className="space-y-4">
@@ -57,81 +72,93 @@ export default function MyVehiclesPage() {
                             </div>
                             <div>
                                 <h3 className="font-semibold text-[var(--text-primary)]">{v.make} {v.model}</h3>
-                                <p className="text-sm text-[var(--text-secondary)]">{v.color} • {v.year} • {v.type}</p>
+                                <p className="text-sm text-[var(--text-secondary)]">{v.color} · {v.year} · {v.type}</p>
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={() => removeVehicle(v.id)}
                             className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            aria-label={isEs ? 'Eliminar vehículo' : 'Delete vehicle'}
                         >
                             <Trash2 className="w-5 h-5" />
                         </button>
                     </div>
                 ))}
 
+                {vehicles.length === 0 && !isAdding && (
+                    <div className="text-center py-8 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--divider)]">
+                        <Car className="w-10 h-10 text-[var(--text-secondary)] mx-auto mb-3 opacity-50" />
+                        <p className="text-[var(--text-secondary)] text-sm">
+                            {isEs ? 'Aún no has añadido vehículos' : 'No vehicles added yet'}
+                        </p>
+                    </div>
+                )}
+
                 {isAdding ? (
                     <div className="bg-[var(--card)] p-6 rounded-2xl border border-[var(--divider)] shadow-lg space-y-4">
-                        <h3 className="font-bold text-lg text-[var(--text-primary)]">Add New Vehicle</h3>
+                        <h3 className="font-bold text-lg text-[var(--text-primary)]">
+                            {isEs ? 'Añadir Vehículo' : 'Add New Vehicle'}
+                        </h3>
                         <div className="grid grid-cols-2 gap-4">
-                            <input 
-                                placeholder="Make" 
+                            <input
+                                placeholder={isEs ? 'Marca' : 'Make'}
                                 value={make}
                                 onChange={(e) => setMake(e.target.value)}
-                                className="bg-transparent border border-[var(--divider)] rounded-xl px-4 py-2"
+                                className="bg-[var(--background)] border border-[var(--divider)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                             />
-                            <input 
-                                placeholder="Model" 
+                            <input
+                                placeholder={isEs ? 'Modelo' : 'Model'}
                                 value={model}
                                 onChange={(e) => setModel(e.target.value)}
-                                className="bg-transparent border border-[var(--divider)] rounded-xl px-4 py-2"
+                                className="bg-[var(--background)] border border-[var(--divider)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                             />
-                            <input 
-                                placeholder="Year" 
+                            <input
+                                placeholder={isEs ? 'Año' : 'Year'}
                                 value={year}
                                 onChange={(e) => setYear(e.target.value)}
-                                className="bg-transparent border border-[var(--divider)] rounded-xl px-4 py-2"
+                                className="bg-[var(--background)] border border-[var(--divider)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
+                                inputMode="numeric"
+                                maxLength={4}
                             />
-                            <input 
-                                placeholder="Color" 
+                            <input
+                                placeholder="Color"
                                 value={color}
                                 onChange={(e) => setColor(e.target.value)}
-                                className="bg-transparent border border-[var(--divider)] rounded-xl px-4 py-2"
+                                className="bg-[var(--background)] border border-[var(--divider)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                             />
-                            <select 
+                            <select
                                 value={type}
-                                onChange={(e) => setType(e.target.value)}
-                                className="bg-transparent border border-[var(--divider)] rounded-xl px-4 py-2 col-span-2"
+                                onChange={(e) => setType(e.target.value as VehicleType)}
+                                className="bg-[var(--background)] border border-[var(--divider)] rounded-xl px-4 py-3 text-[var(--text-primary)] col-span-2"
                             >
-                                <option value="sedan">Sedan</option>
-                                <option value="suv">SUV</option>
-                                <option value="truck">Truck</option>
-                                <option value="coupe">Coupe</option>
-                                <option value="van">Van</option>
-                                <option value="other">Other</option>
+                                {VEHICLE_TYPES.map((t) => (
+                                    <option key={t.id} value={t.id}>{isEs ? t.es : t.en}</option>
+                                ))}
                             </select>
                         </div>
                         <div className="flex gap-3 pt-2">
-                            <button 
+                            <button
                                 onClick={handleAddVehicle}
-                                className="flex-1 py-3 bg-[var(--accent)] text-white rounded-xl font-bold"
+                                disabled={!make || !model || !year || !color}
+                                className="flex-1 py-3 bg-[var(--accent)] text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                             >
-                                Save Vehicle
+                                {isEs ? 'Guardar' : 'Save Vehicle'}
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setIsAdding(false)}
                                 className="flex-1 py-3 bg-[var(--card)] border border-[var(--divider)] text-[var(--text-secondary)] rounded-xl"
                             >
-                                Cancel
+                                {isEs ? 'Cancelar' : 'Cancel'}
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <button 
+                    <button
                         onClick={() => setIsAdding(true)}
                         className="w-full py-4 rounded-xl border-2 border-dashed border-[var(--divider)] text-[var(--text-secondary)] font-medium flex items-center justify-center gap-2 hover:bg-[var(--card)] transition-colors"
                     >
                         <Plus className="w-5 h-5" />
-                        Add New Vehicle
+                        {isEs ? 'Añadir Vehículo' : 'Add New Vehicle'}
                     </button>
                 )}
             </div>

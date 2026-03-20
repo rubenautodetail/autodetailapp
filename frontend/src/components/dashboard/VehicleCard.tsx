@@ -1,4 +1,5 @@
 import React from 'react';
+import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Car, Trash2, Edit2 } from 'lucide-react';
 import { Vehicle } from '@/contexts/BookingStatusContext';
@@ -10,6 +11,9 @@ interface VehicleCardProps {
 }
 
 export function VehicleCard({ vehicle, onDelete, onEdit }: VehicleCardProps) {
+    const params = useParams();
+    const isEs = (params?.lang as string) === 'es';
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -17,14 +21,12 @@ export function VehicleCard({ vehicle, onDelete, onEdit }: VehicleCardProps) {
             whileHover={{ y: -5, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)' }}
             className="glass-card p-6 rounded-2xl relative group overflow-hidden"
         >
-            {/* Decorative background logo/icon */}
             <Car className="absolute -right-6 -bottom-6 w-32 h-32 text-white/5 transform -rotate-12" />
 
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center">
-                            {/* We could map make to logos later */}
                             <Car className="w-5 h-5 text-accent-gold" />
                         </div>
                         <div>
@@ -37,6 +39,7 @@ export function VehicleCard({ vehicle, onDelete, onEdit }: VehicleCardProps) {
                             <button
                                 onClick={() => onEdit(vehicle.id)}
                                 className="p-2 hover:bg-white/10 rounded-full text-text-secondary hover:text-white transition-colors"
+                                aria-label={isEs ? 'Editar' : 'Edit'}
                             >
                                 <Edit2 className="w-4 h-4" />
                             </button>
@@ -44,6 +47,7 @@ export function VehicleCard({ vehicle, onDelete, onEdit }: VehicleCardProps) {
                         <button
                             onClick={() => onDelete(vehicle.id)}
                             className="p-2 hover:bg-red-500/10 rounded-full text-text-secondary hover:text-red-500 transition-colors"
+                            aria-label={isEs ? 'Eliminar' : 'Delete'}
                         >
                             <Trash2 className="w-4 h-4" />
                         </button>
@@ -51,12 +55,14 @@ export function VehicleCard({ vehicle, onDelete, onEdit }: VehicleCardProps) {
                 </div>
 
                 <div className="space-y-2 mt-4">
+                    {vehicle.licensePlate && (
+                        <div className="flex justify-between text-sm border-b border-white/5 pb-2">
+                            <span className="text-text-muted">{isEs ? 'Placa' : 'License Plate'}</span>
+                            <span className="font-mono text-white tracking-wider">{vehicle.licensePlate}</span>
+                        </div>
+                    )}
                     <div className="flex justify-between text-sm border-b border-white/5 pb-2">
-                        <span className="text-text-muted">License Plate</span>
-                        <span className="font-mono text-white tracking-wider">{vehicle.licensePlate}</span>
-                    </div>
-                    <div className="flex justify-between text-sm border-b border-white/5 pb-2">
-                        <span className="text-text-muted">Year</span>
+                        <span className="text-text-muted">{isEs ? 'Año' : 'Year'}</span>
                         <span className="text-white">{vehicle.year}</span>
                     </div>
                     <div className="flex justify-between text-sm pt-1">

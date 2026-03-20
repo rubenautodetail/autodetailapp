@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { verifyAdmin } from '@/lib/verifyAdmin';
+import { sendContractorRejectedEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,25 @@ export async function POST(req: NextRequest) {
         if (error) {
             console.error('Reject contractor error:', error);
             return NextResponse.json({ error: 'Failed to reject application' }, { status: 500 });
+        }
+
+        // Send rejection email
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, email')
+                .eq('id', userId)
+                .single();
+
+            if (profile?.email) {
+                await sendContractorRejectedEmail({
+                    fullName: profile.full_name || 'Applicant',
+                    email: profile.email,
+                });
+            }
+        } catch (emailErr) {
+            // Don't fail the rejection if email fails
+            console.error('Failed to send rejection email:', emailErr);
         }
 
         return NextResponse.json({ success: true });

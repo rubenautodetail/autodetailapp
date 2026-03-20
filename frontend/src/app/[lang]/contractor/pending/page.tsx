@@ -16,7 +16,7 @@ export default function ContractorPendingPage() {
     useEffect(() => {
         if (isLoading) return;
         if (!profile) {
-            router.replace(`/${lang}/login`);
+            router.replace(`/${lang}/contractor/login`);
             return;
         }
         if (profile.role === "contractor" && profile.approval_status === "approved") {

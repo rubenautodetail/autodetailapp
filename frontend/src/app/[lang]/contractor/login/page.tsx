@@ -27,13 +27,8 @@ export default function ContractorLoginPage() {
           : `/${lang}/contractor/pending`
       );
     } else {
-      // Non-contractor (admin or regular user) — show error, stop spinner
-      setLoading(false);
-      setError(
-        isEs
-          ? "Esta cuenta no tiene acceso de contratista. Aplica primero."
-          : "This account doesn't have contractor access. Apply first."
-      );
+      // Non-contractor — redirect to apply page so they can submit an application
+      router.replace(`/${lang}/contractors/apply`);
     }
   }, [isLoading, user, profile, lang, router, isEs]);
 
@@ -94,9 +89,14 @@ export default function ContractorLoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-white/50 uppercase tracking-widest mb-1.5">
-              {isEs ? "Contraseña" : "Password"}
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-white/50 uppercase tracking-widest">
+                {isEs ? "Contraseña" : "Password"}
+              </label>
+              <Link href={`/${lang}/forgot-password?from=contractor`} className="text-xs text-yellow-400/70 hover:text-yellow-400 transition-colors">
+                {isEs ? "¿Olvidaste tu contraseña?" : "Forgot password?"}
+              </Link>
+            </div>
             <input
               type="password"
               required

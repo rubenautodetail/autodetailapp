@@ -83,7 +83,7 @@ export default function RegisterPage() {
                         </p>
                     )}
                     <Link
-                        href={`/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+                        href={isContractorFlow ? `/${lang}/contractor/login` : `/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
                         className="text-[var(--accent)] text-sm hover:underline"
                     >
                         {isEs ? "Ya confirmé, iniciar sesión" : "Already confirmed? Sign in"}
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                     <p className="text-sm text-[var(--text-secondary)]">
                         {isEs ? "¿Ya tienes una cuenta?" : "Already have an account?"}{" "}
                         <Link
-                            href={`/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+                            href={isContractorFlow ? `/${lang}/contractor/login` : `/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
                             className="text-[var(--accent)] hover:underline font-medium"
                         >
                             {isEs ? "Iniciar sesión" : "Sign In"}

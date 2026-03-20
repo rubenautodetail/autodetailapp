@@ -4,27 +4,33 @@ import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, ChevronRight, CheckCircle, Truck, Wrench, ShieldCheck, XCircle } from 'lucide-react';
+import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle } from 'lucide-react';
 import { BookingStatus } from './StatusTimeline';
 
 interface BookingCardProps {
     id: string;
     serviceName: string;
-    date: string; // ISO string
+    date: string;
     time: string;
     status: BookingStatus;
     price: number;
     providerName?: string;
-    index?: number; // For stagger animation
+    index?: number;
 }
 
-const statusConfig = {
-    pending: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock, label: 'Requested' },
-    confirmed: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: CheckCircle, label: 'Confirmed' },
-    en_route: { color: 'text-indigo-500', bg: 'bg-indigo-500/10', icon: Truck, label: 'En Route' },
-    working: { color: 'text-purple-500', bg: 'bg-purple-500/10', icon: Wrench, label: 'In Progress' },
-    completed: { color: 'text-green-500', bg: 'bg-green-500/10', icon: ShieldCheck, label: 'Completed' },
-    cancelled: { color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle, label: 'Cancelled' },
+const statusConfig: Record<string, {
+    color: string;
+    bg: string;
+    icon: React.ComponentType<{ className?: string }>;
+    en: string;
+    es: string;
+}> = {
+    pending: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock, en: 'Requested', es: 'Solicitado' },
+    confirmed: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: CheckCircle, en: 'Confirmed', es: 'Confirmado' },
+    en_route: { color: 'text-indigo-500', bg: 'bg-indigo-500/10', icon: Truck, en: 'En Route', es: 'En Camino' },
+    working: { color: 'text-purple-500', bg: 'bg-purple-500/10', icon: Wrench, en: 'In Progress', es: 'En Progreso' },
+    completed: { color: 'text-green-500', bg: 'bg-green-500/10', icon: ShieldCheck, en: 'Completed', es: 'Completado' },
+    cancelled: { color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle, en: 'Cancelled', es: 'Cancelado' },
 };
 
 export function BookingCard({
@@ -38,7 +44,8 @@ export function BookingCard({
     index = 0,
 }: BookingCardProps) {
     const params = useParams();
-    const lang = params?.lang || 'en';
+    const lang = (params?.lang as string) || 'en';
+    const isEs = lang === 'es';
     const config = statusConfig[status] || statusConfig.pending;
     const StatusIcon = config.icon;
 
@@ -57,7 +64,7 @@ export function BookingCard({
                         </div>
                         <div>
                             <span className={`text-xs font-medium uppercase tracking-wider ${config.color}`}>
-                                {config.label}
+                                {isEs ? config.es : config.en}
                             </span>
                             <h3 className="text-xl font-bold text-white mt-1 group-hover:text-accent-gold transition-colors">
                                 {serviceName}
@@ -72,7 +79,7 @@ export function BookingCard({
                 <div className="space-y-3 mb-6">
                     <div className="flex items-center text-text-secondary text-sm">
                         <Calendar className="w-4 h-4 mr-2 text-text-muted" />
-                        {new Date(date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                        {new Date(date).toLocaleDateString(lang, { weekday: 'long', month: 'long', day: 'numeric' })}
                     </div>
                     <div className="flex items-center text-text-secondary text-sm">
                         <Clock className="w-4 h-4 mr-2 text-text-muted" />
@@ -81,7 +88,7 @@ export function BookingCard({
                     {providerName && (
                         <div className="flex items-center text-text-secondary text-sm">
                             <ShieldCheck className="w-4 h-4 mr-2 text-text-muted" />
-                            Detailer: <span className="text-white ml-1">{providerName}</span>
+                            {isEs ? 'Detallador:' : 'Detailer:'} <span className="text-white ml-1">{providerName}</span>
                         </div>
                     )}
                 </div>
@@ -89,10 +96,10 @@ export function BookingCard({
                 <div className="pt-4 border-t border-white/5 flex justify-between items-center">
                     <span className="text-xs text-text-muted font-mono">ID: {id}</span>
                     <Link
-                        href={`/${lang}/customer/bookings/${id}`}
+                        href={`/${lang}/booking/${id}/track`}
                         className="flex items-center text-sm font-semibold text-white hover:text-accent-gold transition-colors group/link"
                     >
-                        Track Status
+                        {isEs ? 'Ver Estado' : 'Track Status'}
                         <ChevronRight className="w-4 h-4 ml-1 transform group-hover/link:translate-x-1 transition-transform" />
                     </Link>
                 </div>

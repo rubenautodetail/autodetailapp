@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -13,7 +13,10 @@ function ForgotPasswordForm() {
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
     const params = useParams();
+    const searchParams = useSearchParams();
     const lang = (params.lang as "en" | "es") || "en";
+    const isContractorFlow = searchParams.get("from") === "contractor";
+    const loginHref = isContractorFlow ? `/${lang}/contractor/login` : `/${lang}/login`;
 
     const dict = {
         en: {
@@ -43,7 +46,7 @@ function ForgotPasswordForm() {
 
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/api/auth/callback?next=/${lang}/reset-password`,
+                redirectTo: `${window.location.origin}/api/auth/callback?next=/${lang}/reset-password${isContractorFlow ? '%3Ffrom%3Dcontractor' : ''}`,
             });
             if (error) {
                 setStatus("error");
@@ -72,7 +75,7 @@ function ForgotPasswordForm() {
                             <div className="p-4 mb-4 rounded-lg bg-green-50 text-green-700 text-sm border border-green-200">
                                 {message}
                             </div>
-                            <Link href={`/${lang}/login`} className="w-full inline-block py-3.5 rounded-xl bg-[var(--accent)] text-white font-medium hover:opacity-90 transition-all">
+                            <Link href={loginHref} className="w-full inline-block py-3.5 rounded-xl bg-[var(--accent)] text-white font-medium hover:opacity-90 transition-all">
                                 {t.backToLogin}
                             </Link>
                         </div>
@@ -107,7 +110,7 @@ function ForgotPasswordForm() {
                             </button>
                             
                             <div className="pt-2 text-center">
-                                <Link href={`/${lang}/login`} className="text-[var(--text-secondary)] text-sm hover:underline">
+                                <Link href={loginHref} className="text-[var(--text-secondary)] text-sm hover:underline">
                                     {t.backToLogin}
                                 </Link>
                             </div>

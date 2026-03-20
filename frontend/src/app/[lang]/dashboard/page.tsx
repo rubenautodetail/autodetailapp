@@ -26,6 +26,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const { user, profile, isLoading: authLoading } = useAuth();
     const { setService, addAddOn, removeAddOn, selectedAddOns, resetBooking } = useBooking();
+    const isEs = locale === 'es';
 
     // Auth guard — redirect to login if not authenticated
     useEffect(() => {
@@ -191,7 +192,7 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-[#131835]">
             <div className="px-6">
-                <Header profileName={profile?.full_name || 'Guest'} />
+                <Header profileName={profile?.full_name || (isEs ? 'Invitado' : 'Guest')} />
             </div>
 
             <main className="space-y-6 md:space-y-8 pb-8">
@@ -201,13 +202,22 @@ export default function DashboardPage() {
                         <div className="relative z-10">
                             <div className="flex items-center gap-2 mb-2">
                                 <Sparkles className="w-5 h-5 text-yellow-300" />
-                                <span className="text-sm font-bold uppercase tracking-wider text-yellow-300">Limited Offer</span>
+                                <span className="text-sm font-bold uppercase tracking-wider text-yellow-300">
+                                    {isEs ? 'Oferta Limitada' : 'Limited Offer'}
+                                </span>
                             </div>
-                            <h3 className="text-2xl font-bold mb-1">Get 20% Off Ceramic</h3>
-                            <p className="text-white/90 mb-4 text-sm max-w-[80%]">Protect your car for the rainy season. Valid until Friday.</p>
-                            <button className="bg-white text-[#D0B078] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors">
-                                Claim Offer
-                            </button>
+                            <h3 className="text-2xl font-bold mb-1">
+                                {isEs ? '20% de Descuento en Cerámico' : 'Get 20% Off Ceramic'}
+                            </h3>
+                            <p className="text-white/90 mb-4 text-sm max-w-[80%]">
+                                {isEs ? 'Protege tu auto para la temporada de lluvias.' : 'Protect your car for the rainy season.'}
+                            </p>
+                            <Link
+                                href={`/${locale}/booking/select`}
+                                className="inline-block bg-white text-[#D0B078] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors"
+                            >
+                                {isEs ? 'Reservar Ahora' : 'Book Now'}
+                            </Link>
                         </div>
                         {/* Decorative circles */}
                         <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
@@ -219,10 +229,10 @@ export default function DashboardPage() {
                 <section>
                     <div className="flex items-center justify-between mb-4 px-6">
                         <h2 className="text-lg font-bold text-white">
-                            Book a Service
+                            {isEs ? 'Reservar Servicio' : 'Book a Service'}
                         </h2>
                         <Link href={`/${locale}/booking/select`} className="text-sm font-medium text-[#D0B078] hover:text-[#D0B078]/80 transition-colors flex items-center">
-                            See All <ArrowRight className="w-4 h-4 ml-1" />
+                            {isEs ? 'Ver Todos' : 'See All'} <ArrowRight className="w-4 h-4 ml-1" />
                         </Link>
                     </div>
                     <ServiceCarousel onSelectService={handleServiceSelect} />
@@ -232,7 +242,7 @@ export default function DashboardPage() {
                 <section>
                     <div className="flex items-center justify-between mb-4 px-6">
                         <h2 className="text-lg font-bold text-white">
-                            Recent Activity
+                            {isEs ? 'Actividad Reciente' : 'Recent Activity'}
                         </h2>
                     </div>
                     <div className="flex gap-4 overflow-x-auto pb-4 px-6 -mx-0 scrollbar-hide snap-x snap-mandatory">
@@ -250,7 +260,7 @@ export default function DashboardPage() {
                             ))
                         ) : (
                             <div className="px-6 py-6 text-center text-[#A5B0D1] bg-[#1A2142] rounded-2xl border border-dashed border-[#2C355E] flex-1 min-w-[85vw]">
-                                <p className="text-sm">No recent bookings found</p>
+                                <p className="text-sm">{isEs ? 'No hay reservas recientes' : 'No recent bookings found'}</p>
                             </div>
                         )}
                     </div>
@@ -260,11 +270,14 @@ export default function DashboardPage() {
                 <section>
                     <div className="flex items-center justify-between mb-4 px-6">
                         <h2 className="text-lg font-bold text-white">
-                            My Garage
+                            {isEs ? 'Mi Garaje' : 'My Garage'}
                         </h2>
-                        <button className="w-8 h-8 rounded-full bg-[#1A2142] border border-[#2C355E] flex items-center justify-center text-[#A5B0D1] hover:text-[#D0B078] transition-colors">
+                        <Link
+                            href={`/${locale}/dashboard/vehicles`}
+                            className="w-8 h-8 rounded-full bg-[#1A2142] border border-[#2C355E] flex items-center justify-center text-[#A5B0D1] hover:text-[#D0B078] transition-colors"
+                        >
                             <Plus className="w-4 h-4" />
-                        </button>
+                        </Link>
                     </div>
 
                     <div className="flex gap-4 overflow-x-auto pb-4 px-6 -mx-0 scrollbar-hide snap-x snap-mandatory">
@@ -286,19 +299,22 @@ export default function DashboardPage() {
                             ))
                         ) : (
                             <div className="px-6 py-8 text-center text-[#A5B0D1] bg-[#1A2142] rounded-2xl border border-dashed border-[#2C355E] flex-1 min-w-[80vw] mx-6">
-                                <p className="text-sm">No vehicles added yet</p>
+                                <p className="text-sm">{isEs ? 'Aún no has añadido vehículos' : 'No vehicles added yet'}</p>
                             </div>
                         )}
-                        {/* Add Vehicle Card Placeholder */}
+                        {/* Add Vehicle Card */}
                         <div className="min-w-[100px] flex items-center justify-center">
-                            <button className="w-12 h-12 rounded-full bg-[#1A2142] border border-[#2C355E] flex items-center justify-center text-[#A5B0D1] hover:text-[#D0B078] shadow-sm">
+                            <Link
+                                href={`/${locale}/dashboard/vehicles`}
+                                className="w-12 h-12 rounded-full bg-[#1A2142] border border-[#2C355E] flex items-center justify-center text-[#A5B0D1] hover:text-[#D0B078] shadow-sm"
+                            >
                                 <Plus className="w-6 h-6" />
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </section>
 
-                {/* Location Card (Compact) */}
+                {/* Quick Action Card */}
                 <section className="px-6">
                     <div className="bg-[#1A2142] rounded-2xl p-4 border border-[#2C355E] shadow-sm flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -307,16 +323,19 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h3 className="text-sm font-bold text-white">
-                                    Current Location
+                                    {isEs ? 'Servicio Móvil' : 'Mobile Service'}
                                 </h3>
                                 <p className="text-xs text-[#A5B0D1]">
-                                    123 Biscayne Blvd, Miami
+                                    {isEs ? 'Vamos a donde estés en Miami' : 'We come to you anywhere in Miami'}
                                 </p>
                             </div>
                         </div>
-                        <button className="text-xs font-bold text-[#D0B078] px-3 py-1.5 rounded-lg bg-[#D0B078]/5 hover:bg-[#D0B078]/10 transition-colors">
-                            Change
-                        </button>
+                        <Link
+                            href={`/${locale}/booking/select`}
+                            className="text-xs font-bold text-[#D0B078] px-3 py-1.5 rounded-lg bg-[#D0B078]/5 hover:bg-[#D0B078]/10 transition-colors"
+                        >
+                            {isEs ? 'Reservar' : 'Book'}
+                        </Link>
                     </div>
                 </section>
             </main>
@@ -329,9 +348,9 @@ export default function DashboardPage() {
                 footer={
                     <button
                         onClick={handleContinueBooking}
-                        className="block w-full text-center py-4 rounded-xl bg-[#D0B078] text-white font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all"
+                        className="block w-full text-center py-4 rounded-xl bg-[#D0B078] text-[#131835] font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all"
                     >
-                        {locale === 'es' ? 'Continuar' : 'Continue'} — ${modalTotal.toFixed(2)}
+                        {isEs ? 'Continuar' : 'Continue'} — ${modalTotal.toFixed(2)}
                     </button>
                 }
             >

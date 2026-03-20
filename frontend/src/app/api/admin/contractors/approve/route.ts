@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { verifyAdmin } from '@/lib/verifyAdmin';
+import { sendContractorApprovedEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,25 @@ export async function POST(req: NextRequest) {
         if (error) {
             console.error('Approve contractor error:', error);
             return NextResponse.json({ error: 'Failed to approve contractor' }, { status: 500 });
+        }
+
+        // Send approval email with login link
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, email')
+                .eq('id', userId)
+                .single();
+
+            if (profile?.email) {
+                await sendContractorApprovedEmail({
+                    fullName: profile.full_name || 'Contractor',
+                    email: profile.email,
+                });
+            }
+        } catch (emailErr) {
+            // Don't fail the approval if email fails
+            console.error('Failed to send approval email:', emailErr);
         }
 
         return NextResponse.json({ success: true });

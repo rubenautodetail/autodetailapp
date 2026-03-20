@@ -46,7 +46,7 @@ export default function ContractorApplyPage() {
     useEffect(() => {
         if (isLoading) return;
         if (!user) {
-            router.replace(`/${lang}/login?next=/${lang}/contractors/apply`);
+            router.replace(`/${lang}/contractor/login`);
         } else if (profile?.role === "contractor" && profile?.approval_status === "approved") {
             router.replace(`/${lang}/contractor/dashboard`);
         } else if (profile?.approval_status === "pending") {
@@ -77,7 +77,17 @@ export default function ContractorApplyPage() {
                     bankAccountType:     values.bankAccountType      || "",
                 }),
             });
-            const json = await res.json();
+            let json;
+            try {
+                json = await res.json();
+            } catch (e) {
+                // If it's not JSON, it's likely a 500 HTML error page from the framework/middleware
+                const text = await res.clone().text();
+                console.error("Failed to parse JSON response:", text);
+                throw new Error(isEs 
+                    ? `Error del servidor (formato inválido). Estado: ${res.status}`
+                    : `Server error (invalid format). Status: ${res.status}`);
+            }
 
             if (!res.ok) throw new Error(json.error || "Submission failed");
 
@@ -109,9 +119,42 @@ export default function ContractorApplyPage() {
                     </h1>
                     <p className="text-white/60 text-sm leading-relaxed">
                         {isEs
-                            ? "Nuestro equipo revisará tu solicitud en 1–2 días hábiles y te notificará por correo."
-                            : "Our team will review your application within 1–2 business days and notify you by email."}
+                            ? "Nuestro equipo revisará tu solicitud en 1–2 días hábiles."
+                            : "Our team will review your application within 1–2 business days."}
                     </p>
+
+                    <div className="bg-white/5 border border-[#D0B078]/20 rounded-xl p-5 space-y-3 text-left">
+                        <p className="text-[#D0B078] text-xs font-semibold uppercase tracking-widest">
+                            {isEs ? "¿Qué sigue?" : "What happens next?"}
+                        </p>
+                        <ul className="space-y-2 text-white/50 text-sm">
+                            <li className="flex items-start gap-2">
+                                <span className="text-[#D0B078] mt-0.5 shrink-0">✓</span>
+                                {isEs
+                                    ? "No necesitas hacer nada más por ahora"
+                                    : "You don't need to do anything else right now"}
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-[#D0B078] mt-0.5 shrink-0">✓</span>
+                                {isEs
+                                    ? "Recibirás un correo con nuestra decisión en 1–2 días hábiles"
+                                    : "You'll receive an email with our decision within 1–2 business days"}
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-[#D0B078] mt-0.5 shrink-0">✓</span>
+                                {isEs
+                                    ? "Si eres aprobado, el correo incluirá un enlace para iniciar sesión y comenzar a trabajar"
+                                    : "If approved, the email will include a link to log in and start accepting jobs"}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <p className="text-white/30 text-xs">
+                        {isEs
+                            ? "¿Preguntas? Escríbenos a support@dtailwash.com"
+                            : "Questions? Email us at support@dtailwash.com"}
+                    </p>
+
                     <Link
                         href={`/${lang}`}
                         className="inline-block px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm font-medium"

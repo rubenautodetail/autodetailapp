@@ -1,26 +1,29 @@
 "use client";
 
-import { ArrowLeft, User, Car, ShoppingBag, CreditCard, LogOut, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, User, Car, ShoppingBag, LogOut, ChevronRight } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 export default function ProfilePage() {
     const router = useRouter();
+    const params = useParams();
+    const locale = (params?.lang as string) || 'en';
+    const isEs = locale === 'es';
     const { user, logout } = useAuth();
 
     const handleLogout = async () => {
         try {
             await logout();
-            router.push("/en"); // Redirect to welcome page (hardcoded lang for now)
+            router.push(`/${locale}`);
         } catch (error) {
             console.error("Logout failed", error);
         }
     };
 
     const menuItems = [
-        { icon: Car, label: "My Vehicles", href: "#", disabled: true },
-        { icon: ShoppingBag, label: "My Orders", href: "#", disabled: true },
-        { icon: CreditCard, label: "Payment Methods", href: "#", disabled: true },
+        { icon: Car, label: isEs ? 'Mis Vehículos' : 'My Vehicles', href: `/${locale}/dashboard/vehicles` },
+        { icon: ShoppingBag, label: isEs ? 'Mis Reservas' : 'My Orders', href: `/${locale}/dashboard/orders` },
     ];
 
     return (
@@ -32,7 +35,7 @@ export default function ProfilePage() {
                 >
                     <ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
                 </button>
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">Profile</h1>
+                <h1 className="text-2xl font-bold text-[var(--text-primary)]">{isEs ? 'Perfil' : 'Profile'}</h1>
             </header>
 
             {/* Profile Header */}
@@ -45,26 +48,26 @@ export default function ProfilePage() {
                         <User className="w-10 h-10" />
                     )}
                 </div>
-                <h2 className="text-xl font-bold text-[var(--text-primary)]">{user?.user_metadata?.full_name || "User"}</h2>
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">{user?.user_metadata?.full_name || (isEs ? 'Usuario' : 'User')}</h2>
                 <p className="text-[var(--text-secondary)]">{user?.email}</p>
             </div>
 
             {/* Menu Options */}
             <div className="bg-[var(--card)] rounded-2xl border border-[var(--divider)] shadow-sm overflow-hidden">
                 {menuItems.map((item, index) => (
-                    <div
+                    <Link
                         key={index}
-                        className={`flex items-center justify-between p-4 ${item.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--background)] cursor-pointer'} transition-colors ${index !== menuItems.length - 1 ? 'border-b border-[var(--divider)]' : ''}`}
+                        href={item.href}
+                        className={`flex items-center justify-between p-4 hover:bg-[var(--background)] transition-colors ${index !== menuItems.length - 1 ? 'border-b border-[var(--divider)]' : ''}`}
                     >
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-[var(--background)] flex items-center justify-center text-[var(--text-secondary)]">
                                 <item.icon className="w-5 h-5" />
                             </div>
                             <span className="font-medium text-[var(--text-primary)]">{item.label}</span>
-                            {item.disabled && <span className="text-xs text-[var(--text-secondary)]">(coming soon)</span>}
                         </div>
                         <ChevronRight className="w-5 h-5 text-[var(--text-secondary)]" />
-                    </div>
+                    </Link>
                 ))}
             </div>
 
@@ -74,7 +77,7 @@ export default function ProfilePage() {
                 className="w-full mt-8 py-4 rounded-xl bg-[var(--error)]/10 text-[var(--error)] font-bold flex items-center justify-center gap-2 hover:bg-[var(--error)]/20 transition-colors"
             >
                 <LogOut className="w-5 h-5" />
-                Log Out
+                {isEs ? 'Cerrar Sesión' : 'Log Out'}
             </button>
 
             <p className="text-center text-xs text-[var(--text-secondary)] mt-8 opacity-50">

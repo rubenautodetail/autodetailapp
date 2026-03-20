@@ -19,9 +19,15 @@ export async function GET(request: NextRequest) {
     const localeMatch = next.match(/^\/(en|es)(\/|$)/)
     const locale = localeMatch ? localeMatch[1] : 'en'
 
+    const isContractorFlow = next.includes('contractor')
+    const loginPath = isContractorFlow ? `/${locale}/contractor/login` : `/${locale}/login`
+
     if (!code) {
-        return NextResponse.redirect(`${origin}/${locale}/login`)
+        return NextResponse.redirect(`${origin}${loginPath}`)
     }
+
+    // Initialize response that will be returned
+    let supabaseResponse = NextResponse.next({ request })
 
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -32,7 +38,7 @@ export async function GET(request: NextRequest) {
                 getAll() { return cookieStore.getAll() },
                 setAll(cookiesToSet) {
                     cookiesToSet.forEach(({ name, value, options }) =>
-                        cookieStore.set(name, value, options)
+                        supabaseResponse.cookies.set(name, value, options)
                     )
                 },
             },
@@ -41,8 +47,21 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
-        return NextResponse.redirect(`${origin}/${locale}/login?error=auth_failed`)
+        // Redirect to login with error, preserving cookies
+        const loginUrl = new URL(`${loginPath}?error=auth_failed`, origin)
+        // Copy cookies from supabaseResponse to redirect response
+        const redirect = NextResponse.redirect(loginUrl)
+        supabaseResponse.cookies.getAll().forEach((cookie) => {
+            redirect.cookies.set(cookie.name, cookie.value, cookie)
+        })
+        return redirect
     }
 
-    return NextResponse.redirect(`${origin}${next}`)
+    // Redirect to next URL, preserving cookies
+    const redirectUrl = new URL(next, origin)
+    const redirect = NextResponse.redirect(redirectUrl)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirect.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirect
 }

@@ -80,7 +80,7 @@ export default async function LandingPage({
     return (
         <div className="min-h-screen bg-[#131835] text-white overflow-x-hidden">
             {/* ─── Hero ──────────────────────────────────────────────────────── */}
-            <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-16 overflow-hidden">
+            <section className="relative min-h-screen flex flex-col items-center px-6 pt-32 pb-12 overflow-hidden">
                 {/* Hero background image from Hygraph */}
                 {heroImage && (
                     <Image
@@ -135,7 +135,7 @@ export default async function LandingPage({
                     </Link>
                 </div>
 
-                <div className="relative z-10 w-full max-w-2xl mx-auto text-center space-y-8">
+                <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto text-center space-y-8 py-10">
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#D0B078]/30 bg-[#D0B078]/5 text-[#D0B078] text-xs font-medium tracking-widest uppercase">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#D0B078] animate-pulse" />
@@ -168,7 +168,7 @@ export default async function LandingPage({
 
                     {/* Auth links */}
                     <div className="flex items-center justify-center gap-4 pt-2">
-                        <span className="text-white/30 text-sm">Already a member?</span>
+                        <span className="text-white/30 text-sm">{locale === 'es' ? '¿Ya tienes cuenta?' : 'Already a member?'}</span>
                         <Link
                             href={`/${locale}/login`}
                             className="text-sm text-white/60 hover:text-white transition-colors underline underline-offset-4"
@@ -178,8 +178,8 @@ export default async function LandingPage({
                     </div>
                 </div>
 
-                {/* Scroll indicator - Hidden on mobile to prevent overlap with auth links */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 opacity-30">
+                {/* Scroll indicator - Better positioning to avoid overlap on small screens */}
+                <div className="relative z-10 mt-auto hidden sm:flex flex-col items-center gap-2 opacity-30 pb-4">
                     <span className="text-xs tracking-widest uppercase">{locale === 'es' ? 'Desplázate' : 'Scroll'}</span>
                     <div className="w-px h-8 bg-white/40 animate-pulse" />
                 </div>
@@ -397,7 +397,7 @@ export default async function LandingPage({
                                 {locale === 'es' ? 'Crear cuenta y aplicar →' : 'Create account & apply →'}
                             </Link>
                             <Link
-                                href={`/${locale}/login?next=/${locale}/contractors/apply`}
+                                href={`/${locale}/contractor/login`}
                                 className="px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all whitespace-nowrap text-center"
                             >
                                 {locale === 'es' ? 'Ya tengo cuenta' : 'I have an account'}

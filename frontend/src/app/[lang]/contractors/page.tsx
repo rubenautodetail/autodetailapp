@@ -74,7 +74,7 @@ export default async function ContractorsPage({
                     </Link>
                     <div className="flex items-center gap-4">
                         <Link
-                            href={`/${locale}/login`}
+                            href={`/${locale}/contractor/login`}
                             className="text-sm text-white/50 hover:text-white transition-colors"
                         >
                             {isEs ? 'Iniciar sesión' : 'Log in'}
@@ -135,7 +135,7 @@ export default async function ContractorsPage({
                             {isEs ? 'Crea tu cuenta y aplica' : 'Create account & apply'}
                         </Link>
                         <Link
-                            href={`/${locale}/login?next=/${locale}/contractors/apply`}
+                            href={`/${locale}/contractor/login`}
                             className="px-8 py-4 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all"
                         >
                             {isEs ? 'Ya tengo cuenta →' : 'Already have an account →'}
@@ -284,7 +284,7 @@ export default async function ContractorsPage({
                             {isEs ? 'Aplicar ahora' : 'Apply now'}
                         </Link>
                         <Link
-                            href={`/${locale}/login?next=/${locale}/contractors/apply`}
+                            href={`/${locale}/contractor/login`}
                             className="px-8 py-4 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all"
                         >
                             {isEs ? 'Ya tengo cuenta' : 'I have an account'}
@@ -311,7 +311,7 @@ export default async function ContractorsPage({
                         <Link href={`/${locale}`} className="hover:text-white/60 transition-colors">
                             ← {isEs ? 'Volver al inicio' : 'Back to home'}
                         </Link>
-                        <Link href={`/${locale}/login`} className="hover:text-white/60 transition-colors">
+                        <Link href={`/${locale}/contractor/login`} className="hover:text-white/60 transition-colors">
                             {isEs ? 'Iniciar sesión' : 'Log in'}
                         </Link>
                     </div>

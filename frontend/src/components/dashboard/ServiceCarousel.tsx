@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useParams } from "next/navigation";
 import ServiceCard from "../ui/ServiceCard";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/types/database";
@@ -12,6 +13,8 @@ export default function ServiceCarousel({ onSelectService }: { onSelectService: 
     const [isLoading, setIsLoading] = useState(true);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const supabase = createClient();
+    const params = useParams();
+    const locale = (params?.lang as string) || 'en';
 
     useEffect(() => {
         async function fetchServices() {
@@ -48,17 +51,15 @@ export default function ServiceCarousel({ onSelectService }: { onSelectService: 
                 ) : services.map((service) => (
                     <ServiceCard
                         key={service.id}
-                        title={service.name}
+                        title={(locale === 'es' && service.name_es) ? service.name_es : service.name}
                         price={`$${service.base_price}`}
-                        description={service.description || ""}
+                        description={(locale === 'es' && service.description_es) ? service.description_es : (service.description || "")}
                         onClick={() => onSelectService(service.id)}
                     />
                 ))}
                 {/* Padding element for end of list */}
                 <div className="w-2 shrink-0" />
             </div>
-
-            {/* Scroll Indicators (Dots) could go here */}
         </div>
     );
 }

@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
 
         const contractorId = userId;
 
+        // Atomic first-come-first-served: only update if still pending and unassigned.
+        // If another contractor already claimed it, this returns zero rows.
         const { data: updatedBooking, error: updateError } = await supabase
             .from('bookings')
             .update({
@@ -82,8 +84,19 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date().toISOString(),
             })
             .eq('id', existingBooking.id)
+            .eq('status', 'pending_assignment')
+            .is('contractor_id', null)
             .select()
             .single();
+
+        if (updateError && updateError.code === 'PGRST116') {
+            // PGRST116 = "JSON object requested, multiple (or no) rows returned"
+            // This means the booking was already claimed by another contractor
+            return NextResponse.json(
+                { error: 'This job has already been accepted by another contractor' },
+                { status: 409 }
+            );
+        }
 
         if (updateError) {
             console.error('accept-job: error updating booking:', updateError);

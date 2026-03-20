@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -10,7 +10,10 @@ function ResetPasswordForm() {
     const supabase = createClient();
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const lang = (params.lang as "en" | "es") || "en";
+    const isContractorFlow = searchParams.get("from") === "contractor";
+    const loginHref = isContractorFlow ? `/${lang}/contractor/login` : `/${lang}/login`;
 
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
@@ -80,7 +83,7 @@ function ResetPasswordForm() {
         } else {
             setStatus("success");
             setMessage(t.success);
-            setTimeout(() => router.push(`/${lang}/login`), 2000);
+            setTimeout(() => router.push(loginHref), 2000);
         }
     };
 
@@ -181,7 +184,7 @@ function ResetPasswordForm() {
                             </button>
 
                             <div className="pt-2 text-center">
-                                <Link href={`/${lang}/login`} className="text-[var(--text-secondary)] text-sm hover:underline">
+                                <Link href={loginHref} className="text-[var(--text-secondary)] text-sm hover:underline">
                                     {lang === "es" ? "Regresar al inicio de sesión" : "Back to Login"}
                                 </Link>
                             </div>

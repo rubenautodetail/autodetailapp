@@ -299,7 +299,16 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                 },
                 body: JSON.stringify({ bookingId }),
             });
-            if (res.ok) loadDashboard();
+            if (res.ok) {
+                loadDashboard();
+            } else if (res.status === 409) {
+                // Job was already claimed by another contractor
+                const body = await res.json().catch(() => ({ error: '' }));
+                alert(lang === 'es'
+                    ? 'Este trabajo ya fue aceptado por otro contratista.'
+                    : (body as { error?: string }).error || 'This job has already been accepted by another contractor.');
+                loadDashboard(); // Refresh to remove the claimed job from the list
+            }
         } catch { /* non-fatal */ }
         finally { setAcceptingId(null); }
     };
