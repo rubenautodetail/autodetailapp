@@ -178,8 +178,8 @@ export default async function LandingPage({
                     </div>
                 </div>
 
-                {/* Scroll indicator */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30">
+                {/* Scroll indicator - Hidden on mobile to prevent overlap with auth links */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 opacity-30">
                     <span className="text-xs tracking-widest uppercase">{locale === 'es' ? 'Desplázate' : 'Scroll'}</span>
                     <div className="w-px h-8 bg-white/40 animate-pulse" />
                 </div>
