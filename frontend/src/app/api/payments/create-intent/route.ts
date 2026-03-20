@@ -33,17 +33,23 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
         }
 
+        // Sanitize bookingId to prevent PostgREST filter injection
+        const safeBookingId = bookingId ? String(bookingId).trim() : '';
+        if (safeBookingId && safeBookingId !== 'temp_booking' && safeBookingId !== 'temp_booking_id' && !/^[a-zA-Z0-9\-_]+$/.test(safeBookingId)) {
+            return NextResponse.json({ error: 'Invalid booking ID format' }, { status: 400 });
+        }
+
         let customerId = 'guest';
         let verifiedAmount = amount;
 
         // Look up the booking to validate amount and get customer email.
-        if (bookingId && bookingId !== 'temp_booking' && bookingId !== 'temp_booking_id') {
+        if (safeBookingId && safeBookingId !== 'temp_booking' && safeBookingId !== 'temp_booking_id') {
             try {
                 const supabase = createServiceClient();
                 const { data: booking } = await supabase
                     .from('bookings')
                     .select('customer_email, total_amount')
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                    .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
                     .single();
 
                 if (booking?.customer_email) {
@@ -69,13 +75,13 @@ export async function POST(req: NextRequest) {
         // Create Stripe PaymentIntent (idempotent — safe to retry).
         const paymentIntent = await createPaymentIntent({
             amount: verifiedAmount,
-            bookingId: bookingId || 'test_booking',
+            bookingId: safeBookingId || 'test_booking',
             customerId,
             currency,
         });
 
         // Persist payment intent ID on the booking.
-        if (bookingId && bookingId !== 'temp_booking' && bookingId !== 'temp_booking_id') {
+        if (safeBookingId && safeBookingId !== 'temp_booking' && safeBookingId !== 'temp_booking_id') {
             try {
                 const supabase = createServiceClient();
                 await supabase
@@ -84,7 +90,7 @@ export async function POST(req: NextRequest) {
                         payment_intent_id: paymentIntent.paymentIntentId,
                         payment_status: 'authorized',
                     })
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+                    .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
             } catch (err) {
                 console.error('Failed to update booking with payment intent:', err);
                 // Non-fatal: PaymentIntent was created; the booking record is out of sync but recoverable via webhook.

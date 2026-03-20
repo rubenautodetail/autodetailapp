@@ -11,13 +11,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // Sanitize bookingId to prevent PostgREST filter injection
+    const safeBookingId = String(bookingId).trim();
+    if (!/^[a-zA-Z0-9\-_]+$/.test(safeBookingId)) {
+      return NextResponse.json({ error: "Invalid booking ID format" }, { status: 400 });
+    }
+
     const supabase = createServiceClient();
 
     // Fetch booking for customer info
     const { data: booking, error: fetchError } = await supabase
       .from("bookings")
       .select("id, customer_name, customer_email, confirmation_code, service_name, status")
-      .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+      .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
       .single();
 
     if (fetchError || !booking) {
@@ -37,7 +43,7 @@ export async function POST(req: NextRequest) {
     const { error: updateError } = await supabase
       .from("bookings")
       .update({ status: "disputed", updated_at: new Date().toISOString() })
-      .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+      .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
 
     if (updateError) {
       console.error("Failed to set booking status to disputed:", updateError);
@@ -70,9 +76,9 @@ export async function POST(req: NextRequest) {
         <p><strong>Booking:</strong> #${bookingId} ${booking?.confirmation_code ? `(${booking.confirmation_code})` : ""}</p>
         <p><strong>Customer:</strong> ${booking?.customer_name || "Unknown"} (${booking?.customer_email || "no email"})</p>
         <p><strong>Service:</strong> ${booking?.service_name || "—"}</p>
-        <p><strong>Issue Type:</strong> ${issueType}</p>
+        <p><strong>Issue Type:</strong> ${String(issueType).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
         <p><strong>Description:</strong></p>
-        <p>${description.replace(/\n/g, "<br>")}</p>
+        <p>${description.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>
       `,
     });
 

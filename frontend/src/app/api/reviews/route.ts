@@ -32,13 +32,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
         }
 
+        const safeId = String(bookingId).trim();
+        if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+            return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+        }
+
         const supabase = createServiceClient();
 
         // Verify the booking belongs to this user
         const { data: booking } = await supabase
             .from('bookings')
             .select('id, contractor_id, status, customer_email')
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
             .single();
 
         if (!booking) {

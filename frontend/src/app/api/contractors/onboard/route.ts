@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
                 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
                 const accountLink = await stripe.accountLinks.create({
                     account: accountId,
-                    refresh_url: `${appUrl}/contractor/settings`,
-                    return_url: `${appUrl}/contractor/settings?onboarding=complete`,
+                    refresh_url: `${appUrl}/en/contractor/settings`,
+                    return_url: `${appUrl}/en/contractor/settings?onboarding=complete`,
                     type: 'account_onboarding',
                 });
 

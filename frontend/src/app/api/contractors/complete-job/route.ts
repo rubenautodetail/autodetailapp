@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
         const supabase = createServiceClient();
 
         let bookingId: string;
+        let safeId: string;
         let checklist: string | undefined;
         let contractorId: string | undefined;
 
@@ -22,11 +23,16 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'bookingId and confirmationCode are required' }, { status: 400 });
             }
 
+            safeId = String(bookingId).trim();
+            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+            }
+
             // Verify the code matches this booking
             const { data: booking, error } = await supabase
                 .from('bookings')
                 .select('id, contractor_id, status, confirmation_code')
-                .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                .or(`id.eq.${safeId},document_id.eq.${safeId}`)
                 .single();
 
             if (error || !booking) {
@@ -60,6 +66,10 @@ export async function POST(req: NextRequest) {
             const formData = await req.formData();
             bookingId = formData.get('bookingId') as string;
             checklist = formData.get('checklist') as string;
+            safeId = String(bookingId).trim();
+            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+            }
             contractorId = user.id;
         }
 
@@ -74,7 +84,7 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date().toISOString(),
                 ...(checklist ? { completion_notes: checklist } : {}),
             })
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`);
+            .or(`id.eq.${safeId},document_id.eq.${safeId}`);
 
         // Only enforce contractor_id check when using JWT auth
         const { data: updatedBooking, error } = contractorId

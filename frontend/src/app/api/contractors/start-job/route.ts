@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
         const supabase = createServiceClient();
 
         let bookingId: string;
+        let safeId: string;
         let contractorId: string | undefined;
 
         if (contentType.includes('application/json')) {
@@ -24,11 +25,16 @@ export async function POST(req: NextRequest) {
                 );
             }
 
+            safeId = String(bookingId).trim();
+            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+            }
+
             // Verify the code matches this booking before allowing the transition
             const { data: booking, error } = await supabase
                 .from('bookings')
                 .select('id, contractor_id, status, confirmation_code')
-                .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                .or(`id.eq.${safeId},document_id.eq.${safeId}`)
                 .single();
 
             if (error || !booking) {
@@ -39,7 +45,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Invalid confirmation code' }, { status: 403 });
             }
 
-            if (booking.status !== 'confirmed') {
+            if (booking.status !== 'confirmed' && booking.status !== 'en_route') {
                 return NextResponse.json(
                     { error: `Cannot start a job with status '${booking.status}'` },
                     { status: 409 }
@@ -72,11 +78,11 @@ export async function POST(req: NextRequest) {
 
             const body = await req.json();
             bookingId = body.bookingId;
-            contractorId = user.id;
-
-            if (!bookingId) {
-                return NextResponse.json({ error: 'bookingId is required' }, { status: 400 });
+            safeId = String(bookingId).trim();
+            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
             }
+            contractorId = user.id;
         }
 
         const updateQuery = supabase
@@ -85,7 +91,7 @@ export async function POST(req: NextRequest) {
                 status: 'in_progress',
                 updated_at: new Date().toISOString(),
             })
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
             .select('id');
 
         // Scope the update to this contractor when using JWT auth
@@ -101,7 +107,7 @@ export async function POST(req: NextRequest) {
         const updatedId = String((updatedRows as any)?.[0]?.id ?? bookingId);
         await logBookingEvent({
             bookingId: updatedId,
-            fromStatus: 'confirmed',
+            fromStatus: contractorId ? 'en_route' : 'confirmed',
             toStatus: 'in_progress',
             actorId: contractorId,
             actorType: 'contractor',

@@ -58,7 +58,7 @@ export default function CheckoutForm({ amount, onSuccess, onError, onBeforeSubmi
             const { error } = await stripe.confirmPayment({
                 elements,
                 confirmParams: {
-                    return_url: `${window.location.origin}/booking/confirmation`,
+                    return_url: `${window.location.origin}/${document.documentElement.lang || 'en'}/booking/confirmation`,
                     payment_method_data: {
                         billing_details: {
                             name: customerDetails.name,

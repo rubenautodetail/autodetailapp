@@ -34,11 +34,16 @@ export async function GET(
 
         const { id } = await params;
 
+        const safeId = String(id).trim();
+        if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+            return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+        }
+
         // Join services so the page can display the service name (incl. Spanish)
         const { data, error } = await supabase
             .from('bookings')
             .select('*, services:service_id(name, name_es)')
-            .or(`id.eq.${id},document_id.eq.${id}`)
+            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
             .single();
 
         if (error || !data) {

@@ -59,6 +59,7 @@ export interface BookingEmailData {
   afterPhotos?: any[];
   notes?: string;
   paymentIntentId?: string;
+  locale?: 'en' | 'es';
 }
 
 /**
@@ -948,7 +949,7 @@ export async function sendJobStartedEmail(booking: BookingEmailData) {
             </div>
 
             <p style="margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}" class="button">View Booking Details</a>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}" class="button">View Booking Details</a>
             </p>
           </div>
 
@@ -1021,15 +1022,15 @@ export async function sendReviewRequestEmail(booking: BookingEmailData) {
             </div>
 
             <p style="margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}/review" class="button">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}/review" class="button">
                 Leave Your Review Now
               </a>
             </p>
 
             <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 20px;">
               Or copy and paste this link into your browser:<br>
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}/review" style="word-break: break-all;">
-                ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}/review
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}/review" style="word-break: break-all;">
+                ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}/review
               </a>
             </p>
           </div>
@@ -1061,6 +1062,143 @@ export async function sendReviewRequestEmail(booking: BookingEmailData) {
 /**
  * Send contractor paid notification
  */
+/**
+ * Send approval email to contractor with login link
+ */
+export async function sendContractorApprovedEmail(contractor: {
+  fullName: string;
+  email: string;
+  locale?: string;
+}) {
+  try {
+    const locale = contractor.locale || 'en';
+    const loginUrl = `${APP_URL}/${locale}/contractor/login`;
+    const isEs = locale === 'es';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #131835 0%, #1e2a50 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+            .cta { display: inline-block; background: linear-gradient(135deg, #D0B078, #c4a068); color: #131835; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 16px; margin: 20px 0; }
+            .box { background: #f9fafb; border-left: 4px solid #D0B078; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">${isEs ? '¡Felicidades, estás aprobado!' : 'Congratulations, You\'re Approved!'} 🎉</h1>
+          </div>
+          <div class="content">
+            <p>${isEs ? 'Hola' : 'Hi'} ${contractor.fullName},</p>
+            <p>${isEs
+              ? 'Tu solicitud para unirte a la red de contratistas de <strong>DetailWash</strong> ha sido aprobada.'
+              : 'Your application to join the <strong>DetailWash</strong> contractor network has been approved.'}</p>
+            <div style="text-align: center;">
+              <a href="${loginUrl}" class="cta">${isEs ? 'Inicia sesión y comienza a trabajar →' : 'Log in & start accepting jobs →'}</a>
+            </div>
+            <div class="box">
+              <p style="margin: 0; font-weight: 600; color: #4b5563;">${isEs ? 'Próximos pasos:' : 'Next steps:'}</p>
+              <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #4b5563;">
+                <li>${isEs ? 'Inicia sesión en tu portal de contratista' : 'Log in to your contractor portal'}</li>
+                <li>${isEs ? 'Configura tu disponibilidad y zona de servicio' : 'Set up your availability and service area'}</li>
+                <li>${isEs ? 'Comienza a recibir y aceptar trabajos' : 'Start receiving and accepting jobs'}</li>
+              </ul>
+            </div>
+            <p>${isEs ? '¡Bienvenido al equipo!' : 'Welcome to the team!'}<br/>${isEs ? 'El equipo de DetailWash' : 'The DetailWash Team'}</p>
+          </div>
+          <div class="footer">
+            <p>DetailWash — Contractor Network</p>
+            <p><a href="mailto:${SUPPORT_EMAIL}" style="color: #D0B078;">${SUPPORT_EMAIL}</a> · ${SUPPORT_PHONE}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: contractor.email,
+      subject: isEs ? '¡Aprobado! Bienvenido a DetailWash 🎉' : 'You\'re Approved! Welcome to DetailWash 🎉',
+      html,
+    });
+
+    if (error) throw error;
+    console.log(`Contractor approved email sent to ${contractor.email}`);
+    return data;
+  } catch (error) {
+    console.error('Failed to send contractor approved email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send rejection email to contractor
+ */
+export async function sendContractorRejectedEmail(contractor: {
+  fullName: string;
+  email: string;
+  locale?: string;
+}) {
+  try {
+    const locale = contractor.locale || 'en';
+    const isEs = locale === 'es';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #131835 0%, #1e2a50 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+            .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">${isEs ? 'Actualización de tu solicitud' : 'Application Update'}</h1>
+          </div>
+          <div class="content">
+            <p>${isEs ? 'Hola' : 'Hi'} ${contractor.fullName},</p>
+            <p>${isEs
+              ? 'Gracias por tu interés en unirte a <strong>DetailWash</strong>. Después de revisar tu solicitud, lamentamos informarte que no podemos aprobarla en este momento.'
+              : 'Thank you for your interest in joining <strong>DetailWash</strong>. After reviewing your application, we\'re unable to approve it at this time.'}</p>
+            <p>${isEs
+              ? 'Esto puede deberse a información incompleta, área de servicio no cubierta, u otros requisitos.'
+              : 'This may be due to incomplete information, uncovered service area, or other requirements.'}</p>
+            <p>${isEs
+              ? 'Si crees que fue un error o tienes preguntas, no dudes en contactarnos.'
+              : 'If you believe this was a mistake or have questions, please don\'t hesitate to reach out.'}</p>
+            <p>${isEs ? 'Saludos,' : 'Best regards,'}<br/>${isEs ? 'El equipo de DetailWash' : 'The DetailWash Team'}</p>
+          </div>
+          <div class="footer">
+            <p><a href="mailto:${SUPPORT_EMAIL}" style="color: #D0B078;">${SUPPORT_EMAIL}</a> · ${SUPPORT_PHONE}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: contractor.email,
+      subject: isEs ? 'Actualización de tu solicitud — DetailWash' : 'Application Update — DetailWash',
+      html,
+    });
+
+    if (error) throw error;
+    console.log(`Contractor rejected email sent to ${contractor.email}`);
+    return data;
+  } catch (error) {
+    console.error('Failed to send contractor rejected email:', error);
+    throw error;
+  }
+}
+
 export async function sendContractorPaidEmail(contractorEmail: string, booking: BookingEmailData) {
   try {
     const amount = (booking.totalAmount * 0.85).toFixed(2); // 85% contractor payout

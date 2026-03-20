@@ -15,13 +15,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'serviceId is required' }, { status: 400 });
         }
 
+        // Sanitize serviceId to prevent PostgREST filter injection
+        const safeServiceId = String(serviceId).trim();
+        if (!/^[a-zA-Z0-9\-_]+$/.test(safeServiceId)) {
+            return NextResponse.json({ error: 'Invalid service ID format' }, { status: 400 });
+        }
+
         const supabase = createApiClient();
 
         // Fetch the service
         const { data: service, error: serviceError } = await supabase
             .from('services')
             .select('*')
-            .or(`document_id.eq.${serviceId},id.eq.${serviceId}`)
+            .or(`document_id.eq.${safeServiceId},id.eq.${safeServiceId}`)
             .single();
 
         if (serviceError || !service) {

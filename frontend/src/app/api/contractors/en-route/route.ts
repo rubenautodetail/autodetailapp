@@ -22,13 +22,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'bookingId is required' }, { status: 400 });
         }
 
+        const safeId = String(bookingId).trim();
+        if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+            return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+        }
+
         const supabase = createServiceClient();
 
         // Verify booking exists, belongs to this contractor, and is in 'confirmed' status
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
             .select('id, contractor_id, customer_id, status')
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
             .single();
 
         if (fetchError || !booking) {
@@ -50,7 +55,7 @@ export async function POST(req: NextRequest) {
         const { error: updateError } = await supabase
             .from('bookings')
             .update({ status: 'en_route', updated_at: new Date().toISOString() })
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
             .eq('contractor_id', user.id);
 
         if (updateError) {
