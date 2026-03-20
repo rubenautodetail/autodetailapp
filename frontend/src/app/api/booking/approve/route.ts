@@ -125,6 +125,12 @@ export async function POST(req: NextRequest) {
             contractorEmail,
         });
 
+        // Send review request email to customer after job completion
+        await notify({
+            type: 'booking.review_request',
+            booking: bookingWithService,
+        });
+
         await logBookingEvent({
             bookingId: String(booking.id),
             fromStatus: 'pending_approval',

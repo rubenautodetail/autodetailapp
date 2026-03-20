@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rubensautodetail.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 const LOCALES = ['en', 'es'] as const;
 
 type ChangeFreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';

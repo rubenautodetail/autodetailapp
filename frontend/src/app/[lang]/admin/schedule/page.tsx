@@ -192,7 +192,7 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const formData = new FormData(e.target);
+                  const formData = new FormData(e.currentTarget as HTMLFormElement);
                   const days = formData.getAll("days"); // returns array of selected values
                   handleSave(contractor.id, {
                     days,
@@ -243,7 +243,7 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
                     <label className="block text-sm font-medium mb-2">{t.endTime}</label>
                     <select
                       name="end_hour"
-                      value={contractor.availability?.end_hour ?? 17>
+                      value={contractor.availability?.end_hour ?? 17}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {timeOptions.map((opt) => (

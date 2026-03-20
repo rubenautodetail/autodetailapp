@@ -27,20 +27,31 @@ export async function PATCH(
     const table = isAddon ? 'add_ons' : 'services';
     const priceField = isAddon ? 'price' : 'base_price';
 
-    // Sync Stripe Product if it exists
-    if (fields.stripe_product_id && fields.name) {
+    // Look up existing stripe_product_id from DB (don't rely on frontend sending it)
+    const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
+    const stripeProductId = existing?.stripe_product_id as string | null;
+
+    if (stripeProductId) {
         try {
-            await stripe.products.update(fields.stripe_product_id, { name: fields.name });
+            const updates: Record<string, any> = {};
+            if (fields.name) updates.name = fields.name;
+            if (fields.description) updates.description = fields.description;
+            if (typeof fields.is_active === 'boolean') updates.active = fields.is_active;
+
+            if (Object.keys(updates).length > 0) {
+                await stripe.products.update(stripeProductId, updates);
+            }
             // Create a new Price if price changed (Stripe prices are immutable)
             if (fields[priceField]) {
                 await stripe.prices.create({
-                    product: fields.stripe_product_id,
+                    product: stripeProductId,
                     unit_amount: Math.round(parseFloat(fields[priceField]) * 100),
                     currency: 'usd',
                 });
             }
         } catch (err) {
-            console.error('Stripe sync failed (non-fatal):', err);
+            console.error('Stripe sync failed:', err);
+            return NextResponse.json({ error: 'Failed to sync changes to Stripe.' }, { status: 502 });
         }
     }
 
@@ -71,13 +82,32 @@ export async function DELETE(
     const supabase = createServiceClient();
     const permanent = new URL(req.url).searchParams.get('permanent') === 'true';
 
+    // Look up stripe_product_id before deleting so we can archive it in Stripe
+    const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
+    const stripeProductId = existing?.stripe_product_id as string | null;
+
     if (permanent) {
+        // Archive Stripe product (deactivate, not delete — Stripe doesn't allow product deletion with prices)
+        if (stripeProductId) {
+            try {
+                await stripe.products.update(stripeProductId, { active: false });
+            } catch (err) {
+                console.error('Stripe product archive failed:', err);
+            }
+        }
         const { error } = await supabase.from(table).delete().eq('id', id);
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json({ success: true });
     }
 
-    // Soft-delete: set is_active = false
+    // Soft-delete: set is_active = false + archive in Stripe
+    if (stripeProductId) {
+        try {
+            await stripe.products.update(stripeProductId, { active: false });
+        } catch (err) {
+            console.error('Stripe product archive failed:', err);
+        }
+    }
     const { error } = await supabase.from(table).update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });

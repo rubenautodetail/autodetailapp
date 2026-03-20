@@ -124,6 +124,8 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const [rejectingId, setRejectingId] = useState<string | null>(null);
     const [isAvailable, setIsAvailable] = useState<boolean>(true);
     const [togglingAvailability, setTogglingAvailability] = useState(false);
+    const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+    const [bannerVisible, setBannerVisible] = useState(true);
 
     // ── Realtime / alert state ────────────────────────────────────────────────
     const [incomingPulse, setIncomingPulse] = useState(false);
@@ -166,6 +168,13 @@ export default function ContractorDashboard({ params }: DashboardProps) {
         } else {
             setOnboardingComplete(true);
         }
+        // Fetch the Hygraph contractor notice banner
+        fetch(`/api/contractors/banner?locale=${lang}`)
+            .then((r) => r.json())
+            .then((data) => {
+                if (data?.banner?.message) setBannerMessage(data.banner.message);
+            })
+            .catch(() => { /* non-fatal */ });
     }, [authLoading, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Supabase realtime subscription for new pending_assignment bookings ────
@@ -379,6 +388,30 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                             className="shrink-0 px-5 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-colors"
                         >
                             {startingOnboarding ? labels.setupLoading : labels.setupBtn}
+                        </button>
+                    </div>
+                )}
+
+                {/* Hygraph Notice Banner */}
+                {bannerMessage && bannerVisible && (
+                    <div className="relative bg-blue-500/10 border border-blue-400/25 rounded-2xl px-5 py-4 flex items-start gap-3">
+                        {/* Icon */}
+                        <span className="mt-0.5 shrink-0 w-8 h-8 rounded-full bg-blue-400/15 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        {/* Message */}
+                        <p className="text-sm text-blue-200 leading-relaxed flex-1">{bannerMessage}</p>
+                        {/* Dismiss button */}
+                        <button
+                            onClick={() => setBannerVisible(false)}
+                            aria-label="Dismiss"
+                            className="shrink-0 ml-2 text-blue-400/60 hover:text-blue-300 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
                 )}

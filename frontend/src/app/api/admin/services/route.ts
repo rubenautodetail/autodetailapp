@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
     const supabase = createServiceClient();
 
     if (type === 'addon') {
-        // Create Stripe Product for add-on
-        let stripeProductId: string | null = null;
+        // Create Stripe Product + Price — fail the request if Stripe is unreachable
+        let stripeProductId: string;
         try {
             const product = await stripe.products.create({
                 name: fields.name,
@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
             });
             stripeProductId = product.id;
         } catch (err) {
-            console.error('Stripe product creation failed (non-fatal):', err);
+            console.error('Stripe product creation failed:', err);
+            return NextResponse.json({ error: 'Failed to create Stripe product. Check Stripe credentials.' }, { status: 502 });
         }
 
         const { data, error } = await supabase.from('add_ons').insert({
@@ -66,8 +67,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ data });
     }
 
-    // Default: service
-    let stripeProductId: string | null = null;
+    // Default: service — Create Stripe Product + Price first
+    let stripeProductId: string;
     try {
         const product = await stripe.products.create({
             name: fields.name,
@@ -81,7 +82,8 @@ export async function POST(req: NextRequest) {
         });
         stripeProductId = product.id;
     } catch (err) {
-        console.error('Stripe product creation failed (non-fatal):', err);
+        console.error('Stripe product creation failed:', err);
+        return NextResponse.json({ error: 'Failed to create Stripe product. Check Stripe credentials.' }, { status: 502 });
     }
 
     const { data, error } = await supabase.from('services').insert({

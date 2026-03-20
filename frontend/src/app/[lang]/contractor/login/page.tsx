@@ -70,7 +70,7 @@ export default function ContractorLoginPage() {
           <h1 className="text-2xl font-bold text-white">
             {isEs ? "Portal de Técnicos" : "Technician Portal"}
           </h1>
-          <p className="text-white/40 text-sm mt-1">Rubens Auto Detail</p>
+          <p className="text-white/40 text-sm mt-1">DetailWash</p>
         </div>
 
         {/* Form */}

@@ -201,14 +201,15 @@ async function notifyContractors(
     const { notify } = await import('@/lib/notifications');
     await notify({ type: 'booking.created', booking: bookingWithService });
 
-    // Alert all approved, available contractors
+    // Alert contractors in service area so they can claim the job
     const { data: contractors } = await supabase
         .from('profiles')
         .select('id, email')
         .eq('role', 'contractor')
         .eq('approval_status', 'approved')
         .eq('onboarding_complete', true)
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .contains('service_area_zips', [zipCode]);
 
     if (!contractors || contractors.length === 0) return;
 

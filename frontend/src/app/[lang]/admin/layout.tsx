@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import Image from "next/image";
 
 const NAV = [
   { segment: "admin", label: "Dashboard", labelEs: "Panel", icon: "📊", exact: true },
@@ -62,7 +63,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Sidebar — desktop only */}
       <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 fixed top-0 left-0 h-full z-20">
         <div className="px-5 py-5 border-b border-gray-100">
-          <div className="text-base font-bold text-gray-900 mb-3">Rubens Auto Detail</div>
+          <div className="mb-4 mt-2">
+            <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={140} height={36} className="w-auto h-8 brightness-0 opacity-80" />
+          </div>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
               <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

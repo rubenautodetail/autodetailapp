@@ -9,6 +9,8 @@ import {
     sendJobPendingApprovalEmail,
     sendJobApprovedReceiptEmail,
     sendContractorPaidEmail,
+    sendJobStartedEmail,
+    sendReviewRequestEmail,
     BookingEmailData
 } from './email';
 import { createServiceClient } from './supabase/server';
@@ -22,7 +24,9 @@ type NotificationEvent =
     | { type: 'booking.approved'; booking: any; contractorEmail: string }
     | { type: 'contractor.job_assigned'; booking: any; contractorEmail: string }
     | { type: 'contractor.job_accepted'; booking: any; contractor: any }
-    | { type: 'contractor.job_rejected'; booking: any };
+    | { type: 'contractor.job_rejected'; booking: any }
+    | { type: 'contractor.job_started'; booking: any }
+    | { type: 'booking.review_request'; booking: any };
 
 /**
  * Creates an in-app notification in Supabase database
@@ -99,7 +103,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
         switch (event.type) {
             case 'user.welcome':
                 await sendWelcomeEmail(event.user);
-                await createInAppNotification(event.user.id, 'Welcome to Rubens Auto Detail!', 'We are excited to have you on board. Book your first detail today.', 'info');
+                await createInAppNotification(event.user.id, 'Welcome to DetailWash!', 'We are excited to have you on board. Book your first detail today.', 'info');
                 break;
 
             case 'booking.created':
@@ -148,6 +152,14 @@ export async function notify(event: NotificationEvent): Promise<void> {
 
             case 'contractor.job_rejected':
                 await sendJobRejectedToAdmin(mapBookingData(event.booking));
+                break;
+
+            case 'contractor.job_started':
+                await sendJobStartedEmail(mapBookingData(event.booking));
+                break;
+
+            case 'booking.review_request':
+                await sendReviewRequestEmail(mapBookingData(event.booking));
                 break;
 
             default:

@@ -78,6 +78,8 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
         inactive: isEs ? "Inactivo" : "Inactive",
         edit: isEs ? "Editar" : "Edit",
         deactivate: isEs ? "Desactivar" : "Deactivate",
+        hide: isEs ? "Ocultar" : "Hide",
+        makeLive: isEs ? "Publicar" : "Live",
         deleteItem: isEs ? "Eliminar" : "Delete",
         save: isEs ? "Guardar" : "Save",
         cancel: isEs ? "Cancelar" : "Cancel",
@@ -158,6 +160,20 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
         const url = `/api/admin/services/${id}?type=${type === 'addon' ? 'addon' : 'service'}`;
         await adminFetch(url, { method: 'DELETE' });
         fetchData();
+    }
+
+    async function handleToggleActive(item: Service | AddOn, type: 'service' | 'addon') {
+        try {
+            const url = `/api/admin/services/${item.id}`;
+            await adminFetch(url, {
+                method: 'PATCH',
+                body: JSON.stringify({ type, is_active: !item.is_active })
+            });
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            alert(isEs ? 'Error al actualizar el estado.' : 'Failed to update status.');
+        }
     }
 
     async function handleDelete(id: number, type: 'service' | 'addon') {
@@ -296,14 +312,16 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                                     >
                                                         {t.edit}
                                                     </button>
-                                                    {item.is_active && (
-                                                        <button
-                                                            onClick={() => handleDeactivate(item.id, tab === 'services' ? 'service' : 'addon')}
-                                                            className="px-3 py-1.5 text-xs font-medium text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors"
-                                                        >
-                                                            {t.deactivate}
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        onClick={() => handleToggleActive(item, tab === 'services' ? 'service' : 'addon')}
+                                                        className={`px-3 py-1.5 text-xs font-medium border rounded-lg transition-colors ${
+                                                            item.is_active
+                                                                ? 'text-orange-600 border-orange-200 hover:bg-orange-50'
+                                                                : 'text-green-600 border-green-200 hover:bg-green-50'
+                                                        }`}
+                                                    >
+                                                        {item.is_active ? t.hide : t.makeLive}
+                                                    </button>
                                                     <button
                                                         onClick={() => handleDelete(item.id, tab === 'services' ? 'service' : 'addon')}
                                                         className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"

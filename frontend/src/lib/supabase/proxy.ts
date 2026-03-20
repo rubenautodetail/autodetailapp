@@ -68,6 +68,7 @@ export async function updateSession(request: NextRequest) {
         path.startsWith('/api/booking/approve') ||
         path.startsWith('/api/services/') ||        // public service catalog
         path.startsWith('/api/admin/') ||
+        path.startsWith('/api/payments/webhook') ||
         path === '/api/contractors/register'
 
     const isAuthPage =

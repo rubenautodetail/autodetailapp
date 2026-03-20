@@ -35,8 +35,8 @@ export default function LeaveReviewPage() {
         title: lang === 'es' ? 'Deja una Reseña' : 'Leave a Review',
         subtitle:
             lang === 'es'
-                ? '¿Cómo fue tu experiencia con Rubens Auto Detail?'
-                : 'How was your experience with Rubens Auto Detail?',
+                ? '¿Cómo fue tu experiencia con DetailWash?'
+                : 'How was your experience with DetailWash?',
         service: lang === 'es' ? 'Servicio' : 'Service',
         technician: lang === 'es' ? 'Técnico' : 'Technician',
         ratingLabel: lang === 'es' ? 'Tu calificación' : 'Your rating',

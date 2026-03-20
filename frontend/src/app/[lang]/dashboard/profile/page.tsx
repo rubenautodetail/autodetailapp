@@ -78,7 +78,7 @@ export default function ProfilePage() {
             </button>
 
             <p className="text-center text-xs text-[var(--text-secondary)] mt-8 opacity-50">
-                Rubens Auto Detail v1.0.0
+                DetailWash v1.0.0
             </p>
         </div>
     );

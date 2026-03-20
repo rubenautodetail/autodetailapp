@@ -20,11 +20,11 @@ export default async function TermsPage({
             ? [
                   {
                       heading: '1. Aceptación de los Términos',
-                      body: 'Al acceder y utilizar la Plataforma Rubens Auto Detail, usted acepta y se compromete a cumplir con los términos y disposiciones de este acuerdo. Si no está de acuerdo con alguna parte de estos términos, no podrá acceder al servicio.',
+                      body: 'Al acceder y utilizar la Plataforma DetailWash, usted acepta y se compromete a cumplir con los términos y disposiciones de este acuerdo. Si no está de acuerdo con alguna parte de estos términos, no podrá acceder al servicio.',
                   },
                   {
                       heading: '2. Descripción del Servicio',
-                      body: 'Rubens Auto Detail es una plataforma de mercado que conecta a propietarios de vehículos ("Clientes") con profesionales independientes de detallado de automóviles ("Contratistas"). Facilitamos las reservas y los pagos, pero no somos directamente responsables de los servicios prestados por los Contratistas. Los Contratistas son trabajadores independientes, no empleados de la plataforma.',
+                      body: 'DetailWash es una plataforma de mercado que conecta a propietarios de vehículos ("Clientes") con profesionales independientes de detallado de automóviles ("Contratistas"). Facilitamos las reservas y los pagos, pero no somos directamente responsables de los servicios prestados por los Contratistas. Los Contratistas son trabajadores independientes, no empleados de la plataforma.',
                   },
                   {
                       heading: '3. Elegibilidad y Cuentas de Usuario',
@@ -48,7 +48,7 @@ export default async function TermsPage({
                   },
                   {
                       heading: '8. Limitación de Responsabilidad',
-                      body: 'La Plataforma Rubens Auto Detail no se hace responsable de daños indirectos, incidentales, especiales, consecuentes o punitivos que resulten del uso de nuestro servicio. Nuestra responsabilidad total no excederá el monto pagado por el servicio específico en cuestión.',
+                      body: 'La Plataforma DetailWash no se hace responsable de daños indirectos, incidentales, especiales, consecuentes o punitivos que resulten del uso de nuestro servicio. Nuestra responsabilidad total no excederá el monto pagado por el servicio específico en cuestión.',
                   },
                   {
                       heading: '9. Resolución de Disputas',
@@ -66,11 +66,11 @@ export default async function TermsPage({
             : [
                   {
                       heading: '1. Acceptance of Terms',
-                      body: 'By accessing and using the Rubens Auto Detail Platform, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to any part of these terms, you may not access the service.',
+                      body: 'By accessing and using the DetailWash Platform, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to any part of these terms, you may not access the service.',
                   },
                   {
                       heading: '2. Service Description',
-                      body: 'Rubens Auto Detail is a marketplace platform connecting vehicle owners ("Customers") with independent auto detailing professionals ("Contractors"). We facilitate bookings and payments but are not directly responsible for the services provided by Contractors. Contractors are independent workers, not employees of the platform.',
+                      body: 'DetailWash is a marketplace platform connecting vehicle owners ("Customers") with independent auto detailing professionals ("Contractors"). We facilitate bookings and payments but are not directly responsible for the services provided by Contractors. Contractors are independent workers, not employees of the platform.',
                   },
                   {
                       heading: '3. User Accounts & Eligibility',
@@ -94,7 +94,7 @@ export default async function TermsPage({
                   },
                   {
                       heading: '8. Limitation of Liability',
-                      body: 'Rubens Auto Detail Platform is not liable for indirect, incidental, special, consequential, or punitive damages arising from use of our service. Our total liability shall not exceed the amount paid for the specific service in question.',
+                      body: 'DetailWash Platform is not liable for indirect, incidental, special, consequential, or punitive damages arising from use of our service. Our total liability shall not exceed the amount paid for the specific service in question.',
                   },
                   {
                       heading: '9. Dispute Resolution',
@@ -157,10 +157,10 @@ export default async function TermsPage({
                             ? '¿Preguntas sobre estos términos? Contáctenos en '
                             : 'Questions about these terms? Contact us at '}
                         <a
-                            href="mailto:support@rubensautodetail.com"
+                            href="mailto:support@dtailwash.com"
                             className="text-[#D0B078] hover:underline"
                         >
-                            support@rubensautodetail.com
+                            support@dtailwash.com
                         </a>
                     </p>
                 </div>

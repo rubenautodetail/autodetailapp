@@ -35,11 +35,23 @@ async function gql<T>(query: string, variables?: Record<string, unknown>): Promi
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface ContractorBanner {
+    message: string;
+    isActive: boolean;
+}
+
 export interface HeroContent {
     heading: string;
     subheading: string;
     ctaText: string;
     badgeText?: string | null;
+    heroImageUrl?: string | null;
+}
+
+export interface ContractorHeroContent {
+    heading: string;
+    subheading: string;
+    heroImageUrl?: string | null;
 }
 
 export interface Testimonial {
@@ -50,25 +62,42 @@ export interface Testimonial {
     vehicleType: string;
 }
 
+export interface GalleryImage {
+    caption: string;
+    imageUrl: string;
+    section: string;
+    sortOrder: number;
+}
+
+export interface PromotionalBanner {
+    message: string;
+    isActive: boolean;
+}
+
 export interface LandingContent {
     hero: HeroContent | null;
     testimonials: Testimonial[];
+    galleryImages: GalleryImage[];
+    promotionalBanner: PromotionalBanner | null;
+}
+
+export interface ContractorLandingContent {
+    hero: ContractorHeroContent | null;
+    galleryImages: GalleryImage[];
 }
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 /**
- * Fetches landing page content from HyGraph.
- * Returns null fields when models haven't been created yet.
- *
- * HyGraph models to create (see HYGRAPH_SETUP.md):
- *   - LandingHero  (single, localized): heading, subheading, ctaText, badgeText
- *   - Testimonial  (list):              authorName, location, rating, text, vehicleType
+ * Fetches the main (customer) landing page content from HyGraph.
+ * Includes hero section (with optional hero image), testimonials, and gallery images.
  */
 export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingContent> {
     const data = await gql<{
         landingHeroes: HeroContent[];
         testimonials: Testimonial[];
+        galleryImages: GalleryImage[];
+        promotionalBanners: PromotionalBanner[];
     }>(`
         query LandingContent($locale: Locale!) {
             landingHeroes(first: 1, locales: [$locale, en]) {
@@ -76,6 +105,7 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
                 subheading
                 ctaText
                 badgeText
+                heroImageUrl
             }
             testimonials(first: 6, orderBy: createdAt_DESC) {
                 authorName
@@ -84,11 +114,83 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
                 text
                 vehicleType
             }
+            galleryImages(
+                where: { section_in: ["home-hero", "home-services", "how-it-works"] }
+                orderBy: sortOrder_ASC
+                first: 20
+            ) {
+                caption
+                imageUrl
+                section
+                sortOrder
+            }
+            promotionalBanners(first: 1, where: { isActive: true }, locales: [$locale, en]) {
+                message
+                isActive
+            }
         }
     `, { locale });
 
     return {
         hero: data?.landingHeroes?.[0] ?? null,
         testimonials: data?.testimonials ?? [],
+        galleryImages: data?.galleryImages ?? [],
+        promotionalBanner: data?.promotionalBanners?.[0] ?? null,
     };
+}
+
+/**
+ * Fetches the contractor recruitment landing page content from HyGraph.
+ * Includes contractor hero section and contractor-specific gallery images.
+ */
+export async function getContractorLandingContent(locale: 'en' | 'es'): Promise<ContractorLandingContent> {
+    const data = await gql<{
+        contractorLandingHeroes: ContractorHeroContent[];
+        galleryImages: GalleryImage[];
+    }>(`
+        query ContractorLandingContent($locale: Locale!) {
+            contractorLandingHeroes(first: 1, locales: [$locale, en]) {
+                heading
+                subheading
+                heroImageUrl
+            }
+            galleryImages(
+                where: { section_in: ["contractor-hero", "contractor-gallery"] }
+                orderBy: sortOrder_ASC
+                first: 10
+            ) {
+                caption
+                imageUrl
+                section
+                sortOrder
+            }
+        }
+    `, { locale });
+
+    return {
+        hero: data?.contractorLandingHeroes?.[0] ?? null,
+        galleryImages: data?.galleryImages ?? [],
+    };
+}
+
+/**
+ * Fetches the contractor notice banner from HyGraph.
+ * HyGraph model: ContractorBanner
+ *   Fields: message (String, localized), isActive (Boolean)
+ *
+ * Returns null if inactive or the model doesn't exist yet.
+ */
+export async function getContractorBanner(locale: 'en' | 'es'): Promise<ContractorBanner | null> {
+    const data = await gql<{
+        contractorBanners: ContractorBanner[];
+    }>(`
+        query ContractorBanner($locale: Locale!) {
+            contractorBanners(first: 1, where: { isActive: true }, locales: [$locale, en]) {
+                message
+                isActive
+            }
+        }
+    `, { locale });
+
+    return data?.contractorBanners?.[0] ?? null;
 }

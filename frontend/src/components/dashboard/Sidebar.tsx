@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Plus, Car, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -33,9 +34,13 @@ export default function Sidebar({ lang }: { lang: string }) {
         <aside className="fixed left-0 top-0 h-screen w-64 bg-black/90 backdrop-blur-xl border-r border-white/5 flex flex-col z-50 hidden lg:flex">
             {/* Logo Area */}
             <div className="h-16 flex items-center px-6 border-b border-white/5">
-                <span className="text-xl font-bold font-display tracking-tight text-white">
-                    RUBENS <span className="text-accent-gold">AUTO</span>
-                </span>
+                <Image 
+                    src="/dtailwash_logo_final.png" 
+                    alt="DetailWash" 
+                    width={150} 
+                    height={40} 
+                    className="w-auto h-8 brightness-0 invert" 
+                />
             </div>
 
             {/* User Identity */}
@@ -88,7 +93,7 @@ export default function Sidebar({ lang }: { lang: string }) {
             {/* Bottom Actions */}
             <div className="p-4 border-t border-white/5 space-y-2">
                 <a
-                    href="mailto:support@rubensautodetail.com"
+                    href="mailto:support@dtailwash.com"
                     className="flex items-center px-4 py-3 rounded-xl text-text-secondary hover:text-white hover:bg-white/5 transition-all"
                 >
                     <HelpCircle className="w-5 h-5 mr-3" />

@@ -252,6 +252,44 @@ export default function ServiceSelectionForm({
                     </div>
                 </div>
             </div>
+
+            {/* Floating Cart (Appears when service is selected) */}
+            {selectedService && (
+                <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-8 z-50 animate-fade-in-up md:w-96 shadow-2xl">
+                    <div className="bg-[#1A2142] border border-[#D0B078]/50 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                        <div className="flex items-center justify-between w-full md:w-auto md:flex-col md:items-start md:gap-1">
+                            <div>
+                                <p className="text-sm font-semibold text-white">
+                                    {selectedService.name}
+                                </p>
+                                <p className="text-xs text-[var(--text-secondary)]">
+                                    {selectedAddOns.length > 0
+                                        ? `${selectedAddOns.length} ${locale === "es" ? "Extras" : "Add-ons"}`
+                                        : locale === "es" ? "Sin extras" : "No add-ons"}
+                                </p>
+                            </div>
+                            <div className="text-right md:text-left">
+                                <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">
+                                    {locale === "es" ? "Total" : "Total"}
+                                </p>
+                                <p className="text-xl font-bold text-[#D0B078]">
+                                    ${total.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            variant="primary"
+                            onClick={handleContinue}
+                            className="w-full md:w-auto whitespace-nowrap"
+                        >
+                            {locale === "es" ? "Continuar" : "Continue"}
+                            <svg className="inline-block ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

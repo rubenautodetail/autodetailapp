@@ -113,7 +113,7 @@ export default function CustomerDashboardPage() {
                                 Need to reschedule or have special requests? Our concierge team is standing by.
                             </p>
                             <a
-                                href="mailto:support@rubensautodetail.com?subject=Concierge Request"
+                                href="mailto:support@dtailwash.com?subject=Concierge Request"
                                 className="text-blue-400 text-sm font-semibold hover:text-blue-300 transition-colors block"
                             >
                                 Chat with Concierge &rarr;

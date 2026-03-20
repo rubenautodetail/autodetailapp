@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
 import { getLandingContent, type Testimonial } from '@/lib/hygraph';
 import { createClient } from '@/lib/supabase/server';
@@ -58,26 +59,42 @@ export default async function LandingPage({
     };
 
     const testimonials = hygraph.testimonials.length ? hygraph.testimonials : FALLBACK_TESTIMONIALS;
+    const heroImage = hygraph.hero?.heroImageUrl ?? null;
+    const allGalleryImages = hygraph.galleryImages ?? [];
+    const workImages = allGalleryImages.filter((img) => img.section === 'home-hero' || img.section === 'home-gallery');
+    const serviceImages = allGalleryImages.filter((img) => img.section === 'home-services').sort((a,b) => a.sortOrder - b.sortOrder);
+    const stepImages = allGalleryImages.filter((img) => img.section === 'how-it-works').sort((a,b) => a.sortOrder - b.sortOrder);
 
     const services = [
-        { ...dict.home.services.interior, icon: '🪞' },
-        { ...dict.home.services.exterior, icon: '✨' },
-        { ...dict.home.services.full, icon: '🏆' },
+        { ...dict.home.services.interior, icon: '🪞', image: serviceImages[0]?.imageUrl },
+        { ...dict.home.services.exterior, icon: '✨', image: serviceImages[1]?.imageUrl },
+        { ...dict.home.services.full, icon: '🏆', image: serviceImages[2]?.imageUrl },
     ];
 
     const steps = [
-        { number: '01', ...dict.home.howItWorks.step1, icon: '📍' },
-        { number: '02', ...dict.home.howItWorks.step2, icon: '🚐' },
-        { number: '03', ...dict.home.howItWorks.step3, icon: '☕' },
+        { number: '01', ...dict.home.howItWorks.step1, icon: '📍', image: stepImages[0]?.imageUrl },
+        { number: '02', ...dict.home.howItWorks.step2, icon: '🚐', image: stepImages[1]?.imageUrl },
+        { number: '03', ...dict.home.howItWorks.step3, icon: '☕', image: stepImages[2]?.imageUrl },
     ];
 
     return (
         <div className="min-h-screen bg-[#131835] text-white overflow-x-hidden">
             {/* ─── Hero ──────────────────────────────────────────────────────── */}
             <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-16 overflow-hidden">
+                {/* Hero background image from Hygraph */}
+                {heroImage && (
+                    <Image
+                        src={heroImage}
+                        alt="Auto detail hero"
+                        fill
+                        priority
+                        className="object-cover object-center opacity-20"
+                        sizes="100vw"
+                    />
+                )}
                 {/* Gold radial glow */}
                 <div
-                    className="absolute inset-0 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none z-[1]"
                     style={{
                         background:
                             'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(208, 176, 120, 0.18) 0%, transparent 70%)',
@@ -85,7 +102,7 @@ export default async function LandingPage({
                 />
                 {/* Subtle grid */}
                 <div
-                    className="absolute inset-0 pointer-events-none opacity-[0.03]"
+                    className="absolute inset-0 pointer-events-none opacity-[0.03] z-[1]"
                     style={{
                         backgroundImage:
                             'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
@@ -93,9 +110,23 @@ export default async function LandingPage({
                     }}
                 />
 
+                {/* Promotional Banner */}
+                {hygraph.promotionalBanner?.isActive && (
+                    <div className="absolute top-0 left-0 right-0 z-50 text-[#131835] py-2.5 px-6 text-center shadow-lg font-medium text-sm sm:text-base tracking-wide flex items-center justify-center gap-2 overflow-hidden"
+                         style={{ background: 'linear-gradient(90deg, #c4a068 0%, #E6C88D 50%, #c4a068 100%)', backgroundSize: '200% auto', animation: 'shimmer 3s linear infinite' }}>
+                        <style>{`
+                            @keyframes shimmer {
+                                0% { background-position: 0% center; }
+                                100% { background-position: 200% center; }
+                            }
+                        `}</style>
+                        <span>{hygraph.promotionalBanner.message}</span>
+                    </div>
+                )}
+
                 {/* Nav bar */}
-                <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full">
-                    <span className="text-white/60 text-sm font-medium">{dict.common.siteName}</span>
+                <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-10 sm:top-[44px]' : 'top-0'}`}>
+                    <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={150} height={40} className="w-auto h-8 brightness-0 invert opacity-90" />
                     <Link
                         href={`/${locale}/contractor/login`}
                         className="text-xs font-medium text-[#D0B078] border border-[#D0B078]/30 rounded-full px-4 py-1.5 hover:bg-[#D0B078]/10 transition-colors"
@@ -186,18 +217,26 @@ export default async function LandingPage({
                         {steps.map((step) => (
                             <div
                                 key={step.number}
-                                className="glass-card rounded-2xl p-8 space-y-4 group hover:border-[#D0B078]/20 transition-colors"
+                                className="glass-card rounded-2xl overflow-hidden group hover:border-[#D0B078]/20 transition-colors flex flex-col"
                             >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-4xl">{step.icon}</span>
-                                    <span className="text-5xl font-bold text-white/5 group-hover:text-[#D0B078]/10 transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
-                                        {step.number}
-                                    </span>
+                                {step.image && (
+                                    <div className="relative h-48 w-full shrink-0">
+                                        <Image src={step.image} alt={step.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#131835] via-[#131835]/40 to-transparent opacity-90" />
+                                    </div>
+                                )}
+                                <div className={`p-8 space-y-4 flex-1 ${step.image ? '-mt-10 relative z-10' : ''}`}>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-4xl drop-shadow-lg">{step.icon}</span>
+                                        <span className="text-5xl font-bold text-white/5 group-hover:text-[#D0B078]/10 transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
+                                            {step.number}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
+                                        {step.title}
+                                    </h3>
+                                    <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
                                 </div>
-                                <h3 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
-                                    {step.title}
-                                </h3>
-                                <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -221,34 +260,79 @@ export default async function LandingPage({
                         {services.map((service, i) => (
                             <div
                                 key={service.title}
-                                className={`glass-card rounded-2xl p-8 space-y-5 flex flex-col ${i === 2 ? 'ring-1 ring-[#D0B078]/30' : ''}`}
+                                className={`glass-card rounded-2xl flex flex-col overflow-hidden ${i === 2 ? 'ring-1 ring-[#D0B078]/30 shadow-[0_0_30px_rgba(208,176,120,0.1)]' : ''}`}
                             >
-                                {i === 2 && (
-                                    <div className="inline-flex self-start px-2.5 py-0.5 rounded-full bg-[#D0B078]/10 text-[#D0B078] text-xs font-medium tracking-wide">
-                                        {locale === 'es' ? 'Más popular' : 'Most popular'}
+                                {service.image && (
+                                    <div className="relative h-48 w-full shrink-0 group-hover:scale-105 transition-transform duration-500">
+                                        <Image src={service.image} alt={service.title} fill className="object-cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#131835] via-[#131835]/40 to-transparent opacity-90" />
+                                        {i === 2 && (
+                                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#D0B078] text-black text-[10px] font-bold tracking-widest uppercase shadow-lg z-10">
+                                                {locale === 'es' ? 'Más popular' : 'Most popular'}
+                                            </div>
+                                        )}
+                                        <div className="absolute bottom-4 left-6 text-4xl drop-shadow-xl z-10">{service.icon}</div>
                                     </div>
                                 )}
-                                <span className="text-4xl">{service.icon}</span>
-                                <div className="space-y-1 flex-1">
-                                    <h3 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
-                                        {service.title}
-                                    </h3>
-                                    <p className="text-white/50 text-sm leading-relaxed">{service.desc}</p>
-                                </div>
-                                <div className="pt-2 flex items-center justify-between border-t border-white/5">
-                                    <span className="text-[#D0B078] font-semibold">{service.price}</span>
-                                    <Link
-                                        href={`/${locale}/booking/select`}
-                                        className="text-xs text-white/40 hover:text-white transition-colors"
-                                    >
-                                        {dict.common.bookNow} →
-                                    </Link>
+                                <div className={`p-8 space-y-5 flex-1 flex flex-col ${service.image ? 'pt-6 relative z-10' : ''}`}>
+                                    {!service.image && (
+                                        <>
+                                            {i === 2 && (
+                                                <div className="inline-flex self-start px-2.5 py-0.5 rounded-full bg-[#D0B078]/10 text-[#D0B078] text-xs font-medium tracking-wide">
+                                                    {locale === 'es' ? 'Más popular' : 'Most popular'}
+                                                </div>
+                                            )}
+                                            <span className="text-4xl">{service.icon}</span>
+                                        </>
+                                    )}
+                                    <div className="space-y-2 flex-1">
+                                        <h3 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
+                                            {service.title}
+                                        </h3>
+                                        <p className="text-white/50 text-sm leading-relaxed">{service.desc}</p>
+                                    </div>
+                                    <div className="pt-4 flex items-center justify-between border-t border-white/5 mt-auto">
+                                        <span className="text-[#D0B078] font-semibold text-lg">{service.price}</span>
+                                        <Link
+                                            href={`/${locale}/booking/select`}
+                                            className="text-xs text-white/50 hover:text-white transition-colors uppercase tracking-widest font-semibold flex items-center gap-1"
+                                        >
+                                            {dict.common.bookNow} <span className="text-[#D0B078]">→</span>
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
+
+            {/* ─── Gallery Strip ──────────────────────────────────────────────── */}
+            {workImages.length > 0 && (
+                <section className="py-10 px-6 overflow-hidden">
+                    <div className="max-w-5xl mx-auto">
+                        <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium text-center mb-6">
+                            {locale === 'es' ? 'Galería de trabajos' : 'Our work'}
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {workImages.map((img) => (
+                                <div key={img.imageUrl} className="relative aspect-[4/3] rounded-xl overflow-hidden group">
+                                    <Image
+                                        src={img.imageUrl}
+                                        alt={img.caption}
+                                        fill
+                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                        sizes="(max-width: 768px) 50vw, 33vw"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <span className="text-white text-xs font-medium">{img.caption}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* ─── Testimonials ───────────────────────────────────────────────── */}
             <section className="py-14 sm:py-24 px-6">
@@ -373,8 +457,9 @@ export default async function LandingPage({
             {/* ─── Footer ──────────────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 py-8 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
-                    <div className="flex flex-col items-center sm:items-start gap-1">
-                        <p>{dict.common.siteName} © {new Date().getFullYear()}</p>
+                    <div className="flex flex-col items-center sm:items-start gap-3">
+                        <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={120} height={32} className="w-auto h-6 brightness-0 invert opacity-50" />
+                        <p>© {new Date().getFullYear()}</p>
                         <p>
                             {locale === 'es' ? 'Diseñado por' : 'Designed by'}{' '}
                             <span className="text-white/45 font-medium">OAC Digital Innovations</span>

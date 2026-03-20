@@ -13,8 +13,8 @@ function getResend(): Resend {
 }
 
 // Email configuration
-const FROM_EMAIL = process.env.FROM_EMAIL || 'notifications@rubensautodetail.com';
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@rubensautodetail.com';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'notifications@dtailwash.com';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@dtailwash.com';
 const SUPPORT_PHONE = process.env.SUPPORT_PHONE || '(305) 000-0000';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
@@ -152,7 +152,7 @@ export async function sendBookingConfirmation(booking: BookingEmailData) {
             </div>
             
             <div class="footer">
-              <p>Thank you for choosing Rubens Auto Detail</p>
+              <p>Thank you for choosing DetailWash</p>
               <p>Questions? <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
             </div>
           </body>
@@ -262,7 +262,7 @@ export async function sendNewJobToContractor(booking: BookingEmailData, contract
             </div>
 
             <div class="footer">
-              <p>Rubens Auto Detail - Contractor Portal</p>
+              <p>DetailWash - Contractor Portal</p>
               <p>Questions? <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
             </div>
           </body>
@@ -324,7 +324,7 @@ export async function sendPaymentReceipt(booking: BookingEmailData) {
             <div class="content">
               <p>Hi ${customer.firstName},</p>
               
-              <p>Thank you for choosing Rubens Auto Detail! Here's your receipt for the service.</p>
+              <p>Thank you for choosing DetailWash! Here's your receipt for the service.</p>
               
               <div class="receipt-box">
                 <h3 style="margin-top: 0; color: #1e40af;">Receipt #${booking.confirmationCode}</h3>
@@ -492,7 +492,7 @@ export async function sendContractorApplicationReceived(applicationData: {
           </div>
           <div class="content">
             <p>Hi ${applicationData.fullName},</p>
-            <p>Thank you for applying to join the <strong>Rubens Auto Detail</strong> contractor network!</p>
+            <p>Thank you for applying to join the <strong>DetailWash</strong> contractor network!</p>
             <p>We've received your application and our team will review it within <strong>1–2 business days</strong>.</p>
             <div class="box">
               <p style="margin: 0; font-weight: 600; color: #4b5563;">What happens next?</p>
@@ -504,10 +504,10 @@ export async function sendContractorApplicationReceived(applicationData: {
             </div>
             <p>In the meantime, you can log in to check your application status at <a href="${APP_URL}/en/contractor/pending">${APP_URL}</a>.</p>
             <p>Questions? Reply to this email or contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
-            <p>Thanks for joining us!<br/>The Rubens Auto Detail Team</p>
+            <p>Thanks for joining us!<br/>The DetailWash Team</p>
           </div>
           <div class="footer">
-            <p>Rubens Auto Detail — Contractor Network</p>
+            <p>DetailWash — Contractor Network</p>
           </div>
         </body>
       </html>
@@ -516,7 +516,7 @@ export async function sendContractorApplicationReceived(applicationData: {
     const { data, error } = await getResend().emails.send({
       from: FROM_EMAIL,
       to: applicationData.email,
-      subject: 'Application Received — Rubens Auto Detail',
+      subject: 'Application Received — DetailWash',
       html,
     });
 
@@ -552,7 +552,7 @@ export async function sendWelcomeEmail(user: { name: string; email: string }) {
         </head>
         <body>
           <div class="header">
-            <h1 style="margin: 0; font-size: 24px;">Welcome to Rubens Auto Detail! 🚗</h1>
+            <h1 style="margin: 0; font-size: 24px;">Welcome to DetailWash! 🚗</h1>
           </div>
           <div class="content">
             <p>Hi ${user.name},</p>
@@ -562,7 +562,7 @@ export async function sendWelcomeEmail(user: { name: string; email: string }) {
               <a href="${APP_URL}/en/dashboard" class="button">Go to Dashboard</a>
             </p>
             <p>If you have any questions, just reply to this email.</p>
-            <p>Happy detailing!<br/>The Rubens Auto Detail Team</p>
+            <p>Happy detailing!<br/>The DetailWash Team</p>
           </div>
         </body>
       </html>
@@ -571,7 +571,7 @@ export async function sendWelcomeEmail(user: { name: string; email: string }) {
     const { data, error } = await getResend().emails.send({
       from: FROM_EMAIL,
       to: user.email,
-      subject: 'Welcome to Rubens Auto Detail! 🚗',
+      subject: 'Welcome to DetailWash! 🚗',
       html,
     });
 
@@ -609,7 +609,7 @@ export async function sendBookingPendingEmail(booking: BookingEmailData) {
             <p>Hi ${customer.firstName},</p>
             <p>We've received your booking request for a <strong>${service.name}</strong>.</p>
             <p>Your booking is currently marked as <strong>Pending</strong> while we process the payment authorization. Once the payment hold is successful, you will receive a confirmation email with all the details and we will assign a detailer to your job.</p>
-            <p>Thank you for choosing Rubens Auto Detail!</p>
+            <p>Thank you for choosing DetailWash!</p>
           </div>
         </body>
       </html>
@@ -753,7 +753,7 @@ export async function sendBookingCancelledEmail(booking: BookingEmailData) {
             <p>Your booking <strong>${booking.confirmationCode}</strong> has been cancelled.</p>
             <p>If this was due to a payment failure, your card has not been charged.</p>
             <p>If you'd like to reschedule, please visit our website to place a new booking.</p>
-            <p>Thank you,<br/>Rubens Auto Detail Team</p>
+            <p>Thank you,<br/>DetailWash Team</p>
           </div>
         </body>
       </html>
@@ -910,6 +910,152 @@ export async function sendJobApprovedReceiptEmail(booking: BookingEmailData) {
   // We can reuse the existing sendPaymentReceipt, or wrap it if we want custom messaging
   // Standard receipt is fine, but we'll add the review link CTA
   return sendPaymentReceipt(booking);
+}
+
+/**
+ * Send contractor job start notification email
+ */
+export async function sendJobStartedEmail(booking: BookingEmailData) {
+  try {
+    const { customer } = booking;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+            .button { display: inline-block; background: #f97316; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+            .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">Detailer Has Started Work! 🚿</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${customer.firstName},</p>
+            <p>Your detailer has arrived and started working on your vehicle. They'll update you when they're finished.</p>
+
+            <div style="background: #fff7ed; border-left: 4px solid #f97316; padding: 20px; margin: 20px 0; border-radius: 4px;">
+              <h3 style="margin-top: 0; color: #ea580c;">Service in Progress</h3>
+              <p><strong>Booking:</strong> ${booking.confirmationCode}</p>
+              <p><strong>Service:</strong> ${booking.service.name}</p>
+              <p><strong>Date:</strong> ${new Date(booking.scheduledDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p><strong>Time:</strong> ${booking.scheduledTime}</p>
+            </div>
+
+            <p style="margin-top: 30px;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}" class="button">View Booking Details</a>
+            </p>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing DetailWash</p>
+            <p>Questions? <a href="mailto:${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}">${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}</a></p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+      from: process.env.FROM_EMAIL || 'notifications@dtailwash.com',
+      to: customer.email,
+      subject: 'Your Detailer Has Started Work! 🚿',
+      html,
+    });
+
+    if (error) throw error;
+    console.log(`Job started email sent to ${customer.email}`);
+    return data;
+  } catch (error) {
+    console.error('Failed to send job started email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send review request email after job completion
+ */
+export async function sendReviewRequestEmail(booking: BookingEmailData) {
+  try {
+    const { customer, service } = booking;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+            .button { display: inline-block; background: #8b5cf6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+            .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+            .star-rating { display: flex; justify-content: center; gap: 8px; margin: 20px 0; }
+            .star { font-size: 24px; color: #fbbf24; cursor: pointer; }
+            .star.empty { color: #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">How Was Your Detail? ⭐</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${customer.firstName},</p>
+            <p>We hope you loved your ${service.name} experience! Your feedback helps us serve you better and helps other customers find great detailers.</p>
+
+            <div style="text-align: center;">
+              <p style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 20px;">
+                Please take 30 seconds to leave a review:
+              </p>
+              <div class="star-rating" id="star-rating">
+                <!-- Stars will be filled via JS in email client that supports it -->
+                <span class="star" data-value="1">☆</span>
+                <span class="star" data-value="2">☆</span>
+                <span class="star" data-value="3">☆</span>
+                <span class="star" data-value="4">☆</span>
+                <span class="star" data-value="5">☆</span>
+              </div>
+            </div>
+
+            <p style="margin-top: 30px;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}/review" class="button">
+                Leave Your Review Now
+              </a>
+            </p>
+
+            <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 20px;">
+              Or copy and paste this link into your browser:<br>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}/review" style="word-break: break-all;">
+                ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/booking/${booking.id}/review
+              </a>
+            </p>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing DetailWash</p>
+            <p>Questions? <a href="mailto:${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}">${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}</a></p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+      from: process.env.FROM_EMAIL || 'notifications@dtailwash.com',
+      to: customer.email,
+      subject: 'How Was Your Detail? Leave a Review ⭐',
+      html,
+    });
+
+    if (error) throw error;
+    console.log(`Review request email sent to ${customer.email}`);
+    return data;
+  } catch (error) {
+    console.error('Failed to send review request email:', error);
+    throw error;
+  }
 }
 
 /**

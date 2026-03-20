@@ -6,7 +6,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const locale = (lang === 'es' || lang === 'en') ? lang : 'en';
 
   return {
-    title: locale === 'es' ? 'Finalizar Reserva | Rubens Auto Detail' : 'Checkout | Rubens Auto Detail',
+    title: locale === 'es' ? 'Finalizar Reserva | DetailWash' : 'Checkout | DetailWash',
     description: locale === 'es' ? 'Completa tu reserva y realiza el pago seguro.' : 'Complete your booking and secure payment.',
   };
 }

@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { i18n } from '@/i18n-config';
+import { getContractorLandingContent } from '@/lib/hygraph';
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
@@ -55,13 +57,20 @@ export default async function ContractorsPage({
     const locale = i18n.locales.includes(lang as 'en' | 'es') ? (lang as 'en' | 'es') : 'en';
     const isEs = locale === 'es';
 
+    // Fetch CMS content from Hygraph
+    const hygraph = await getContractorLandingContent(locale);
+    const heroImage = hygraph.hero?.heroImageUrl ?? null;
+    const cmsHeading = hygraph.hero?.heading ?? null;
+    const cmsSubheading = hygraph.hero?.subheading ?? null;
+    const galleryImages = hygraph.galleryImages ?? [];
+
     return (
         <div className="min-h-screen bg-[#131835] text-white overflow-x-hidden">
             {/* ─── Nav ──────────────────────────────────────────────────────── */}
             <nav className="border-b border-white/5 px-6 py-4">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <Link href={`/${locale}`} className="flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                        <span className="text-[#D0B078]">✦</span> Rubens Auto Detail
+                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={140} height={36} className="w-auto h-8 brightness-0 invert opacity-90" />
                     </Link>
                     <div className="flex items-center gap-4">
                         <Link
@@ -82,8 +91,19 @@ export default async function ContractorsPage({
 
             {/* ─── Hero ──────────────────────────────────────────────────────── */}
             <section className="relative py-14 sm:py-24 px-6 overflow-hidden">
+                {/* Hero background image from Hygraph */}
+                {heroImage && (
+                    <Image
+                        src={heroImage}
+                        alt="Contractor hero"
+                        fill
+                        priority
+                        className="object-cover object-center opacity-15"
+                        sizes="100vw"
+                    />
+                )}
                 <div
-                    className="absolute inset-0 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none z-[1]"
                     style={{
                         background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(208,176,120,0.14) 0%, transparent 65%)',
                     }}
@@ -94,14 +114,18 @@ export default async function ContractorsPage({
                         {isEs ? 'Únete al equipo' : 'Join the team'}
                     </div>
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                        {isEs
-                            ? <>Gana dinero haciendo<br /><span className="text-gold-gradient">lo que ya sabes hacer.</span></>
-                            : <>Get paid to do<br /><span className="text-gold-gradient">what you already do.</span></>}
+                        {cmsHeading
+                            ? <><span className="text-gold-gradient">{cmsHeading}</span></>
+                            : isEs
+                                ? <>Gana dinero haciendo<br /><span className="text-gold-gradient">lo que ya sabes hacer.</span></>
+                                : <>Get paid to do<br /><span className="text-gold-gradient">what you already do.</span></>}
                     </h1>
                     <p className="text-lg text-white/50 max-w-xl mx-auto leading-relaxed">
-                        {isEs
-                            ? 'Conviértete en detallador certificado en la plataforma Rubens. Tú traes el talento, nosotros traemos los clientes.'
-                            : 'Become a certified detailer on the Rubens platform. You bring the skill, we bring the customers.'}
+                        {cmsSubheading
+                            ? cmsSubheading
+                            : isEs
+                                ? 'Conviértete en detallador certificado en la plataforma Rubens. Tú traes el talento, nosotros traemos los clientes.'
+                                : 'Become a certified detailer on the Rubens platform. You bring the skill, we bring the customers.'}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                         <Link
@@ -119,6 +143,33 @@ export default async function ContractorsPage({
                     </div>
                 </div>
             </section>
+
+            {/* ─── Gallery Strip ────────────────────────────────────────────── */}
+            {galleryImages.length > 0 && (
+                <section className="py-8 px-6 bg-white/[0.015]">
+                    <div className="max-w-5xl mx-auto">
+                        <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium text-center mb-5">
+                            {isEs ? 'Nuestro equipo en acción' : 'Our team in action'}
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {galleryImages.map((img) => (
+                                <div key={img.imageUrl} className="relative aspect-[4/3] rounded-xl overflow-hidden group">
+                                    <Image
+                                        src={img.imageUrl}
+                                        alt={img.caption}
+                                        fill
+                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                        sizes="(max-width: 768px) 50vw, 25vw"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <span className="text-white text-xs font-medium">{img.caption}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* ─── Perks ─────────────────────────────────────────────────────── */}
             <section className="py-12 sm:py-20 px-6 bg-white/[0.015]">
@@ -248,12 +299,22 @@ export default async function ContractorsPage({
             {/* ─── Footer ────────────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 py-8 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
-                    <Link href={`/${locale}`} className="hover:text-white/60 transition-colors">
-                        ← {isEs ? 'Volver al inicio' : 'Back to home'}
-                    </Link>
-                    <Link href={`/${locale}/login`} className="hover:text-white/60 transition-colors">
-                        {isEs ? 'Iniciar sesión' : 'Log in'}
-                    </Link>
+                    <div className="flex flex-col items-center sm:items-start gap-3">
+                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={120} height={32} className="w-auto h-6 brightness-0 invert opacity-50" />
+                        <p>© {new Date().getFullYear()}</p>
+                        <p>
+                            {isEs ? 'Diseñado por' : 'Designed by'}{' '}
+                            <span className="text-white/45 font-medium">OAC Digital Innovations</span>
+                        </p>
+                    </div>
+                    <div className="flex gap-6">
+                        <Link href={`/${locale}`} className="hover:text-white/60 transition-colors">
+                            ← {isEs ? 'Volver al inicio' : 'Back to home'}
+                        </Link>
+                        <Link href={`/${locale}/login`} className="hover:text-white/60 transition-colors">
+                            {isEs ? 'Iniciar sesión' : 'Log in'}
+                        </Link>
+                    </div>
                 </div>
             </footer>
         </div>

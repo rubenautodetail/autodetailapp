@@ -16,7 +16,7 @@ const cspDirectives = [
     "https://api.mapbox.com https://events.mapbox.com",
     "https://api-us-west-2.hygraph.com",
   ].join(" "),
-  "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com",
+  "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com https://images.unsplash.com https://images.hygraph.com https://media.graphassets.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -40,6 +40,15 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'images.hygraph.com' },
+      { protocol: 'https', hostname: 'media.graphassets.com' },
+      { protocol: 'https', hostname: 'eu-west-2.graphassets.com' },
+      { protocol: 'https', hostname: 'us-west-2.graphassets.com' },
+    ],
   },
 };
 

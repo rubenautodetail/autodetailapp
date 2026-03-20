@@ -9,7 +9,7 @@ export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
 }
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rubensautodetail.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
     const { lang } = await params;

@@ -49,7 +49,7 @@ export default function ContractorPendingPage() {
                                 : "Your contractor application was not approved. Contact us if you believe this is a mistake."}
                         </p>
                         <a
-                            href="mailto:support@rubensautodetail.com"
+                            href="mailto:support@dtailwash.com"
                             className="inline-block px-6 py-3 bg-yellow-500 text-black font-semibold rounded-lg hover:bg-yellow-400 transition-colors text-sm mb-4"
                         >
                             {isEs ? "Contáctanos" : "Contact Support"}

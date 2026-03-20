@@ -92,7 +92,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const locale = (lang === 'es' || lang === 'en') ? lang : 'en';
 
   return {
-    title: locale === 'es' ? 'Seleccionar Servicio | Rubens Auto Detail' : 'Select Service | Rubens Auto Detail',
+    title: locale === 'es' ? 'Seleccionar Servicio | DetailWash' : 'Select Service | DetailWash',
     description: locale === 'es' ? 'Elige el paquete de detallado perfecto para tu vehículo.' : 'Choose the perfect detailing package for your vehicle.',
   };
 }

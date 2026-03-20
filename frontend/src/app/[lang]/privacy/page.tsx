@@ -36,7 +36,7 @@ export default async function PrivacyPage({
                   },
                   {
                       heading: '5. Sus Derechos',
-                      body: 'Tiene derecho a: acceder a los datos personales que tenemos sobre usted; corregir información inexacta; solicitar la eliminación de sus datos; oponerse o limitar ciertos usos de sus datos; recibir sus datos en un formato portátil. Para ejercer estos derechos, contáctenos en support@rubensautodetail.com.',
+                      body: 'Tiene derecho a: acceder a los datos personales que tenemos sobre usted; corregir información inexacta; solicitar la eliminación de sus datos; oponerse o limitar ciertos usos de sus datos; recibir sus datos en un formato portátil. Para ejercer estos derechos, contáctenos en support@dtailwash.com.',
                   },
                   {
                       heading: '6. Cookies y Seguimiento',
@@ -56,7 +56,7 @@ export default async function PrivacyPage({
                   },
                   {
                       heading: '10. Contáctenos',
-                      body: 'Si tiene preguntas sobre esta política o sobre cómo manejamos sus datos, póngase en contacto con nosotros en support@rubensautodetail.com. Responderemos dentro de los 30 días hábiles.',
+                      body: 'Si tiene preguntas sobre esta política o sobre cómo manejamos sus datos, póngase en contacto con nosotros en support@dtailwash.com. Responderemos dentro de los 30 días hábiles.',
                   },
               ]
             : [
@@ -78,7 +78,7 @@ export default async function PrivacyPage({
                   },
                   {
                       heading: '5. Your Rights',
-                      body: 'You have the right to: access the personal data we hold about you; correct inaccurate information; request deletion of your data; object to or restrict certain uses of your data; receive your data in a portable format. To exercise these rights, contact us at support@rubensautodetail.com.',
+                      body: 'You have the right to: access the personal data we hold about you; correct inaccurate information; request deletion of your data; object to or restrict certain uses of your data; receive your data in a portable format. To exercise these rights, contact us at support@dtailwash.com.',
                   },
                   {
                       heading: '6. Cookies & Tracking',
@@ -98,7 +98,7 @@ export default async function PrivacyPage({
                   },
                   {
                       heading: '10. Contact Us',
-                      body: 'If you have questions about this policy or how we handle your data, please contact us at support@rubensautodetail.com. We will respond within 30 business days.',
+                      body: 'If you have questions about this policy or how we handle your data, please contact us at support@dtailwash.com. We will respond within 30 business days.',
                   },
               ],
     };
@@ -149,10 +149,10 @@ export default async function PrivacyPage({
                             ? '¿Preguntas sobre su privacidad? Contáctenos en '
                             : 'Questions about your privacy? Contact us at '}
                         <a
-                            href="mailto:support@rubensautodetail.com"
+                            href="mailto:support@dtailwash.com"
                             className="text-[#D0B078] hover:underline"
                         >
-                            support@rubensautodetail.com
+                            support@dtailwash.com
                         </a>
                     </p>
                 </div>

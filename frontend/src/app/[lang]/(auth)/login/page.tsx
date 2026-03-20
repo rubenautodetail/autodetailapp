@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Loader2 } from "lucide-react";
 
 const t = {
@@ -79,9 +80,8 @@ function LoginForm() {
             <div className="w-full max-w-sm">
                 {/* Brand */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 mb-4">
-                        <span className="text-2xl font-bold text-[var(--accent)]">✦</span>
-                        <span className="text-xl font-bold text-[var(--text-primary)]">Rubens Detail</span>
+                    <div className="inline-flex justify-center items-center mb-6">
+                        <Image src="/dtailwash_logo_final.png" alt="Rubens Detail" width={180} height={48} className="w-auto h-12 brightness-0 invert opacity-90" priority />
                     </div>
                     <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-1">{dict.title}</h1>
                     <p className="text-[var(--text-secondary)] text-sm">{dict.subtitle}</p>

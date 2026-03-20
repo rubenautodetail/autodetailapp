@@ -60,7 +60,7 @@ export default function ReceiptPage() {
 
     const t = {
         title: lang === 'es' ? 'Recibo de Pago' : 'Payment Receipt',
-        thankYou: lang === 'es' ? '¡Gracias por elegir Rubens Auto Detail!' : 'Thank you for choosing Rubens Auto Detail!',
+        thankYou: lang === 'es' ? '¡Gracias por elegir DetailWash!' : 'Thank you for choosing DetailWash!',
         paymentProcessed: lang === 'es' ? 'Tu pago ha sido procesado exitosamente.' : 'Your payment has been processed successfully.',
         service: lang === 'es' ? 'Servicio' : 'Service',
         date: lang === 'es' ? 'Fecha' : 'Date',
