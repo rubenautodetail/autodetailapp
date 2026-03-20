@@ -7,6 +7,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 
+interface TimeWindow {
+  slot: string; // HH:MM format
+  label: string;
+  label_es: string;
+}
+
 export async function POST(req: NextRequest) {
     try {
         const { zipCode, month } = await req.json();
@@ -34,6 +40,37 @@ export async function POST(req: NextRequest) {
         const currentMonth = today.toISOString().slice(0, 7);
 
         const supabase = createServiceClient();
+
+        // Fetch time windows from admin config
+        let timeWindows: TimeWindow[] = [
+            { slot: "09:00", label: "9:00 AM", label_es: "9:00 AM" },
+            { slot: "10:00", label: "10:00 AM", label_es: "10:00 AM" },
+            { slot: "11:00", label: "11:00 AM", label_es: "11:00 AM" },
+            { slot: "12:00", label: "12:00 PM", label_es: "12:00 PM" },
+            { slot: "13:00", label: "1:00 PM", label_es: "1:00 PM" },
+            { slot: "14:00", label: "2:00 PM", label_es: "2:00 PM" },
+            { slot: "15:00", label: "3:00 PM", label_es: "3:00 PM" },
+            { slot: "16:00", label: "4:00 PM", label_es: "4:00 PM" },
+        ];
+
+        try {
+            const timeWindowResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/admin/time-windows`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (timeWindowResponse.ok) {
+                const timeWindowData = await timeWindowResponse.json();
+                timeWindows = timeWindowData.timeWindows.map((w: any) => ({
+                    slot: w.slot,
+                    label: w.label,
+                    label_es: w.label_es || w.label,
+                }));
+            }
+        } catch (timeWindowError) {
+            console.warn('Could not fetch time windows from admin API, using defaults:', timeWindowError);
+            // Keep default time windows
+        }
 
         // Count active contractors (onboarding complete)
         const { count: contractorCount } = await supabase
@@ -81,16 +118,18 @@ export async function POST(req: NextRequest) {
                 // Skip Sundays (day 0)
                 if (dateObj.getDay() === 0) continue;
 
-                const timeWindows = [
-                    { window: 'morning', label: '9:00 AM - 12:00 PM' },
-                    { window: 'afternoon', label: '1:00 PM - 4:00 PM' },
-                    { window: 'evening', label: '4:00 PM - 7:00 PM' },
-                ];
-
+                // Convert admin time windows to availability slots
                 const slots = timeWindows
-                    .map(({ window, label }) => {
-                        const booked = bookedMap.get(`${dateKey}:${window}`) ?? 0;
-                        return { window, label, contractorsAvailable: Math.max(0, totalContractors - booked) };
+                    .filter(w => w.is_active !== false) // Only active time windows
+                    .map(window => {
+                        // Create time window key for checking bookings (e.g., "09:00" -> morning/afternoon/evening)
+                        const windowKey = getWindowKeyFromSlot(window.slot);
+                        const booked = bookedMap.get(`${dateKey}:${windowKey}`) ?? 0;
+                        return {
+                            window: window.slot,
+                            label: window.label,
+                            contractorsAvailable: Math.max(0, totalContractors - booked)
+                        };
                     })
                     .filter((s) => s.contractorsAvailable > 0); // Only show open slots
 
@@ -119,4 +158,14 @@ export async function POST(req: NextRequest) {
             { status: 500 }
         );
     }
+}
+
+// Helper function to map time slot to window key for booking compatibility
+function getWindowKeyFromSlot(slot: string): string {
+    const hour = parseInt(slot.split(':')[0], 10);
+    if (hour >= 9 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 16) return 'afternoon';
+    if (hour >= 16 && hour < 19) return 'evening';
+    // Default to morning for edge cases
+    return 'morning';
 }

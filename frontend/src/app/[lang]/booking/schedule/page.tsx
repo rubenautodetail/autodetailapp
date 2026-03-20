@@ -7,22 +7,22 @@ import { PricingSummary, ProgressIndicator } from "@/components/booking";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
+interface TimeWindowConfig {
+  slot: string;
+  label: string;
+  labelEs: string;
+  range: string;
+  rangeEs: string;
+}
+
 interface SchedulePageProps {
   params: Promise<{
     lang: "en" | "es";
   }>;
 }
 
-const TIME_WINDOWS = [
-  { slot: "09:00", label: "9:00 AM", labelEs: "9:00 AM", range: "9:00 AM", rangeEs: "9:00 AM" },
-  { slot: "10:00", label: "10:00 AM", labelEs: "10:00 AM", range: "10:00 AM", rangeEs: "10:00 AM" },
-  { slot: "11:00", label: "11:00 AM", labelEs: "11:00 AM", range: "11:00 AM", rangeEs: "11:00 AM" },
-  { slot: "12:00", label: "12:00 PM", labelEs: "12:00 PM", range: "12:00 PM", rangeEs: "12:00 PM" },
-  { slot: "13:00", label: "1:00 PM", labelEs: "1:00 PM", range: "1:00 PM", rangeEs: "1:00 PM" },
-  { slot: "14:00", label: "2:00 PM", labelEs: "2:00 PM", range: "2:00 PM", rangeEs: "2:00 PM" },
-  { slot: "15:00", label: "3:00 PM", labelEs: "3:00 PM", range: "3:00 PM", rangeEs: "3:00 PM" },
-  { slot: "16:00", label: "4:00 PM", labelEs: "4:00 PM", range: "4:00 PM", rangeEs: "4:00 PM" },
-];
+// Time windows will be fetched from API
+let TIME_WINDOWS: Array<{ slot: string; label: string; labelEs: string; range: string; rangeEs: string }> = [];
 
 export default function SchedulePage({ params }: SchedulePageProps) {
   const router = useRouter();
@@ -46,11 +46,11 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(selectedDate);
-  const [tempSelectedWindow, setTempSelectedWindow] = useState<typeof TIME_WINDOWS[0] | null>(
-    selectedTimeWindow
-  );
+  const [tempSelectedWindow, setTempSelectedWindow] = useState<TimeWindowConfig | null>(null);
   const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+  const [timeWindows, setTimeWindows] = useState<TimeWindowConfig[]>([]);
+  const [isLoadingTimeWindows, setIsLoadingTimeWindows] = useState(true);
 
   // Redirect if prerequisites not met
   useEffect(() => {
@@ -61,6 +61,52 @@ export default function SchedulePage({ params }: SchedulePageProps) {
       router.push(`/${locale}/booking/location`);
     }
   }, [selectedService, customerLocation, router, locale]);
+
+  // Fetch time windows when language changes
+  useEffect(() => {
+    const fetchTimeWindows = async () => {
+      setIsLoadingTimeWindows(true);
+      try {
+        const response = await fetch(`/api/admin/time-windows`, {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) {
+          // Fallback to default time windows if API fails
+          setTimeWindows([
+            { slot: "09:00", label: "9:00 AM", labelEs: "9:00 AM", range: "9:00 AM", rangeEs: "9:00 AM" },
+            { slot: "10:00", label: "10:00 AM", labelEs: "10:00 AM", range: "10:00 AM", rangeEs: "10:00 AM" },
+            { slot: "11:00", label: "11:00 AM", labelEs: "11:00 AM", range: "11:00 AM", rangeEs: "11:00 AM" },
+            { slot: "12:00", label: "12:00 PM", labelEs: "12:00 PM", range: "12:00 PM", rangeEs: "12:00 PM" },
+            { slot: "13:00", label: "1:00 PM", labelEs: "1:00 PM", range: "1:00 PM", rangeEs: "1:00 PM" },
+            { slot: "14:00", label: "2:00 PM", labelEs: "2:00 PM", range: "2:00 PM", rangeEs: "2:00 PM" },
+            { slot: "15:00", label: "3:00 PM", labelEs: "3:00 PM", range: "3:00 PM", rangeEs: "3:00 PM" },
+            { slot: "16:00", label: "4:00 PM", labelEs: "4:00 PM", range: "4:00 PM", rangeEs: "4:00 PM" },
+          ]);
+        } else {
+          const data = await response.json();
+          setTimeWindows(data.timeWindows || []);
+        }
+      } catch (error) {
+        console.error("Error fetching time windows:", error);
+        // Fallback to default time windows
+        setTimeWindows([
+          { slot: "09:00", label: "9:00 AM", labelEs: "9:00 AM", range: "9:00 AM", rangeEs: "9:00 AM" },
+          { slot: "10:00", label: "10:00 AM", labelEs: "10:00 AM", range: "10:00 AM", rangeEs: "10:00 AM" },
+          { slot: "11:00", label: "11:00 AM", labelEs: "11:00 AM", range: "11:00 AM", rangeEs: "11:00 AM" },
+          { slot: "12:00", label: "12:00 PM", labelEs: "12:00 PM", range: "12:00 PM", rangeEs: "12:00 PM" },
+          { slot: "13:00", label: "1:00 PM", labelEs: "1:00 PM", range: "1:00 PM", rangeEs: "1:00 PM" },
+          { slot: "14:00", label: "2:00 PM", labelEs: "2:00 PM", range: "2:00 PM", rangeEs: "2:00 PM" },
+          { slot: "15:00", label: "3:00 PM", labelEs: "3:00 PM", range: "3:00 PM", rangeEs: "3:00 PM" },
+          { slot: "16:00", label: "4:00 PM", labelEs: "4:00 PM", range: "4:00 PM", rangeEs: "4:00 PM" },
+        ]);
+      } finally {
+        setIsLoadingTimeWindows(false);
+      }
+    };
+
+    fetchTimeWindows();
+  }, [locale]);
 
   // Fetch availability when month changes
   useEffect(() => {
@@ -188,7 +234,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     setTempSelectedWindow(null);
   };
 
-  const isTimeWindowAvailable = (window: typeof TIME_WINDOWS[0]): boolean => {
+  const isTimeWindowAvailable = (window: TimeWindowConfig): boolean => {
     if (!tempSelectedDate) return true;
     const today = new Date();
     const isToday = tempSelectedDate.toDateString() === today.toDateString();
@@ -198,7 +244,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     return slotHour > today.getHours() + 1;
   };
 
-  const handleWindowSelect = (window: typeof TIME_WINDOWS[0]) => {
+  const handleWindowSelect = (window: TimeWindowConfig) => {
     if (!isTimeWindowAvailable(window)) return;
     setTempSelectedWindow(window);
   };
@@ -358,7 +404,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                 </h3>
 
                 <div className="grid md:grid-cols-3 gap-4">
-                  {TIME_WINDOWS.map((window) => {
+                  {timeWindows.map((window) => {
                     const isSelected = tempSelectedWindow?.slot === window.slot;
                     const isAvailable = isTimeWindowAvailable(window);
                     const label = locale === "es" ? window.labelEs : window.label;

@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 fixed top-0 left-0 h-full z-20">
         <div className="px-5 py-5 border-b border-gray-100">
           <div className="mb-4 mt-2">
-            <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={140} height={36} className="w-auto h-8 brightness-0 opacity-80" />
+            <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={180} height={48} className="w-auto h-10 sm:h-12 opacity-100 drop-shadow-sm" />
           </div>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
