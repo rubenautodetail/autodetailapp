@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Use the caller-supplied `next` so the confirmation email lands on the right page
     // (e.g. /en/contractors/apply instead of the generic dashboard)
-    const postConfirmRedirect = next && next.startsWith('/') ? next : `/${lang}/dashboard`;
+    const postConfirmRedirect = next && next.startsWith('/') ? next : `/${lang}/login`;
 
     const { data, error } = await supabase.auth.signUp({
       email,
