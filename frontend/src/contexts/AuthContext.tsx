@@ -112,6 +112,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       options: {
         data: {
           full_name: name,
+          // Store the redirect intent in metadata so the callback can recover it
+          // even if Supabase strips our ?next= query param from the redirect URL
+          pending_redirect: postConfirmRedirect,
         },
         emailRedirectTo: `${siteUrl}/api/auth/callback?next=${encodeURIComponent(postConfirmRedirect)}`,
       },
@@ -120,11 +123,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
 
     // Create profile row via service-role API route (anon key can't write with RLS enabled)
+    // If this is the contractor flow, create the profile with role: contractor from the start
+    const isContractorFlow = postConfirmRedirect.includes('contractors/apply');
     if (data.user?.id) {
       fetch('/api/auth/create-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: data.user.id, name }),
+        body: JSON.stringify({
+          userId: data.user.id,
+          name,
+          role: isContractorFlow ? 'contractor' : 'user',
+        }),
       }).catch((err) => console.warn('Profile creation failed (non-critical):', err));
     }
 

@@ -3,14 +3,16 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, name } = await req.json();
+    const { userId, name, role } = await req.json();
     if (!userId || !name) {
       return NextResponse.json({ error: "Missing userId or name" }, { status: 400 });
     }
 
+    const assignedRole = role === "contractor" ? "contractor" : "user";
+
     const supabase = createServiceClient();
     const { error } = await supabase.from("profiles").upsert(
-      { id: userId, full_name: name, role: "user", updated_at: new Date().toISOString() },
+      { id: userId, full_name: name, role: assignedRole, updated_at: new Date().toISOString() },
       { onConflict: "id", ignoreDuplicates: true }
     );
 

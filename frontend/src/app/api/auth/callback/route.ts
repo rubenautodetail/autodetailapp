@@ -55,15 +55,31 @@ export async function GET(request: NextRequest) {
     )
 
     let error: { message: string } | null = null
+    let resolvedNext = next
 
     if (tokenHash && type) {
-        // Cross-device compatible: works regardless of which browser initiated sign-up
         const result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
         error = result.error
+
+        // If next is still the default, check user metadata for the stored redirect intent
+        if (!error && (resolvedNext === '/en' || resolvedNext === '/es')) {
+            const { data: { user } } = await supabase.auth.getUser()
+            const pendingRedirect = user?.user_metadata?.pending_redirect
+            if (pendingRedirect && pendingRedirect.startsWith('/')) {
+                resolvedNext = pendingRedirect
+            }
+        }
     } else if (code) {
-        // PKCE: only works if the same browser that called signUp is handling the callback
         const result = await supabase.auth.exchangeCodeForSession(code)
         error = result.error
+
+        if (!error && (resolvedNext === '/en' || resolvedNext === '/es')) {
+            const { data: { user } } = await supabase.auth.getUser()
+            const pendingRedirect = user?.user_metadata?.pending_redirect
+            if (pendingRedirect && pendingRedirect.startsWith('/')) {
+                resolvedNext = pendingRedirect
+            }
+        }
     }
 
     if (error) {
@@ -76,10 +92,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Success — redirect to destination with session cookies
-    const redirectUrl = new URL(next, origin)
-    const redirect = NextResponse.redirect(redirectUrl)
+    const redirectUrl = new URL(resolvedNext, origin)
+    const successRedirect = NextResponse.redirect(redirectUrl)
     supabaseResponse.cookies.getAll().forEach((c) => {
-        redirect.cookies.set(c.name, c.value, c)
+        successRedirect.cookies.set(c.name, c.value, c)
     })
-    return redirect
+    return successRedirect
 }
