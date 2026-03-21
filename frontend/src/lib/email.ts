@@ -557,10 +557,10 @@ export async function sendWelcomeEmail(user: { name: string; email: string }) {
           </div>
           <div class="content">
             <p>Hi ${user.name},</p>
-            <p>We're thrilled to have you here! Your account is ready to go.</p>
-            <p>You can now book premium auto detailing services directly to your location, manage your vehicles, and track your appointments all from your dashboard.</p>
+            <p>We're thrilled to have you here!</p>
+            <p>First, please confirm your email using the separate confirmation email we just sent you. Once confirmed, you can log in and start booking premium auto detailing services.</p>
             <p style="text-align: center;">
-              <a href="${APP_URL}/en/dashboard" class="button">Go to Dashboard</a>
+              <a href="${APP_URL}/en/login" class="button">Sign in to your account</a>
             </p>
             <p>If you have any questions, just reply to this email.</p>
             <p>Happy detailing!<br/>The DetailWash Team</p>

@@ -37,13 +37,22 @@ function LoginForm() {
     const { login, user, profile, isLoading } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
     const lang = (params.lang as "en" | "es") || "en";
     const dict = t[lang] ?? t.en;
+
+    // Show error if confirmation link failed (callback sets ?error=auth_failed)
+    const urlError = searchParams.get("error");
+    const [error, setError] = useState(
+        urlError === "auth_failed"
+            ? (lang === "es"
+                ? "El enlace de confirmación falló o expiró. Confirma tu correo e intenta de nuevo."
+                : "Confirmation link failed or expired. Please confirm your email and try again.")
+            : ""
+    );
 
     // Role-based redirect after login
     useEffect(() => {

@@ -46,7 +46,7 @@ export default function ContractorApplyPage() {
     useEffect(() => {
         if (isLoading) return;
         if (!user) {
-            router.replace(`/${lang}/contractor/login`);
+            router.replace(`/${lang}/login?next=/${lang}/contractors/apply`);
         } else if (profile?.role === "contractor" && profile?.approval_status === "approved") {
             router.replace(`/${lang}/contractor/dashboard`);
         } else if (profile?.approval_status === "pending") {
