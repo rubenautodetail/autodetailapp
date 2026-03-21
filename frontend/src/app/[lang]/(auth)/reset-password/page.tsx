@@ -108,14 +108,17 @@ function ResetPasswordForm() {
 
         setStatus("loading");
         try {
-            const { error } = await supabase.auth.updateUser({ password });
-            if (error) {
+            const res = await fetch('/api/auth/update-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
                 setStatus("error");
-                setMessage(error.message);
+                setMessage(data.error || "Failed to update password. Please try again.");
                 return;
             }
-            // Sign out non-blocking — don't await so a stale session can't hang the flow
-            supabase.auth.signOut().catch(() => {});
             setStatus("success");
             setMessage(t.success);
             setTimeout(() => router.push(loginHref), 2000);
