@@ -119,14 +119,8 @@ export function useServices(locale: 'en' | 'es'): UseServicesReturn {
 
                 if (!isMounted) return;
 
-                // Use catalog data if available, otherwise fallback
-                const mappedServices = catalogServices.length > 0
-                    ? catalogServices.map(mapCatalogService)
-                    : FALLBACK_SERVICES;
-
-                const mappedAddOns = catalogAddOns.length > 0
-                    ? catalogAddOns.map(mapCatalogAddOn)
-                    : FALLBACK_ADDONS;
+                const mappedServices = catalogServices.map(mapCatalogService);
+                const mappedAddOns = catalogAddOns.map(mapCatalogAddOn);
 
                 setServices(mappedServices);
                 setAddOns(mappedAddOns);

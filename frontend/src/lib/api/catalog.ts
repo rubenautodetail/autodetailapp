@@ -3,15 +3,10 @@
  * Services and add-ons are fetched directly from Supabase.
  */
 
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase client for direct data fetching
-function getSupabaseClient() {
-  // No Database generic — keeps TS simple, we type rows explicitly in each mapper
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+// Base URL for internal API calls (absolute on server, relative on client)
+function getBaseUrl() {
+  if (typeof window !== 'undefined') return '';
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
 // ─── Service Types (matching catalog response) ───
@@ -74,61 +69,47 @@ export interface CatalogBooking {
 
 // ─── API Functions ───
 
+// Shared fetcher — calls the internal API route which uses service-role key (no RLS issues)
+async function fetchCatalogData(): Promise<{ services: Record<string, unknown>[]; addOns: Record<string, unknown>[] }> {
+  const res = await fetch(`${getBaseUrl()}/api/services/available`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch catalog: ${res.status}`);
+  return res.json();
+}
+
 /**
- * Fetch all active services from Supabase.
- * Uses name_es / description_es for Spanish locale.
+ * Fetch all active services via the internal API (service-role key, bypasses RLS).
  */
 export async function fetchServices(locale: string = "en"): Promise<CatalogService[]> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
-    .from('services')
-    .select('id, name, name_es, description, description_es, base_price, duration_minutes, sort_order')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
-
-  if (error) throw new Error(`Failed to fetch services: ${error.message}`);
-
-  return (data || []).map((row) => ({
-    id: row.id,
+  const { services } = await fetchCatalogData();
+  return (services || []).map((row) => ({
+    id: row.id as number,
     documentId: String(row.id),
-    name: (locale === 'es' && row.name_es) ? row.name_es : row.name,
+    name: (locale === 'es' && row.name_es) ? row.name_es as string : row.name as string,
     slug: null,
-    description: (locale === 'es' && row.description_es) ? row.description_es : (row.description || ''),
+    description: (locale === 'es' && row.description_es) ? row.description_es as string : (row.description as string || ''),
     basePrice: Number(row.base_price),
-    durationMinutes: row.duration_minutes || 60,
+    durationMinutes: (row.duration_minutes as number) || 60,
     checklist: null,
-    sortOrder: row.sort_order || 0,
+    sortOrder: (row.sort_order as number) || 0,
     locale,
   }));
 }
 
 /**
- * Fetch all active add-ons from Supabase (catalog no longer required at runtime)
+ * Fetch all active add-ons via the internal API (service-role key, bypasses RLS).
  */
 export async function fetchAddOns(locale: string = "en"): Promise<CatalogAddOn[]> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
-    .from('add_ons')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
-
-  if (error) throw new Error(`Failed to fetch add-ons: ${error.message}`);
-
-  // Map Supabase column names to the CatalogAddOn interface
-  return (data || []).map((row) => ({
-    id: row.id,
-    documentId: row.document_id || String(row.id),
-    // Use Spanish name if locale is 'es' and it exists
-    name: (locale === 'es' && row.name_es) ? row.name_es : row.name,
+  const { addOns } = await fetchCatalogData();
+  return (addOns || []).map((row) => ({
+    id: row.id as number,
+    documentId: String(row.id),
+    name: (locale === 'es' && row.name_es) ? row.name_es as string : row.name as string,
     slug: null,
-    description: (locale === 'es' && row.description_es) ? row.description_es : (row.description || ''),
+    description: (locale === 'es' && row.description_es) ? row.description_es as string : (row.description as string || ''),
     price: Number(row.price),
-    durationMinutes: row.duration_minutes || 30,
+    durationMinutes: (row.duration_minutes as number) || 30,
     checklist: null,
-    sortOrder: row.sort_order || 0,
+    sortOrder: (row.sort_order as number) || 0,
     locale,
   }));
 }
