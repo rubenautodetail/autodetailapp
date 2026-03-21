@@ -15,7 +15,7 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
     if (pathname === `/${lang}` || pathname === `/${lang}/`) return null;
 
     // Hide on contractor and admin sections — they have their own navs
-    if (pathname?.includes("/contractor/") || pathname?.includes("/admin/") || pathname?.includes("/admin")) {
+    if (pathname?.includes("/contractor") || pathname?.includes("/contractors") || pathname?.includes("/admin")) {
         return null;
     }
 

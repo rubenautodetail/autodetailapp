@@ -125,6 +125,11 @@ function ResetPasswordForm() {
                 setMessage(data.error || "Failed to update password. Please try again.");
                 return;
             }
+            // Sign out client-side to clear the recovery session from memory.
+            // The server already did a global sign-out; this ensures the client
+            // doesn't carry stale auth state into the login page, which would
+            // cause a SIGNED_OUT race against the new SIGNED_IN event.
+            await supabase.auth.signOut();
             setStatus("success");
             setMessage(t.success);
             setTimeout(() => router.push(loginHref), 2000);

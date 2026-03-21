@@ -68,7 +68,16 @@ export default function ContractorLoginPage() {
 
     try {
       await login(email, password);
-      // useEffect handles redirect once profile loads
+      // useEffect handles redirect once profile loads.
+      // Safety timeout: if profile never loads within 8s, unfreeze the button.
+      setTimeout(() => {
+        setLoading((prev) => {
+          if (prev) {
+            setError(isEs ? "Error de conexión. Intenta de nuevo." : "Connection error. Please try again.");
+          }
+          return false;
+        });
+      }, 8000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.toLowerCase().includes("email not confirmed")) {
