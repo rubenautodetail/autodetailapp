@@ -45,9 +45,11 @@ function ForgotPasswordForm() {
         setMessage("");
 
         try {
-            const fromParam = isContractorFlow ? '?from=contractor' : '';
+            const nextPath = isContractorFlow
+                ? `/${lang}/reset-password?from=contractor`
+                : `/${lang}/reset-password`;
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/${lang}/reset-password${fromParam}`,
+                redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`,
             });
             if (error) {
                 setStatus("error");
