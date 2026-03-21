@@ -108,27 +108,17 @@ function ResetPasswordForm() {
 
         setStatus("loading");
         try {
-            // Confirm session is still alive before attempting the update
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            if (!currentSession) {
-                setStatus("error");
-                setMessage(lang === "es"
-                    ? "Sesión expirada. Solicita un nuevo enlace."
-                    : "Session expired. Please request a new reset link.");
-                return;
-            }
-
             const { error } = await supabase.auth.updateUser({ password });
             if (error) {
                 setStatus("error");
                 setMessage(error.message);
-            } else {
-                // Sign out so the user lands on a clean login page
-                await supabase.auth.signOut();
-                setStatus("success");
-                setMessage(t.success);
-                setTimeout(() => router.push(loginHref), 2000);
+                return;
             }
+            // Sign out non-blocking — don't await so a stale session can't hang the flow
+            supabase.auth.signOut().catch(() => {});
+            setStatus("success");
+            setMessage(t.success);
+            setTimeout(() => router.push(loginHref), 2000);
         } catch (err: unknown) {
             setStatus("error");
             setMessage(err instanceof Error ? err.message : "Failed to update password. Please try again.");

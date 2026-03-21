@@ -67,9 +67,10 @@ export default function ContractorLayout({
     // Notifications Hook — must be before any early return
     const { notifications, dismissToast } = useNotifications();
 
-    // Login page renders without the nav shell
+    // Login and pending pages render without the nav shell
     const isLoginPage = pathname?.endsWith('/contractor/login');
-    if (isLoginPage) return <>{children}</>;
+    const isPendingPage = pathname?.endsWith('/contractor/pending');
+    if (isLoginPage || isPendingPage) return <>{children}</>;
 
     if (authLoading || !profile || (profile.role !== 'contractor' && profile.role !== 'admin') ||
         (profile.role === 'contractor' && profile.approval_status !== 'approved')) {

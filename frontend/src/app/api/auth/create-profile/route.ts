@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const supabase = createServiceClient();
     const { error } = await supabase.from("profiles").upsert(
       { id: userId, full_name: name, role: assignedRole, updated_at: new Date().toISOString() },
-      { onConflict: "id", ignoreDuplicates: true }
+      { onConflict: "id", ignoreDuplicates: false }
     );
 
     if (error) throw error;

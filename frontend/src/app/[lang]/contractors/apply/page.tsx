@@ -78,19 +78,18 @@ export default function ContractorApplyPage() {
                     bankAccountType:     values.bankAccountType      || "",
                 }),
             });
-            let json;
+            const text = await res.text();
+            let json: Record<string, unknown> | null = null;
             try {
-                json = await res.json();
-            } catch (e) {
-                // If it's not JSON, it's likely a 500 HTML error page from the framework/middleware
-                const text = await res.clone().text();
+                json = JSON.parse(text);
+            } catch {
                 console.error("Failed to parse JSON response:", text);
-                throw new Error(isEs 
+                throw new Error(isEs
                     ? `Error del servidor (formato inválido). Estado: ${res.status}`
                     : `Server error (invalid format). Status: ${res.status}`);
             }
 
-            if (!res.ok) throw new Error(json.error || "Submission failed");
+            if (!res.ok) throw new Error((json?.error as string) || "Submission failed");
 
             // Refresh profile so AuthContext knows role changed to contractor
             await refreshProfile();
@@ -106,7 +105,7 @@ export default function ContractorApplyPage() {
     const redirectPending = !isLoading && (
         !user ||
         (profile?.role === "contractor" && profile?.approval_status === "approved") ||
-        profile?.approval_status === "pending"
+        (profile?.role === "contractor" && profile?.approval_status === "pending")
     );
     if (isLoading || redirectPending) return null;
 

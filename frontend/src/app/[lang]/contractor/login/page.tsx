@@ -29,13 +29,17 @@ export default function ContractorLoginPage() {
 
     const role = profile.role;
 
-    // Contractor → go to dashboard or pending
+    // Contractor → go to correct destination based on approval status
     if (role === "contractor") {
-      router.replace(
-        profile.approval_status === "approved"
-          ? `/${lang}/contractor/dashboard`
-          : `/${lang}/contractor/pending`
-      );
+      if (profile.approval_status === "approved") {
+        router.replace(`/${lang}/contractor/dashboard`);
+      } else if (!profile.approval_status) {
+        // Never applied — send to application form
+        router.replace(`/${lang}/contractors/apply`);
+      } else {
+        // Applied but not yet approved (pending / rejected)
+        router.replace(`/${lang}/contractor/pending`);
+      }
       return;
     }
 

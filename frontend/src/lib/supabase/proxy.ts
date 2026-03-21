@@ -68,8 +68,10 @@ export async function updateSession(request: NextRequest) {
         path === '/api/contractors/register'
 
     const isAuthPage =
-        path.includes('/login') ||
-        path.includes('/register')
+        !path.startsWith('/api/') && (
+            path.includes('/login') ||
+            path.includes('/register')
+        )
 
     const isLandingPage =
         path === `/${locale}` ||
@@ -114,9 +116,6 @@ export async function updateSession(request: NextRequest) {
     const isContractorLogin = path.includes('/contractor/login')
     const isAdminLogin = path.includes('/admin/login')
     const isAnyLoginPage = isContractorLogin || isAdminLogin || path.endsWith('/login')
-    const nextParam = request.nextUrl.searchParams.get('next')
-    const isContractorApplicationFlow = nextParam?.includes('/contractors/apply')
-
     // Redirect logged-in users away from /register and other auth pages
     // For contractor flow: send them straight to /contractors/apply (skip register)
     if (user && isAuthPage && !isAnyLoginPage) {
@@ -158,7 +157,9 @@ export async function updateSession(request: NextRequest) {
                     const approvalStatus = (loginProfile as { approval_status?: string } | null)?.approval_status
                     dest.pathname = approvalStatus === 'approved'
                         ? `/${locale}/contractor/dashboard`
-                        : `/${locale}/contractor/pending`
+                        : !approvalStatus
+                            ? `/${locale}/contractors/apply`
+                            : `/${locale}/contractor/pending`
                 } else {
                     dest.pathname = `/${locale}/dashboard`
                 }
@@ -209,16 +210,21 @@ export async function updateSession(request: NextRequest) {
         }
 
         const approvalStatus = (profile as { approval_status?: string } | null)?.approval_status
-        if (
-            isContractorRoute &&
-            role === 'contractor' &&
-            approvalStatus !== 'approved' &&
-            !path.includes('/contractor/pending')
-        ) {
-            const pendingUrl = request.nextUrl.clone()
-            pendingUrl.pathname = `/${locale}/contractor/pending`
-            pendingUrl.search = ''
-            return cookiedRedirect(supabaseResponse, pendingUrl)
+        if (isContractorRoute && role === 'contractor' && approvalStatus !== 'approved') {
+            // No application submitted yet → send to apply form
+            if (!approvalStatus && !path.includes('/contractors/apply')) {
+                const applyUrl = request.nextUrl.clone()
+                applyUrl.pathname = `/${locale}/contractors/apply`
+                applyUrl.search = ''
+                return cookiedRedirect(supabaseResponse, applyUrl)
+            }
+            // Applied but not yet approved → send to pending
+            if (approvalStatus && !path.includes('/contractor/pending')) {
+                const pendingUrl = request.nextUrl.clone()
+                pendingUrl.pathname = `/${locale}/contractor/pending`
+                pendingUrl.search = ''
+                return cookiedRedirect(supabaseResponse, pendingUrl)
+            }
         }
     }
 
