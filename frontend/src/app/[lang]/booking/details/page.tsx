@@ -52,7 +52,9 @@ export default function DetailsPage({ params }: DetailsPageProps) {
     selectedDate,
     selectedTimeWindow,
     vehicleInfo,
+    bookingVehicles,
     setVehicleInfo,
+    addBookingVehicle,
     subtotal,
     serviceFee,
     total,
@@ -106,9 +108,18 @@ export default function DetailsPage({ params }: DetailsPageProps) {
   const handleContinue = () => {
     if (!validate()) return;
 
-    setVehicleInfo({ make, model, year, color });
+    const vehicle = { make, model, year, color };
+    setVehicleInfo(vehicle);
+    // Also add to bookingVehicles if not already a duplicate
+    const isDuplicate = bookingVehicles.some(
+      bv => bv.make === vehicle.make && bv.model === vehicle.model && bv.year === vehicle.year && bv.color === vehicle.color
+    );
+    if (!isDuplicate) {
+      addBookingVehicle(vehicle);
+    }
     nextStep();
-    router.push(`/${locale}/booking/payment`);
+    // Route to review (where customerInfo is collected) rather than directly to payment
+    router.push(`/${locale}/booking/review`);
   };
 
   const handleBack = () => {

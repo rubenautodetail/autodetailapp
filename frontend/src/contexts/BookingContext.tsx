@@ -98,10 +98,15 @@ interface BookingContextType {
   // Customer contact info (collected on review page, used on payment page)
   customerInfo: CustomerInfo | null;
 
-  // Vehicle info (collected on details page, used on payment page)
+  // Vehicle info — single vehicle (backwards compat, reflects first vehicle)
   vehicleInfo: VehicleInfo | null;
 
-  // Pricing
+  // Multi-vehicle booking — array of vehicles for one appointment
+  bookingVehicles: VehicleInfo[];
+  addBookingVehicle: (vehicle: VehicleInfo) => void;
+  removeBookingVehicle: (index: number) => void;
+
+  // Pricing (per vehicle — multiply by vehicleCount for group total)
   subtotal: number;
   serviceFee: number;
   total: number;
@@ -154,6 +159,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   // Vehicle info
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
 
+  // Multi-vehicle booking
+  const [bookingVehicles, setBookingVehicles] = useState<VehicleInfo[]>([]);
+
   // Payment state
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'paid' | 'failed' | 'refunded'>('pending');
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
@@ -170,6 +178,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const tw = ssGet<TimeWindow>('selectedTimeWindow');
     const ci = ssGet<CustomerInfo>('customerInfo');
     const vi = ssGet<VehicleInfo>('vehicleInfo');
+    const bv = ssGet<VehicleInfo[]>('bookingVehicles');
     const step = ssGet<number>('currentStep');
 
     if (svc) setSelectedService(svc);
@@ -179,6 +188,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     if (tw) setSelectedTimeWindow(tw);
     if (ci) setCustomerInfo(ci);
     if (vi) setVehicleInfo(vi);
+    if (bv && bv.length > 0) setBookingVehicles(bv);
     if (step) setCurrentStep(step);
 
     // Recalculate pricing from restored state
@@ -267,6 +277,35 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     ssSave({ vehicleInfo: info });
   };
 
+  const addBookingVehicle = (vehicle: VehicleInfo) => {
+    setBookingVehicles(prev => {
+      const next = [...prev, vehicle];
+      ssSave({ bookingVehicles: next });
+      // Keep vehicleInfo in sync with first vehicle
+      if (next.length === 1) {
+        setVehicleInfo(vehicle);
+        ssSave({ vehicleInfo: vehicle });
+      }
+      return next;
+    });
+  };
+
+  const removeBookingVehicle = (index: number) => {
+    setBookingVehicles(prev => {
+      const next = prev.filter((_, i) => i !== index);
+      ssSave({ bookingVehicles: next });
+      // Keep vehicleInfo in sync
+      if (next.length > 0) {
+        setVehicleInfo(next[0]);
+        ssSave({ vehicleInfo: next[0] });
+      } else {
+        setVehicleInfo(null);
+        ssSave({ vehicleInfo: null });
+      }
+      return next;
+    });
+  };
+
   // Navigation actions
   const nextStep = () => {
     setCurrentStep((prev) => {
@@ -297,6 +336,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     setTotal(0);
     setCustomerInfo(null);
     setVehicleInfo(null);
+    setBookingVehicles([]);
     setPaymentStatus('pending');
     setPaymentIntentId(null);
     ssClear(); // wipe persisted state so next booking starts fresh
@@ -310,6 +350,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     selectedTimeWindow,
     customerInfo,
     vehicleInfo,
+    bookingVehicles,
+    addBookingVehicle,
+    removeBookingVehicle,
     subtotal,
     serviceFee,
     total,

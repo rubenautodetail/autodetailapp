@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle } from 'lucide-react';
+import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle, CreditCard } from 'lucide-react';
 import { BookingStatus } from './StatusTimeline';
 
 interface BookingCardProps {
@@ -25,6 +25,7 @@ const statusConfig: Record<string, {
     en: string;
     es: string;
 }> = {
+    pending_payment: { color: 'text-amber-400', bg: 'bg-amber-400/10', icon: CreditCard, en: 'Payment Pending', es: 'Pago Pendiente' },
     pending: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock, en: 'Requested', es: 'Solicitado' },
     confirmed: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: CheckCircle, en: 'Confirmed', es: 'Confirmado' },
     en_route: { color: 'text-indigo-500', bg: 'bg-indigo-500/10', icon: Truck, en: 'En Route', es: 'En Camino' },
@@ -95,13 +96,24 @@ export function BookingCard({
 
                 <div className="pt-4 border-t border-white/5 flex justify-between items-center">
                     <span className="text-xs text-text-muted font-mono">ID: {id}</span>
-                    <Link
-                        href={`/${lang}/booking/${id}/track`}
-                        className="flex items-center text-sm font-semibold text-white hover:text-accent-gold transition-colors group/link"
-                    >
-                        {isEs ? 'Ver Estado' : 'Track Status'}
-                        <ChevronRight className="w-4 h-4 ml-1 transform group-hover/link:translate-x-1 transition-transform" />
-                    </Link>
+                    {status === 'pending_payment' ? (
+                        <Link
+                            href={`/${lang}/booking/${id}/pay`}
+                            className="flex items-center gap-1.5 text-sm font-bold text-amber-400 hover:text-white bg-amber-400/10 hover:bg-amber-400/20 px-3 py-1.5 rounded-lg transition-all group/link"
+                        >
+                            <CreditCard className="w-4 h-4" />
+                            {isEs ? 'Completar Pago' : 'Complete Payment'}
+                            <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
+                        </Link>
+                    ) : (
+                        <Link
+                            href={`/${lang}/booking/${id}/track`}
+                            className="flex items-center text-sm font-semibold text-white hover:text-accent-gold transition-colors group/link"
+                        >
+                            {isEs ? 'Ver Estado' : 'Track Status'}
+                            <ChevronRight className="w-4 h-4 ml-1 transform group-hover/link:translate-x-1 transition-transform" />
+                        </Link>
+                    )}
                 </div>
             </div>
         </motion.div>

@@ -16,6 +16,8 @@ function ConfirmationContent({ locale }: { locale: string }) {
   const confirmationCode = searchParams.get("code") || "RBN-UNKNOWN";
   const serviceName = searchParams.get("service") || "Auto Detail";
   const totalAmount = searchParams.get("total") || "0.00";
+  const vehicleCountParam = searchParams.get("vehicles");
+  const vehicleCount = vehicleCountParam ? parseInt(vehicleCountParam, 10) : 1;
 
   const { isAuthenticated, isLoading } = useAuth();
   const [guestDismissed, setGuestDismissed] = useState(false);
@@ -62,6 +64,16 @@ function ConfirmationContent({ locale }: { locale: string }) {
               </span>
               <span className="font-medium text-white">{decodeURIComponent(serviceName)}</span>
             </div>
+            {vehicleCount > 1 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-[#5E698F]">
+                  {locale === "es" ? "Vehículos" : "Vehicles"}
+                </span>
+                <span className="font-medium text-white">
+                  {vehicleCount} {locale === "es" ? "vehículos" : "vehicles"}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between text-base">
               <span className="text-[#5E698F]">
                 {locale === "es" ? "Total" : "Total"}

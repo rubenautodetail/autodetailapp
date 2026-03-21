@@ -26,6 +26,7 @@ function CheckoutForm({
   total,
   confirmationCode,
   serviceName,
+  vehicleCount = 1,
 }: {
   locale: "en" | "es";
   onSuccess: () => void;
@@ -33,6 +34,7 @@ function CheckoutForm({
   total: number;
   confirmationCode: string;
   serviceName: string;
+  vehicleCount?: number;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -57,6 +59,7 @@ function CheckoutForm({
     returnUrl.searchParams.set("code", confirmationCode);
     returnUrl.searchParams.set("service", encodeURIComponent(serviceName));
     returnUrl.searchParams.set("total", total.toFixed(2));
+    if (vehicleCount > 1) returnUrl.searchParams.set("vehicles", String(vehicleCount));
 
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
@@ -127,6 +130,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     selectedTimeWindow,
     customerInfo,
     vehicleInfo,
+    bookingVehicles,
     subtotal,
     serviceFee,
     total,
@@ -136,6 +140,9 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     setPaymentStatus,
     setPaymentIntentId,
   } = useBooking();
+
+  const vehicleCount = Math.max(bookingVehicles.length, 1);
+  const groupTotal = total * vehicleCount;
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -167,8 +174,15 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     try {
       const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
 
-      // Single atomic call: creates booking + Stripe PaymentIntent together.
-      // If Stripe fails the server rolls back the booking — no orphaned records.
+      // Build vehicles array — use bookingVehicles if multi, else single vehicleInfo
+      const vehicles = bookingVehicles.length > 0
+        ? bookingVehicles.map(v => ({ make: v.make, model: v.model, year: v.year, color: v.color }))
+        : vehicleInfo
+          ? [{ make: vehicleInfo.make, model: vehicleInfo.model, year: vehicleInfo.year, color: vehicleInfo.color }]
+          : [];
+
+      // Single atomic call: creates booking(s) + Stripe PaymentIntent together.
+      // If Stripe fails the server rolls back the bookings — no orphaned records.
       const res = await fetch("/api/booking/create-with-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -185,12 +199,15 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           specialInstructions: customerInfo.specialNotes || undefined,
           subtotal,
           serviceFee,
-          total,
+          total: groupTotal,
+          perVehicleTotal: total,
           serviceName: selectedService.name,
-          vehicleMake: vehicleInfo?.make,
-          vehicleModel: vehicleInfo?.model,
-          vehicleYear: vehicleInfo?.year,
-          vehicleColor: vehicleInfo?.color,
+          vehicles,
+          // Backwards compat — first vehicle
+          vehicleMake: vehicles[0]?.make,
+          vehicleModel: vehicles[0]?.model,
+          vehicleYear: vehicles[0]?.year,
+          vehicleColor: vehicles[0]?.color,
           currency: "usd",
         }),
       });
@@ -287,9 +304,10 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                   locale={locale}
                   onSuccess={() => setPaymentStatus("paid")}
                   isProcessing={isProcessing}
-                  total={total}
+                  total={groupTotal}
                   confirmationCode={confirmationCode}
                   serviceName={selectedService.name}
+                  vehicleCount={vehicleCount}
                 />
               </StripeProvider>
             ) : (
@@ -357,6 +375,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
+                vehicleCount={vehicleCount}
               />
             </div>
           </div>

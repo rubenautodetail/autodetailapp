@@ -11,6 +11,7 @@ interface PricingSummaryProps {
   total: number;
   locale?: "en" | "es";
   className?: string;
+  vehicleCount?: number;
 }
 
 export default function PricingSummary({
@@ -21,6 +22,7 @@ export default function PricingSummary({
   total,
   locale = "en",
   className = "",
+  vehicleCount = 1,
 }: PricingSummaryProps) {
   if (!service) {
     return null;
@@ -63,12 +65,29 @@ export default function PricingSummary({
           </div>
         </div>
 
+        {vehicleCount > 1 && (
+          <div className="border-t border-[#2C355E] pt-4 mt-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[#A5B0D1] font-medium">
+                {locale === "es" ? "Por vehículo" : "Per vehicle"}
+              </span>
+              <span className="font-bold text-white">${total.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#A5B0D1] text-sm">
+                &times; {vehicleCount} {locale === "es" ? "vehículos" : "vehicles"}
+              </span>
+              <span className="text-sm text-[#A5B0D1]">${(total * vehicleCount).toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
         <div className="border-t border-[#2C355E] pt-4 mt-2">
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold text-white">
               {locale === "es" ? "Total" : "Total"}
             </span>
-            <span className="text-2xl font-bold text-[#D0B078]">${total.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-[#D0B078]">${(total * vehicleCount).toFixed(2)}</span>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 
 // --- Types ---
 
-export type BookingStatus = 'pending' | 'confirmed' | 'en_route' | 'working' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending_payment' | 'pending' | 'confirmed' | 'en_route' | 'working' | 'completed' | 'cancelled';
 
 export interface Booking {
     id: string;
@@ -18,6 +18,8 @@ export interface Booking {
     providerName?: string;
     providerLocation?: { lat: number; lng: number }; // For map simulation
     customerAddress: string;
+    paymentStatus?: string;
+    confirmationCode?: string;
 }
 
 export interface ToastMessage {
@@ -174,6 +176,8 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                     status: (b.status as BookingStatus) || 'pending',
                     price: Number(b.total_amount) || 0,
                     customerAddress: b.address || 'N/A',
+                    paymentStatus: (b as any).payment_status,
+                    confirmationCode: (b as any).confirmation_code,
                 })));
             }
 

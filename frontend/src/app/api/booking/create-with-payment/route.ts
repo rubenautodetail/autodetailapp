@@ -53,7 +53,9 @@ export async function POST(req: NextRequest) {
         subtotal?: number;
         serviceFee?: number;
         total?: number;
+        perVehicleTotal?: number;
         serviceName?: string;
+        vehicles?: Array<{ make?: string; model?: string; year?: string; color?: string }>;
         vehicleMake?: string;
         vehicleModel?: string;
         vehicleYear?: string;
@@ -71,9 +73,19 @@ export async function POST(req: NextRequest) {
         date, timeWindow, address, city, state, zipCode,
         customerName, customerEmail, customerPhone,
         specialInstructions, subtotal, serviceFee, total,
-        serviceName, vehicleMake, vehicleModel, vehicleYear, vehicleColor,
+        perVehicleTotal,
+        serviceName, vehicles: vehiclesInput,
+        vehicleMake, vehicleModel, vehicleYear, vehicleColor,
         currency = 'usd',
     } = body;
+
+    // Build vehicles array — backwards compat: if no vehicles array, use single vehicle fields
+    const vehicles = (vehiclesInput && vehiclesInput.length > 0)
+        ? vehiclesInput
+        : [{ make: vehicleMake, model: vehicleModel, year: vehicleYear, color: vehicleColor }];
+
+    const vehicleCount = vehicles.length;
+    const perVehicleAmount = perVehicleTotal ?? (total && vehicleCount > 1 ? total / vehicleCount : total ?? 0);
 
     // Required field validation
     if (!date || !timeWindow || !address || !customerEmail || !customerName) {
@@ -100,90 +112,99 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    const confirmationCode = generateConfirmationCode();
     const userId = user?.id || null;
 
-    // ── Step 1: Create booking ────────────────────────────────────────────────
-    const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
-        .insert({
-            user_id: userId,
-            confirmation_code: confirmationCode,
-            status: 'pending_payment',   // distinct from pending_assignment — not yet paid
-            payment_status: 'unpaid',
-            date,
-            time_window: timeWindow,
-            address,
-            city: city || '',
-            state: state || 'FL',
-            zip_code: zipCode,
-            customer_name: customerName,
-            customer_email: customerEmail,
-            customer_phone: customerPhone || '',
-            special_instructions: specialInstructions || '',
-            subtotal: subtotal || 0,
-            service_fee: serviceFee || 0,
-            total_amount: total || 0,
-            service_name: serviceName || null,
-            vehicle_make: vehicleMake || null,
-            vehicle_model: vehicleModel || null,
-            vehicle_year: vehicleYear || null,
-            vehicle_color: vehicleColor || null,
-        })
-        .select()
-        .single();
+    // Generate a group ID when booking multiple vehicles in one appointment
+    const bookingGroupId = vehicleCount > 1 ? crypto.randomUUID() : null;
 
-    if (bookingError || !booking) {
+    // ── Step 1: Create booking(s) — one per vehicle ─────────────────────────
+    const bookingRows = vehicles.map(v => ({
+        user_id: userId,
+        confirmation_code: generateConfirmationCode(),
+        status: 'pending_payment' as const,
+        payment_status: 'unpaid' as const,
+        date,
+        time_window: timeWindow,
+        address,
+        city: city || '',
+        state: state || 'FL',
+        zip_code: zipCode,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone || '',
+        special_instructions: specialInstructions || '',
+        subtotal: perVehicleAmount,
+        service_fee: serviceFee ? (serviceFee / vehicleCount) : 0,
+        total_amount: perVehicleAmount,
+        service_name: serviceName || null,
+        vehicle_make: v.make || null,
+        vehicle_model: v.model || null,
+        vehicle_year: v.year || null,
+        vehicle_color: v.color || null,
+        ...(bookingGroupId ? { booking_group_id: bookingGroupId } : {}),
+    }));
+
+    const { data: bookings, error: bookingError } = await supabase
+        .from('bookings')
+        .insert(bookingRows)
+        .select();
+
+    if (bookingError || !bookings || bookings.length === 0) {
         console.error('create-with-payment: booking insert failed:', bookingError);
         return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 });
     }
 
-    const bookingDocId = String(booking.id);
+    const bookingIds = bookings.map(b => String(b.id));
+    const primaryBookingId = bookingIds[0];
 
     // ── Step 2: Create Stripe PaymentIntent ──────────────────────────────────
-    // If this fails, we delete the booking so no orphaned records are left.
+    // If this fails, we delete all bookings so no orphaned records are left.
     let paymentIntent: { clientSecret: string | null; paymentIntentId: string; amount: number };
     try {
         paymentIntent = await createPaymentIntent({
             amount: amountCents,
-            bookingId: bookingDocId,
-            customerId: customerEmail,
+            bookingId: primaryBookingId,
+            customerId: customerEmail ?? 'guest',
             currency,
         });
     } catch (stripeErr) {
-        // Rollback: remove the booking we just created
-        await supabase.from('bookings').delete().eq('id', booking.id);
+        // Rollback: remove all bookings we just created
+        await supabase.from('bookings').delete().in('id', bookings.map(b => b.id));
 
-        console.error('create-with-payment: Stripe failed, booking rolled back:', stripeErr);
+        console.error('create-with-payment: Stripe failed, bookings rolled back:', stripeErr);
         return NextResponse.json(
             { error: 'Payment setup failed. Please try again or contact support.' },
             { status: 502 }
         );
     }
 
-    // ── Step 3: Persist payment intent ID on the booking ─────────────────────
+    // ── Step 3: Persist payment intent ID on all bookings ────────────────────
     await supabase
         .from('bookings')
-        .update({
-            payment_intent_id: paymentIntent.paymentIntentId,
-        })
-        .eq('id', booking.id);
+        .update({ payment_intent_id: paymentIntent.paymentIntentId })
+        .in('id', bookings.map(b => b.id));
 
     // ── Step 4: Notify contractors about the new job ─────────────────────────
     // Fire-and-forget — notification failure must not block the payment flow
-    notifyContractors(supabase, booking, zipCode ?? '', serviceName ?? 'Detailing Service').catch(
+    notifyContractors(supabase, bookings[0], zipCode ?? '', serviceName ?? 'Detailing Service').catch(
         (err) => {
             console.error('create-with-payment: contractor notification failed:', err);
-            Sentry.captureException(err, { tags: { context: 'contractor_notification', bookingId: booking.id } });
+            Sentry.captureException(err, { tags: { context: 'contractor_notification', bookingId: bookings[0].id } });
         }
     );
 
+    const confirmationCodes = bookings.map(b => b.confirmation_code);
+
     return NextResponse.json({
         success: true,
-        confirmationCode: booking.confirmation_code,
+        confirmationCode: confirmationCodes[0],
+        confirmationCodes,
         clientSecret: paymentIntent.clientSecret,
         paymentIntentId: paymentIntent.paymentIntentId,
-        bookingId: bookingDocId,
+        bookingId: primaryBookingId,
+        bookingIds,
+        bookingGroupId,
+        vehicleCount,
     });
 }
 
