@@ -515,7 +515,7 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
         try {
             await logout();
             toast.success(labels.logoutConfirm);
-            router.push(`/${lang}`);
+            router.push(`/${lang}/contractor/login`);
         } catch {
             toast.error(labels.errorSave);
         }
