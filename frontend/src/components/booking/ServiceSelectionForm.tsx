@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useBooking, Service, AddOn } from "@/contexts";
 import { AddOnSelector, PricingSummary } from "@/components/booking";
 import { ServiceCard } from "@/components/booking/ServiceCard";
@@ -11,6 +12,7 @@ interface ServiceSelectionFormProps {
     addOns: AddOn[];
     locale: "en" | "es";
     dataSource: "catalog" | "fallback";
+    preselectedServiceName?: string;
 }
 
 export default function ServiceSelectionForm({
@@ -18,6 +20,7 @@ export default function ServiceSelectionForm({
     addOns,
     locale,
     dataSource,
+    preselectedServiceName,
 }: ServiceSelectionFormProps) {
     const router = useRouter();
 
@@ -34,7 +37,15 @@ export default function ServiceSelectionForm({
         nextStep,
     } = useBooking();
 
-    // No need for local state for services/addOns as they are passed as props
+    // Auto-select service when arriving via "Book Again" link
+    useEffect(() => {
+        if (!preselectedServiceName || selectedService) return;
+        const decoded = decodeURIComponent(preselectedServiceName);
+        const match = services.find(
+            (s) => s.name.toLowerCase() === decoded.toLowerCase()
+        );
+        if (match) setService(match);
+    }, [preselectedServiceName, services]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleServiceSelect = (service: Service) => {
         setService(service);

@@ -48,6 +48,12 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [stats, setStats] = useState<{
+    todayCount: number;
+    pendingAssignment: number;
+    totalRevenue: number;
+    completedThisMonth: number;
+  } | null>(null);
 
   const t = {
     title: locale === "es" ? "Gestión de Reservas" : "Booking Management",
@@ -83,6 +89,13 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   }, [statusFilter, page, locale]);
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
+
+  useEffect(() => {
+    adminFetch('/api/admin/bookings/stats')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setStats(data); })
+      .catch(() => { /* non-fatal */ });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleAction(bookingId: number, action: "cancel" | "requeue") {
     setActionLoading(bookingId);
@@ -146,6 +159,46 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6">
+
+        {/* Stats bar */}
+        {stats ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white border border-gray-200 rounded-xl px-5 py-4">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                {locale === "es" ? "Hoy" : "Today"}
+              </p>
+              <p className="text-2xl font-bold text-gray-900">{stats.todayCount}</p>
+            </div>
+            <div className="bg-white border border-orange-200 rounded-xl px-5 py-4">
+              <p className="text-xs font-medium text-orange-500 uppercase tracking-wider mb-1">
+                {locale === "es" ? "Sin Asignar" : "Pending Assignment"}
+              </p>
+              <p className="text-2xl font-bold text-orange-600">{stats.pendingAssignment}</p>
+            </div>
+            <div className="bg-white border border-green-200 rounded-xl px-5 py-4">
+              <p className="text-xs font-medium text-green-600 uppercase tracking-wider mb-1">
+                {locale === "es" ? "Completados este Mes" : "Completed This Month"}
+              </p>
+              <p className="text-2xl font-bold text-green-700">{stats.completedThisMonth}</p>
+            </div>
+            <div className="bg-white border border-blue-200 rounded-xl px-5 py-4">
+              <p className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">
+                {locale === "es" ? "Ingresos Totales" : "Total Revenue"}
+              </p>
+              <p className="text-2xl font-bold text-blue-700">${stats.totalRevenue.toFixed(2)}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white border border-gray-200 rounded-xl px-5 py-4 animate-pulse">
+                <div className="h-2.5 w-20 bg-gray-200 rounded mb-2" />
+                <div className="h-7 w-12 bg-gray-200 rounded" />
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Status filter tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {STATUS_OPTIONS.map((s) => (

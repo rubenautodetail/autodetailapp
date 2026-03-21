@@ -7,7 +7,7 @@ import { useBookingStatus } from '@/contexts/BookingStatusContext';
 import { StatusTimeline } from '@/components/dashboard/StatusTimeline';
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
 import { motion } from 'framer-motion';
-import { ChevronLeft, MapPin, Phone, MessageSquare, Star, Zap } from 'lucide-react';
+import { ChevronLeft, MapPin, Star } from 'lucide-react';
 
 interface BookingDetailPageProps {
     params: Promise<{
@@ -18,7 +18,7 @@ interface BookingDetailPageProps {
 
 export default function BookingDetailPage({ params }: BookingDetailPageProps) {
     const { lang, id } = use(params);
-    const { getBooking, simulateProviderUpdate, notifications, dismissNotification } = useBookingStatus();
+    const { getBooking, notifications, dismissNotification } = useBookingStatus();
 
     const booking = getBooking(id);
 
@@ -53,7 +53,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
 
                             <div className="flex justify-between items-start mb-8 relative z-10">
                                 <div>
-                                    <h1 className="text-3xl font-display font-bold text-white mb-1">Booking #{booking.id}</h1>
+                                    <h1 className="text-3xl font-display font-bold text-white mb-1">Order {booking.confirmationCode || `#${booking.id}`}</h1>
                                     <p className="text-text-secondary text-lg">{booking.serviceName}</p>
                                 </div>
                                 <div className="text-right">
@@ -105,25 +105,20 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                                     <h3 className="font-bold text-xl text-white">{booking.providerName}</h3>
                                     <div className="flex items-center text-accent-gold text-sm mt-1">
                                         <Star className="w-4 h-4 fill-current mr-1" />
-                                        <span className="font-bold mr-1">4.9</span>
-                                        <span className="text-text-secondary">(124 jobs) • Elite Detailer</span>
+                                        {booking.providerRating != null ? (
+                                            <span className="font-bold">{booking.providerRating.toFixed(1)}</span>
+                                        ) : (
+                                            <span className="text-text-secondary">No rating yet</span>
+                                        )}
                                     </div>
-                                </div>
-                                <div className="flex space-x-3">
-                                    <button className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-white transition-colors border border-white/10">
-                                        <Phone className="w-5 h-5" />
-                                    </button>
-                                    <button className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-white transition-colors border border-white/10">
-                                        <MessageSquare className="w-5 h-5" />
-                                    </button>
                                 </div>
                             </motion.div>
                         )}
                     </div>
 
-                    {/* Sidebar: Details & Demo Controls */}
+                    {/* Sidebar */}
                     <div className="lg:col-span-1 space-y-6">
-                        {/* Booking Details */}
+                        {/* Payment Summary */}
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -147,32 +142,51 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                             </div>
                         </motion.div>
 
-                        {/* DEMO CONTROLS - ALERT */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="p-6 rounded-2xl border border-accent-gold/30 bg-accent-gold/5 relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-accent-gold/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-
-                            <div className="flex items-center mb-4 text-accent-gold relative z-10">
-                                <Zap className="w-5 h-5 mr-2" />
-                                <h3 className="font-bold">Simulation Mode</h3>
-                            </div>
-                            <p className="text-xs text-text-secondary mb-6 relative z-10 leading-relaxed">
-                                Experience the real-time notification system. Trigger provider status updates manually.
-                            </p>
-                            <button
-                                onClick={() => simulateProviderUpdate(booking.id)}
-                                className="w-full py-4 btn-primary rounded-xl font-bold transition-transform active:scale-95 shadow-glow relative z-10"
+                        {/* View Receipt — only when completed */}
+                        {booking.status === 'completed' && (
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.35 }}
+                                className="glass-card p-4 rounded-2xl"
                             >
-                                Trigger Next Status Event
-                            </button>
-                            <p className="text-xs text-text-muted mt-4 text-center">
-                                Current Status: <strong className="text-white">{booking.status.replace('_', ' ').toUpperCase()}</strong>
-                            </p>
-                        </motion.div>
+                                <Link
+                                    href={`/${lang}/booking/${booking.id}/receipt`}
+                                    className="flex items-center justify-between text-sm text-text-secondary hover:text-white transition-colors"
+                                >
+                                    <span>{lang === 'es' ? 'Ver Recibo de Pago' : 'View Payment Receipt'}</span>
+                                    <ChevronLeft className="w-4 h-4 rotate-180" />
+                                </Link>
+                            </motion.div>
+                        )}
+
+                        {/* Rate Your Service — only when completed */}
+                        {booking.status === 'completed' && (
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="glass-card p-6 rounded-2xl border border-accent-gold/20"
+                            >
+                                <div className="flex items-center gap-2 mb-2 text-accent-gold">
+                                    <Star className="w-5 h-5 fill-current" />
+                                    <h3 className="font-bold">
+                                        {lang === 'es' ? 'Califica tu Servicio' : 'Rate Your Service'}
+                                    </h3>
+                                </div>
+                                <p className="text-text-secondary text-sm mb-5 leading-relaxed">
+                                    {lang === 'es'
+                                        ? 'Tu opinión ayuda a mejorar nuestros servicios y reconocer a los mejores detalladores.'
+                                        : 'Your feedback helps us improve and recognize our best detailers.'}
+                                </p>
+                                <Link
+                                    href={`/${lang}/booking/${booking.id}/review`}
+                                    className="block w-full py-3 btn-primary rounded-xl font-bold text-center text-sm"
+                                >
+                                    {lang === 'es' ? 'Dejar una Reseña' : 'Leave a Review'}
+                                </Link>
+                            </motion.div>
+                        )}
                     </div>
                 </div>
                 <NotificationToast notifications={notifications} onDismiss={dismissNotification} />

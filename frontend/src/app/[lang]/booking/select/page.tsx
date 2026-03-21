@@ -97,8 +97,15 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   };
 }
 
-export default async function SelectServicePage({ params }: { params: Promise<{ lang: string }> }) {
+export default async function SelectServicePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lang: string }>;
+  searchParams: Promise<{ service?: string }>;
+}) {
   const { lang } = await params;
+  const { service: preselectedServiceName } = await searchParams;
   const locale = (lang === 'es' || lang === 'en') ? lang : 'en';
 
   let services: Service[] = [];
@@ -128,6 +135,7 @@ export default async function SelectServicePage({ params }: { params: Promise<{ 
       addOns={addOns}
       locale={locale}
       dataSource={dataSource}
+      preselectedServiceName={preselectedServiceName}
     />
   );
 }

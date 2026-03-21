@@ -235,3 +235,131 @@ After deploy, hit `GET /api/health` — all checks should be `"ok"`. If `env` ch
 | Middleware | `frontend/src/middleware.ts` + `frontend/src/lib/supabase/proxy.ts` |
 | Booking context | `frontend/src/contexts/BookingContext.tsx` |
 | Auth context | `frontend/src/contexts/AuthContext.tsx` |
+
+---
+
+## Enhancement Backlog (Post Mar 21, 2026)
+
+Each item is additive — nothing here modifies existing working logic.
+Starting point: contractor availability toggle (highest value / lowest risk).
+
+---
+
+### 🔴 Priority 1 — Contractor Availability Toggle
+**Group:** Contractor side
+
+**Why first:** `is_available` column exists in `profiles` but has no UI. Auto-assignment already filters by `is_available=true`, so without a toggle contractors have no way to go off-duty without admin intervention.
+
+- [ ] `POST /api/contractor/availability` — toggle `is_available` on the authed contractor's profile
+- [ ] Availability toggle UI on `/[lang]/contractor/dashboard` — pill switch, optimistic update, bilingual
+- [ ] Show current status in contractor header/settings
+
+**Files:** `frontend/src/app/api/contractor/availability/route.ts` (new), contractor dashboard page
+
+---
+
+### 🟡 Priority 2 — "Book Same Service Again" on Completed Cards
+**Group:** Customer side
+
+**Why:** One-tap rebook is the highest-conversion action on the history tab. Customer already trusts the service.
+
+- [ ] "Book Again" button on completed `BookingCard` (below "Rate Your Service")
+- [ ] Links to `/[lang]/booking/select?service=<serviceId>` — pre-selects the service on load
+- [ ] Booking select page reads `?service` param and auto-highlights the matching card
+- [ ] No backend changes needed
+
+**Files:** `BookingCard.tsx`, `frontend/src/app/[lang]/booking/select/page.tsx`
+
+---
+
+### 🟡 Priority 3 — Loading Skeletons on Customer Dashboard
+**Group:** Customer side
+
+**Why:** The spinner is functional but skeletons feel instant — perceived performance improvement. Pure UI, zero logic change.
+
+- [ ] `BookingCardSkeleton` component matching `BookingCard` layout and dimensions
+- [ ] Replace `<Loader2>` spinner in `customer/page.tsx` with 4 skeleton cards in the grid
+- [ ] No data or API changes
+
+**Files:** `frontend/src/components/dashboard/BookingCard.tsx` (add skeleton export), `customer/page.tsx`
+
+---
+
+### 🟡 Priority 4 — Booking Receipt Page
+**Group:** Customer side
+
+**Why:** `/booking/[id]/receipt` route exists but content is likely a stub. Customers want a clean receipt they can screenshot or print.
+
+- [ ] Check current state of `frontend/src/app/[lang]/booking/[id]/receipt/page.tsx`
+- [ ] Display: order number, service name, date, contractor name, itemized price breakdown, payment status
+- [ ] Print-friendly layout (white bg, clean typography)
+- [ ] Link to it from the completed booking detail page sidebar
+
+**Files:** `frontend/src/app/[lang]/booking/[id]/receipt/page.tsx`
+
+---
+
+### 🟡 Priority 5 — Contractor Earnings Summary Card
+**Group:** Contractor side
+
+**Why:** Contractors have no visibility into their income. Data already exists in `bookings`. Motivates retention.
+
+- [ ] `GET /api/contractor/earnings/summary` — returns `{ totalEarned, pendingPayout, completedJobs, thisMonthEarned }` for authed contractor
+- [ ] Summary card on contractor dashboard with 4 stat tiles
+- [ ] Bilingual labels
+
+**Files:** `frontend/src/app/api/contractor/earnings/summary/route.ts` (new), contractor dashboard page
+
+---
+
+### 🟡 Priority 6 — Admin Stats Bar on Bookings List
+**Group:** Admin side
+
+**Why:** Admin has zero at-a-glance visibility. No DB schema changes needed.
+
+- [ ] `GET /api/admin/bookings/stats` — returns `{ todayCount, pendingAssignment, totalRevenue, completedThisMonth }`
+- [ ] 4-tile stats bar at top of `/[lang]/admin/bookings`
+- [ ] Bilingual
+
+**Files:** `frontend/src/app/api/admin/bookings/stats/route.ts` (new), admin bookings list page
+
+---
+
+### 🟢 Priority 7 — React Error Boundaries
+**Group:** Technical / zero risk
+
+**Why:** An unhandled render error currently shows a blank white screen. Error boundary shows a recovery UI instead.
+
+- [ ] `ErrorBoundary` component with "Something went wrong — go back" fallback UI
+- [ ] Wrap `customer/layout.tsx` and `contractor/layout.tsx`
+- [ ] Pure defensive addition — no logic change
+
+**Files:** new `frontend/src/components/ErrorBoundary.tsx`, layout files
+
+---
+
+### 🟢 Priority 8 — Fix `BookingStatus` TypeScript Type
+**Group:** Technical / zero risk
+
+**Why:** `pending_assignment` is a real DB status set by the webhook, but it's missing from the `BookingStatus` union type. Results in silent `as BookingStatus` casts throughout the codebase.
+
+- [ ] Add `'pending_assignment'` to `BookingStatus` in `StatusTimeline.tsx`
+- [ ] Add `pending_assignment` entry to `statusConfig` in `BookingCard.tsx`
+- [ ] Remove `as BookingStatus` cast on status mapping in `BookingStatusContext.tsx`
+
+**Files:** `StatusTimeline.tsx`, `BookingCard.tsx`, `BookingStatusContext.tsx`
+
+---
+
+### Progress Tracker
+
+| # | Group | Item | Status |
+|---|---|---|---|
+| 1 | Contractor | Availability toggle | ✅ Already implemented |
+| 2 | Customer | Book same service again | ✅ Done |
+| 3 | Customer | Loading skeletons | ✅ Done |
+| 4 | Customer | Booking receipt page | ✅ Done |
+| 5 | Contractor | Earnings summary card | ✅ Done |
+| 6 | Admin | Stats bar on bookings list | ✅ Done |
+| 7 | Technical | React error boundaries | ✅ Done |
+| 8 | Technical | BookingStatus type fix | ✅ Done |

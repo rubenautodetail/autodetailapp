@@ -4,11 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle, CreditCard } from 'lucide-react';
+import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle, CreditCard, Star } from 'lucide-react';
 import { BookingStatus } from './StatusTimeline';
 
 interface BookingCardProps {
     id: string;
+    confirmationCode?: string;
     serviceName: string;
     date: string;
     time: string;
@@ -27,6 +28,7 @@ const statusConfig: Record<string, {
 }> = {
     pending_payment: { color: 'text-amber-400', bg: 'bg-amber-400/10', icon: CreditCard, en: 'Payment Pending', es: 'Pago Pendiente' },
     pending: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock, en: 'Requested', es: 'Solicitado' },
+    pending_assignment: { color: 'text-orange-400', bg: 'bg-orange-400/10', icon: Clock, en: 'Finding Detailer', es: 'Buscando Técnico' },
     confirmed: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: CheckCircle, en: 'Confirmed', es: 'Confirmado' },
     en_route: { color: 'text-indigo-500', bg: 'bg-indigo-500/10', icon: Truck, en: 'En Route', es: 'En Camino' },
     working: { color: 'text-purple-500', bg: 'bg-purple-500/10', icon: Wrench, en: 'In Progress', es: 'En Progreso' },
@@ -34,8 +36,45 @@ const statusConfig: Record<string, {
     cancelled: { color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle, en: 'Cancelled', es: 'Cancelado' },
 };
 
+export function BookingCardSkeleton() {
+    return (
+        <div className="glass-card rounded-2xl overflow-hidden animate-pulse">
+            <div className="p-6">
+                {/* Header row */}
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-lg bg-white/5" />
+                        <div className="space-y-2">
+                            <div className="h-2.5 w-16 bg-white/5 rounded" />
+                            <div className="h-5 w-36 bg-white/10 rounded" />
+                        </div>
+                    </div>
+                    <div className="h-7 w-16 bg-white/10 rounded" />
+                </div>
+                {/* Detail rows */}
+                <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-white/5" />
+                        <div className="h-3 w-40 bg-white/5 rounded" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-white/5" />
+                        <div className="h-3 w-24 bg-white/5 rounded" />
+                    </div>
+                </div>
+                {/* Footer */}
+                <div className="pt-4 border-t border-white/5 flex justify-between items-center">
+                    <div className="h-3 w-20 bg-white/5 rounded" />
+                    <div className="h-8 w-28 bg-white/10 rounded-lg" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function BookingCard({
     id,
+    confirmationCode,
     serviceName,
     date,
     time,
@@ -57,6 +96,14 @@ export function BookingCard({
             transition={{ delay: index * 0.1, duration: 0.5 }}
             className="glass-card rounded-2xl overflow-hidden group hover:border-accent-gold/30 transition-all duration-300"
         >
+            {status === 'completed' && (
+                <div className="bg-accent-gold/10 border-b border-accent-gold/20 px-6 py-2 flex items-center gap-2">
+                    <Star className="w-3.5 h-3.5 text-accent-gold fill-current" />
+                    <span className="text-xs font-bold text-accent-gold uppercase tracking-wider">
+                        {isEs ? 'Calificación Pendiente' : 'Review Pending'}
+                    </span>
+                </div>
+            )}
             <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-3">
@@ -95,7 +142,9 @@ export function BookingCard({
                 </div>
 
                 <div className="pt-4 border-t border-white/5 flex justify-between items-center">
-                    <span className="text-xs text-text-muted font-mono">ID: {id}</span>
+                    <span className="text-xs text-text-muted font-mono">
+                        {confirmationCode ?? `#${id.slice(0, 8)}`}
+                    </span>
                     {status === 'pending_payment' ? (
                         <Link
                             href={`/${lang}/booking/${id}/pay`}
@@ -105,6 +154,22 @@ export function BookingCard({
                             {isEs ? 'Completar Pago' : 'Complete Payment'}
                             <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
                         </Link>
+                    ) : status === 'completed' ? (
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href={`/${lang}/booking/${id}/review`}
+                                className="text-xs text-text-secondary hover:text-accent-gold transition-colors"
+                            >
+                                {isEs ? 'Calificar' : 'Rate'}
+                            </Link>
+                            <Link
+                                href={`/${lang}/booking/select?service=${encodeURIComponent(serviceName)}`}
+                                className="flex items-center gap-1.5 text-sm font-bold text-accent-gold hover:text-white bg-accent-gold/10 hover:bg-accent-gold/20 px-3 py-1.5 rounded-lg transition-all group/link"
+                            >
+                                {isEs ? 'Reservar de nuevo' : 'Book Again'}
+                                <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
                     ) : (
                         <Link
                             href={`/${lang}/booking/${id}/track`}

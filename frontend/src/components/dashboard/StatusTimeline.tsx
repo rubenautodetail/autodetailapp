@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Clock, Truck, Wrench, ShieldCheck } from 'lucide-react';
 
-export type BookingStatus = 'pending_payment' | 'pending' | 'confirmed' | 'en_route' | 'working' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending_payment' | 'pending' | 'pending_assignment' | 'confirmed' | 'en_route' | 'working' | 'completed' | 'cancelled';
 
 interface StatusTimelineProps {
     status: BookingStatus;

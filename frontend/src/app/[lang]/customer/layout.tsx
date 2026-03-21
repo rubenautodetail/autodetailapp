@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { BookingStatusProvider } from '@/contexts/BookingStatusContext';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
@@ -29,14 +30,16 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
     }
 
     return (
-        <BookingStatusProvider>
-            <div className="min-h-screen bg-bg-primary">
-                <Sidebar lang={lang} />
-                <main className="lg:pl-64 min-h-screen transition-all duration-300">
-                    {children}
-                </main>
-            </div>
-        </BookingStatusProvider>
+        <ErrorBoundary lang={lang}>
+            <BookingStatusProvider>
+                <div className="min-h-screen bg-bg-primary">
+                    <Sidebar lang={lang} />
+                    <main className="lg:pl-64 min-h-screen transition-all duration-300">
+                        {children}
+                    </main>
+                </div>
+            </BookingStatusProvider>
+        </ErrorBoundary>
     );
 }
 

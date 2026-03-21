@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ContractorProvider } from '@/contexts/ContractorContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
@@ -99,6 +100,7 @@ export default function ContractorLayout({
     ];
 
     return (
+        <ErrorBoundary lang={lang}>
         <ContractorProvider>
             <Toaster position="top-center" />
             <NotificationToast notifications={notifications.filter(n => !n.is_read)} onDismiss={dismissToast} />
@@ -236,5 +238,6 @@ export default function ContractorLayout({
                 </nav>
             </div>
         </ContractorProvider>
+        </ErrorBoundary>
     );
 }

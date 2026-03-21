@@ -67,6 +67,29 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        // Recalculate and update contractor's average rating
+        if (booking.contractor_id) {
+            const { data: allReviews } = await supabase
+                .from('notifications')
+                .select('payload')
+                .eq('type', 'review')
+                .filter('payload->>contractor_id', 'eq', booking.contractor_id);
+
+            if (allReviews && allReviews.length > 0) {
+                const ratings = allReviews
+                    .map((r) => (r.payload as { rating?: number })?.rating)
+                    .filter((r): r is number => typeof r === 'number' && r >= 1 && r <= 5);
+
+                if (ratings.length > 0) {
+                    const avg = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+                    await supabase
+                        .from('profiles')
+                        .update({ rating: Math.round(avg * 10) / 10 })
+                        .eq('id', booking.contractor_id);
+                }
+            }
+        }
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Reviews API error:', error);

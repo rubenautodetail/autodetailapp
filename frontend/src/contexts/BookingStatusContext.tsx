@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 
 // --- Types ---
 
-export type BookingStatus = 'pending_payment' | 'pending' | 'confirmed' | 'en_route' | 'working' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending_payment' | 'pending' | 'pending_assignment' | 'confirmed' | 'en_route' | 'working' | 'completed' | 'cancelled';
 
 export interface Booking {
     id: string;
@@ -16,6 +16,7 @@ export interface Booking {
     status: BookingStatus;
     price: number;
     providerName?: string;
+    providerRating?: number;
     providerLocation?: { lat: number; lng: number }; // For map simulation
     customerAddress: string;
     paymentStatus?: string;
@@ -27,6 +28,7 @@ export interface ToastMessage {
     title: string;
     message: string;
     type: 'info' | 'success' | 'warning' | 'error';
+    link?: string;
 }
 
 export interface Vehicle {
@@ -162,7 +164,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             // Fetch bookings from Supabase (source of truth for transactional data)
             const { data: bookingData } = await supabase
                 .from('bookings')
-                .select('*')
+                .select('*, contractor:contractor_id(full_name, rating)')
                 .eq('customer_email', userEmail)
                 .order('created_at', { ascending: false })
                 .limit(20);
@@ -178,6 +180,8 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                     customerAddress: b.address || 'N/A',
                     paymentStatus: (b as any).payment_status,
                     confirmationCode: (b as any).confirmation_code,
+                    providerName: (b as any).contractor?.full_name || undefined,
+                    providerRating: (b as any).contractor?.rating || undefined,
                 })));
             }
 
@@ -186,7 +190,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
         fetchUserData();
 
-        // Real-time for Vehicles
+        // Real-time for Vehicles + Bookings
         const supabase = createClient();
         const vehicleChannel = supabase
             .channel(`user-vehicles-${userId}`)
@@ -205,8 +209,38 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             )
             .subscribe();
 
+        const bookingChannel = supabase
+            .channel(`user-bookings-${userId}`)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `customer_email=eq.${userEmail}` },
+                (payload) => {
+                    const updated = payload.new as Record<string, unknown>;
+                    setBookings(prev => prev.map(b =>
+                        b.id === String(updated.id)
+                            ? { ...b, status: updated.status as BookingStatus }
+                            : b
+                    ));
+                    if (updated.status === 'completed') {
+                        const bookingId = String(updated.id);
+                        const confirmationCode = updated.confirmation_code as string | undefined;
+                        const currentLang = typeof window !== 'undefined'
+                            ? (window.location.pathname.split('/')[1] || 'en')
+                            : 'en';
+                        addNotification({
+                            title: 'Job Complete!',
+                            message: `Order ${confirmationCode ?? bookingId} is done. Leave a review.`,
+                            type: 'success',
+                            link: `/${currentLang}/booking/${bookingId}/review`,
+                        });
+                    }
+                }
+            )
+            .subscribe();
+
         return () => {
             supabase.removeChannel(vehicleChannel);
+            supabase.removeChannel(bookingChannel);
         };
     }, [user, user?.id, user?.email]);
 

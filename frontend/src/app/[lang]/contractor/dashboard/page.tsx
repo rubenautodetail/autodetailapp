@@ -126,6 +126,12 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const [togglingAvailability, setTogglingAvailability] = useState(false);
     const [bannerMessage, setBannerMessage] = useState<string | null>(null);
     const [bannerVisible, setBannerVisible] = useState(true);
+    const [earningSummary, setEarningSummary] = useState<{
+        totalEarned: number;
+        thisMonthEarned: number;
+        pendingPayout: number;
+        completedJobs: number;
+    } | null>(null);
 
     // ── Realtime / alert state ────────────────────────────────────────────────
     const [incomingPulse, setIncomingPulse] = useState(false);
@@ -165,6 +171,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
         if (isAuthenticated) {
             checkOnboardingStatus();
             fetchAvailability();
+            fetchEarningSummary();
         } else {
             setOnboardingComplete(true);
         }
@@ -211,6 +218,19 @@ export default function ContractorDashboard({ params }: DashboardProps) {
             if (res.ok) {
                 const data = await res.json();
                 setOnboardingComplete(data.onboardingComplete ?? true);
+            }
+        } catch { /* non-fatal */ }
+    };
+
+    const fetchEarningSummary = async () => {
+        if (!session?.access_token) return;
+        try {
+            const res = await fetch('/api/contractor/earnings/summary', {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setEarningSummary(data);
             }
         } catch { /* non-fatal */ }
     };
@@ -475,6 +495,56 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                         <p className="text-2xl font-bold text-white">${(dashboardData?.earnings?.total || 0).toFixed(2)}</p>
                     </div>
                 </div>
+
+                {/* Earnings Summary Card */}
+                {earningSummary && (
+                    <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
+                        <div className="px-6 py-4 border-b border-[#2C355E] flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-white">
+                                {lang === 'es' ? 'Resumen de Ganancias' : 'Earnings Overview'}
+                            </h2>
+                            <Link
+                                href={`/${lang}/contractor/earnings`}
+                                className="text-xs text-[#D0B078] hover:text-white transition-colors font-medium"
+                            >
+                                {lang === 'es' ? 'Ver historial →' : 'Full history →'}
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#2C355E]">
+                            <div className="px-5 py-4">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Total Ganado' : 'Total Earned'}
+                                </p>
+                                <p className="text-xl font-bold text-white">${earningSummary.totalEarned.toFixed(2)}</p>
+                            </div>
+                            <div className="px-5 py-4">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Este Mes' : 'This Month'}
+                                </p>
+                                <p className="text-xl font-bold text-[#D0B078]">${earningSummary.thisMonthEarned.toFixed(2)}</p>
+                            </div>
+                            <div className="px-5 py-4">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Por Cobrar' : 'Pending Payout'}
+                                </p>
+                                <p className="text-xl font-bold text-amber-400">${earningSummary.pendingPayout.toFixed(2)}</p>
+                            </div>
+                            <div className="px-5 py-4">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Trabajos Completados' : 'Jobs Completed'}
+                                </p>
+                                <p className="text-xl font-bold text-green-400">{earningSummary.completedJobs}</p>
+                            </div>
+                        </div>
+                        <div className="px-6 py-2.5 border-t border-[#2C355E]">
+                            <p className="text-[10px] text-[#5E698F]">
+                                {lang === 'es'
+                                    ? 'Todos los montos reflejan tu parte neta (85% del total del servicio).'
+                                    : 'All amounts reflect your net share (85% of service total).'}
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Incoming Jobs */}
                 <div className={`bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden transition-shadow ${incomingPulse ? 'ring-2 ring-[#D0B078] ring-offset-2 ring-offset-[#131835]' : ''}`}>

@@ -1,26 +1,50 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useBookingStatus } from '@/contexts/BookingStatusContext';
-import { BookingCard } from '@/components/dashboard/BookingCard';
+import { BookingCard, BookingCardSkeleton } from '@/components/dashboard/BookingCard';
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { motion } from 'framer-motion';
-import { Plus, Car, Settings, HelpCircle, Loader2 } from 'lucide-react';
+import { Plus, Car, Settings, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
+const ACTIVE_STATUSES = new Set(['pending_payment', 'pending', 'pending_assignment', 'confirmed', 'en_route', 'working']);
+
 export default function CustomerDashboardPage() {
     const params = useParams();
+    const lang = (params?.lang as string) || 'en';
+    const isEs = lang === 'es';
     const { bookings, notifications, dismissNotification, userProfile, isLoading } = useBookingStatus();
+    const [tab, setTab] = useState<'active' | 'history'>('active');
 
-    // Sort by date
-    const sortedBookings = [...bookings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = [...bookings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const activeBookings = sorted.filter(b => ACTIVE_STATUSES.has(b.status));
+    const historyBookings = sorted.filter(b => !ACTIVE_STATUSES.has(b.status));
+    const displayed = tab === 'active' ? activeBookings : historyBookings;
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-accent-gold animate-spin" />
+            <div className="min-h-screen bg-bg-primary pb-20 overflow-x-hidden">
+                <div className="container mx-auto px-4 pt-8">
+                    {/* Hero placeholder */}
+                    <div className="mb-8 space-y-2 animate-pulse">
+                        <div className="h-4 w-32 bg-white/5 rounded" />
+                        <div className="h-9 w-56 bg-white/10 rounded" />
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                        <div className="lg:col-span-3">
+                            {/* Tab bar placeholder */}
+                            <div className="h-10 w-48 bg-white/5 rounded-xl mb-6 animate-pulse" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {[...Array(4)].map((_, i) => (
+                                    <BookingCardSkeleton key={i} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -38,22 +62,57 @@ export default function CustomerDashboardPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
                         >
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold text-white">Your Garage</h2>
-                                {/* Filter or View All could go here */}
+                            {/* Tabs */}
+                            <div className="flex items-center gap-1 mb-6 bg-white/5 rounded-xl p-1 w-fit">
+                                <button
+                                    onClick={() => setTab('active')}
+                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
+                                        tab === 'active'
+                                            ? 'bg-accent-gold text-bg-primary'
+                                            : 'text-text-secondary hover:text-white'
+                                    }`}
+                                >
+                                    {isEs ? 'Activos' : 'Active'}
+                                    {activeBookings.length > 0 && (
+                                        <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${tab === 'active' ? 'bg-black/20' : 'bg-white/10'}`}>
+                                            {activeBookings.length}
+                                        </span>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setTab('history')}
+                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
+                                        tab === 'history'
+                                            ? 'bg-accent-gold text-bg-primary'
+                                            : 'text-text-secondary hover:text-white'
+                                    }`}
+                                >
+                                    {isEs ? 'Historial' : 'History'}
+                                    {historyBookings.length > 0 && (
+                                        <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${tab === 'history' ? 'bg-black/20' : 'bg-white/10'}`}>
+                                            {historyBookings.length}
+                                        </span>
+                                    )}
+                                </button>
                             </div>
 
-                            {sortedBookings.length === 0 ? (
+                            {displayed.length === 0 ? (
                                 <div className="glass-card rounded-2xl p-12 text-center text-text-secondary">
                                     <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                    <p className="text-lg">No active bookings found.</p>
-                                    <Link href={`/${params.lang}/booking/select`} className="mt-4 text-accent-gold font-bold hover:text-white transition-colors block">
-                                        Book your first service
-                                    </Link>
+                                    <p className="text-lg">
+                                        {tab === 'active'
+                                            ? (isEs ? 'No tienes servicios activos.' : 'No active bookings.')
+                                            : (isEs ? 'No tienes historial de servicios.' : 'No past bookings yet.')}
+                                    </p>
+                                    {tab === 'active' && (
+                                        <Link href={`/${lang}/booking/select`} className="mt-4 text-accent-gold font-bold hover:text-white transition-colors block">
+                                            {isEs ? 'Reservar un servicio' : 'Book your first service'}
+                                        </Link>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {sortedBookings.map((booking, index) => (
+                                    {displayed.map((booking, index) => (
                                         <BookingCard
                                             key={booking.id}
                                             {...booking}
