@@ -15,8 +15,14 @@ function ForgotPasswordForm() {
     const params = useParams();
     const searchParams = useSearchParams();
     const lang = (params.lang as "en" | "es") || "en";
-    const isContractorFlow = searchParams.get("from") === "contractor";
-    const loginHref = isContractorFlow ? `/${lang}/contractor/login` : `/${lang}/login`;
+    const fromParam = searchParams.get("from");
+    const isContractorFlow = fromParam === "contractor";
+    const isAdminFlow = fromParam === "admin";
+    const loginHref = isContractorFlow
+        ? `/${lang}/contractor/login`
+        : isAdminFlow
+            ? `/${lang}/admin/login`
+            : `/${lang}/login`;
 
     const dict = {
         en: {
@@ -47,7 +53,9 @@ function ForgotPasswordForm() {
         try {
             const nextPath = isContractorFlow
                 ? `/${lang}/reset-password?from=contractor`
-                : `/${lang}/reset-password`;
+                : isAdminFlow
+                    ? `/${lang}/reset-password?from=admin`
+                    : `/${lang}/reset-password`;
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`,
             });

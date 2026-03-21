@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
+    // Sign out so the user is forced to log in with the new password
+    await supabase.auth.signOut({ scope: 'global' })
+
     const response = NextResponse.json({ success: true })
     pendingCookies.forEach(({ name, value, options }) => {
         response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])

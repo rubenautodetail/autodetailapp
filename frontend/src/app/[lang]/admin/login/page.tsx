@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const t = {
   en: {
@@ -103,9 +104,14 @@ function AdminLoginForm() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">
-                {dict.password}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {dict.password}
+                </label>
+                <Link href={`/${lang}/forgot-password?from=admin`} className="text-xs text-blue-500 hover:text-blue-700 transition-colors">
+                  {lang === "es" ? "¿Olvidaste tu contraseña?" : "Forgot password?"}
+                </Link>
+              </div>
               <input
                 type="password"
                 value={password}
