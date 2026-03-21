@@ -22,9 +22,27 @@ function ResetPasswordForm() {
     const [sessionReady, setSessionReady] = useState<boolean | null>(null);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSessionReady(!!session);
+        // Listen for PASSWORD_RECOVERY — fired by the browser client when it detects
+        // the recovery token in the URL (works with both hash-fragment and PKCE flows)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+                setSessionReady(true);
+            }
         });
+
+        // Check existing session, then resolve to false after a short delay if nothing fired
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                setSessionReady(true);
+            } else {
+                // Give onAuthStateChange 2s to fire before showing "invalid link"
+                setTimeout(() => {
+                    setSessionReady((prev) => (prev === null ? false : prev));
+                }, 2000);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, [supabase]);
 
     const t = {

@@ -117,8 +117,9 @@ export async function updateSession(request: NextRequest) {
     const nextParam = request.nextUrl.searchParams.get('next')
     const isContractorApplicationFlow = nextParam?.includes('/contractors/apply')
 
-    // Redirect logged-in users away from /register (unless contractor application flow)
-    if (user && isAuthPage && !isAnyLoginPage && !isContractorApplicationFlow) {
+    // Redirect logged-in users away from /register and other auth pages
+    // For contractor flow: send them straight to /contractors/apply (skip register)
+    if (user && isAuthPage && !isAnyLoginPage) {
         const next = request.nextUrl.searchParams.get('next')
         const dest = request.nextUrl.clone()
         dest.search = ''
