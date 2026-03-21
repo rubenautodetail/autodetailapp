@@ -1246,3 +1246,131 @@ export async function sendContractorPaidEmail(contractorEmail: string, booking: 
     throw error;
   }
 }
+
+// ── Payout confirmation ─────────────────────────────────────────────────────
+
+export interface PayoutEmailData {
+  contractorName: string;
+  contractorEmail: string;
+  periodStart: string;  // 'YYYY-MM-DD'
+  periodEnd: string;    // 'YYYY-MM-DD'
+  totalBookings: number;
+  grossAmount: number;
+  platformFee: number;
+  contractorAmount: number;
+  paymentMethod: 'ach' | 'zelle' | 'check' | 'cash';
+  notes: string | null;
+  locale?: 'en' | 'es';
+}
+
+const PAYMENT_METHOD_LABELS: Record<string, { en: string; es: string }> = {
+  ach:   { en: 'ACH / Direct Deposit', es: 'ACH / Depósito Directo' },
+  zelle: { en: 'Zelle',               es: 'Zelle'                  },
+  check: { en: 'Check',               es: 'Cheque'                 },
+  cash:  { en: 'Cash',                es: 'Efectivo'               },
+};
+
+/**
+ * Send weekly payout confirmation to contractor after admin marks payment sent.
+ */
+export async function sendPayoutConfirmation(data: PayoutEmailData) {
+  const isEs = data.locale === 'es';
+  const fmt = (d: string) =>
+    new Date(d + 'T12:00:00Z').toLocaleDateString(isEs ? 'es-US' : 'en-US', {
+      month: 'long', day: 'numeric', year: 'numeric',
+    });
+  const methodLabel =
+    PAYMENT_METHOD_LABELS[data.paymentMethod]?.[isEs ? 'es' : 'en'] ?? data.paymentMethod;
+
+  const subject = isEs
+    ? `Pago enviado: semana del ${fmt(data.periodStart)}`
+    : `Payment sent: week of ${fmt(data.periodStart)}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #1a2142 0%, #131835 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; color: #D0B078; }
+          .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+          .box { background: #f9fafb; border-left: 4px solid #D0B078; padding: 20px; margin: 20px 0; border-radius: 4px; }
+          .row { display: flex; justify-content: space-between; margin: 8px 0; }
+          .label { font-weight: 600; color: #6b7280; }
+          .value { color: #111827; }
+          .total-row { border-top: 2px solid #D0B078; margin-top: 12px; padding-top: 12px; }
+          .total-value { font-size: 1.2em; font-weight: bold; color: #16a34a; }
+          .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${isEs ? 'Pago Enviado' : 'Payment Sent'}</h1>
+        </div>
+        <div class="content">
+          <p>${isEs ? `Hola ${data.contractorName},` : `Hi ${data.contractorName},`}</p>
+          <p>${isEs
+            ? 'Tu pago semanal ha sido enviado. Aquí están los detalles:'
+            : 'Your weekly payout has been sent. Here are the details:'
+          }</p>
+
+          <div class="box">
+            <div class="row">
+              <span class="label">${isEs ? 'Período' : 'Period'}:</span>
+              <span class="value">${fmt(data.periodStart)} – ${fmt(data.periodEnd)}</span>
+            </div>
+            <div class="row">
+              <span class="label">${isEs ? 'Trabajos completados' : 'Completed jobs'}:</span>
+              <span class="value">${data.totalBookings}</span>
+            </div>
+            <div class="row">
+              <span class="label">${isEs ? 'Total facturado' : 'Total billed'}:</span>
+              <span class="value">$${Number(data.grossAmount).toFixed(2)}</span>
+            </div>
+            <div class="row">
+              <span class="label">${isEs ? 'Comisión plataforma (30%)' : 'Platform fee (30%)'}:</span>
+              <span class="value" style="color:#dc2626;">−$${Number(data.platformFee).toFixed(2)}</span>
+            </div>
+            <div class="row total-row">
+              <span class="label">${isEs ? 'Tu pago (70%)' : 'Your payout (70%)'}:</span>
+              <span class="total-value">$${Number(data.contractorAmount).toFixed(2)}</span>
+            </div>
+            <div class="row" style="margin-top:16px;">
+              <span class="label">${isEs ? 'Método de pago' : 'Payment method'}:</span>
+              <span class="value">${methodLabel}</span>
+            </div>
+            ${data.notes ? `<div class="row">
+              <span class="label">${isEs ? 'Notas' : 'Notes'}:</span>
+              <span class="value">${data.notes}</span>
+            </div>` : ''}
+          </div>
+
+          <p>${isEs
+            ? `¿Preguntas? Contáctanos en <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> o llama al ${SUPPORT_PHONE}.`
+            : `Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> or call ${SUPPORT_PHONE}.`
+          }</p>
+        </div>
+        <div class="footer">
+          <p>DTailWash · Miami-Dade County · <a href="${APP_URL}">${APP_URL}</a></p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  try {
+    const { data: emailData, error } = await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: data.contractorEmail,
+      subject,
+      html,
+    });
+    if (error) throw error;
+    console.log(`Payout confirmation sent to ${data.contractorEmail}`);
+    return emailData;
+  } catch (err) {
+    console.error('Failed to send payout confirmation email:', err);
+    throw err;
+  }
+}

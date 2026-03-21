@@ -162,6 +162,10 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
               <div className="text-2xl sm:text-3xl mb-2 opacity-90">💳</div>
               <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Pagos" : "Payments"}</div>
             </Link>
+            <Link href={`/${locale}/admin/payouts`} className="group rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-2xl sm:text-3xl mb-2 opacity-90">💰</div>
+              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Pagos a Contratistas" : "Contractor Payouts"}</div>
+            </Link>
           </div>
         </div>
 

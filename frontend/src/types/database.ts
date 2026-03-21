@@ -218,6 +218,56 @@ export interface Database {
                     locale?: string | null
                 }
             }
+            payouts: {
+                Row: {
+                    id: number
+                    contractor_id: string
+                    period_start: string
+                    period_end: string
+                    total_bookings: number
+                    gross_amount: number
+                    platform_fee: number
+                    contractor_amount: number
+                    status: 'pending' | 'paid'
+                    payment_method: 'ach' | 'zelle' | 'check' | 'cash' | null
+                    paid_at: string | null
+                    paid_by: string | null
+                    notes: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    contractor_id: string
+                    period_start: string
+                    period_end: string
+                    total_bookings?: number
+                    gross_amount?: number
+                    platform_fee?: number
+                    contractor_amount?: number
+                    status?: 'pending' | 'paid'
+                    payment_method?: 'ach' | 'zelle' | 'check' | 'cash' | null
+                    paid_at?: string | null
+                    paid_by?: string | null
+                    notes?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    contractor_id?: string
+                    period_start?: string
+                    period_end?: string
+                    total_bookings?: number
+                    gross_amount?: number
+                    platform_fee?: number
+                    contractor_amount?: number
+                    status?: 'pending' | 'paid'
+                    payment_method?: 'ach' | 'zelle' | 'check' | 'cash' | null
+                    paid_at?: string | null
+                    paid_by?: string | null
+                    notes?: string | null
+                    created_at?: string
+                }
+            }
             bookings: {
                 Row: {
                     id: number
@@ -259,6 +309,7 @@ export interface Database {
                     cancellation_reason: string | null
                     rejection_reason: string | null
                     payment_error: string | null
+                    payout_id: number | null
                     customer_notes: string | null
                     before_photos: string[] | null
                     completion_photos: string[] | null
