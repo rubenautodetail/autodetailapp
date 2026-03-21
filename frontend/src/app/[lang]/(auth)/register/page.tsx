@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterForm() {
     const { register, user, isLoading } = useAuth();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -16,12 +16,10 @@ export default function RegisterPage() {
     const [confirmedEmail, setConfirmedEmail] = useState("");
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const lang = (params.lang as string) || "en";
 
-    // Read `next` once, safely (window only exists in browser)
-    const next = typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("next")
-        : null;
+    const next = searchParams.get("next");
     const redirectTo = next || `/${lang}/dashboard`;
 
     const isContractorFlow = !!next?.includes("contractors/apply");
@@ -197,5 +195,17 @@ export default function RegisterPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+                <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
+            </div>
+        }>
+            <RegisterForm />
+        </Suspense>
     );
 }
