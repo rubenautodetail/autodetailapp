@@ -112,7 +112,7 @@ export default function RequestPage() {
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Confirmed! ✅</h2>
-                        <p className="text-[var(--text-secondary)]">Rubens is on the way.</p>
+                        <p className="text-[var(--text-secondary)]">Your technician is on the way.</p>
                     </div>
 
                     {/* Status Tracker */}

@@ -124,8 +124,8 @@ export default async function ContractorsPage({
                         {cmsSubheading
                             ? cmsSubheading
                             : isEs
-                                ? 'Conviértete en detallador certificado en la plataforma Rubens. Tú traes el talento, nosotros traemos los clientes.'
-                                : 'Become a certified detailer on the Rubens platform. You bring the skill, we bring the customers.'}
+                                ? 'Conviértete en detallador certificado en la plataforma DTailWash. Tú traes el talento, nosotros traemos los clientes.'
+                                : 'Become a certified detailer on the DTailWash platform. You bring the skill, we bring the customers.'}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                         <Link

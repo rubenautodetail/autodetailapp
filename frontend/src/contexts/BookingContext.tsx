@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 // ── sessionStorage helpers (SSR-safe) ────────────────────────────────────────
-const SS_KEY = 'rubens_booking_state';
+const SS_KEY = 'dtailwash_booking_state';
 
 function ssGet<T>(field: string): T | null {
   if (typeof window === 'undefined') return null;

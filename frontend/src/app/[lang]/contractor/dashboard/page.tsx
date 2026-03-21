@@ -120,6 +120,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const [error, setError] = useState<string | null>(null);
     const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
     const [startingOnboarding, setStartingOnboarding] = useState(false);
+    const [onboardingError, setOnboardingError] = useState<string | null>(null);
     const [acceptingId, setAcceptingId] = useState<string | null>(null);
     const [rejectingId, setRejectingId] = useState<string | null>(null);
     const [isAvailable, setIsAvailable] = useState<boolean>(true);
@@ -271,17 +272,23 @@ export default function ContractorDashboard({ params }: DashboardProps) {
 
     const handleStartOnboarding = async () => {
         setStartingOnboarding(true);
+        setOnboardingError(null);
         try {
             const res = await fetch('/api/contractors/onboard', {
                 method: 'POST',
                 headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
             });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.url) window.location.href = data.url;
+            const data = await res.json();
+            if (res.ok && data.url) {
+                window.location.href = data.url;
+            } else {
+                setOnboardingError(data.error || 'Failed to start Stripe onboarding. Please try again.');
             }
-        } catch { /* non-fatal */ }
-        finally { setStartingOnboarding(false); }
+        } catch {
+            setOnboardingError('Network error. Please check your connection and try again.');
+        } finally {
+            setStartingOnboarding(false);
+        }
     };
 
     const loadDashboard = async () => {
@@ -406,18 +413,23 @@ export default function ContractorDashboard({ params }: DashboardProps) {
 
                 {/* Stripe Onboarding Banner */}
                 {onboardingComplete === false && (
-                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div>
-                            <h3 className="font-semibold text-amber-300 text-base">⚡ {labels.setupPayments}</h3>
-                            <p className="text-sm text-amber-400/80 mt-1">{labels.setupDesc}</p>
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="font-semibold text-amber-300 text-base">⚡ {labels.setupPayments}</h3>
+                                <p className="text-sm text-amber-400/80 mt-1">{labels.setupDesc}</p>
+                            </div>
+                            <button
+                                onClick={handleStartOnboarding}
+                                disabled={startingOnboarding}
+                                className="shrink-0 px-5 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-colors"
+                            >
+                                {startingOnboarding ? labels.setupLoading : labels.setupBtn}
+                            </button>
                         </div>
-                        <button
-                            onClick={handleStartOnboarding}
-                            disabled={startingOnboarding}
-                            className="shrink-0 px-5 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-colors"
-                        >
-                            {startingOnboarding ? labels.setupLoading : labels.setupBtn}
-                        </button>
+                        {onboardingError && (
+                            <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{onboardingError}</p>
+                        )}
                     </div>
                 )}
 

@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfile(null);
     // Clear any sensitive booking data left in session storage
     try {
-      sessionStorage.removeItem('rubens_booking_state');
+      sessionStorage.removeItem('dtailwash_booking_state');
     } catch {
       // Private browsing may block sessionStorage — non-fatal
     }

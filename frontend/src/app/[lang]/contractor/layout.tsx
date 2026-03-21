@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ContractorProvider } from '@/contexts/ContractorContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
@@ -113,10 +114,15 @@ export default function ContractorLayout({
                             {/* Brand */}
                             <Link
                                 href={`/${lang}/contractor/dashboard`}
-                                className="flex items-center space-x-2 text-white font-bold text-lg tracking-tight hover:opacity-80 transition-opacity"
+                                className="flex items-center hover:opacity-80 transition-opacity"
                             >
-                                <span className="text-yellow-400">✦</span>
-                                <span>Rubens Detail</span>
+                                <Image
+                                    src="/dtailwash_logo_final.png"
+                                    alt="DTailWash"
+                                    width={120}
+                                    height={36}
+                                    className="h-9 w-auto object-contain"
+                                />
                             </Link>
 
                             {/* Role identity badge */}

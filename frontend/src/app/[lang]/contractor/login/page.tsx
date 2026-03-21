@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function ContractorLoginPage() {
   const { login, logout, profile, user, isLoading } = useAuth();
@@ -140,16 +141,18 @@ export default function ContractorLoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 mb-4">
-            <svg className="w-7 h-7 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-            </svg>
+          <div className="flex justify-center mb-5">
+            <Image
+              src="/dtailwash_logo_final.png"
+              alt="DTailWash"
+              width={160}
+              height={48}
+              className="h-12 w-auto object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold text-white">
             {isEs ? "Portal de Técnicos" : "Technician Portal"}
           </h1>
-          <p className="text-white/40 text-sm mt-1">DetailWash</p>
         </div>
 
         {/* Form */}

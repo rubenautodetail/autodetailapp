@@ -383,14 +383,21 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             addNotification({ title: 'Vehicle Removed', message: 'Vehicle removed from your garage.', type: 'info' });
             return;
         }
+        // Optimistic update — remove immediately so the UI responds even if real-time is slow
+        setVehicles(prev => prev.filter(v => v.id !== id));
+
         const supabase = createClient();
         const { error } = await supabase
             .from('vehicles')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', user.id);
 
         if (error) {
             console.error('Error removing vehicle:', error);
+            // Revert optimistic update on failure
+            const { data } = await supabase.from('vehicles').select('*').eq('user_id', user.id);
+            if (data) setVehicles(data.map(mapDbVehicleToVehicle));
             addNotification({ title: 'Action Failed', message: error.message, type: 'error' });
             return;
         }

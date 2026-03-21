@@ -46,6 +46,19 @@ export async function POST(req: NextRequest) {
                         .from('profiles')
                         .update({ stripe_account_id: accountId } as any)
                         .eq('id', user.id);
+                } else {
+                    // Verify the stored account still exists in Stripe (could be stale from test→live switch)
+                    try {
+                        await stripe.accounts.retrieve(accountId);
+                    } catch {
+                        // Account doesn't exist — create a fresh one
+                        const account = await stripe.accounts.create({ type: 'express' });
+                        accountId = account.id;
+                        await supabase
+                            .from('profiles')
+                            .update({ stripe_account_id: accountId } as any)
+                            .eq('id', user.id);
+                    }
                 }
 
                 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

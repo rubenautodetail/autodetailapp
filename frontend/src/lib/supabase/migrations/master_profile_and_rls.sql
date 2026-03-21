@@ -24,7 +24,7 @@ BEGIN
 
     -- Upsert the profile row with role = admin
     INSERT INTO public.profiles (id, full_name, role)
-    VALUES (v_user_id, 'Rubens Admin', 'admin')
+    VALUES (v_user_id, 'DTailWash Admin', 'admin')
     ON CONFLICT (id) DO UPDATE
         SET role = 'admin',
             updated_at = now();

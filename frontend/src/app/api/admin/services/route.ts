@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
             const product = await stripe.products.create({
                 name: fields.name,
                 description: fields.description || undefined,
-                metadata: { type: 'addon', platform: 'rubens-auto-detail' },
+                metadata: { type: 'addon', platform: 'dtailwash' },
             });
             await stripe.prices.create({
                 product: product.id,
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         const product = await stripe.products.create({
             name: fields.name,
             description: fields.description || undefined,
-            metadata: { type: 'service', platform: 'rubens-auto-detail' },
+            metadata: { type: 'service', platform: 'dtailwash' },
         });
         await stripe.prices.create({
             product: product.id,
