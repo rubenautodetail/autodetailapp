@@ -17,7 +17,7 @@ export default function ContractorLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Redirect already-logged-in users (e.g. back-navigation after session restore)
+  // Redirect already-logged-in contractors only
   useEffect(() => {
     if (isLoading || !user || !profile) return;
     if (profile.role === "contractor") {
@@ -26,11 +26,9 @@ export default function ContractorLoginPage() {
           ? `/${lang}/contractor/dashboard`
           : `/${lang}/contractor/pending`
       );
-    } else {
-      // Non-contractor — redirect to apply page so they can submit an application
-      router.replace(`/${lang}/contractors/apply`);
     }
-  }, [isLoading, user, profile, lang, router, isEs]);
+    // Non-contractors stay on this page — they can log in with a contractor account
+  }, [isLoading, user, profile, lang, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
