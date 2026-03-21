@@ -26,32 +26,37 @@ const t = {
 };
 
 function AdminLoginForm() {
-  const { login, user, profile, isLoading } = useAuth();
+  const { login, logout, user, profile, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [wrongRole, setWrongRole] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const lang = (params.lang as "en" | "es") || "en";
   const dict = t[lang] ?? t.en;
 
-  // Redirect after login
+  // Redirect after login — admin only
   useEffect(() => {
     if (isLoading || !user || !profile) return;
     if (profile.role !== "admin") {
-      setError(dict.forbidden);
+      // Sign out immediately — non-admins cannot stay authenticated here
+      setWrongRole(true);
+      setLoading(false);
+      logout().catch(() => {});
       return;
     }
     const next = searchParams.get("next");
     router.replace(next && next.startsWith("/") ? next : `/${lang}/admin`);
-  }, [user, profile, isLoading, router, lang, searchParams, dict.forbidden]);
+  }, [user, profile, isLoading, router, lang, searchParams, logout]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setWrongRole(false);
     try {
       await login(email, password);
     } catch (err: unknown) {
@@ -112,7 +117,13 @@ function AdminLoginForm() {
               />
             </div>
 
-            {error && (
+            {wrongRole && (
+              <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm text-center border border-red-100">
+                {dict.forbidden}
+              </div>
+            )}
+
+            {error && !wrongRole && (
               <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm text-center border border-red-100">
                 {error}
               </div>

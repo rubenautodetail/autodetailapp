@@ -110,13 +110,14 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    // ─── Redirect authenticated users away from /register ─────────────────────
-    // But allow if next param points to contractor application flow
+    // ─── Redirect authenticated users away from auth pages ─────────────────────
     const isContractorLogin = path.includes('/contractor/login')
     const isAdminLogin = path.includes('/admin/login')
     const isAnyLoginPage = isContractorLogin || isAdminLogin || path.endsWith('/login')
     const nextParam = request.nextUrl.searchParams.get('next')
     const isContractorApplicationFlow = nextParam?.includes('/contractors/apply')
+
+    // Redirect logged-in users away from /register (unless contractor application flow)
     if (user && isAuthPage && !isAnyLoginPage && !isContractorApplicationFlow) {
         const next = request.nextUrl.searchParams.get('next')
         const dest = request.nextUrl.clone()
@@ -127,6 +128,42 @@ export async function updateSession(request: NextRequest) {
             dest.pathname = `/${locale}/dashboard`
         }
         return cookiedRedirect(supabaseResponse, dest)
+    }
+
+    // ─── Redirect logged-in users on login pages to their correct portal ────────
+    // Prevents e.g. a contractor sitting on user login, or user sitting on contractor login
+    if (user && isAnyLoginPage) {
+        const { data: loginProfile } = await supabase
+            .from('profiles')
+            .select('role, approval_status')
+            .eq('id', user.id)
+            .single()
+
+        const loginRole = (loginProfile as { role?: string } | null)?.role
+
+        if (loginRole) {
+            // Already on correct login page → let client-side handle it
+            const onCorrectPage =
+                (loginRole === 'user' && !isContractorLogin && !isAdminLogin) ||
+                (loginRole === 'contractor' && isContractorLogin) ||
+                (loginRole === 'admin' && isAdminLogin)
+
+            if (!onCorrectPage) {
+                const dest = request.nextUrl.clone()
+                dest.search = ''
+                if (loginRole === 'admin') {
+                    dest.pathname = `/${locale}/admin`
+                } else if (loginRole === 'contractor') {
+                    const approvalStatus = (loginProfile as { approval_status?: string } | null)?.approval_status
+                    dest.pathname = approvalStatus === 'approved'
+                        ? `/${locale}/contractor/dashboard`
+                        : `/${locale}/contractor/pending`
+                } else {
+                    dest.pathname = `/${locale}/dashboard`
+                }
+                return cookiedRedirect(supabaseResponse, dest)
+            }
+        }
     }
 
     // ─── Role enforcement for admin & contractor pages ─────────────────────────

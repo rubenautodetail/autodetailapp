@@ -34,10 +34,11 @@ const t = {
 
 // Inner component that uses useSearchParams (requires Suspense wrapper)
 function LoginForm() {
-    const { login, user, profile, isLoading } = useAuth();
+    const { login, logout, user, profile, isLoading } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [wrongRole, setWrongRole] = useState<"contractor" | "admin" | null>(null);
     const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
@@ -54,20 +55,37 @@ function LoginForm() {
             : ""
     );
 
-    // Role-based redirect after login
+    // Role-based redirect after login — customers only
     useEffect(() => {
         if (isLoading || !user || !profile) return;
+
+        // Contractor tried to use customer login → reject
+        if (profile.role === "contractor") {
+            setWrongRole("contractor");
+            setLoading(false);
+            logout().catch(() => {});
+            return;
+        }
+
+        // Admin tried to use customer login → reject
+        if (profile.role === "admin") {
+            setWrongRole("admin");
+            setLoading(false);
+            logout().catch(() => {});
+            return;
+        }
+
+        // Regular user → redirect to dashboard or next
         const next = searchParams.get("next");
         if (next && next.startsWith("/")) { router.replace(next); return; }
-        if (profile.role === "admin") router.replace(`/${lang}/admin`);
-        else if (profile.role === "contractor") router.replace(`/${lang}/contractor/dashboard`);
-        else router.replace(`/${lang}/dashboard`);
-    }, [user, profile, isLoading, router, lang, searchParams]);
+        router.replace(`/${lang}/dashboard`);
+    }, [user, profile, isLoading, router, lang, searchParams, logout]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
+        setWrongRole(null);
         try {
             await login(email, password);
         } catch (err: unknown) {
@@ -88,6 +106,46 @@ function LoginForm() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
                 <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
+            </div>
+        );
+    }
+
+    // Wrong-role screen: contractor or admin tried customer login
+    if (wrongRole) {
+        const isContractor = wrongRole === "contractor";
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
+                <div className="w-full max-w-sm text-center space-y-6">
+                    <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+                        <svg className="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-xl font-semibold text-[var(--text-primary)]">
+                        {lang === "es"
+                            ? (isContractor ? "Esta es una cuenta de técnico" : "Esta es una cuenta de administrador")
+                            : (isContractor ? "This is a technician account" : "This is an admin account")}
+                    </h1>
+                    <p className="text-[var(--text-secondary)] text-sm">
+                        {lang === "es"
+                            ? "Esta página es solo para clientes. Inicia sesión en el portal correcto."
+                            : "This page is for customers only. Please sign in at the correct portal."}
+                    </p>
+                    <Link
+                        href={isContractor ? `/${lang}/contractor/login` : `/${lang}/admin/login`}
+                        className="block w-full py-3.5 rounded-xl bg-[var(--accent)] text-white font-medium shadow-sm hover:opacity-90 transition-all text-center"
+                    >
+                        {lang === "es"
+                            ? (isContractor ? "Ir al portal de técnicos" : "Ir al portal de admin")
+                            : (isContractor ? "Go to technician portal" : "Go to admin portal")}
+                    </Link>
+                    <button
+                        onClick={() => setWrongRole(null)}
+                        className="text-[var(--text-secondary)] text-sm hover:text-[var(--text-primary)] transition-colors"
+                    >
+                        {lang === "es" ? "Intentar con otra cuenta" : "Try a different account"}
+                    </button>
+                </div>
             </div>
         );
     }

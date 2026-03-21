@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
 export default function ContractorLoginPage() {
-  const { login, profile, user, isLoading } = useAuth();
+  const { login, logout, profile, user, isLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const lang = (params?.lang as string) || "en";
@@ -16,38 +16,111 @@ export default function ContractorLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [wrongRole, setWrongRole] = useState<string | null>(null);
+  // Track whether the user just attempted login (vs. arrived already logged in)
+  const justLoggedIn = useRef(false);
 
-  // Redirect already-logged-in contractors only
+  // Handle post-login role enforcement + already-logged-in redirect
   useEffect(() => {
-    if (isLoading || !user || !profile) return;
-    if (profile.role === "contractor") {
+    if (isLoading || !user) return;
+
+    // Profile still loading — wait
+    if (!profile) return;
+
+    const role = profile.role;
+
+    // Contractor → go to dashboard or pending
+    if (role === "contractor") {
       router.replace(
         profile.approval_status === "approved"
           ? `/${lang}/contractor/dashboard`
           : `/${lang}/contractor/pending`
       );
+      return;
     }
-    // Non-contractors stay on this page — they can log in with a contractor account
-  }, [isLoading, user, profile, lang, router]);
+
+    // Admin can access contractor portal too
+    if (role === "admin") {
+      router.replace(`/${lang}/contractor/dashboard`);
+      return;
+    }
+
+    // Wrong role — sign them out and show a clear message
+    if (role === "user") {
+      setWrongRole("user");
+      setLoading(false);
+      // Auto sign-out so they don't stay in a broken session
+      logout().catch(() => {});
+      return;
+    }
+  }, [isLoading, user, profile, lang, router, logout]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setWrongRole(null);
+    justLoggedIn.current = true;
 
     try {
       await login(email, password);
-      // Don't navigate here — let the useEffect handle redirect once
-      // AuthContext finishes loading the profile after authentication.
-    } catch {
-      setError(
-        isEs
-          ? "Correo o contraseña incorrectos."
-          : "Incorrect email or password."
-      );
+      // useEffect handles redirect once profile loads
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.toLowerCase().includes("email not confirmed")) {
+        setError(
+          isEs
+            ? "Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada."
+            : "Please confirm your email before signing in. Check your inbox."
+        );
+      } else {
+        setError(
+          isEs
+            ? "Correo o contraseña incorrectos."
+            : "Incorrect email or password."
+        );
+      }
       setLoading(false);
+      justLoggedIn.current = false;
     }
   };
+
+  // Wrong-role screen: user tried to log in but they're not a contractor
+  if (wrongRole === "user") {
+    return (
+      <div className="min-h-screen bg-[#0D1128] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 mb-2">
+            <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-bold text-white">
+            {isEs ? "Cuenta no es de técnico" : "Not a technician account"}
+          </h1>
+          <p className="text-white/50 text-sm leading-relaxed">
+            {isEs
+              ? "Esta cuenta es de cliente. Si deseas trabajar como técnico, primero debes aplicar."
+              : "This is a customer account. To work as a technician, you need to apply first."}
+          </p>
+          <div className="space-y-3">
+            <Link
+              href={`/${lang}/register?next=/${lang}/contractors/apply`}
+              className="block w-full py-3 rounded-xl bg-yellow-400 text-black font-semibold text-sm hover:bg-yellow-300 transition-colors"
+            >
+              {isEs ? "Aplicar como técnico" : "Apply as technician"}
+            </Link>
+            <Link
+              href={`/${lang}/login`}
+              className="block w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm hover:bg-white/10 transition-colors"
+            >
+              {isEs ? "Ir al inicio de sesión de cliente" : "Go to customer login"}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0D1128] flex items-center justify-center px-4">
@@ -132,6 +205,15 @@ export default function ContractorLoginPage() {
               className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
             >
               {isEs ? "Aplica aquí" : "Apply here"}
+            </Link>
+          </p>
+          <p className="text-white/30 text-sm">
+            {isEs ? "¿Cliente?" : "Customer?"}{" "}
+            <Link
+              href={`/${lang}/login`}
+              className="text-white/50 hover:text-white/70 transition-colors"
+            >
+              {isEs ? "Inicia sesión aquí" : "Sign in here"}
             </Link>
           </p>
           <Link
