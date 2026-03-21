@@ -108,11 +108,23 @@ function ResetPasswordForm() {
 
         setStatus("loading");
         try {
+            // Confirm session is still alive before attempting the update
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession) {
+                setStatus("error");
+                setMessage(lang === "es"
+                    ? "Sesión expirada. Solicita un nuevo enlace."
+                    : "Session expired. Please request a new reset link.");
+                return;
+            }
+
             const { error } = await supabase.auth.updateUser({ password });
             if (error) {
                 setStatus("error");
                 setMessage(error.message);
             } else {
+                // Sign out so the user lands on a clean login page
+                await supabase.auth.signOut();
                 setStatus("success");
                 setMessage(t.success);
                 setTimeout(() => router.push(loginHref), 2000);
