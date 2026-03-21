@@ -62,7 +62,15 @@ function LoginForm() {
         try {
             await login(email, password);
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Failed to sign in.");
+            const msg = err instanceof Error ? err.message : "Failed to sign in.";
+            // Make Supabase's "Email not confirmed" readable
+            if (msg.toLowerCase().includes("email not confirmed")) {
+                setError(lang === "es"
+                    ? "Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada."
+                    : "Please confirm your email before signing in. Check your inbox.");
+            } else {
+                setError(msg);
+            }
             setLoading(false);
         }
     };

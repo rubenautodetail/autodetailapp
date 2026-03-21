@@ -39,8 +39,10 @@ export default function RegisterPage() {
         setError("");
 
         try {
-            // Pass `next` so the confirmation email redirects to the right destination
-            const { needsEmailConfirmation } = await register(name, email, password, lang, redirectTo);
+            // For contractor flow: email confirmation → contractors/apply
+            // For regular users: email confirmation → login page (they log in after confirming)
+            const emailRedirect = isContractorFlow ? redirectTo : `/${lang}/login`;
+            const { needsEmailConfirmation } = await register(name, email, password, lang, emailRedirect);
             if (needsEmailConfirmation) {
                 setConfirmedEmail(email);
             } else {

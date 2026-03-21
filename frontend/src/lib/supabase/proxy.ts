@@ -124,7 +124,7 @@ export async function updateSession(request: NextRequest) {
         if (next && next.startsWith('/')) {
             dest.pathname = next
         } else {
-            dest.pathname = `/${locale}`
+            dest.pathname = `/${locale}/dashboard`
         }
         return cookiedRedirect(supabaseResponse, dest)
     }

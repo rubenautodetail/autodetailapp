@@ -1,35 +1,44 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import type { EmailOtpType } from '@supabase/supabase-js'
 
 /**
  * GET /api/auth/callback
- * Handles Supabase email link callbacks (password reset, email confirmation).
- * Exchanges the PKCE code for a session and redirects to the appropriate page.
+ * Handles Supabase email link callbacks (email confirmation, password reset).
+ *
+ * Supports two flows:
+ *  1. PKCE code exchange  — ?code=XXX         (same-browser only)
+ *  2. Token-hash OTP      — ?token_hash=XXX&type=signup  (cross-device, preferred)
+ *
+ * To enable cross-device confirmation, set the Supabase email template to:
+ *   {{ .SiteURL }}/api/auth/callback?token_hash={{ .TokenHash }}&type=signup
  */
 export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
-    const code = searchParams.get('code')
-    const rawNext = searchParams.get('next') ?? '/en'
+
+    const code       = searchParams.get('code')
+    const tokenHash  = searchParams.get('token_hash')
+    const type       = searchParams.get('type') as EmailOtpType | null
+    const rawNext    = searchParams.get('next') ?? '/en'
 
     // Prevent open redirect — only allow relative paths
     const next = rawNext.startsWith('/') ? rawNext : '/en'
 
-    // Extract locale from `next` for error redirects (e.g. /es/reset-password → es)
     const localeMatch = next.match(/^\/(en|es)(\/|$)/)
-    const locale = localeMatch ? localeMatch[1] : 'en'
+    const locale      = localeMatch ? localeMatch[1] : 'en'
 
     const isContractorFlow = next.includes('contractor')
     const loginPath = isContractorFlow ? `/${locale}/contractor/login` : `/${locale}/login`
 
-    if (!code) {
+    // Neither code nor token_hash → just send to login
+    if (!code && !tokenHash) {
         return NextResponse.redirect(`${origin}${loginPath}`)
     }
 
-    // Initialize response that will be returned
+    const cookieStore = await cookies()
     let supabaseResponse = NextResponse.next({ request })
 
-    const cookieStore = await cookies()
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -45,23 +54,32 @@ export async function GET(request: NextRequest) {
         }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    let error: { message: string } | null = null
+
+    if (tokenHash && type) {
+        // Cross-device compatible: works regardless of which browser initiated sign-up
+        const result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+        error = result.error
+    } else if (code) {
+        // PKCE: only works if the same browser that called signUp is handling the callback
+        const result = await supabase.auth.exchangeCodeForSession(code)
+        error = result.error
+    }
+
     if (error) {
-        // Redirect to login with error, preserving cookies
         const loginUrl = new URL(`${loginPath}?error=auth_failed`, origin)
-        // Copy cookies from supabaseResponse to redirect response
         const redirect = NextResponse.redirect(loginUrl)
-        supabaseResponse.cookies.getAll().forEach((cookie) => {
-            redirect.cookies.set(cookie.name, cookie.value, cookie)
+        supabaseResponse.cookies.getAll().forEach((c) => {
+            redirect.cookies.set(c.name, c.value, c)
         })
         return redirect
     }
 
-    // Redirect to next URL, preserving cookies
+    // Success — redirect to destination with session cookies
     const redirectUrl = new URL(next, origin)
     const redirect = NextResponse.redirect(redirectUrl)
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-        redirect.cookies.set(cookie.name, cookie.value, cookie)
+    supabaseResponse.cookies.getAll().forEach((c) => {
+        redirect.cookies.set(c.name, c.value, c)
     })
     return redirect
 }

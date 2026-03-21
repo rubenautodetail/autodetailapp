@@ -20,20 +20,20 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
     }
 
     const navItems = [
-        { icon: Home, label: "Home", labelEs: "Inicio", path: "/" },
+        { icon: Home, label: "Home", labelEs: "Inicio", path: "/dashboard" },
         { icon: Sparkles, label: "Book", labelEs: "Reservar", path: "/booking/select" },
-        { icon: ClipboardList, label: "Bookings", labelEs: "Reservas", path: "/dashboard" },
+        { icon: ClipboardList, label: "Orders", labelEs: "Reservas", path: "/dashboard/orders" },
         { icon: User, label: "Account", labelEs: "Cuenta", path: "/dashboard/profile" },
     ];
 
     const isActive = (itemPath: string) => {
         const fullPath = `/${lang}${itemPath}`;
-        // Exact match for home
-        if (itemPath === "/") return pathname === `/${lang}` || pathname === `/${lang}/`;
+        // Home = exact dashboard match
+        if (itemPath === "/dashboard") return pathname === `/${lang}/dashboard`;
         // Booking section — active for any /booking/* page
         if (itemPath === "/booking/select") return pathname?.startsWith(`/${lang}/booking`);
-        // Dashboard — active only for exact dashboard, not profile
-        if (itemPath === "/dashboard") return pathname === `/${lang}/dashboard`;
+        // Orders
+        if (itemPath === "/dashboard/orders") return pathname?.startsWith(`/${lang}/dashboard/orders`);
         // Profile
         if (itemPath === "/dashboard/profile") return pathname?.startsWith(`/${lang}/dashboard/profile`);
         return pathname === fullPath;
