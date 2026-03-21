@@ -1,13 +1,14 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import type { EmailOtpType } from "@supabase/supabase-js";
 
 function ResetPasswordForm() {
-    const supabase = createClient();
+    const supabase = useRef(createClient()).current;
     const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
@@ -22,20 +23,32 @@ function ResetPasswordForm() {
     const [sessionReady, setSessionReady] = useState<boolean | null>(null);
 
     useEffect(() => {
-        // Listen for PASSWORD_RECOVERY — fired by the browser client when it detects
-        // the recovery token in the URL (works with both hash-fragment and PKCE flows)
+        const tokenHash = searchParams.get('token_hash');
+        const type = searchParams.get('type') as EmailOtpType | null;
+
+        if (tokenHash && type) {
+            // token_hash flow: verify client-side so the browser client owns the session
+            supabase.auth.verifyOtp({ token_hash: tokenHash, type }).then(({ data, error }) => {
+                if (!error && data.session) {
+                    setSessionReady(true);
+                } else {
+                    setSessionReady(false);
+                }
+            });
+            return;
+        }
+
+        // Fallback: check existing session (page refresh) or catch hash-fragment flow
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
                 setSessionReady(true);
             }
         });
 
-        // Check existing session, then resolve to false after a short delay if nothing fired
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 setSessionReady(true);
             } else {
-                // Give onAuthStateChange 2s to fire before showing "invalid link"
                 setTimeout(() => {
                     setSessionReady((prev) => (prev === null ? false : prev));
                 }, 2000);
@@ -43,7 +56,8 @@ function ResetPasswordForm() {
         });
 
         return () => subscription.unsubscribe();
-    }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const t = {
         en: {
@@ -93,15 +107,19 @@ function ResetPasswordForm() {
         }
 
         setStatus("loading");
-        const { error } = await supabase.auth.updateUser({ password });
-
-        if (error) {
+        try {
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) {
+                setStatus("error");
+                setMessage(error.message);
+            } else {
+                setStatus("success");
+                setMessage(t.success);
+                setTimeout(() => router.push(loginHref), 2000);
+            }
+        } catch (err: unknown) {
             setStatus("error");
-            setMessage(error.message);
-        } else {
-            setStatus("success");
-            setMessage(t.success);
-            setTimeout(() => router.push(loginHref), 2000);
+            setMessage(err instanceof Error ? err.message : "Failed to update password. Please try again.");
         }
     };
 
