@@ -15,6 +15,7 @@ import * as Sentry from '@sentry/nextjs';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { createPaymentIntent } from '@/lib/stripe/server';
 import { rateLimit } from '@/lib/rateLimit';
+import { getQStashClient, SITE_URL } from '@/lib/qstash';
 
 function generateConfirmationCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -194,6 +195,12 @@ export async function POST(req: NextRequest) {
         }
     );
 
+    // ── Step 5: Enqueue payment reminder emails via QStash ───────────────────
+    // Each reminder fires only if the booking is still pending_payment at that time.
+    schedulePaymentReminders(bookings[0].id).catch(
+        (err) => console.error('create-with-payment: QStash scheduling failed:', err)
+    );
+
     const confirmationCodes = bookings.map(b => b.confirmation_code);
 
     return NextResponse.json({
@@ -207,6 +214,32 @@ export async function POST(req: NextRequest) {
         bookingGroupId,
         vehicleCount,
     });
+}
+
+// ── Schedule escalating payment reminders via Upstash QStash ─────────────────
+// Delays: 15 min → 2 hours → 24 hours
+
+async function schedulePaymentReminders(bookingId: number) {
+    const qstash = getQStashClient();
+    const url = `${SITE_URL}/api/booking/payment-reminder`;
+
+    const reminders: Array<{ delay: number; reminderNumber: 1 | 2 | 3 }> = [
+        { delay: 15 * 60,       reminderNumber: 1 }, // 15 minutes
+        { delay: 2 * 60 * 60,   reminderNumber: 2 }, // 2 hours
+        { delay: 24 * 60 * 60,  reminderNumber: 3 }, // 24 hours
+    ];
+
+    await Promise.all(
+        reminders.map(({ delay, reminderNumber }) =>
+            qstash.publishJSON({
+                url,
+                delay,
+                body: { bookingId, reminderNumber },
+            })
+        )
+    );
+
+    console.log(`Payment reminders scheduled for booking ${bookingId}`);
 }
 
 // ── Customer confirmation email only (booking pending payment) ────────────────

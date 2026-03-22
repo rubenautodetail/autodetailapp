@@ -89,6 +89,13 @@ export async function POST(req: NextRequest) {
                     const zipCode = (updatedBooking as Record<string, unknown>).zip_code as string || '';
                     const bookingWithService = { ...updatedBooking, service_name: serviceName };
 
+                    const { notify } = await import('@/lib/notifications');
+
+                    // Send booking confirmation email to customer now that payment is authorized
+                    await notify({ type: 'booking.confirmed', booking: bookingWithService }).catch(
+                        (err) => console.error('webhook: customer confirmation email failed:', err)
+                    );
+
                     // Broadcast to ALL approved+available contractors — first to accept wins.
                     // NOTE: Service-area ZIP filtering is dormant — re-enable for geo-routing when needed.
                     const { data: contractors } = await supabase
@@ -99,7 +106,6 @@ export async function POST(req: NextRequest) {
                         .eq('is_available', true);
 
                     if (contractors && contractors.length > 0) {
-                        const { notify } = await import('@/lib/notifications');
                         await Promise.all(
                             contractors.map((c: { id: string; email: string }) =>
                                 notify({

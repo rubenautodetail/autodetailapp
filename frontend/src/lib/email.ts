@@ -1247,6 +1247,101 @@ export async function sendContractorPaidEmail(contractorEmail: string, booking: 
   }
 }
 
+/**
+ * Payment reminder emails — 3 escalating tones
+ * reminderNumber: 1 = 15 min, 2 = 2 hours, 3 = 24 hours (final)
+ */
+export async function sendPaymentReminderEmail(booking: BookingEmailData, reminderNumber: 1 | 2 | 3) {
+  const { customer, service } = booking;
+  const payUrl = `${APP_URL}/en/booking/${booking.id}/pay`;
+  const cancelUrl = `${APP_URL}/en/dashboard`;
+
+  const configs = {
+    1: {
+      subject: `Complete your booking — ${service.name}`,
+      headline: 'Your booking is still waiting',
+      body: `You started a booking for <strong>${service.name}</strong> a few minutes ago but haven't completed payment yet. Your spot is still reserved — tap below to finish.`,
+      urgency: '',
+      cta: 'Complete Payment →',
+    },
+    2: {
+      subject: `Reminder: Payment needed for your ${service.name}`,
+      headline: 'Don\'t lose your appointment',
+      body: `Your <strong>${service.name}</strong> appointment is still pending payment. We're holding your spot, but it won't last forever.`,
+      urgency: 'Your appointment is <strong>not confirmed</strong> until payment is received.',
+      cta: 'Pay Now →',
+    },
+    3: {
+      subject: `Final reminder — your booking will be released`,
+      headline: 'Last chance to keep your appointment',
+      body: `This is your final reminder for <strong>${service.name}</strong>. If payment is not completed today, your booking will be automatically cancelled and the spot released.`,
+      urgency: '⚠️ Your booking will be <strong>cancelled</strong> if not paid within the next few hours.',
+      cta: 'Complete Payment Before It\'s Gone →',
+    },
+  };
+
+  const c = configs[reminderNumber];
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+          .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+          .urgency { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 16px 0; border-radius: 4px; font-size: 14px; }
+          .cta { display: inline-block; background: #f59e0b; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; margin: 16px 0; }
+          .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+          .cancel-link { font-size: 12px; color: #9ca3af; text-decoration: none; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1 style="margin:0;font-size:22px;">${c.headline}</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${customer.firstName},</p>
+          <p>${c.body}</p>
+          ${c.urgency ? `<div class="urgency">${c.urgency}</div>` : ''}
+
+          <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;">
+            <div class="detail-row"><span>Service</span><strong>${service.name}</strong></div>
+            <div class="detail-row"><span>Date</span><strong>${new Date(booking.scheduledDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</strong></div>
+            <div class="detail-row"><span>Amount</span><strong>$${Number(booking.totalAmount).toFixed(2)}</strong></div>
+            <div class="detail-row" style="border-bottom:none;"><span>Confirmation</span><strong>${booking.confirmationCode}</strong></div>
+          </div>
+
+          <div style="text-align:center;margin:24px 0;">
+            <a href="${payUrl}" class="cta">${c.cta}</a>
+          </div>
+
+          <p style="font-size:13px;color:#6b7280;">
+            Don't want this appointment? <a href="${cancelUrl}" class="cancel-link">Cancel from your dashboard</a>
+          </p>
+          <p style="font-size:13px;color:#6b7280;">Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> or ${SUPPORT_PHONE}.</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  try {
+    const { data, error } = await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: customer.email,
+      subject: c.subject,
+      html,
+    });
+    if (error) throw error;
+    console.log(`Payment reminder #${reminderNumber} sent to ${customer.email} for booking ${booking.id}`);
+    return data;
+  } catch (error) {
+    console.error(`Failed to send payment reminder #${reminderNumber}:`, error);
+    throw error;
+  }
+}
+
 // ── Payout confirmation ─────────────────────────────────────────────────────
 
 export interface PayoutEmailData {
