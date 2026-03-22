@@ -521,7 +521,7 @@ export default function TrackBookingPage() {
                 {/* ── Approve CTA (when pending_approval) ─────────────────── */}
                 {status === 'pending_approval' && (
                     <button
-                        onClick={() => router.push(`/${lang}/booking/${bookingId}/approve`)}
+                        onClick={() => router.push(`/${lang}/booking/${bookingId}/approve${booking.confirmation_code ? `?code=${booking.confirmation_code}` : ''}`)}
                         className="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-500 transition-colors text-base"
                     >
                         {isEs ? 'Aprobar Servicio ✓' : 'Approve Service ✓'}

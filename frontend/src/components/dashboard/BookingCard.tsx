@@ -191,7 +191,7 @@ export function BookingCard({
                             </Link>
                         ) : status === 'pending_approval' ? (
                             <Link
-                                href={`/${lang}/booking/${id}/approve`}
+                                href={`/${lang}/booking/${id}/approve${confirmationCode ? `?code=${confirmationCode}` : ''}`}
                                 className="flex items-center gap-1.5 text-sm font-bold text-amber-400 hover:text-white bg-amber-400/10 hover:bg-amber-400/20 px-3 py-1.5 rounded-lg transition-all group/link"
                             >
                                 <ShieldCheck className="w-4 h-4" />
