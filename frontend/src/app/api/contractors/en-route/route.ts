@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         // Verify booking exists, belongs to this contractor, and is in 'confirmed' status
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
-            .select('id, contractor_id, customer_id, status')
+            .select('id, contractor_id, user_id, status')
             .or(`id.eq.${safeId},document_id.eq.${safeId}`)
             .single();
 
@@ -64,11 +64,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Insert notification for the customer
-        if (booking.customer_id) {
+        if (booking.user_id) {
             const { error: notifError } = await supabase
                 .from('notifications')
                 .insert({
-                    user_id: booking.customer_id,
+                    user_id: booking.user_id,
                     type: 'info',
                     title: 'Contractor On The Way',
                     message: 'Your detailer is heading to you now! They should arrive soon.',
