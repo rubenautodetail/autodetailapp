@@ -71,6 +71,14 @@ export async function POST(req: NextRequest) {
             .single();
 
         if (fullBooking) {
+            // If customer_email is missing (older bookings), look it up from auth
+            if (!fullBooking.customer_email && fullBooking.user_id) {
+                const { data: authData } = await supabase.auth.admin.getUserById(fullBooking.user_id);
+                if (authData?.user?.email) {
+                    (fullBooking as any).customer_email = authData.user.email;
+                }
+            }
+            console.log(`[en-route] sending notification for booking ${safeId}, customer_email: ${fullBooking.customer_email}`);
             const { notify } = await import('@/lib/notifications');
             await notify({ type: 'contractor.en_route', booking: fullBooking });
         }

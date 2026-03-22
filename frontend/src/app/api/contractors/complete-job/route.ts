@@ -111,6 +111,13 @@ export async function POST(req: NextRequest) {
                 .eq('id', (updatedBooking as any).id)
                 .single();
 
+            if (fullBooking && !fullBooking.customer_email && (fullBooking as any).user_id) {
+                const { data: authData } = await supabase.auth.admin.getUserById((fullBooking as any).user_id);
+                if (authData?.user?.email) {
+                    (fullBooking as any).customer_email = authData.user.email;
+                }
+            }
+
             const bookingForNotify = fullBooking || updatedBooking;
             const serviceName = (bookingForNotify as any).service_name || 'Detailing Service';
             const { notify } = await import('@/lib/notifications');

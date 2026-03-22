@@ -114,6 +114,13 @@ export async function POST(req: NextRequest) {
                 .eq('id', updatedId)
                 .single();
 
+            if (fullBooking && !fullBooking.customer_email && fullBooking.user_id) {
+                const { data: authData } = await supabase.auth.admin.getUserById(fullBooking.user_id);
+                if (authData?.user?.email) {
+                    (fullBooking as any).customer_email = authData.user.email;
+                }
+            }
+
             const { notify } = await import('@/lib/notifications');
             await notify({
                 type: 'contractor.job_started',
