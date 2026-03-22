@@ -202,7 +202,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             const supabase = createClient();
             const { data, error: fetchError } = await supabase
                 .from("bookings")
-                .select("*, services:service_id(name, name_es)")
+                .select("*")
                 .or(`id.eq.${id},document_id.eq.${id}`)
                 .eq("confirmation_code", code)
                 .single();
@@ -212,7 +212,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             } else {
                 setJob({
                     ...data,
-                    service: data.services,
+                    service: data.service_name ? { name: data.service_name, name_es: data.service_name } : null,
                     timeWindow: data.time_window,
                     specialInstructions: data.special_instructions,
                     location: { address: data.address, zipCode: data.zip_code },

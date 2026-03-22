@@ -39,10 +39,9 @@ export async function GET(
             return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
         }
 
-        // Join services so the page can display the service name (incl. Spanish)
         const { data, error } = await supabase
             .from('bookings')
-            .select('*, services:service_id(name, name_es)')
+            .select('*')
             .or(`id.eq.${safeId},document_id.eq.${safeId}`)
             .single();
 
@@ -64,8 +63,8 @@ export async function GET(
             scheduled_date: data.date,
             timeWindow: data.time_window,
             specialInstructions: data.special_instructions,
-            // Nested service object (mirrors the loadJobByCode Supabase join)
-            service: data.services ?? null,
+            // Build service object from service_name text column
+            service: data.service_name ? { name: data.service_name, name_es: data.service_name } : null,
             // Nested location object
             location: {
                 address: data.address ?? null,
