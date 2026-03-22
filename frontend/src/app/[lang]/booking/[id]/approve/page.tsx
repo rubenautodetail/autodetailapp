@@ -10,6 +10,7 @@ interface Booking {
     status: string;
     payment_status: string;
     contractor_id: string;
+    confirmation_code: string | null;
     date: string;
     time_window: string;
     address: string | null;
@@ -33,17 +34,12 @@ export default function ApproveServicePage() {
     const confirmationCode = searchParams.get('code');
 
     const [booking, setBooking] = useState<Booking | null>(null);
+    const [resolvedCode, setResolvedCode] = useState<string | null>(confirmationCode);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (!confirmationCode) {
-            setError('Invalid approval link. Please use the link from your email.');
-            setLoading(false);
-            return;
-        }
-
         const fetchBooking = async () => {
             try {
                 const supabase = createClient();
@@ -57,6 +53,10 @@ export default function ApproveServicePage() {
                     setError('Booking not found');
                 } else {
                     setBooking(data as Booking);
+                    // If no code in URL, use the one from the booking row (RLS ensures only owner can read it)
+                    if (!confirmationCode && data.confirmation_code) {
+                        setResolvedCode(data.confirmation_code);
+                    }
                 }
             } catch {
                 setError('Failed to load booking');
@@ -69,12 +69,16 @@ export default function ApproveServicePage() {
     }, [bookingId, confirmationCode]);
 
     const handleApprove = async () => {
+        if (!resolvedCode) {
+            setError('Unable to verify booking. Please try again or use the link from your email.');
+            return;
+        }
         setSubmitting(true);
         try {
             const res = await fetch('/api/booking/approve', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bookingId: booking!.id, confirmationCode }),
+                body: JSON.stringify({ bookingId: booking!.id, confirmationCode: resolvedCode }),
             });
 
             if (res.ok) {
