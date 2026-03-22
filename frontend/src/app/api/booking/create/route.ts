@@ -136,7 +136,6 @@ export async function POST(req: NextRequest) {
       .select('id, email')
       .eq('role', 'contractor')
       .eq('approval_status', 'approved')
-      .eq('onboarding_complete', true)
       .eq('is_available', true);
 
     if (contractorsError) {

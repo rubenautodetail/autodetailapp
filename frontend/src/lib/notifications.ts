@@ -141,8 +141,9 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 break;
 
             case 'contractor.job_assigned':
+                // Email only — in-app notifications are batch-inserted by the caller
+                // with the correct contractor user_id (booking.contractor_id is null at this stage)
                 await sendNewJobToContractor(mapBookingData(event.booking), event.contractorEmail);
-                await createInAppNotification(event.booking.contractor_id, 'New Job Assigned', `You have been assigned a new job matching your preferences.`, 'info');
                 break;
 
             case 'contractor.job_accepted':

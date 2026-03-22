@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
             .select('id')
             .eq('role', 'contractor')
             .eq('approval_status', 'approved')
-            .eq('onboarding_complete', true)
             .eq('is_available', true);
 
         if (contractorsError) {

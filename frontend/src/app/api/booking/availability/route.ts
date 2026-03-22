@@ -74,12 +74,12 @@ export async function POST(req: NextRequest) {
             // Keep default time windows
         }
 
-        // Count active contractors (onboarding complete)
+        // Count active approved contractors
         const { count: contractorCount } = await supabase
             .from('profiles')
             .select('id', { count: 'exact', head: true })
             .eq('role', 'contractor')
-            .eq('onboarding_complete', true);
+            .eq('approval_status', 'approved');
 
         // Fallback: if no onboarded contractors found, use 1 (dev mode)
         const totalContractors = contractorCount && contractorCount > 0 ? contractorCount : 1;

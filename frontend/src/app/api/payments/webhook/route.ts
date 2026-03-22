@@ -86,39 +86,44 @@ export async function POST(req: NextRequest) {
 
                 if (updatedBooking) {
                     const serviceName = (updatedBooking as Record<string, unknown>).service_name as string || 'Detailing Service';
+                    const zipCode = (updatedBooking as Record<string, unknown>).zip_code as string || '';
+                    const bookingWithService = { ...updatedBooking, service_name: serviceName };
 
-                    // Auto-assign: find an approved, available, onboarded contractor.
+                    // Broadcast to ALL approved+available contractors — first to accept wins.
+                    // NOTE: Service-area ZIP filtering is dormant — re-enable for geo-routing when needed.
                     const { data: contractors } = await supabase
                         .from('profiles')
-                        .select('id, full_name, phone_number')
+                        .select('id, email')
                         .eq('role', 'contractor')
                         .eq('approval_status', 'approved')
-                        .eq('onboarding_complete', true)
-                        .eq('is_available', true)
-                        .limit(1);
+                        .eq('is_available', true);
 
-                    const contractor = contractors?.[0] ?? null;
-
-                    if (contractor) {
-                        await supabase
-                            .from('bookings')
-                            .update({ contractor_id: contractor.id, status: 'confirmed' })
-                            .or(`id.eq.${safeId},document_id.eq.${safeId}`);
-
+                    if (contractors && contractors.length > 0) {
                         const { notify } = await import('@/lib/notifications');
-                        await notify({
-                            type: 'contractor.job_accepted',
-                            booking: { ...updatedBooking, service_name: serviceName },
-                            contractor,
-                        });
+                        await Promise.all(
+                            contractors.map((c: { id: string; email: string }) =>
+                                notify({
+                                    type: 'contractor.job_assigned',
+                                    booking: bookingWithService,
+                                    contractorEmail: c.email,
+                                })
+                            )
+                        );
+
+                        const notificationRows = contractors.map((c: { id: string; email: string }) => ({
+                            user_id: c.id,
+                            type: 'info' as const,
+                            title: 'New Job Available',
+                            message: `New detailing job in ${zipCode}. Tap to view and accept.`,
+                            booking_id: updatedBooking.id,
+                            is_read: false,
+                            link: `/contractor/jobs/${updatedBooking.id}`,
+                        }));
+
+                        const { error: notifError } = await supabase.from('notifications').insert(notificationRows);
+                        if (notifError) console.error('webhook: contractor notification insert failed:', notifError);
                     } else {
-                        // No contractor available — notify admin to assign manually.
-                        console.warn(`No available contractor for booking ${bookingId}`);
-                        const { notify } = await import('@/lib/notifications');
-                        await notify({
-                            type: 'booking.confirmed',
-                            booking: { ...updatedBooking, service_name: serviceName },
-                        });
+                        console.warn(`webhook: no available contractors for booking ${bookingId}`);
                     }
                 }
             }

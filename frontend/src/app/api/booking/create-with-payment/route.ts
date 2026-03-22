@@ -184,12 +184,13 @@ export async function POST(req: NextRequest) {
         .update({ payment_intent_id: paymentIntent.paymentIntentId })
         .in('id', bookings.map(b => b.id));
 
-    // ── Step 4: Notify contractors about the new job ─────────────────────────
-    // Fire-and-forget — notification failure must not block the payment flow
-    notifyContractors(supabase, bookings[0], zipCode ?? '', serviceName ?? 'Detailing Service').catch(
+    // ── Step 4: Customer confirmation email only ──────────────────────────────
+    // Contractor notifications fire from the webhook (payment_intent.amount_capturable_updated)
+    // AFTER payment is confirmed, so contractors only see jobs that have been paid for.
+    notifyCustomer(bookings[0], serviceName ?? 'Detailing Service').catch(
         (err) => {
-            console.error('create-with-payment: contractor notification failed:', err);
-            Sentry.captureException(err, { tags: { context: 'contractor_notification', bookingId: bookings[0].id } });
+            console.error('create-with-payment: customer notification failed:', err);
+            Sentry.captureException(err, { tags: { context: 'customer_notification', bookingId: bookings[0].id } });
         }
     );
 
@@ -208,52 +209,13 @@ export async function POST(req: NextRequest) {
     });
 }
 
-// ── Contractor notification (fire-and-forget) ─────────────────────────────────
+// ── Customer confirmation email only (booking pending payment) ────────────────
 
-async function notifyContractors(
-    supabase: ReturnType<typeof createServiceClient>,
+async function notifyCustomer(
     booking: Record<string, unknown>,
-    zipCode: string,
     resolvedServiceName: string,
 ) {
     const bookingWithService = { ...booking, service_name: resolvedServiceName };
-
-    // Confirm email to customer
     const { notify } = await import('@/lib/notifications');
     await notify({ type: 'booking.created', booking: bookingWithService });
-
-    // Alert ALL approved contractors so they can claim the job.
-    // NOTE: Service-area ZIP filtering is dormant — re-enable for geo-routing when needed.
-    const { data: contractors } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('role', 'contractor')
-        .eq('approval_status', 'approved')
-        .eq('onboarding_complete', true)
-        .eq('is_available', true);
-
-    if (!contractors || contractors.length === 0) return;
-
-    await Promise.all(
-        contractors.map((c: { id: string; email: string }) =>
-            notify({
-                type: 'contractor.job_assigned',
-                booking: bookingWithService,
-                contractorEmail: c.email,
-            })
-        )
-    );
-
-    const notificationRows = contractors.map((c: { id: string; email: string }) => ({
-        user_id: c.id,
-        type: 'info' as const,
-        title: 'New Job Available',
-        message: `New detailing job in ${zipCode}. Tap to view and accept.`,
-        booking_id: booking.id,
-        is_read: false,
-        link: `/contractor/jobs/${booking.id}`,
-    }));
-
-    const { error: notifError } = await supabase.from('notifications').insert(notificationRows);
-    if (notifError) console.error('create-with-payment: notification insert failed:', notifError);
 }
