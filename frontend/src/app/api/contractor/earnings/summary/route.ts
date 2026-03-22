@@ -1,14 +1,13 @@
 /**
  * GET /api/contractor/earnings/summary
  * Returns earnings summary for the authenticated contractor.
- * All amounts are net (85% of booking total — platform keeps 15%).
+ * All amounts are net (70% of booking total — platform keeps 30%).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 
-const PLATFORM_FEE = Number(process.env.PLATFORM_FEE_PERCENTAGE ?? 15) / 100;
-const CONTRACTOR_SHARE = 1 - PLATFORM_FEE;
+const CONTRACTOR_SHARE = 0.70;
 
 export async function GET(req: NextRequest) {
     const authHeader = req.headers.get('Authorization');

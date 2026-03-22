@@ -10,8 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdmin } from '@/lib/verifyAdmin';
 import { createServiceClient } from '@/lib/supabase/server';
 
-const PLATFORM_FEE = Number(process.env.PLATFORM_FEE_PERCENTAGE ?? 30) / 100;
-const CONTRACTOR_SHARE = 1 - PLATFORM_FEE;
+const CONTRACTOR_SHARE = 0.70;
 
 function getMondayOfWeek(dateStr: string): Date {
     const d = new Date(dateStr + 'T12:00:00Z');
@@ -83,7 +82,7 @@ export async function POST(req: NextRequest) {
 
         let generated = 0;
         for (const [contractorId, { bookingIds, gross }] of byContractor) {
-            const platformFee = +(gross * PLATFORM_FEE).toFixed(2);
+            const platformFee = +(gross * (1 - CONTRACTOR_SHARE)).toFixed(2);
             const contractorAmount = +(gross * CONTRACTOR_SHARE).toFixed(2);
 
             // Upsert payout record

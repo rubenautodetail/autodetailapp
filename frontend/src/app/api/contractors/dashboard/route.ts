@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
             date: b.date,
             // Only show ZIP until accepted — hide full address
             area: b.zip_code || '',
-            totalAmount: Number(b.total_amount) || 0,
+            totalAmount: (Number(b.total_amount) || 0) * 0.70,
             status: b.status,
         }));
 
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
                 timeWindow: b.time_window || 'TBD',
                 date: b.date,
                 address: [b.address, b.city, b.zip_code].filter(Boolean).join(', '),
-                totalAmount: Number(b.total_amount) || 0,
+                totalAmount: (Number(b.total_amount) || 0) * 0.70,
                 status: b.status,
             }));
 
@@ -95,10 +95,13 @@ export async function GET(req: NextRequest) {
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
 
-            earnings.total = (completed ?? []).reduce((s, b) => s + (Number(b.total_amount) || 0), 0);
+            const CONTRACTOR_SHARE = 0.70;
+            const contractorAmount = (raw: number) => raw * CONTRACTOR_SHARE;
+
+            earnings.total = (completed ?? []).reduce((s, b) => s + contractorAmount(Number(b.total_amount) || 0), 0);
             earnings.thisWeek = (completed ?? [])
                 .filter((b) => new Date(b.created_at) >= weekAgo)
-                .reduce((s, b) => s + (Number(b.total_amount) || 0), 0);
+                .reduce((s, b) => s + contractorAmount(Number(b.total_amount) || 0), 0);
 
             completedJobs = completed ?? [];
         }

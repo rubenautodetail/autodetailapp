@@ -87,7 +87,7 @@ export default function ContractorHistory({ params }: Props) {
                                     </p>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <p className="font-bold text-[#D0B078]">${Number(job.total_amount || 0).toFixed(2)}</p>
+                                    <p className="font-bold text-[#D0B078]">${(Number(job.total_amount || 0) * 0.70).toFixed(2)}</p>
                                     <p className="text-xs text-green-400 font-medium">{label.completed}</p>
                                 </div>
                             </div>
