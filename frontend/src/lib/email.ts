@@ -144,7 +144,7 @@ export async function sendBookingConfirmation(booking: BookingEmailData) {
               </ul>
               
               <p style="margin-top: 30px;">
-                <a href="${APP_URL}/en/booking/${booking.id}" class="button">View Booking Details</a>
+                <a href="${APP_URL}/en/booking/${booking.id}/track" class="button">View Booking Details</a>
               </p>
               
               <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
@@ -881,7 +881,7 @@ export async function sendChargebackAlertEmail(data: {
             </div>
             <p>Log into the Stripe Dashboard to respond to this dispute. You typically have <strong>7–21 days</strong> to submit evidence.</p>
             <p style="text-align: center;">
-              <a href="${APP_URL}/admin/bookings/${data.bookingId}" class="button">View Booking in Admin</a>
+              <a href="${APP_URL}/en/admin/bookings/${data.bookingId}" class="button">View Booking in Admin</a>
             </p>
           </div>
         </body>
@@ -949,7 +949,7 @@ export async function sendJobStartedEmail(booking: BookingEmailData) {
             </div>
 
             <p style="margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}" class="button">View Booking Details</a>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}/track" class="button">View Booking Details</a>
             </p>
           </div>
 
@@ -1016,7 +1016,7 @@ export async function sendEnRouteEmail(booking: BookingEmailData) {
             <p>If you have any questions or need to reach your detailer, please contact us at <a href="mailto:${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}">${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}</a>.</p>
 
             <p style="margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}" class="button">View Booking Details</a>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}/track" class="button">View Booking Details</a>
             </p>
           </div>
 
