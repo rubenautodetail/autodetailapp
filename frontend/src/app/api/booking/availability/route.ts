@@ -124,9 +124,8 @@ export async function POST(req: NextRequest) {
                 const slots = timeWindows
                     .filter(w => w.is_active !== false) // Only active time windows
                     .map(window => {
-                        // Create time window key for checking bookings (e.g., "09:00" -> morning/afternoon/evening)
-                        const windowKey = getWindowKeyFromSlot(window.slot);
-                        const booked = bookedMap.get(`${dateKey}:${windowKey}`) ?? 0;
+                        // Match against the exact time stored in bookings.time_window (e.g. "09:00")
+                        const booked = bookedMap.get(`${dateKey}:${window.slot}`) ?? 0;
                         return {
                             window: window.slot,
                             label: window.label,
@@ -162,12 +161,3 @@ export async function POST(req: NextRequest) {
     }
 }
 
-// Helper function to map time slot to window key for booking compatibility
-function getWindowKeyFromSlot(slot: string): string {
-    const hour = parseInt(slot.split(':')[0], 10);
-    if (hour >= 9 && hour < 12) return 'morning';
-    if (hour >= 12 && hour < 16) return 'afternoon';
-    if (hour >= 16 && hour < 19) return 'evening';
-    // Default to morning for edge cases
-    return 'morning';
-}

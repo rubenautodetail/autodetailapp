@@ -639,7 +639,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                         <p className="text-[#D0B078] font-semibold text-sm">${job.totalAmount.toFixed(2)}</p>
                                     </div>
                                     <Link
-                                        href={`/${lang}/contractor/jobs/${job.id}${job.confirmationCode ? `?code=${job.confirmationCode}` : ''}`}
+                                        href={`/${lang}/contractor/jobs/${job.id}`}
                                         className="shrink-0 px-5 py-2.5 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-all border border-white/10"
                                     >
                                         {labels.viewJob}
