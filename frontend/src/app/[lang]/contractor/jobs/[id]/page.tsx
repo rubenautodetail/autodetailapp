@@ -203,7 +203,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             const { data, error: fetchError } = await supabase
                 .from("bookings")
                 .select("*")
-                .or(`id.eq.${id},document_id.eq.${id}`)
+                .eq('id', id)
                 .eq("confirmation_code", code)
                 .single();
 

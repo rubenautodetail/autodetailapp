@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         const { data: service, error: serviceError } = await supabase
             .from('services')
             .select('*')
-            .or(`document_id.eq.${safeServiceId},id.eq.${safeServiceId}`)
+            .eq('id', safeServiceId)
             .single();
 
         if (serviceError || !service) {

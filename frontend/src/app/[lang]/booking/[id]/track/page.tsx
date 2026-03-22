@@ -180,7 +180,7 @@ export default function TrackBookingPage() {
         const { data, error: fetchError } = await supabase
             .from('bookings')
             .select('*, profiles:contractor_id(full_name)')
-            .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+            .eq('id', bookingId)
             .single();
 
         if (fetchError || !data) {

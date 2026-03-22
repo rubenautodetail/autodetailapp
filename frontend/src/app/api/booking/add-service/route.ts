@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const { data: booking, error: fetchError } = await supabase
         .from('bookings')
         .select('*')
-        .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+        .eq('id', safeId)
         .single();
 
     if (fetchError || !booking) {
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
             total_amount: newTotal,
             updated_at: new Date().toISOString(),
         })
-        .or(`id.eq.${safeId},document_id.eq.${safeId}`);
+        .eq('id', safeId);
 
     if (updateError) {
         console.error('add-service update error:', updateError);

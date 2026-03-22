@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
                 const { data: booking } = await supabase
                     .from('bookings')
                     .select('customer_email, total_amount')
-                    .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
+                    .eq('id', safeBookingId)
                     .single();
 
                 if (booking?.customer_email) {
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
                         payment_intent_id: paymentIntent.paymentIntentId,
                         payment_status: 'authorized',
                     })
-                    .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
+                    .eq('id', safeBookingId);
             } catch (err) {
                 console.error('Failed to update booking with payment intent:', err);
                 // Non-fatal: PaymentIntent was created; the booking record is out of sync but recoverable via webhook.

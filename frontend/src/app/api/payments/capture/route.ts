@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         const { data: booking, error } = await supabase
             .from('bookings')
             .select('payment_intent_id, payment_status, contractor_id, total_amount, service_fee, service_name')
-            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
+            .eq('id', safeBookingId)
             .single();
 
         if (error || !booking) {
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
             await supabase
                 .from('bookings')
                 .update({ payment_status: 'failed', status: 'cancelled' })
-                .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
+                .eq('id', safeBookingId);
 
             return NextResponse.json(
                 { error: 'Payment capture failed. Please contact support.' },
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
         await supabase
             .from('bookings')
             .update({ payment_status: 'paid' })
-            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
+            .eq('id', safeBookingId);
 
         // Notify contractor that the job payment has been captured.
         if (booking.contractor_id) {

@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
             const { data: booking, error } = await supabase
                 .from('bookings')
                 .select('id, contractor_id, status, confirmation_code')
-                .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+                .eq('id', safeId)
                 .single();
 
             if (error || !booking) {
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date().toISOString(),
                 ...(checklist ? { completion_notes: checklist } : {}),
             })
-            .or(`id.eq.${safeId},document_id.eq.${safeId}`);
+            .eq('id', safeId);
 
         // Only enforce contractor_id check when using JWT auth
         const { data: updatedBooking, error } = contractorId
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
             const { data: fullBooking } = await supabase
                 .from('bookings')
                 .select('*')
-                .or(`id.eq.${(updatedBooking as any).id},document_id.eq.${(updatedBooking as any).id}`)
+                .eq('id', (updatedBooking as any).id)
                 .single();
 
             const bookingForNotify = fullBooking || updatedBooking;

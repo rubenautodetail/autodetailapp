@@ -50,7 +50,7 @@ export default function ApproveServicePage() {
                 const { data, error } = await supabase
                     .from('bookings')
                     .select('*, profiles:contractor_id(full_name, phone_number)')
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                    .eq('id', bookingId)
                     .single();
 
                 if (error || !data) {

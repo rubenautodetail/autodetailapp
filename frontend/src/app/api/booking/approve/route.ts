@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
             .select('*')
-            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
+            .eq('id', safeBookingId)
             .single();
 
         if (fetchError || !booking) {
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
             await supabase
                 .from('bookings')
                 .update({ payment_status: 'failed', status: 'cancelled' })
-                .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
+                .eq('id', safeBookingId);
             return NextResponse.json(
                 { error: 'Payment capture failed. Please contact support.' },
                 { status: 502 }
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
                 status: 'completed',
                 updated_at: new Date().toISOString()
             })
-            .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
+            .eq('id', safeBookingId);
 
         if (updateError) {
             throw new Error(`Failed to update booking status: ${updateError.message}`);

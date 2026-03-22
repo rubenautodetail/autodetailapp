@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         const { data: booking } = await supabase
             .from('bookings')
             .select('id, contractor_id, status, customer_email')
-            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+            .eq('id', safeId)
             .single();
 
         if (!booking) {

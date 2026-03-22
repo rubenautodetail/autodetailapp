@@ -42,7 +42,7 @@ export async function GET(
         const { data, error } = await supabase
             .from('bookings')
             .select('*')
-            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+            .eq('id', safeId)
             .single();
 
         if (error || !data) {

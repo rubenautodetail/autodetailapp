@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
             const { data: booking, error } = await supabase
                 .from('bookings')
                 .select('id, contractor_id, status, confirmation_code')
-                .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+                .eq('id', safeId)
                 .single();
 
             if (error || !booking) {
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
                 status: 'in_progress',
                 updated_at: new Date().toISOString(),
             })
-            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+            .eq('id', safeId)
             .select('id');
 
         // Scope the update to this contractor when using JWT auth

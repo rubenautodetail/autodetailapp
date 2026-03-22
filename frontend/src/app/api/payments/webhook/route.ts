@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
                     // pending_payment → pending_assignment (card authorized; now visible to contractors)
                     // .eq('payment_status', 'unpaid') ensures idempotency: duplicate events are no-ops
                     .update({ payment_status: 'authorized', status: 'pending_assignment' })
-                    .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+                    .eq('id', safeId)
                     .eq('payment_status', 'unpaid')
                     .select()
                     .single();
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
                 await supabase
                     .from('bookings')
                     .update({ payment_status: 'paid', status: 'confirmed' })
-                    .or(`id.eq.${safeId2},document_id.eq.${safeId2}`)
+                    .eq('id', safeId2)
                     .eq('payment_status', 'authorized');
 
                 console.log(`Payment succeeded for booking ${bookingId}`);
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
                 const { data: updatedBooking } = await supabase
                     .from('bookings')
                     .update({ payment_status: 'failed', status: 'cancelled' })
-                    .or(`id.eq.${safeId3},document_id.eq.${safeId3}`)
+                    .eq('id', safeId3)
                     .select()
                     .single();
 

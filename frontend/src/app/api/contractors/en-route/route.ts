@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
             .select('id, contractor_id, user_id, status')
-            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+            .eq('id', safeId)
             .single();
 
         if (fetchError || !booking) {
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         const { error: updateError } = await supabase
             .from('bookings')
             .update({ status: 'en_route', updated_at: new Date().toISOString() })
-            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+            .eq('id', safeId)
             .eq('contractor_id', user.id);
 
         if (updateError) {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         const { data: fullBooking } = await supabase
             .from('bookings')
             .select('*')
-            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+            .eq('id', safeId)
             .single();
 
         if (fullBooking) {

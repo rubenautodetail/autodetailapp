@@ -68,7 +68,7 @@ export default function LeaveReviewPage() {
                 const { data, error: fetchError } = await supabase
                     .from('bookings')
                     .select('id, confirmation_code, service_name, date, contractor_id, profiles:contractor_id(full_name)')
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                    .eq('id', bookingId)
                     .single();
 
                 if (fetchError || !data) {

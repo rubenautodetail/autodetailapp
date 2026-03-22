@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const { data: booking, error: fetchError } = await supabase
       .from("bookings")
       .select("id, customer_name, customer_email, confirmation_code, service_name, status")
-      .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`)
+      .eq('id', safeBookingId)
       .single();
 
     if (fetchError || !booking) {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const { error: updateError } = await supabase
       .from("bookings")
       .update({ status: "disputed", updated_at: new Date().toISOString() })
-      .or(`id.eq.${safeBookingId},document_id.eq.${safeBookingId}`);
+      .eq('id', safeBookingId);
 
     if (updateError) {
       console.error("Failed to set booking status to disputed:", updateError);

@@ -41,7 +41,7 @@ export default function ReceiptPage() {
                 const { data, error: fetchError } = await supabase
                     .from('bookings')
                     .select('*, services:service_id(name), profiles:contractor_id(full_name)')
-                    .or(`id.eq.${bookingId},document_id.eq.${bookingId}`)
+                    .eq('id', bookingId)
                     .single();
 
                 if (fetchError || !data) {
