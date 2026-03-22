@@ -126,7 +126,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
               <p className="text-2xl font-bold text-purple-700">${totalPlatformFee.toFixed(2)}</p>
             </div>
             <div className="bg-green-50 rounded-xl border border-green-200 p-5">
-              <p className="text-xs text-green-600 mb-1">{locale === "es" ? "Pago Total Técnicos (85%)" : "Total Technician Payouts (85%)"}</p>
+              <p className="text-xs text-green-600 mb-1">{locale === "es" ? "Pago Total Técnicos (70%)" : "Total Technician Payouts (70%)"}</p>
               <p className="text-2xl font-bold text-green-700">${totalPayouts.toFixed(2)}</p>
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                             {locale === "es" ? "Total" : "Total"}
                           </th>
                           <th className="text-right px-6 py-2 text-xs text-gray-500 font-medium">
-                            {locale === "es" ? "A pagar (85%)" : "Payout (85%)"}
+                            {locale === "es" ? "A pagar (70%)" : "Payout (70%)"}
                           </th>
                           <th className="text-left px-6 py-2 text-xs text-gray-500 font-medium">
                             {locale === "es" ? "Pago" : "Payment"}

@@ -385,8 +385,8 @@ export default async function LandingPage({
                             </h2>
                             <p className="text-white/45 text-sm max-w-md">
                                 {locale === 'es'
-                                    ? 'Gana el 85% por trabajo, establece tu horario y haz crecer tu negocio en nuestra plataforma.'
-                                    : 'Keep 85% per job, set your schedule, and grow your business on our platform.'}
+                                    ? 'Gana el 70% por trabajo, establece tu horario y haz crecer tu negocio en nuestra plataforma.'
+                                    : 'Keep 70% per job, set your schedule, and grow your business on our platform.'}
                             </p>
                         </div>
                         <div className="shrink-0 flex flex-col sm:flex-row gap-3">

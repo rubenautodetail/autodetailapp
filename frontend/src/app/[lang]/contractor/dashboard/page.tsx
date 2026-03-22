@@ -520,8 +520,8 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                         <div className="px-6 py-2.5 border-t border-[#2C355E]">
                             <p className="text-[10px] text-[#5E698F]">
                                 {lang === 'es'
-                                    ? 'Todos los montos reflejan tu parte neta (85% del total del servicio).'
-                                    : 'All amounts reflect your net share (85% of service total).'}
+                                    ? 'Todos los montos reflejan tu parte neta (70% del total del servicio).'
+                                    : 'All amounts reflect your net share (70% of service total).'}
                             </p>
                         </div>
                     </div>

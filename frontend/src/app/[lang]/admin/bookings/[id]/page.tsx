@@ -247,7 +247,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
             value={`$${platformFee.toFixed(2)}`}
           />
           <Field
-            label={locale === "es" ? "Pago al técnico (85%)" : "Technician Payout (85%)"}
+            label={locale === "es" ? "Pago al técnico (70%)" : "Technician Payout (70%)"}
             value={`$${contractorPayout.toFixed(2)}`}
             bold
           />

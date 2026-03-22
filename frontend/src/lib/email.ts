@@ -245,7 +245,7 @@ export async function sendNewJobToContractor(booking: BookingEmailData, contract
                 </div>
                 <div class="detail-row">
                   <span class="label">Your Earnings:</span>
-                  <span class="value"><strong>$${(booking.totalAmount * 0.85).toFixed(2)}</strong> (85% of $${booking.totalAmount.toFixed(2)})</span>
+                  <span class="value"><strong>$${(booking.totalAmount * 0.70).toFixed(2)}</strong> (70% of $${booking.totalAmount.toFixed(2)})</span>
                 </div>
               </div>
 
@@ -1268,7 +1268,7 @@ export async function sendContractorRejectedEmail(contractor: {
 
 export async function sendContractorPaidEmail(contractorEmail: string, booking: BookingEmailData) {
   try {
-    const amount = (booking.totalAmount * 0.85).toFixed(2); // 85% contractor payout
+    const amount = (booking.totalAmount * 0.70).toFixed(2); // 70% contractor payout
     const html = `
       <!DOCTYPE html>
       <html>
