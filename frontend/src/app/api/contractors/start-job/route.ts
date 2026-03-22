@@ -5,14 +5,38 @@ import { notify } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
     try {
-        const contentType = req.headers.get('content-type') || '';
         const supabase = createServiceClient();
+        const authHeader = req.headers.get('Authorization');
+        const token = authHeader?.replace('Bearer ', '').trim();
 
         let bookingId: string;
         let safeId: string;
         let contractorId: string | undefined;
 
-        if (contentType.includes('application/json')) {
+        if (token) {
+            // JWT-based access (authenticated contractor)
+            const { user, error: authError } = await createAuthClient(token);
+            if (authError || !user) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+
+            const { data: approvalCheck } = await supabase
+                .from('profiles')
+                .select('approval_status')
+                .eq('id', user.id)
+                .single();
+            if ((approvalCheck as any)?.approval_status !== 'approved') {
+                return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
+            }
+
+            const body = await req.json();
+            bookingId = body.bookingId;
+            safeId = String(bookingId).trim();
+            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+            }
+            contractorId = user.id;
+        } else {
             // Code-based access — no JWT required, secured by confirmationCode
             const body = await req.json();
             bookingId = body.bookingId;
@@ -53,36 +77,6 @@ export async function POST(req: NextRequest) {
             }
 
             contractorId = booking.contractor_id ?? undefined;
-        } else {
-            // JWT-based access (authenticated contractor)
-            const authHeader = req.headers.get('Authorization');
-            const token = authHeader?.replace('Bearer ', '').trim();
-
-            if (!token) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
-
-            const { user, error: authError } = await createAuthClient(token);
-            if (authError || !user) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
-
-            const { data: approvalCheck } = await supabase
-                .from('profiles')
-                .select('approval_status')
-                .eq('id', user.id)
-                .single();
-            if ((approvalCheck as any)?.approval_status !== 'approved') {
-                return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
-            }
-
-            const body = await req.json();
-            bookingId = body.bookingId;
-            safeId = String(bookingId).trim();
-            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
-                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
-            }
-            contractorId = user.id;
         }
 
         const updateQuery = supabase

@@ -4,15 +4,38 @@ import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
 
 export async function POST(req: NextRequest) {
     try {
-        const contentType = req.headers.get('content-type') || '';
         const supabase = createServiceClient();
+        const authHeader = req.headers.get('Authorization');
+        const token = authHeader?.replace('Bearer ', '').trim();
 
         let bookingId: string;
         let safeId: string;
         let checklist: string | undefined;
         let contractorId: string | undefined;
 
-        if (contentType.includes('application/json')) {
+        if (token) {
+            // JWT-based access (authenticated contractor)
+            const { user, error: authError } = await createAuthClient(token);
+            if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+            const { data: approvalCheck } = await supabase
+                .from('profiles')
+                .select('approval_status')
+                .eq('id', user.id)
+                .single();
+            if ((approvalCheck as any)?.approval_status !== 'approved') {
+                return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
+            }
+
+            const body = await req.json();
+            bookingId = body.bookingId;
+            checklist = body.checklist;
+            safeId = String(bookingId).trim();
+            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
+                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+            }
+            contractorId = user.id;
+        } else {
             // Code-based access — no JWT required
             const body = await req.json();
             bookingId = body.bookingId;
@@ -51,33 +74,6 @@ export async function POST(req: NextRequest) {
             }
 
             contractorId = booking.contractor_id;
-        } else {
-            // JWT-based access (authenticated contractor)
-            const authHeader = req.headers.get('Authorization');
-            const token = authHeader?.replace('Bearer ', '').trim();
-
-            if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-            const { user, error: authError } = await createAuthClient(token);
-            if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-            const { data: approvalCheck } = await supabase
-                .from('profiles')
-                .select('approval_status')
-                .eq('id', user.id)
-                .single();
-            if ((approvalCheck as any)?.approval_status !== 'approved') {
-                return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
-            }
-
-            const formData = await req.formData();
-            bookingId = formData.get('bookingId') as string;
-            checklist = formData.get('checklist') as string;
-            safeId = String(bookingId).trim();
-            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
-                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
-            }
-            contractorId = user.id;
         }
 
         if (!bookingId) {
