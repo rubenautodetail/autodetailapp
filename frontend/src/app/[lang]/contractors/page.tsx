@@ -9,9 +9,9 @@ export async function generateStaticParams() {
 
 const PERKS = [
     {
-        icon: '💰',
-        en: { title: 'Keep 70% of Every Job', desc: 'Set your own rates. We take a 30% platform fee — you keep the rest.' },
-        es: { title: 'Gana el 70% de Cada Trabajo', desc: 'Fija tus propias tarifas. Solo cobramos una comisión del 30%.' },
+        icon: '🚀',
+        en: { title: 'More Clients, More Revenue', desc: 'Get connected with customers in your area and build a steady stream of bookings.' },
+        es: { title: 'Más Clientes, Más Ingresos', desc: 'Conéctate con clientes en tu área y construye un flujo constante de reservas.' },
     },
     {
         icon: '📅',

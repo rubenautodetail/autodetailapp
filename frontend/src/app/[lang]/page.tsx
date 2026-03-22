@@ -128,10 +128,10 @@ export default async function LandingPage({
                 <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-10 sm:top-[44px]' : 'top-0'}`}>
                     <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={360} height={96} className="w-auto h-16 sm:h-24 opacity-100 drop-shadow-md" />
                     <Link
-                        href={`/${locale}/contractor/login`}
+                        href={`/${locale}/login`}
                         className="text-xs font-medium text-[#D0B078] border border-[#D0B078]/30 rounded-full px-4 py-1.5 hover:bg-[#D0B078]/10 transition-colors"
                     >
-                        {locale === 'es' ? '¿Eres contratista? Inicia sesión' : 'Contractor login'}
+                        {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
                     </Link>
                 </div>
 
@@ -385,8 +385,8 @@ export default async function LandingPage({
                             </h2>
                             <p className="text-white/45 text-sm max-w-md">
                                 {locale === 'es'
-                                    ? 'Gana el 70% por trabajo, establece tu horario y haz crecer tu negocio en nuestra plataforma.'
-                                    : 'Keep 70% per job, set your schedule, and grow your business on our platform.'}
+                                    ? 'Accede a más clientes, establece tu horario y haz crecer tu negocio con nosotros.'
+                                    : 'Access more clients, set your own schedule, and grow your business with us.'}
                             </p>
                         </div>
                         <div className="shrink-0 flex flex-col sm:flex-row gap-3">
