@@ -18,16 +18,8 @@ function generateConfirmationCode(): string {
   return code;
 }
 
-/**
- * Parses a time string like "9:00 AM" or "12:30 PM" into hours (0-23).
- */
-function parseTimeToHour(timeStr: string): number {
-  const [timePart, period] = timeStr.trim().split(' ');
-  let [hours, minutes] = timePart.split(':').map(Number);
-  if (period === 'PM' && hours !== 12) hours += 12;
-  if (period === 'AM' && hours === 12) hours = 0;
-  return hours;
-}
+// parseTimeToHour — dormant, kept for future geo/time-based routing
+// function parseTimeToHour(timeStr: string): number { ... }
 
 export async function POST(req: NextRequest) {
   if (await rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'booking-create' })) {
@@ -90,16 +82,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // --- Determine day of week and start hour for availability check ---
-    const bookingDate = new Date(date);
-    const dayOfWeek = bookingDate.getDay(); // 0 Sunday, 1 Monday, ..., 6 Saturday
-    const dayMap = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const dayString = dayMap[dayOfWeek];
-
-    // timeWindow format: "HH:MM AM/PM - HH:MM AM/PM"
-    const startTimeStr = timeWindow.split(' - ')[0];
-    const startHour = parseTimeToHour(startTimeStr);
-
     const supabase = createServiceClient();
     const confirmationCode = generateConfirmationCode();
 
@@ -145,62 +127,50 @@ export async function POST(req: NextRequest) {
     // 1. Confirm email to customer
     await notify({ type: 'booking.created', booking: bookingWithService });
 
-    // 2. Alert contractors in service area who are available and match the booking's day/time
+    // 2. Alert ALL approved contractors about the new booking.
+    // NOTE: Service-area ZIP filtering is dormant — will be re-enabled when
+    // multi-contractor geo-routing is needed. For now every contractor gets notified.
     const supabaseAdmin = createServiceClient();
     const { data: contractors, error: contractorsError } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, availability, is_available')
+      .select('id, email')
       .eq('role', 'contractor')
       .eq('approval_status', 'approved')
       .eq('onboarding_complete', true)
-      .eq('is_available', true)
-      .contains('service_area_zips', [zipCode]);
+      .eq('is_available', true);
 
     if (contractorsError) {
       console.error('Error fetching contractors:', contractorsError);
       // We don't fail the booking because of this; we just won't notify contractors.
-    } else {
-      // Filter contractors by availability (day and hour)
-      const availableContractors = contractors.filter((c) => {
-        if (!c.availability) return false;
-        const { days, start_hour, end_hour } = c.availability;
-        return (
-          days.includes(dayString) &&
-          start_hour <= startHour &&
-          end_hour >= startHour
-        );
-      });
+    } else if (contractors && contractors.length > 0) {
+      // Send emails to all available contractors
+      await Promise.all(
+        contractors.map((c) =>
+          notify({
+            type: 'contractor.job_assigned',
+            booking: bookingWithService,
+            contractorEmail: c.email,
+          })
+        )
+      );
 
-      if (availableContractors.length > 0) {
-        // Send emails to all available contractors
-        await Promise.all(
-          availableContractors.map((c) =>
-            notify({
-              type: 'contractor.job_assigned',
-              booking: bookingWithService,
-              contractorEmail: c.email,
-            })
-          )
-        );
+      // Batch insert in-app notifications for all eligible contractors
+      const notificationRows = contractors.map((c) => ({
+        user_id: c.id,
+        type: 'info' as const,
+        title: 'New Job Available',
+        message: `New detailing job in ${zipCode}. Tap to view and accept.`,
+        booking_id: booking.id,
+        is_read: false,
+        link: `/contractor/jobs/${booking.id}`,
+      }));
 
-        // Batch insert in-app notifications for all eligible contractors
-        const notificationRows = availableContractors.map((c) => ({
-          user_id: c.id,
-          type: 'info' as const,
-          title: 'New Job Available',
-          message: `New detailing job in ${zipCode}. Tap to view and accept.`,
-          booking_id: booking.id,
-          is_read: false,
-          link: `/contractor/jobs/${booking.id}`,
-        }));
+      const { error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .insert(notificationRows);
 
-        const { error: notifError } = await supabaseAdmin
-          .from('notifications')
-          .insert(notificationRows);
-
-        if (notifError) {
-          console.error('Failed to insert contractor notifications:', notifError);
-        }
+      if (notifError) {
+        console.error('Failed to insert contractor notifications:', notifError);
       }
     }
 

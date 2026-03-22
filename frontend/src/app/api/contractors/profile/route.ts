@@ -17,6 +17,12 @@ interface ProfilePatchBody {
     availability?: AvailabilityPayload;
     is_available?: boolean;
     languages?: string[];
+    payment_preference?: string;
+    zelle_contact?: string;
+    bank_name?: string;
+    bank_account_number?: string;
+    bank_routing_number?: string;
+    bank_account_type?: string;
 }
 
 // ── Helper ───────────────────────────────────────────────────────────────────
@@ -53,7 +59,7 @@ export async function GET(req: NextRequest) {
         const { data: profile, error: dbError } = await supabase
             .from('profiles')
             .select(
-                'id, full_name, email, phone, bio, profile_photo_url, service_area_zips, availability, is_available, languages, rating, total_ratings, total_jobs_completed, stripe_account_id, onboarding_complete, role, created_at'
+                'id, full_name, email, phone, bio, profile_photo_url, service_area_zips, availability, is_available, languages, rating, total_ratings, total_jobs_completed, stripe_account_id, onboarding_complete, role, created_at, payment_preference, zelle_contact, bank_name, bank_account_number, bank_routing_number, bank_account_type'
             )
             .eq('id', user.id)
             .single();
@@ -127,6 +133,24 @@ export async function PATCH(req: NextRequest) {
         }
         if (body.languages !== undefined) {
             updates.languages = body.languages.filter(Boolean);
+        }
+        if (body.payment_preference !== undefined) {
+            updates.payment_preference = body.payment_preference.trim() || null;
+        }
+        if (body.zelle_contact !== undefined) {
+            updates.zelle_contact = body.zelle_contact.trim() || null;
+        }
+        if (body.bank_name !== undefined) {
+            updates.bank_name = body.bank_name.trim() || null;
+        }
+        if (body.bank_account_number !== undefined) {
+            updates.bank_account_number = body.bank_account_number.trim() || null;
+        }
+        if (body.bank_routing_number !== undefined) {
+            updates.bank_routing_number = body.bank_routing_number.trim() || null;
+        }
+        if (body.bank_account_type !== undefined) {
+            updates.bank_account_type = body.bank_account_type.trim() || null;
         }
 
         if (Object.keys(updates).length === 0) {

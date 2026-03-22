@@ -11,7 +11,7 @@ import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 const t = {
     en: {
         title: "Settings",
-        subtitle: "Manage your profile, availability, and payout account",
+        subtitle: "Manage your profile, availability, and payment info",
         // Section A
         profileTitle: "Profile",
         fullName: "Full Name",
@@ -40,15 +40,26 @@ const t = {
         saveAvailability: "Save Schedule",
         days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as string[],
         dayLabels: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as string[],
-        // Section E — Stripe
-        stripeTitle: "Stripe Payout",
-        stripeConnected: "Connected",
-        stripeNotSetUp: "Not set up",
-        stripeSetupBtn: "Set Up Payouts",
-        stripeManageBtn: "Manage Payouts",
-        stripeSetupDesc: "Connect your bank account to receive payments for completed jobs.",
-        stripeConnectedDesc: "Your payout account is active. Payments will be transferred automatically.",
-        stripeLoading: "Loading...",
+        // Section E — Payment Info
+        paymentTitle: "Payment Info",
+        paymentDesc: "How you'd like to be paid for completed jobs. Admin uses this to send your earnings.",
+        paymentMethod: "Payment Method",
+        paymentMethodPlaceholder: "Select method",
+        paymentMethodZelle: "Zelle",
+        paymentMethodACH: "ACH / Direct Deposit",
+        zelleContact: "Zelle Phone or Email",
+        zelleContactPlaceholder: "e.g. (305) 555-0123 or you@email.com",
+        bankName: "Bank Name",
+        bankNamePlaceholder: "e.g. Chase, Bank of America",
+        bankAccountNumber: "Account Number",
+        bankAccountNumberPlaceholder: "Enter account number",
+        bankRoutingNumber: "Routing Number",
+        bankRoutingNumberPlaceholder: "9-digit routing number",
+        bankAccountType: "Account Type",
+        bankChecking: "Checking",
+        bankSavings: "Savings",
+        savePayment: "Save Payment Info",
+        paymentSaved: "Payment info saved",
         // Section F — Notifications
         notificationsTitle: "Notifications",
         notifEmailLabel: "Email Notifications",
@@ -71,7 +82,7 @@ const t = {
     },
     es: {
         title: "Configuración",
-        subtitle: "Administra tu perfil, disponibilidad y cuenta de pagos",
+        subtitle: "Administra tu perfil, disponibilidad e info de pago",
         // Section A
         profileTitle: "Perfil",
         fullName: "Nombre Completo",
@@ -100,15 +111,26 @@ const t = {
         saveAvailability: "Guardar Horario",
         days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as string[],
         dayLabels: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as string[],
-        // Section E — Stripe
-        stripeTitle: "Cuenta de Pagos",
-        stripeConnected: "Conectado",
-        stripeNotSetUp: "Sin configurar",
-        stripeSetupBtn: "Configurar Pagos",
-        stripeManageBtn: "Administrar Pagos",
-        stripeSetupDesc: "Conecta tu cuenta bancaria para recibir pagos por trabajos completados.",
-        stripeConnectedDesc: "Tu cuenta de pagos está activa. Los pagos se transferirán automáticamente.",
-        stripeLoading: "Cargando...",
+        // Section E — Payment Info
+        paymentTitle: "Info de Pago",
+        paymentDesc: "Cómo te gustaría recibir tus pagos por trabajos completados. El administrador usa esto para enviarte tus ganancias.",
+        paymentMethod: "Método de Pago",
+        paymentMethodPlaceholder: "Selecciona método",
+        paymentMethodZelle: "Zelle",
+        paymentMethodACH: "ACH / Depósito Directo",
+        zelleContact: "Teléfono o Email de Zelle",
+        zelleContactPlaceholder: "ej. (305) 555-0123 o tu@email.com",
+        bankName: "Nombre del Banco",
+        bankNamePlaceholder: "ej. Chase, Bank of America",
+        bankAccountNumber: "Número de Cuenta",
+        bankAccountNumberPlaceholder: "Ingresa número de cuenta",
+        bankRoutingNumber: "Número de Ruta (Routing)",
+        bankRoutingNumberPlaceholder: "9 dígitos de routing",
+        bankAccountType: "Tipo de Cuenta",
+        bankChecking: "Corriente (Checking)",
+        bankSavings: "Ahorros (Savings)",
+        savePayment: "Guardar Info de Pago",
+        paymentSaved: "Info de pago guardada",
         // Section F — Notifications
         notificationsTitle: "Notificaciones",
         notifEmailLabel: "Notificaciones por Correo",
@@ -284,9 +306,13 @@ interface ProfileData {
     availability: { days: string[]; start_hour: number; end_hour: number } | null;
     is_available: boolean | null;
     languages: string[] | null;
-    stripe_account_id: string | null;
-    onboarding_complete: boolean | null;
     role: string | null;
+    payment_preference: string | null;
+    zelle_contact: string | null;
+    bank_name: string | null;
+    bank_account_number: string | null;
+    bank_routing_number: string | null;
+    bank_account_type: string | null;
 }
 
 export default function ContractorSettingsPage({ params }: SettingsPageProps) {
@@ -319,9 +345,14 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const [endHour, setEndHour] = useState(18);
     const [savingSchedule, setSavingSchedule] = useState(false);
 
-    // ── Section E — Stripe ────────────────────────────────────────────────────
-    const [stripeConnected, setStripeConnected] = useState(false);
-    const [startingOnboarding, setStartingOnboarding] = useState(false);
+    // ── Section E — Payment Info ──────────────────────────────────────────────
+    const [paymentPreference, setPaymentPreference] = useState("");
+    const [zelleContact, setZelleContact] = useState("");
+    const [bankName, setBankName] = useState("");
+    const [bankAccountNumber, setBankAccountNumber] = useState("");
+    const [bankRoutingNumber, setBankRoutingNumber] = useState("");
+    const [bankAccountType, setBankAccountType] = useState("checking");
+    const [savingPayment, setSavingPayment] = useState(false);
 
     // ── Section F — Notifications ─────────────────────────────────────────────
     const [notifEmail, setNotifEmail] = useState(true);
@@ -363,7 +394,12 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                 setEndHour(p.availability.end_hour ?? 18);
             }
 
-            setStripeConnected(!!p.onboarding_complete);
+            setPaymentPreference(p.payment_preference ?? "");
+            setZelleContact(p.zelle_contact ?? "");
+            setBankName(p.bank_name ?? "");
+            setBankAccountNumber(p.bank_account_number ?? "");
+            setBankRoutingNumber(p.bank_routing_number ?? "");
+            setBankAccountType(p.bank_account_type ?? "checking");
         } catch (err) {
             console.error("Load profile error:", err);
             toast.error(labels.errorLoad);
@@ -455,26 +491,25 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
         );
     };
 
-    // ── Section E — Stripe onboarding ────────────────────────────────────────
-    const handleStartOnboarding = async () => {
-        setStartingOnboarding(true);
+    // ── Section E — Payment info save ────────────────────────────────────────
+    const handleSavePayment = async () => {
+        setSavingPayment(true);
         try {
-            const res = await fetch("/api/contractors/onboard", {
-                method: "POST",
-                headers: session?.access_token
-                    ? { Authorization: `Bearer ${session.access_token}` }
-                    : {},
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.url) window.location.href = data.url;
-            } else {
-                toast.error(labels.errorSave);
+            const payload: Record<string, unknown> = { payment_preference: paymentPreference };
+            if (paymentPreference === "zelle") {
+                payload.zelle_contact = zelleContact;
+            } else if (paymentPreference === "direct_deposit") {
+                payload.bank_name = bankName;
+                payload.bank_account_number = bankAccountNumber;
+                payload.bank_routing_number = bankRoutingNumber;
+                payload.bank_account_type = bankAccountType;
             }
+            await patchProfile(payload);
+            toast.success(labels.paymentSaved);
         } catch {
             toast.error(labels.errorSave);
         } finally {
-            setStartingOnboarding(false);
+            setSavingPayment(false);
         }
     };
 
@@ -579,26 +614,18 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                 </SectionCard>
 
                 {/* ── Section B: Service Area ─────────────────────────────── */}
+                {/* DORMANT: geo-routing by ZIP disabled — all contractors serve full coverage area */}
+                {/* Re-enable this block when multi-zone routing is needed
                 <SectionCard>
                     <SectionTitle>{labels.serviceAreaTitle}</SectionTitle>
-
                     <div>
                         <FieldLabel>{labels.serviceAreaLabel}</FieldLabel>
-                        <TextInput
-                            value={serviceAreaInput}
-                            onChange={setServiceAreaInput}
-                            placeholder={labels.serviceAreaPlaceholder}
-                        />
+                        <TextInput value={serviceAreaInput} onChange={setServiceAreaInput} placeholder={labels.serviceAreaPlaceholder} />
                         <p className="mt-2 text-xs text-[#5E698F]">{labels.serviceAreaHelp}</p>
                     </div>
-
-                    <SaveBtn
-                        onClick={handleSaveServiceArea}
-                        loading={savingArea}
-                        label={labels.saveServiceArea}
-                        loadingLabel={labels.saving}
-                    />
+                    <SaveBtn onClick={handleSaveServiceArea} loading={savingArea} label={labels.saveServiceArea} loadingLabel={labels.saving} />
                 </SectionCard>
+                */}
 
                 {/* ── Section C: Availability Toggle ──────────────────────── */}
                 <SectionCard>
@@ -689,76 +716,83 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                     />
                 </SectionCard>
 
-                {/* ── Section E: Stripe Payout ────────────────────────────── */}
+                {/* ── Section E: Payment Info ──────────────────────────────── */}
                 <SectionCard>
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-base font-semibold text-white tracking-tight">
-                                {labels.stripeTitle}
-                            </h2>
-                            <p className="mt-1 text-sm text-[#7D8DB5]">
-                                {stripeConnected ? labels.stripeConnectedDesc : labels.stripeSetupDesc}
-                            </p>
-                        </div>
-                        {/* Status badge */}
-                        <span
-                            className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${
-                                stripeConnected
-                                    ? "bg-green-500/10 border-green-500/30 text-green-400"
-                                    : "bg-white/5 border-[#2C355E] text-[#5E698F]"
-                            }`}
+                    <SectionTitle>{labels.paymentTitle}</SectionTitle>
+                    <p className="text-xs text-[#5E698F] -mt-2">{labels.paymentDesc}</p>
+
+                    <div>
+                        <FieldLabel>{labels.paymentMethod}</FieldLabel>
+                        <select
+                            value={paymentPreference}
+                            onChange={(e) => setPaymentPreference(e.target.value)}
+                            className="w-full bg-[#131835] border border-[#2C355E] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078]/40 focus:border-[#D0B078]/60 transition-all"
                         >
-                            {stripeConnected ? (
-                                <>
-                                    <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none">
-                                        <circle cx="6" cy="6" r="5" fill="currentColor" opacity={0.2} />
-                                        <path
-                                            d="M3.5 6l1.8 1.8L8.5 4.5"
-                                            stroke="currentColor"
-                                            strokeWidth={1.5}
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    </svg>
-                                    {labels.stripeConnected}
-                                </>
-                            ) : (
-                                <>
-                                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                    {labels.stripeNotSetUp}
-                                </>
-                            )}
-                        </span>
+                            <option value="">{labels.paymentMethodPlaceholder}</option>
+                            <option value="zelle">{labels.paymentMethodZelle}</option>
+                            <option value="direct_deposit">{labels.paymentMethodACH}</option>
+                        </select>
                     </div>
 
-                    <div className="border-t border-[#2C355E] pt-4">
-                        {stripeConnected ? (
-                            <a
-                                href="https://dashboard.stripe.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#2C355E] text-white text-sm font-semibold rounded-xl hover:bg-white/5 hover:border-white/20 transition-all"
-                            >
-                                {labels.stripeManageBtn}
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                    />
-                                </svg>
-                            </a>
-                        ) : (
-                            <button
-                                onClick={handleStartOnboarding}
-                                disabled={startingOnboarding}
-                                className="px-6 py-2.5 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
-                            >
-                                {startingOnboarding ? labels.stripeLoading : labels.stripeSetupBtn}
-                            </button>
-                        )}
-                    </div>
+                    {paymentPreference === "zelle" && (
+                        <div>
+                            <FieldLabel>{labels.zelleContact}</FieldLabel>
+                            <TextInput
+                                value={zelleContact}
+                                onChange={setZelleContact}
+                                placeholder={labels.zelleContactPlaceholder}
+                            />
+                        </div>
+                    )}
+
+                    {paymentPreference === "direct_deposit" && (
+                        <>
+                            <div>
+                                <FieldLabel>{labels.bankName}</FieldLabel>
+                                <TextInput
+                                    value={bankName}
+                                    onChange={setBankName}
+                                    placeholder={labels.bankNamePlaceholder}
+                                />
+                            </div>
+                            <div>
+                                <FieldLabel>{labels.bankAccountNumber}</FieldLabel>
+                                <TextInput
+                                    value={bankAccountNumber}
+                                    onChange={setBankAccountNumber}
+                                    placeholder={labels.bankAccountNumberPlaceholder}
+                                />
+                            </div>
+                            <div>
+                                <FieldLabel>{labels.bankRoutingNumber}</FieldLabel>
+                                <TextInput
+                                    value={bankRoutingNumber}
+                                    onChange={setBankRoutingNumber}
+                                    placeholder={labels.bankRoutingNumberPlaceholder}
+                                />
+                            </div>
+                            <div>
+                                <FieldLabel>{labels.bankAccountType}</FieldLabel>
+                                <select
+                                    value={bankAccountType}
+                                    onChange={(e) => setBankAccountType(e.target.value)}
+                                    className="w-full bg-[#131835] border border-[#2C355E] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078]/40 focus:border-[#D0B078]/60 transition-all"
+                                >
+                                    <option value="checking">{labels.bankChecking}</option>
+                                    <option value="savings">{labels.bankSavings}</option>
+                                </select>
+                            </div>
+                        </>
+                    )}
+
+                    {paymentPreference && (
+                        <SaveBtn
+                            onClick={handleSavePayment}
+                            loading={savingPayment}
+                            label={labels.savePayment}
+                            loadingLabel={labels.saving}
+                        />
+                    )}
                 </SectionCard>
 
                 {/* ── Section F: Notifications ────────────────────────────── */}

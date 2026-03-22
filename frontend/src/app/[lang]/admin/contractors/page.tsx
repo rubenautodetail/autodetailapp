@@ -51,10 +51,10 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PAYMENT_LABELS: Record<string, { en: string; es: string }> = {
-    direct_deposit: { en: "Direct Deposit",  es: "Depósito Directo" },
-    zelle:          { en: "Zelle",            es: "Zelle"            },
-    check:          { en: "Check",            es: "Cheque"           },
-    cash:           { en: "Cash",             es: "Efectivo"         },
+    direct_deposit: { en: "ACH / Direct Deposit", es: "ACH / Depósito Directo" },
+    zelle:          { en: "Zelle",                es: "Zelle"                  },
+    check:          { en: "Check",                es: "Cheque"                 },
+    cash:           { en: "Cash",                 es: "Efectivo"               },
 };
 
 function paymentLabel(pref: string | null, isEs: boolean): string {
