@@ -40,7 +40,7 @@ export default function ReceiptPage() {
                 const supabase = createClient();
                 const { data, error: fetchError } = await supabase
                     .from('bookings')
-                    .select('*, services:service_id(name), profiles:contractor_id(full_name)')
+                    .select('*, profiles:contractor_id(full_name)')
                     .eq('id', bookingId)
                     .single();
 
