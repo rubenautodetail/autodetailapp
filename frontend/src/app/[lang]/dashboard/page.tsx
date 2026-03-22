@@ -43,12 +43,17 @@ export default function DashboardPage() {
     const supabase = createClient();
     const userEmailRef = useRef<string | undefined>(undefined);
 
-    const fetchBookings = async (email: string) => {
+    const fetchBookings = async (email: string, userId?: string) => {
         try {
+            // Match by customer_email OR user_id — covers cases where the
+            // email typed in the booking form differs from the auth email.
+            const orFilter = userId
+                ? `customer_email.eq.${email},user_id.eq.${userId}`
+                : `customer_email.eq.${email}`;
             const { data, error } = await supabase
                 .from("bookings")
                 .select("*")
-                .eq("customer_email", email)
+                .or(orFilter)
                 .order("date", { ascending: false })
                 .limit(5);
 
@@ -56,9 +61,10 @@ export default function DashboardPage() {
 
             setBookings((data || []).map(b => ({
                 id: b.id.toString(),
+                confirmationCode: (b as any).confirmation_code ?? undefined,
                 serviceName: (b as any).service_name || "Service",
                 date: b.date,
-                time: "Scheduled",
+                time: (b as any).time_window || "Scheduled",
                 status: (b.status as any) || "pending",
                 price: parseFloat(String(b.total_amount ?? '0')) || 0,
                 providerName: "Ruben's Team"
@@ -100,7 +106,7 @@ export default function DashboardPage() {
         if (profile) {
             userEmailRef.current = user?.email;
             fetchVehicles();
-            if (user?.email) fetchBookings(user.email);
+            if (user?.email) fetchBookings(user.email, user.id);
         }
     }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -115,9 +121,9 @@ export default function DashboardPage() {
                 "postgres_changes",
                 { event: "UPDATE", schema: "public", table: "bookings" },
                 (payload) => {
-                    const updated = payload.new as { customer_email?: string };
-                    if (updated.customer_email === email) {
-                        fetchBookings(email);
+                    const updated = payload.new as { customer_email?: string; user_id?: string };
+                    if (updated.customer_email === email || updated.user_id === user?.id) {
+                        fetchBookings(email, user?.id);
                     }
                 }
             )
@@ -258,7 +264,7 @@ export default function DashboardPage() {
                                     <BookingCard
                                         {...booking}
                                         index={index}
-                                        onRefresh={() => user?.email && fetchBookings(user.email)}
+                                        onRefresh={() => user?.email && fetchBookings(user.email, user.id)}
                                     />
                                 </div>
                             ))

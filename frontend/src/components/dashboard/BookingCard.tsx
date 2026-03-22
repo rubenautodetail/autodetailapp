@@ -33,6 +33,8 @@ const statusConfig: Record<string, {
     confirmed: { color: 'text-blue-500', bg: 'bg-blue-500/10', icon: CheckCircle, en: 'Confirmed', es: 'Confirmado' },
     en_route: { color: 'text-indigo-500', bg: 'bg-indigo-500/10', icon: Truck, en: 'En Route', es: 'En Camino' },
     working: { color: 'text-purple-500', bg: 'bg-purple-500/10', icon: Wrench, en: 'In Progress', es: 'En Progreso' },
+    in_progress: { color: 'text-purple-500', bg: 'bg-purple-500/10', icon: Wrench, en: 'In Progress', es: 'En Progreso' },
+    pending_approval: { color: 'text-amber-400', bg: 'bg-amber-400/10', icon: ShieldCheck, en: 'Awaiting Approval', es: 'Esperando Aprobación' },
     completed: { color: 'text-green-500', bg: 'bg-green-500/10', icon: ShieldCheck, en: 'Completed', es: 'Completado' },
     cancelled: { color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle, en: 'Cancelled', es: 'Cancelado' },
 };
@@ -185,6 +187,15 @@ export function BookingCard({
                             >
                                 <CreditCard className="w-4 h-4" />
                                 {isEs ? 'Completar Pago' : 'Complete Payment'}
+                                <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
+                            </Link>
+                        ) : status === 'pending_approval' ? (
+                            <Link
+                                href={`/${lang}/booking/${id}/approve`}
+                                className="flex items-center gap-1.5 text-sm font-bold text-amber-400 hover:text-white bg-amber-400/10 hover:bg-amber-400/20 px-3 py-1.5 rounded-lg transition-all group/link"
+                            >
+                                <ShieldCheck className="w-4 h-4" />
+                                {isEs ? 'Aprobar Trabajo' : 'Approve & Pay'}
                                 <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
                             </Link>
                         ) : status === 'completed' ? (

@@ -43,6 +43,13 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Invalid confirmation code' }, { status: 403 });
             }
 
+            if (booking.status !== 'in_progress') {
+                return NextResponse.json(
+                    { error: `Cannot complete a job with status '${booking.status}'` },
+                    { status: 409 }
+                );
+            }
+
             contractorId = booking.contractor_id;
         } else {
             // JWT-based access (authenticated contractor)

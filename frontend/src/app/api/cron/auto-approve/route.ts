@@ -112,12 +112,21 @@ export async function GET(req: NextRequest) {
                     })
                     .eq('id', booking.id);
 
-                // Notify customer
+                // Notify customer + contractor
                 const serviceName = (booking as any).service_name || 'Detailing Service';
+                let contractorEmail = '';
+                if ((booking as any).contractor_id) {
+                    const { data: contractorProfile } = await supabase
+                        .from('profiles')
+                        .select('email')
+                        .eq('id', (booking as any).contractor_id)
+                        .single();
+                    contractorEmail = contractorProfile?.email ?? '';
+                }
                 await notify({
                     type: 'booking.approved',
                     booking: { ...booking, service_name: serviceName },
-                    contractorEmail: '',
+                    contractorEmail,
                 });
 
                 processed++;

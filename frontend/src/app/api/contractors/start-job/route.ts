@@ -115,10 +115,16 @@ export async function POST(req: NextRequest) {
 
         // Send notification email to customer that job has started
         if (updatedId) {
+            const { data: fullBooking } = await supabase
+                .from('bookings')
+                .select('*')
+                .eq('id', updatedId)
+                .single();
+
             const { notify } = await import('@/lib/notifications');
             await notify({
                 type: 'contractor.job_started',
-                booking: { id: updatedId } as any, // Minimal booking data for email
+                booking: fullBooking ?? ({ id: updatedId } as any),
             });
         }
 
