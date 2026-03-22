@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { useBooking, useBookingStatus, CustomerInfo, type VehicleInfo } from "@/contexts";
+import { useAuth } from "@/contexts/AuthContext";
 import { PricingSummary, ProgressIndicator } from "@/components/booking";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -40,10 +41,19 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   } = useBooking();
 
   const { vehicles: garageVehicles, addVehicle } = useBookingStatus();
+  const { user, profile } = useAuth();
 
   const [name, setName] = useState(customerInfo?.name || "");
   const [email, setEmail] = useState(customerInfo?.email || "");
   const [phone, setPhone] = useState(customerInfo?.phone || "");
+
+  // Auto-fill from auth profile on first load (only if fields are still empty)
+  useEffect(() => {
+    if (!name && profile?.full_name) setName(profile.full_name);
+    if (!email && user?.email) setEmail(user.email);
+    if (!phone && (profile as any)?.phone) setPhone((profile as any).phone);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, user]);
   const [specialNotes, setSpecialNotes] = useState(customerInfo?.specialNotes || "");
 
   // New vehicle form state

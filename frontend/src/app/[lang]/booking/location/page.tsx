@@ -4,9 +4,22 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useBooking, Location } from "@/contexts";
+import { useAuth } from "@/contexts/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 import { PricingSummary, ProgressIndicator } from "@/components/booking";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+
+interface SavedAddress {
+  id: string;
+  label: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  latitude: number;
+  longitude: number;
+}
 
 const MapboxAddressInput = dynamic(
   () => import("@/components/maps/MapboxAddressInput"),
@@ -48,6 +61,57 @@ export default function LocationPage({ params }: LocationPageProps) {
   const [zipError, setZipError] = useState("");
   const [addressError, setAddressError] = useState("");
   const [isValid, setIsValid] = useState(false);
+
+  // Saved addresses
+  const { user } = useAuth();
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [saveLabel, setSaveLabel] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase.from("profiles").select("saved_addresses").eq("id", user.id).single().then(({ data }) => {
+      if (data?.saved_addresses) setSavedAddresses(data.saved_addresses as SavedAddress[]);
+    });
+  }, [user]);
+
+  const handleSelectSaved = (saved: SavedAddress) => {
+    setAddress(saved.address);
+    setCity(saved.city);
+    setState(saved.state);
+    setZipCode(saved.zipCode);
+    setLatitude(saved.latitude);
+    setLongitude(saved.longitude);
+    setIsValid(true);
+    setZipError("");
+    setAddressError("");
+  };
+
+  const handleSaveAddress = async () => {
+    if (!user || !address || !zipCode || !saveLabel.trim()) return;
+    setSaving(true);
+    const newEntry: SavedAddress = {
+      id: crypto.randomUUID(),
+      label: saveLabel.trim(),
+      address, city, state: state || "FL", zipCode,
+      latitude, longitude,
+    };
+    const updated = [...savedAddresses, newEntry];
+    const supabase = createClient();
+    await supabase.from("profiles").update({ saved_addresses: updated }).eq("id", user.id);
+    setSavedAddresses(updated);
+    setSaveLabel("");
+    setSaving(false);
+  };
+
+  const handleDeleteSaved = async (id: string) => {
+    if (!user) return;
+    const updated = savedAddresses.filter(a => a.id !== id);
+    const supabase = createClient();
+    await supabase.from("profiles").update({ saved_addresses: updated }).eq("id", user.id);
+    setSavedAddresses(updated);
+  };
 
   // Redirect if prerequisites not met
   useEffect(() => {
@@ -191,6 +255,43 @@ export default function LocationPage({ params }: LocationPageProps) {
         <div className="grid lg:grid-cols-3 gap-10">
           {/* Left column: Location Input */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Saved Addresses */}
+            {savedAddresses.length > 0 && (
+              <Card className="p-6 !bg-[#1A2142] !border-[#2C355E]">
+                <h3 className="text-base font-bold text-white mb-4">
+                  {locale === "es" ? "Mis Direcciones" : "Saved Addresses"}
+                </h3>
+                <div className="space-y-2">
+                  {savedAddresses.map(saved => (
+                    <div
+                      key={saved.id}
+                      className={`flex items-center justify-between gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                        address === saved.address
+                          ? "border-[#D0B078] bg-[#D0B078]/10"
+                          : "border-[#2C355E] hover:border-[#D0B078]/50"
+                      }`}
+                      onClick={() => handleSelectSaved(saved)}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#D0B078]">{saved.label}</p>
+                        <p className="text-xs text-[#A5B0D1] truncate">{saved.address}</p>
+                        <p className="text-xs text-[#5E698F]">{saved.city}, {saved.state} {saved.zipCode}</p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteSaved(saved.id); }}
+                        className="text-[#5E698F] hover:text-red-400 transition-colors flex-shrink-0 p-1"
+                        aria-label="Remove"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
             {/* ZIP Code Input */}
             <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
               <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
@@ -291,13 +392,36 @@ export default function LocationPage({ params }: LocationPageProps) {
                   )}
 
                   {address && (
-                    <div className="mt-4 p-5 bg-[#D0B078]/5 border border-[#D0B078]/30 rounded-xl animate-fade-in">
-                      <p className="text-sm font-semibold text-[#D0B078] mb-1">
-                        {locale === "es" ? "Dirección Seleccionada:" : "Selected Address:"}
-                      </p>
-                      <p className="text-white">
-                        {address}
-                      </p>
+                    <div className="mt-4 space-y-3 animate-fade-in">
+                      <div className="p-5 bg-[#D0B078]/5 border border-[#D0B078]/30 rounded-xl">
+                        <p className="text-sm font-semibold text-[#D0B078] mb-1">
+                          {locale === "es" ? "Dirección Seleccionada:" : "Selected Address:"}
+                        </p>
+                        <p className="text-white">{address}</p>
+                      </div>
+
+                      {/* Save address option — only show if not already saved */}
+                      {user && !savedAddresses.some(s => s.address === address) && (
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            value={saveLabel}
+                            onChange={e => setSaveLabel(e.target.value)}
+                            placeholder={locale === "es" ? "Guardar como (Casa, Trabajo…)" : "Save as (Home, Work…)"}
+                            className="flex-1 px-3 py-2 text-sm bg-white/5 border border-[#2C355E] rounded-lg text-white placeholder-[#5E698F] focus:outline-none focus:border-[#D0B078]"
+                          />
+                          <button
+                            onClick={handleSaveAddress}
+                            disabled={!saveLabel.trim() || saving}
+                            className="px-4 py-2 text-sm font-semibold text-[#D0B078] bg-[#D0B078]/10 border border-[#D0B078]/30 rounded-lg hover:bg-[#D0B078]/20 disabled:opacity-40 transition-all"
+                          >
+                            {saving ? "…" : (locale === "es" ? "Guardar" : "Save")}
+                          </button>
+                        </div>
+                      )}
+                      {user && savedAddresses.some(s => s.address === address) && (
+                        <p className="text-xs text-green-400">✓ {locale === "es" ? "Dirección guardada" : "Address saved"}</p>
+                      )}
                     </div>
                   )}
                 </div>
