@@ -978,6 +978,73 @@ export async function sendJobStartedEmail(booking: BookingEmailData) {
 }
 
 /**
+ * Send "on the way" email to customer when contractor marks en_route
+ */
+export async function sendEnRouteEmail(booking: BookingEmailData) {
+  try {
+    const { customer } = booking;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+            .button { display: inline-block; background: #6366f1; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+            .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">Your Detailer Is On The Way! 🚗</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${customer.firstName},</p>
+            <p>Great news! Your detailer is heading to you now and should arrive shortly. Please make sure your vehicle is accessible.</p>
+
+            <div style="background: #eef2ff; border-left: 4px solid #6366f1; padding: 20px; margin: 20px 0; border-radius: 4px;">
+              <h3 style="margin-top: 0; color: #4f46e5;">Appointment Details</h3>
+              <p><strong>Booking:</strong> ${booking.confirmationCode}</p>
+              <p><strong>Service:</strong> ${booking.service.name}</p>
+              <p><strong>Date:</strong> ${new Date(booking.scheduledDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p><strong>Time:</strong> ${booking.scheduledTime}</p>
+              <p><strong>Address:</strong> ${booking.location.address}, ${booking.location.city}, ${booking.location.state} ${booking.location.zipCode}</p>
+            </div>
+
+            <p>If you have any questions or need to reach your detailer, please contact us at <a href="mailto:${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}">${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}</a>.</p>
+
+            <p style="margin-top: 30px;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${booking.locale || 'en'}/booking/${booking.id}" class="button">View Booking Details</a>
+            </p>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing DetailWash</p>
+            <p>Questions? <a href="mailto:${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}">${process.env.SUPPORT_EMAIL || 'support@dtailwash.com'}</a></p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+      from: process.env.FROM_EMAIL || 'notifications@dtailwash.com',
+      to: customer.email,
+      subject: 'Your Detailer Is On The Way! 🚗',
+      html,
+    });
+
+    if (error) throw error;
+    console.log(`En-route email sent to ${customer.email}`);
+    return data;
+  } catch (error) {
+    console.error('Failed to send en-route email:', error);
+    throw error;
+  }
+}
+
+/**
  * Send review request email after job completion
  */
 export async function sendReviewRequestEmail(booking: BookingEmailData) {

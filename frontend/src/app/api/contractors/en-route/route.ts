@@ -63,23 +63,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: updateError.message }, { status: 500 });
         }
 
-        // Insert notification for the customer
-        if (booking.user_id) {
-            const { error: notifError } = await supabase
-                .from('notifications')
-                .insert({
-                    user_id: booking.user_id,
-                    type: 'info',
-                    title: 'Contractor On The Way',
-                    message: 'Your detailer is heading to you now! They should arrive soon.',
-                    booking_id: booking.id,
-                    is_read: false,
-                });
+        // Send email + in-app notification to customer
+        const { data: fullBooking } = await supabase
+            .from('bookings')
+            .select('*')
+            .or(`id.eq.${safeId},document_id.eq.${safeId}`)
+            .single();
 
-            if (notifError) {
-                // Non-fatal — log but don't fail the request
-                console.error('en-route: notification insert error:', notifError);
-            }
+        if (fullBooking) {
+            const { notify } = await import('@/lib/notifications');
+            await notify({ type: 'contractor.en_route', booking: fullBooking });
         }
 
         return NextResponse.json({ success: true });

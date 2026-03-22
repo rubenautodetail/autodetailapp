@@ -10,6 +10,7 @@ import {
     sendJobApprovedReceiptEmail,
     sendContractorPaidEmail,
     sendJobStartedEmail,
+    sendEnRouteEmail,
     sendReviewRequestEmail,
     BookingEmailData
 } from './email';
@@ -25,6 +26,7 @@ type NotificationEvent =
     | { type: 'contractor.job_assigned'; booking: any; contractorEmail: string }
     | { type: 'contractor.job_accepted'; booking: any; contractor: any }
     | { type: 'contractor.job_rejected'; booking: any }
+    | { type: 'contractor.en_route'; booking: any }
     | { type: 'contractor.job_started'; booking: any }
     | { type: 'booking.review_request'; booking: any };
 
@@ -153,6 +155,11 @@ export async function notify(event: NotificationEvent): Promise<void> {
 
             case 'contractor.job_rejected':
                 await sendJobRejectedToAdmin(mapBookingData(event.booking));
+                break;
+
+            case 'contractor.en_route':
+                await sendEnRouteEmail(mapBookingData(event.booking));
+                await createInAppNotification(event.booking.user_id, 'Detailer On The Way', 'Your detailer is heading to you now! They should arrive shortly.', 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}`);
                 break;
 
             case 'contractor.job_started':
