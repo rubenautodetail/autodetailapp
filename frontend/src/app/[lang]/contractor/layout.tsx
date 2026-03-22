@@ -36,18 +36,29 @@ export default function ContractorLayout({
     };
 
     // Auth guard — contractor or admin only; pending contractors go to pending page
+    // Only redirect when profile is fully loaded to prevent race conditions.
     useEffect(() => {
         if (authLoading) return;
         // Skip redirect if already on the contractor login page
         if (pathname?.endsWith('/contractor/login')) return;
-        if (!profile || (profile.role !== 'contractor' && profile.role !== 'admin')) {
+        if (!profile) {
+            // No profile at all (not logged in) → send to login
             router.replace(`/${lang}/contractor/login`);
+            return;
+        }
+        if (profile.role !== 'contractor' && profile.role !== 'admin') {
+            // Wrong role → send to their correct portal instead of login
+            if (profile.role === 'user') {
+                router.replace(`/${lang}/dashboard`);
+            } else {
+                router.replace(`/${lang}/contractor/login`);
+            }
             return;
         }
         if (profile.role === 'contractor' && profile.approval_status !== 'approved') {
             router.replace(`/${lang}/contractor/pending`);
         }
-    }, [authLoading, profile, lang, router]);
+    }, [authLoading, profile, lang, router, pathname]);
 
     // Red dot on Jobs tab when there are pending incoming jobs
     const [hasIncoming, setHasIncoming] = useState(false);

@@ -119,13 +119,31 @@ export async function updateSession(request: NextRequest) {
     // Redirect logged-in users away from /register and other auth pages
     // For contractor flow: send them straight to /contractors/apply (skip register)
     if (user && isAuthPage && !isAnyLoginPage) {
+        // Fetch role to validate the ?next= destination matches their actual role
+        const { data: authProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+        const authRole = (authProfile as { role?: string } | null)?.role
+
         const next = request.nextUrl.searchParams.get('next')
         const dest = request.nextUrl.clone()
         dest.search = ''
-        if (next && next.startsWith('/')) {
+
+        // Only honor ?next= if it matches the user's role (prevent cross-role redirect)
+        const nextAllowed = next && next.startsWith('/') &&
+            (authRole === 'admin' ? next.includes('/admin') :
+             authRole === 'contractor' ? (next.includes('/contractor') || next.includes('/contractors')) :
+             !next.includes('/admin') && !next.includes('/contractor'))
+
+        if (nextAllowed) {
             dest.pathname = next
         } else {
-            dest.pathname = `/${locale}/dashboard`
+            // Default destination by role
+            dest.pathname = authRole === 'admin' ? `/${locale}/admin`
+                : authRole === 'contractor' ? `/${locale}/contractor/dashboard`
+                : `/${locale}/dashboard`
         }
         return cookiedRedirect(supabaseResponse, dest)
     }
@@ -165,6 +183,29 @@ export async function updateSession(request: NextRequest) {
                 }
                 return cookiedRedirect(supabaseResponse, dest)
             }
+        }
+    }
+
+    // ─── Role enforcement for customer dashboard — redirect non-users ─────────
+    if (user && isCustomerRoute && !isAdminRoute && !isContractorRoute) {
+        const { data: custProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        const custRole = (custProfile as { role?: string } | null)?.role
+        if (custRole === 'contractor') {
+            const dest = request.nextUrl.clone()
+            dest.pathname = `/${locale}/contractor/dashboard`
+            dest.search = ''
+            return cookiedRedirect(supabaseResponse, dest)
+        }
+        if (custRole === 'admin') {
+            const dest = request.nextUrl.clone()
+            dest.pathname = `/${locale}/admin`
+            dest.search = ''
+            return cookiedRedirect(supabaseResponse, dest)
         }
     }
 

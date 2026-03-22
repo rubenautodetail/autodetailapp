@@ -17,17 +17,25 @@ export default function DashboardLayout({
     params,
 }: DashboardLayoutProps) {
     const { lang } = use(params);
-    const { user, isLoading } = useAuth();
+    const { user, profile, isLoading } = useAuth();
     const router = useRouter();
     const { notifications, dismissToast } = useNotifications();
 
     useEffect(() => {
-        if (!isLoading && !user) {
+        if (isLoading) return;
+        if (!user) {
             router.replace(`/${lang}/login`);
+            return;
         }
-    }, [isLoading, user, lang, router]);
+        // Prevent contractors/admins from accessing customer dashboard
+        if (profile?.role === 'contractor') {
+            router.replace(`/${lang}/contractor/dashboard`);
+        } else if (profile?.role === 'admin') {
+            router.replace(`/${lang}/admin`);
+        }
+    }, [isLoading, user, profile, lang, router]);
 
-    if (isLoading || !user) {
+    if (isLoading || !user || (profile && profile.role !== 'user')) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
                 <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />

@@ -91,6 +91,28 @@ export async function GET(request: NextRequest) {
         return redirect
     }
 
+    // Validate destination matches the user's actual role to prevent cross-role redirect
+    const { data: { user: verifiedUser } } = await supabase.auth.getUser()
+    if (verifiedUser) {
+        const { data: cbProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', verifiedUser.id)
+            .single()
+        const cbRole = (cbProfile as { role?: string } | null)?.role
+        const goesAdmin = resolvedNext.includes('/admin')
+        const goesContractor = resolvedNext.includes('/contractor') || resolvedNext.includes('/contractors')
+
+        // If destination doesn't match role, override to correct portal
+        if (cbRole === 'user' && (goesAdmin || goesContractor)) {
+            resolvedNext = `/${locale}/dashboard`
+        } else if (cbRole === 'contractor' && goesAdmin) {
+            resolvedNext = `/${locale}/contractor/dashboard`
+        } else if (cbRole === 'admin' && !goesAdmin && !goesContractor) {
+            // Admin going to customer page — let it through (admins can access anything)
+        }
+    }
+
     // Success — redirect to destination with session cookies
     const redirectUrl = new URL(resolvedNext, origin)
     const successRedirect = NextResponse.redirect(redirectUrl)

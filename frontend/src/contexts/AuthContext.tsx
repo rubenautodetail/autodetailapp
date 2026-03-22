@@ -69,9 +69,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (_event, session) => {
+          const prevUser = user;
           setSession(session);
           setUser(session?.user ?? null);
           if (session?.user) {
+            // If the user changed (e.g. another tab signed in as different account),
+            // clear stale profile immediately to prevent cross-role contamination
+            if (prevUser && prevUser.id !== session.user.id) {
+              setProfile(null);
+            }
+            setIsLoading(true);
             await fetchProfile(session.user.id);
           } else {
             setProfile(null);

@@ -23,10 +23,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const { profile, isLoading, logout } = useAuth();
 
   // Auth guard — must be before any early returns to satisfy Rules of Hooks
+  // Only redirect when profile is fully loaded AND confirmed wrong role.
+  // Never redirect when profile is null (still loading) to prevent race conditions.
   useEffect(() => {
     if (isLoading) return;
-    if (!profile || profile.role !== "admin") {
+    if (!profile) {
+      // No profile at all (not logged in) → send to login
       router.replace(`/${lang}/admin/login`);
+      return;
+    }
+    if (profile.role !== "admin") {
+      // Logged in but wrong role → send to their correct portal
+      if (profile.role === "contractor") {
+        router.replace(`/${lang}/contractor/dashboard`);
+      } else {
+        router.replace(`/${lang}/dashboard`);
+      }
     }
   }, [isLoading, profile, lang, router]);
 

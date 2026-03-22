@@ -104,9 +104,11 @@ export function useNotifications() {
         await supabase.from('notifications').update({ is_read: true }).eq('id', id);
     }, [supabase]);
 
-    const dismissToast = useCallback((id: string) => {
+    const dismissToast = useCallback(async (id: string) => {
         setNotifications((prev) => prev.filter((n) => n.id !== id));
-    }, []);
+        // Persist dismissal so the notification won't reappear after navigation/reload
+        await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    }, [supabase]);
 
     const unreadCount = notifications.filter((n) => !n.is_read).length;
 
