@@ -255,7 +255,11 @@ export default function DashboardPage() {
                         ) : bookings.length > 0 ? (
                             bookings.map((booking, index) => (
                                 <div key={booking.id} className="min-w-[85vw] md:min-w-[400px] snap-center">
-                                    <BookingCard {...booking} index={index} />
+                                    <BookingCard
+                                        {...booking}
+                                        index={index}
+                                        onRefresh={() => user?.email && fetchBookings(user.email)}
+                                    />
                                 </div>
                             ))
                         ) : (

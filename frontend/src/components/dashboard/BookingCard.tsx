@@ -1,10 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle, CreditCard, Star } from 'lucide-react';
+import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle, CreditCard, Star, AlertTriangle, CalendarClock } from 'lucide-react';
 import { BookingStatus } from './StatusTimeline';
 
 interface BookingCardProps {
@@ -17,6 +17,7 @@ interface BookingCardProps {
     price: number;
     providerName?: string;
     index?: number;
+    onRefresh?: () => void;
 }
 
 const statusConfig: Record<string, {
@@ -82,12 +83,43 @@ export function BookingCard({
     price,
     providerName,
     index = 0,
+    onRefresh,
 }: BookingCardProps) {
     const params = useParams();
     const lang = (params?.lang as string) || 'en';
     const isEs = lang === 'es';
     const config = statusConfig[status] || statusConfig.pending;
     const StatusIcon = config.icon;
+
+    const [confirmCancel, setConfirmCancel] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
+    const [cancelError, setCancelError] = useState('');
+
+    const hoursUntil = (new Date(date).getTime() - Date.now()) / (1000 * 60 * 60);
+    const within24h = hoursUntil < 24;
+
+    const handleCancel = async () => {
+        setCancelling(true);
+        setCancelError('');
+        const res = await fetch('/api/booking/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bookingId: id }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            setCancelError(data.error || (isEs ? 'Error al cancelar' : 'Failed to cancel'));
+            setCancelling(false);
+        } else {
+            onRefresh?.();
+        }
+    };
+
+    // Statuses where cancel/reschedule are available
+    const canCancel = ['pending_payment', 'pending', 'pending_assignment', 'confirmed'].includes(status);
+    const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within24h;
+    // pending_payment can cancel anytime (no payment captured)
+    const cancelBlocked = status !== 'pending_payment' && status !== 'pending' && within24h;
 
     return (
         <motion.div
@@ -141,43 +173,107 @@ export function BookingCard({
                     )}
                 </div>
 
-                <div className="pt-4 border-t border-white/5 flex justify-between items-center">
-                    <span className="text-xs text-text-muted font-mono">
-                        {confirmationCode ?? `#${id.slice(0, 8)}`}
-                    </span>
-                    {status === 'pending_payment' ? (
-                        <Link
-                            href={`/${lang}/booking/${id}/pay`}
-                            className="flex items-center gap-1.5 text-sm font-bold text-amber-400 hover:text-white bg-amber-400/10 hover:bg-amber-400/20 px-3 py-1.5 rounded-lg transition-all group/link"
-                        >
-                            <CreditCard className="w-4 h-4" />
-                            {isEs ? 'Completar Pago' : 'Complete Payment'}
-                            <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
-                        </Link>
-                    ) : status === 'completed' ? (
-                        <div className="flex items-center gap-3">
+                <div className="pt-4 border-t border-white/5 space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-xs text-text-muted font-mono">
+                            {confirmationCode ?? `#${id.slice(0, 8)}`}
+                        </span>
+                        {status === 'pending_payment' ? (
                             <Link
-                                href={`/${lang}/booking/${id}/review`}
-                                className="text-xs text-text-secondary hover:text-accent-gold transition-colors"
+                                href={`/${lang}/booking/${id}/pay`}
+                                className="flex items-center gap-1.5 text-sm font-bold text-amber-400 hover:text-white bg-amber-400/10 hover:bg-amber-400/20 px-3 py-1.5 rounded-lg transition-all group/link"
                             >
-                                {isEs ? 'Calificar' : 'Rate'}
-                            </Link>
-                            <Link
-                                href={`/${lang}/booking/select?service=${encodeURIComponent(serviceName)}`}
-                                className="flex items-center gap-1.5 text-sm font-bold text-accent-gold hover:text-white bg-accent-gold/10 hover:bg-accent-gold/20 px-3 py-1.5 rounded-lg transition-all group/link"
-                            >
-                                {isEs ? 'Reservar de nuevo' : 'Book Again'}
+                                <CreditCard className="w-4 h-4" />
+                                {isEs ? 'Completar Pago' : 'Complete Payment'}
                                 <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
                             </Link>
+                        ) : status === 'completed' ? (
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    href={`/${lang}/booking/${id}/review`}
+                                    className="text-xs text-text-secondary hover:text-accent-gold transition-colors"
+                                >
+                                    {isEs ? 'Calificar' : 'Rate'}
+                                </Link>
+                                <Link
+                                    href={`/${lang}/booking/select?service=${encodeURIComponent(serviceName)}`}
+                                    className="flex items-center gap-1.5 text-sm font-bold text-accent-gold hover:text-white bg-accent-gold/10 hover:bg-accent-gold/20 px-3 py-1.5 rounded-lg transition-all group/link"
+                                >
+                                    {isEs ? 'Reservar de nuevo' : 'Book Again'}
+                                    <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
+                                </Link>
+                            </div>
+                        ) : (
+                            <Link
+                                href={`/${lang}/booking/${id}/track`}
+                                className="flex items-center text-sm font-semibold text-white hover:text-accent-gold transition-colors group/link"
+                            >
+                                {isEs ? 'Ver Estado' : 'Track Status'}
+                                <ChevronRight className="w-4 h-4 ml-1 transform group-hover/link:translate-x-1 transition-transform" />
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Cancel / Reschedule actions */}
+                    {canCancel && !['cancelled', 'completed'].includes(status) && (
+                        <div className="space-y-2">
+                            {/* 24-hour notice */}
+                            {within24h && status !== 'pending_payment' && status !== 'pending' && (
+                                <div className="flex items-start gap-1.5 text-xs text-amber-400/80">
+                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                    {isEs
+                                        ? 'Solo puedes cancelar o reprogramar con 24h+ de anticipación.'
+                                        : 'Cancel/reschedule only allowed 24+ hours before appointment.'}
+                                </div>
+                            )}
+
+                            {!confirmCancel ? (
+                                <div className="flex gap-2">
+                                    {canReschedule && (
+                                        <Link
+                                            href={`/${lang}/booking/${id}/reschedule`}
+                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#A5B0D1] hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded-lg transition-all"
+                                        >
+                                            <CalendarClock className="w-3.5 h-3.5" />
+                                            {isEs ? 'Reprogramar' : 'Reschedule'}
+                                        </Link>
+                                    )}
+                                    {!cancelBlocked && (
+                                        <button
+                                            onClick={() => setConfirmCancel(true)}
+                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition-all"
+                                        >
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            {isEs ? 'Cancelar' : 'Cancel'}
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 space-y-2">
+                                    <p className="text-xs text-red-300 font-medium">
+                                        {isEs ? '¿Seguro que deseas cancelar?' : 'Are you sure you want to cancel?'}
+                                    </p>
+                                    {cancelError && (
+                                        <p className="text-xs text-red-400">{cancelError}</p>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => { setConfirmCancel(false); setCancelError(''); }}
+                                            className="flex-1 text-xs font-semibold text-[#A5B0D1] bg-white/5 hover:bg-white/10 py-2 rounded-lg transition-all"
+                                        >
+                                            {isEs ? 'No, volver' : 'No, go back'}
+                                        </button>
+                                        <button
+                                            onClick={handleCancel}
+                                            disabled={cancelling}
+                                            className="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 py-2 rounded-lg transition-all"
+                                        >
+                                            {cancelling ? '...' : (isEs ? 'Sí, cancelar' : 'Yes, cancel')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <Link
-                            href={`/${lang}/booking/${id}/track`}
-                            className="flex items-center text-sm font-semibold text-white hover:text-accent-gold transition-colors group/link"
-                        >
-                            {isEs ? 'Ver Estado' : 'Track Status'}
-                            <ChevronRight className="w-4 h-4 ml-1 transform group-hover/link:translate-x-1 transition-transform" />
-                        </Link>
                     )}
                 </div>
             </div>
