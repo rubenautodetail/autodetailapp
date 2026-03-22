@@ -143,22 +143,13 @@ export async function completeJob(
         (typeof window !== 'undefined' ? localStorage.getItem('supabase_access_token') : '') ||
         '';
 
-    const formData = new FormData();
-    formData.append('bookingId', bookingId);
-    formData.append('checklist', data.checklist);
-
-    data.beforePhotos.forEach((photo, index) => {
-        formData.append(`before_photo_${index}`, photo);
-    });
-
-    data.afterPhotos.forEach((photo, index) => {
-        formData.append(`after_photo_${index}`, photo);
-    });
-
     const response = await fetch(`${getBase()}/api/contractors/complete-job`, {
         method: 'POST',
-        headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
-        body: formData,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+        },
+        body: JSON.stringify({ bookingId, checklist: data.checklist }),
     });
 
     if (!response.ok) {

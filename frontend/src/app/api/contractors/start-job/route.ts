@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
-import { notify } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
     try {
