@@ -32,6 +32,17 @@ export async function GET(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Only contractors (and admins) may access job details
+        const { data: callerProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        const callerRole = (callerProfile as { role?: string } | null)?.role;
+        if (callerRole !== 'contractor' && callerRole !== 'admin') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         const { id } = await params;
 
         const safeId = String(id).trim();
@@ -56,6 +67,21 @@ export async function GET(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
+        // Look up service description by name
+        let serviceDescription: string | null = null;
+        let serviceDescriptionEs: string | null = null;
+        if (data.service_name) {
+            const { data: svc } = await supabase
+                .from('services')
+                .select('description, description_es')
+                .eq('name', data.service_name)
+                .maybeSingle();
+            if (svc) {
+                serviceDescription = svc.description ?? null;
+                serviceDescriptionEs = svc.description_es ?? svc.description ?? null;
+            }
+        }
+
         // Normalize to the shape the job detail page expects
         const normalized = {
             ...data,
@@ -64,7 +90,9 @@ export async function GET(
             timeWindow: data.time_window,
             specialInstructions: data.special_instructions,
             // Build service object from service_name text column
-            service: data.service_name ? { name: data.service_name, name_es: data.service_name } : null,
+            service: data.service_name
+                ? { name: data.service_name, name_es: data.service_name, description: serviceDescription, description_es: serviceDescriptionEs }
+                : null,
             // Nested location object
             location: {
                 address: data.address ?? null,

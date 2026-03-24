@@ -126,7 +126,7 @@ export default async function LandingPage({
 
                 {/* Nav bar */}
                 <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-10 sm:top-[44px]' : 'top-0'}`}>
-                    <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={360} height={96} className="w-auto h-16 sm:h-24 opacity-100 drop-shadow-md" />
+                    <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={486} height={130} className="w-auto h-20 sm:h-32 opacity-100 drop-shadow-md" />
                     <Link
                         href={`/${locale}/login`}
                         className="text-xs font-medium text-[#D0B078] border border-[#D0B078]/30 rounded-full px-4 py-1.5 hover:bg-[#D0B078]/10 transition-colors"
@@ -458,7 +458,7 @@ export default async function LandingPage({
             <footer className="border-t border-white/5 py-8 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
                     <div className="flex flex-col items-center sm:items-start gap-3">
-                        <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={270} height={72} className="w-auto h-12 sm:h-16 opacity-70" />
+                        <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={365} height={97} className="w-auto h-16 sm:h-20 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>
                         <p>
                             {locale === 'es' ? 'Diseñado por' : 'Designed by'}{' '}

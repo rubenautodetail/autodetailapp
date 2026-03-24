@@ -83,7 +83,7 @@ function AdminLoginForm() {
         {/* Brand */}
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="mb-4">
-            <Image src="/dtailwash_logo_final.png" alt="DTailWash" width={390} height={105} className="w-auto h-20 sm:h-28" priority />
+            <Image src="/dtailwash_logo_final.png" alt="DTailWash" width={527} height={142} className="w-auto h-28 sm:h-36" priority />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{dict.title}</h1>
           <p className="text-gray-500 text-sm">{dict.subtitle}</p>

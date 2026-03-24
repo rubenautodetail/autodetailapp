@@ -33,13 +33,13 @@ export default function Sidebar({ lang }: { lang: string }) {
     return (
         <aside className="fixed left-0 top-0 h-screen w-64 bg-black/90 backdrop-blur-xl border-r border-white/5 flex flex-col z-50 hidden lg:flex">
             {/* Logo Area */}
-            <div className="h-16 flex items-center px-6 border-b border-white/5">
-                <Image 
-                    src="/dtailwash_logo_final.png" 
-                    alt="DetailWash" 
-                    width={300} 
-                    height={72} 
-                    className="w-auto h-14 sm:h-18 opacity-100" 
+            <div className="h-20 flex items-center px-6 border-b border-white/5">
+                <Image
+                    src="/dtailwash_logo_final.png"
+                    alt="DetailWash"
+                    width={405}
+                    height={97}
+                    className="w-auto h-20 sm:h-24 opacity-100"
                 />
             </div>
 
@@ -92,13 +92,13 @@ export default function Sidebar({ lang }: { lang: string }) {
 
             {/* Bottom Actions */}
             <div className="p-4 border-t border-white/5 space-y-2">
-                <a
-                    href="mailto:support@dtailwash.com"
+                <Link
+                    href={`/${lang}/customer/support`}
                     className="flex items-center px-4 py-3 rounded-xl text-text-secondary hover:text-white hover:bg-white/5 transition-all"
                 >
                     <HelpCircle className="w-5 h-5 mr-3" />
                     <span className="font-medium">Support</span>
-                </a>
+                </Link>
                 <button
                     onClick={handleSignOut}
                     className="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">

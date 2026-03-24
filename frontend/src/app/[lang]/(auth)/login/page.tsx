@@ -158,7 +158,7 @@ function LoginForm() {
                 {/* Brand */}
                 <div className="text-center mb-8">
                     <div className="inline-flex justify-center items-center mb-6">
-                        <Image src="/dtailwash_logo_final.png" alt="DTailWash" width={390} height={105} className="w-auto h-20 sm:h-28 opacity-100" priority />
+                        <Image src="/dtailwash_logo_final.png" alt="DTailWash" width={527} height={142} className="w-auto h-28 sm:h-36 opacity-100" priority />
                     </div>
                     <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-1">{dict.title}</h1>
                     <p className="text-[var(--text-secondary)] text-sm">{dict.subtitle}</p>

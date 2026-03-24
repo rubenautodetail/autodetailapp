@@ -341,6 +341,48 @@ export default function TrackBookingPage() {
     }
 
     const status = (booking.status ?? 'pending_assignment') as BookingStatus;
+
+    // ── Cancelled — show a clear end-state, no timeline ──────────────────────
+    if (status === 'cancelled') {
+        return (
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+                <div className="bg-gray-900 rounded-2xl border border-red-500/20 p-8 text-center max-w-md w-full">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <p className="text-xs text-red-400 font-semibold uppercase tracking-widest mb-2">
+                        {isEs ? 'Cancelada' : 'Cancelled'}
+                    </p>
+                    <h2 className="text-xl font-bold text-white mb-1">
+                        {booking.service_name ?? (isEs ? 'Servicio' : 'Service')}
+                    </h2>
+                    {booking.confirmation_code && (
+                        <p className="text-sm text-gray-500 font-mono mb-6">{booking.confirmation_code}</p>
+                    )}
+                    <p className="text-gray-400 text-sm mb-8">
+                        {isEs
+                            ? 'Esta reserva fue cancelada. Puedes hacer una nueva reserva cuando quieras.'
+                            : 'This booking was cancelled. You can place a new booking whenever you\'re ready.'}
+                    </p>
+                    <button
+                        onClick={() => router.push(`/${lang}/booking/select`)}
+                        className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-500 transition-colors"
+                    >
+                        {isEs ? 'Reservar de nuevo' : 'Book Again'}
+                    </button>
+                    <button
+                        onClick={() => router.push(`/${lang}/customer`)}
+                        className="mt-3 w-full text-gray-400 text-sm hover:text-white transition-colors py-2"
+                    >
+                        {isEs ? 'Ir al inicio' : 'Go to Dashboard'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     const activeIdx = getActiveStepIndex(status);
     const contractorName = booking.profiles?.full_name ?? null;
     const showContractor = status !== 'pending_assignment' && contractorName;

@@ -130,9 +130,9 @@ export default function ContractorLayout({
                                 <Image
                                     src="/dtailwash_logo_final.png"
                                     alt="DTailWash"
-                                    width={120}
-                                    height={36}
-                                    className="h-9 w-auto object-contain"
+                                    width={162}
+                                    height={49}
+                                    className="h-12 w-auto object-contain"
                                 />
                             </Link>
 

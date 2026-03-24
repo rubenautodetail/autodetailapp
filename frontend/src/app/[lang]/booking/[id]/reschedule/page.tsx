@@ -33,7 +33,8 @@ export default function ReschedulePage() {
       .select("date, status, service_name")
       .eq("id", id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error("Failed to load booking:", error.message);
         setBooking(data);
         setLoading(false);
       });
@@ -73,7 +74,7 @@ export default function ReschedulePage() {
       setError(data.error || (isEs ? "Error al reprogramar" : "Failed to reschedule"));
       setSubmitting(false);
     } else {
-      router.push(`/${lang}/dashboard`);
+      router.push(`/${lang}/customer`);
     }
   };
 

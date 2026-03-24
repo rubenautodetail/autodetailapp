@@ -181,10 +181,11 @@ export default function ContractorDashboard({ params }: DashboardProps) {
             .catch(() => { /* non-fatal */ });
     }, [authLoading, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ── Supabase realtime subscription for new pending_assignment bookings ────
+    // ── Supabase realtime subscription for booking changes ───────────────────
     useEffect(() => {
         const channel = supabaseClient
             .channel("incoming-jobs")
+            // New unassigned booking → alert all contractors
             .on(
                 "postgres_changes",
                 {
@@ -197,6 +198,18 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                     loadDashboard();
                     playAlert();
                     triggerPulse();
+                }
+            )
+            // Booking claimed or status changed → remove it from other contractors' incoming list
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "bookings",
+                },
+                () => {
+                    loadDashboard();
                 }
             )
             .subscribe();

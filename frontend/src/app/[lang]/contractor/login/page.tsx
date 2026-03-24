@@ -146,9 +146,9 @@ export default function ContractorLoginPage() {
             <Image
               src="/dtailwash_logo_final.png"
               alt="DTailWash"
-              width={160}
-              height={48}
-              className="h-12 w-auto object-contain"
+              width={216}
+              height={65}
+              className="h-16 w-auto object-contain"
             />
           </div>
           <h1 className="text-2xl font-bold text-white">

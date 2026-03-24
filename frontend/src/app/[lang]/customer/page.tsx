@@ -6,7 +6,7 @@ import { BookingCard, BookingCardSkeleton } from '@/components/dashboard/Booking
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { motion } from 'framer-motion';
-import { Plus, Car, Settings, HelpCircle } from 'lucide-react';
+import { Plus, Car, Settings, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -23,6 +23,12 @@ export default function CustomerDashboardPage() {
     const activeBookings = sorted.filter(b => ACTIVE_STATUSES.has(b.status));
     const historyBookings = sorted.filter(b => !ACTIVE_STATUSES.has(b.status));
     const displayed = tab === 'active' ? activeBookings : historyBookings;
+
+    const RESCHEDULE_ELIGIBLE = new Set(['pending', 'pending_assignment', 'confirmed']);
+    const reschedulable = activeBookings.filter(b =>
+        RESCHEDULE_ELIGIBLE.has(b.status) &&
+        (new Date(b.date).getTime() - Date.now()) / (1000 * 60 * 60) >= 24
+    );
 
     if (isLoading) {
         return (
@@ -158,25 +164,43 @@ export default function CustomerDashboardPage() {
                             </div>
                         </motion.div>
 
+                        {/* Reschedule widget */}
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.5 }}
-                            className="p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-blue-500/10 to-transparent"
+                            className="glass-card p-6 rounded-2xl"
                         >
-                            <div className="flex items-center gap-3 mb-2 text-blue-400">
-                                <HelpCircle className="w-5 h-5" />
-                                <h3 className="font-bold">Concierge Support</h3>
+                            <div className="flex items-center gap-3 mb-4">
+                                <CalendarDays className="w-5 h-5 text-accent-gold" />
+                                <h3 className="font-bold text-white text-sm uppercase tracking-wider text-text-muted">
+                                    {isEs ? 'Reprogramar' : 'Reschedule'}
+                                </h3>
                             </div>
-                            <p className="text-text-secondary text-sm mb-4 leading-relaxed">
-                                Need to reschedule or have special requests? Our concierge team is standing by.
-                            </p>
-                            <a
-                                href="mailto:support@dtailwash.com?subject=Concierge Request"
-                                className="text-blue-400 text-sm font-semibold hover:text-blue-300 transition-colors block"
-                            >
-                                Chat with Concierge &rarr;
-                            </a>
+
+                            {reschedulable.length === 0 ? (
+                                <p className="text-text-secondary text-sm leading-relaxed">
+                                    {isEs
+                                        ? 'No tienes citas disponibles para reprogramar. Solo se puede reprogramar con 24+ horas de anticipación.'
+                                        : 'No upcoming appointments available to reschedule. Rescheduling requires 24+ hours notice.'}
+                                </p>
+                            ) : (
+                                <div className="space-y-2">
+                                    <p className="text-text-secondary text-xs mb-3">
+                                        {isEs ? 'Selecciona una cita para reprogramar:' : 'Select an appointment to reschedule:'}
+                                    </p>
+                                    {reschedulable.map(b => (
+                                        <Link
+                                            key={b.id}
+                                            href={`/${lang}/booking/${b.id}/reschedule`}
+                                            className="block w-full p-3 rounded-xl border border-white/10 hover:border-accent-gold/40 hover:bg-accent-gold/5 transition-all group"
+                                        >
+                                            <p className="text-white text-sm font-semibold group-hover:text-accent-gold transition-colors">{b.serviceName}</p>
+                                            <p className="text-text-secondary text-xs mt-0.5">{b.date} · {b.time}</p>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                         </motion.div>
                     </div>
                 </div>

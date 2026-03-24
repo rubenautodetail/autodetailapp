@@ -14,6 +14,9 @@ export async function POST(req: NextRequest) {
   if (!bookingId || !newDate) {
     return NextResponse.json({ error: "bookingId and newDate are required" }, { status: 400 });
   }
+  if (newTimeWindow && !["morning", "afternoon", "evening"].includes(newTimeWindow)) {
+    return NextResponse.json({ error: "Invalid time window" }, { status: 400 });
+  }
 
   const supabase = createServiceClient();
 

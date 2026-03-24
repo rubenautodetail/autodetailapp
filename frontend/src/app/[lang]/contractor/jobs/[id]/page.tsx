@@ -17,7 +17,7 @@ interface JobDetailsProps {
 interface JobData {
     id: string | number;
     status: string;
-    service?: { name?: string; name_es?: string } | null;
+    service?: { name?: string; name_es?: string; description?: string | null; description_es?: string | null } | null;
     location?: { address?: string; zipCode?: string } | null;
     address?: string;
     zip_code?: string;
@@ -81,6 +81,7 @@ const translations = {
         statusPendingApproval: "Pending Approval",
         addOns: "Add-ons",
         vehicle: "Vehicle",
+        serviceIncludes: "What's included",
     },
     es: {
         title: "Detalles del Trabajo",
@@ -126,6 +127,7 @@ const translations = {
         statusPendingApproval: "Pendiente de Aprobación",
         addOns: "Complementos",
         vehicle: "Vehículo",
+        serviceIncludes: "Qué incluye",
     },
 };
 
@@ -483,9 +485,17 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
                         {/* Service */}
-                        <div>
+                        <div className="sm:col-span-2">
                             <p className="text-[#A5B0D1] text-xs font-medium uppercase tracking-wide mb-1">{t.service}</p>
-                            <p className="text-white font-semibold">{serviceName}</p>
+                            <p className="text-white font-semibold mb-1">{serviceName}</p>
+                            {(lang === "es" ? job.service?.description_es : job.service?.description) && (
+                                <div className="mt-2">
+                                    <p className="text-[#A5B0D1] text-xs font-medium uppercase tracking-wide mb-1">{t.serviceIncludes}</p>
+                                    <p className="text-white/70 text-sm leading-relaxed">
+                                        {lang === "es" ? job.service?.description_es : job.service?.description}
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Status */}

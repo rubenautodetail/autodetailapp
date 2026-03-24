@@ -66,8 +66,7 @@ export default function ServiceSelectionForm({
     };
 
     const handleBack = () => {
-        // Go back to homepage
-        router.push(`/${locale}`);
+        router.push(`/${locale}/customer`);
     };
 
     return (

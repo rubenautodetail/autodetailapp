@@ -214,7 +214,7 @@ export function BookingCard({
                                     <ChevronRight className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
                                 </Link>
                             </div>
-                        ) : (
+                        ) : status === 'cancelled' ? null : (
                             <Link
                                 href={`/${lang}/booking/${id}/track`}
                                 className="flex items-center text-sm font-semibold text-white hover:text-accent-gold transition-colors group/link"

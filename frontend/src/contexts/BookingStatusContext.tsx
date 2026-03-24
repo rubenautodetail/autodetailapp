@@ -145,7 +145,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 setUserProfile({
                     name: profileData.full_name || userEmail.split('@')[0] || 'User',
                     email: userEmail,
-                    phone: profileData.phone_number || '',
+                    phone: profileData.phone || '',
                     memberSince: new Date(profileData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
                     path: profileData.avatar_url || '/avatars/default.png'
                 });
@@ -317,10 +317,10 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         }
         const supabase = createClient();
 
-        const payload: any = {};
-        if (data.name) payload.full_name = data.name;
-        if (data.phone) payload.phone_number = data.phone;
-        if (data.path) payload.avatar_url = data.path;
+        const payload: Record<string, string | null> = {};
+        if (data.name !== undefined) payload.full_name = data.name;
+        if (data.phone !== undefined) payload.phone = data.phone;
+        if (data.path !== undefined) payload.avatar_url = data.path || null;
 
         const { error } = await supabase
             .from('profiles')

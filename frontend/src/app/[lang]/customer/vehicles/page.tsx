@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
 
 export default function VehiclesPage() {
     const params = useParams();
+    const lang = (params?.lang as string) || 'en';
     const { vehicles, addVehicle, removeVehicle, notifications, dismissNotification, isLoading } = useBookingStatus();
     const [isAdding, setIsAdding] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +59,7 @@ export default function VehiclesPage() {
             {/* Header */}
             <div className="glass-card border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link href={`/${params.lang || 'en'}/customer`} className="text-text-secondary hover:text-white flex items-center text-sm font-medium transition-colors">
+                    <Link href={`/${lang}/customer`} className="text-text-secondary hover:text-white flex items-center text-sm font-medium transition-colors">
                         <ChevronLeft className="w-5 h-5 mr-1" />
                         Back to Dashboard
                     </Link>
@@ -96,7 +97,7 @@ export default function VehiclesPage() {
                     {vehicles.length === 0 && (
                         <div className="col-span-full py-12 text-center text-text-muted border border-dashed border-white/10 rounded-2xl">
                             <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>No vehicles in your garage yest.</p>
+                            <p>No vehicles in your garage yet.</p>
                         </div>
                     )}
                 </div>
@@ -181,10 +182,9 @@ export default function VehiclesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs uppercase text-text-muted font-bold mb-1">License Plate</label>
+                                    <label className="block text-xs uppercase text-text-muted font-bold mb-1">License Plate <span className="text-text-muted/50 normal-case font-normal">(optional)</span></label>
                                     <input
                                         type="text"
-                                        required
                                         disabled={isSubmitting}
                                         className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
                                         placeholder="ABC-1234"
