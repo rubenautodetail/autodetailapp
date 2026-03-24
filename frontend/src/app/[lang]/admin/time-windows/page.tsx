@@ -42,13 +42,6 @@ const DEFAULT_TIME_WINDOWS: TimeWindowConfig[] = [
   { id: 20, slot: "17:30", label: "5:30 PM", labelEs: "5:30 PM", range: "5:30 PM", rangeEs: "5:30 PM", is_active: true, sort_order: 20 },
 ];
 
-function formatTime24To12(time24: string): string {
-  const [hours, minutes] = time24.split(":").map(Number);
-  const period = hours >= 12 ? "PM" : "AM";
-  const hours12 = hours % 12 === 0 ? 12 : hours % 12;
-  return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
-}
-
 export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) {
   const { lang } = use(params);
   const locale = lang || "en";
@@ -96,7 +89,7 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
     } catch (err) {
       console.error("Load time windows error:", err);
       setTimeWindows(DEFAULT_TIME_WINDOWS); // Fallback to defaults
-      setError(t.errorLoad);
+      setError(isEs ? "Error al cargar horarios" : "Failed to load time windows");
     } finally {
       setLoading(false);
     }

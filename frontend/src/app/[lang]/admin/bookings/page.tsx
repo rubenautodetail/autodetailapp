@@ -95,7 +95,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setStats(data); })
       .catch(() => { /* non-fatal */ });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleAction(bookingId: number, action: "cancel" | "requeue") {
     setActionLoading(bookingId);

@@ -98,7 +98,7 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
     }
   };
 
-  const handleSave = async (contractorId: string, formData: any) => {
+  const handleSave = async (contractorId: string, formData: { days: string[]; start_hour: number; end_hour: number; is_available: boolean }) => {
     setSaving((prev) => ({ ...prev, [contractorId]: true }));
     setSuccessMsg((prev) => ({ ...prev, [contractorId]: false }));
     try {
@@ -193,7 +193,7 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
                 onSubmit={(e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget as HTMLFormElement);
-                  const days = formData.getAll("days"); // returns array of selected values
+                  const days = formData.getAll("days") as string[];
                   handleSave(contractor.id, {
                     days,
                     start_hour: parseInt(formData.get("start_hour") as string, 10),

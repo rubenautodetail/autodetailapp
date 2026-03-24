@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useReducer, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -32,8 +32,17 @@ function AdminLoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [wrongRole, setWrongRole] = useState(false);
+  type AdminLoginAction = { type: 'wrong_role' } | { type: 'dismiss' } | { type: 'loading'; value: boolean };
+  const [{ loading, wrongRole }, dispatch] = useReducer(
+    (state: { loading: boolean; wrongRole: boolean }, action: AdminLoginAction) => {
+      switch (action.type) {
+        case 'wrong_role': return { loading: false, wrongRole: true };
+        case 'dismiss': return { loading: false, wrongRole: false };
+        case 'loading': return { ...state, loading: action.value };
+      }
+    },
+    { loading: false, wrongRole: false }
+  );
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -45,8 +54,7 @@ function AdminLoginForm() {
     if (isLoading || !user || !profile) return;
     if (profile.role !== "admin") {
       // Sign out immediately — non-admins cannot stay authenticated here
-      setWrongRole(true);
-      setLoading(false);
+      dispatch({ type: 'wrong_role' });
       logout().catch(() => {});
       return;
     }
@@ -58,14 +66,14 @@ function AdminLoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    dispatch({ type: 'loading', value: true });
     setError("");
-    setWrongRole(false);
+    dispatch({ type: 'dismiss' });
     try {
       await login(email, password);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sign in.");
-      setLoading(false);
+      dispatch({ type: 'loading', value: false });
     }
   };
 

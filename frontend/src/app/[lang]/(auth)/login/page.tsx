@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useReducer, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -38,8 +38,20 @@ function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [wrongRole, setWrongRole] = useState<"contractor" | "admin" | null>(null);
+    type LoginAction =
+        | { type: 'wrong_role'; role: "contractor" | "admin" }
+        | { type: 'dismiss' }
+        | { type: 'loading'; value: boolean };
+    const [{ loading, wrongRole }, dispatch] = useReducer(
+        (state: { loading: boolean; wrongRole: "contractor" | "admin" | null }, action: LoginAction) => {
+            switch (action.type) {
+                case 'wrong_role': return { loading: false, wrongRole: action.role };
+                case 'dismiss': return { loading: false, wrongRole: null };
+                case 'loading': return { ...state, loading: action.value };
+            }
+        },
+        { loading: false, wrongRole: null }
+    );
     const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
@@ -62,16 +74,14 @@ function LoginForm() {
 
         // Contractor tried to use customer login → reject
         if (profile.role === "contractor") {
-            setWrongRole("contractor");
-            setLoading(false);
+            dispatch({ type: 'wrong_role', role: 'contractor' });
             logout().catch(() => {});
             return;
         }
 
         // Admin tried to use customer login → reject
         if (profile.role === "admin") {
-            setWrongRole("admin");
-            setLoading(false);
+            dispatch({ type: 'wrong_role', role: 'admin' });
             logout().catch(() => {});
             return;
         }
@@ -85,9 +95,8 @@ function LoginForm() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        dispatch({ type: 'loading', value: true });
         setError("");
-        setWrongRole(null);
         try {
             await login(email, password);
         } catch (err: unknown) {
@@ -100,7 +109,7 @@ function LoginForm() {
             } else {
                 setError(msg);
             }
-            setLoading(false);
+            dispatch({ type: 'loading', value: false });
         }
     };
 
@@ -142,7 +151,7 @@ function LoginForm() {
                             : (isContractor ? "Go to technician portal" : "Go to admin portal")}
                     </Link>
                     <button
-                        onClick={() => setWrongRole(null)}
+                        onClick={() => dispatch({ type: 'dismiss' })}
                         className="text-[var(--text-secondary)] text-sm hover:text-[var(--text-primary)] transition-colors"
                     >
                         {lang === "es" ? "Intentar con otra cuenta" : "Try a different account"}

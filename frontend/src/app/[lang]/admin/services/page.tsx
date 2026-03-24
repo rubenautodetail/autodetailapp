@@ -155,13 +155,6 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
         }
     }
 
-    async function handleDeactivate(id: number, type: 'service' | 'addon') {
-        if (!confirm(isEs ? '¿Desactivar este elemento?' : 'Deactivate this item?')) return;
-        const url = `/api/admin/services/${id}?type=${type === 'addon' ? 'addon' : 'service'}`;
-        await adminFetch(url, { method: 'DELETE' });
-        fetchData();
-    }
-
     async function handleToggleActive(item: Service | AddOn, type: 'service' | 'addon') {
         try {
             const url = `/api/admin/services/${item.id}`;
@@ -187,7 +180,6 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
     }
 
     const items = tab === 'services' ? services : addOns;
-    const priceKey = tab === 'services' ? 'base_price' : 'price';
 
     return (
         <div className="min-h-screen bg-gray-50">
