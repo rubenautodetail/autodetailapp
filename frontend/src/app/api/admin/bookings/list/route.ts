@@ -10,12 +10,15 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = req.nextUrl;
-  const status = searchParams.get("status") || "all";
+  const status = searchParams.get("status") || "active";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
   const db = createServiceClient();
+
+  const ACTIVE_STATUSES = ["pending_payment", "pending_assignment", "en_route", "confirmed", "in_progress", "pending_approval"];
+  const ARCHIVE_STATUSES = ["cancelled"];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = db
@@ -24,7 +27,11 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (status !== "all") {
+  if (status === "active") {
+    query = query.in("status", ACTIVE_STATUSES);
+  } else if (status === "archive") {
+    query = query.in("status", ARCHIVE_STATUSES);
+  } else if (status !== "all") {
     query = query.eq("status", status);
   }
 

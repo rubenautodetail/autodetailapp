@@ -25,15 +25,28 @@ interface Booking {
   paymentIntentId?: string;
 }
 
-const STATUS_OPTIONS = ["all", "pending_payment", "pending_assignment", "confirmed", "in_progress", "completed", "cancelled"] as const;
+// Top-level tabs shown to admin
+const STATUS_OPTIONS = ["active", "completed", "archive", "all"] as const;
+
+// Sub-filters shown only when on "active" — for drilling down
+const ACTIVE_SUB_FILTERS = ["pending_payment", "pending_assignment", "confirmed", "en_route", "in_progress", "pending_approval"] as const;
+
+const TAB_LABELS: Record<string, { en: string; es: string }> = {
+  active:             { en: "Active",       es: "Activos" },
+  completed:          { en: "Completed",    es: "Completados" },
+  archive:            { en: "Archive",      es: "Archivo" },
+  all:                { en: "All",          es: "Todos" },
+};
 
 const STATUS_COLORS: Record<string, string> = {
-  pending_payment: "bg-gray-100 text-gray-700",
+  pending_payment:    "bg-gray-100 text-gray-700",
   pending_assignment: "bg-orange-100 text-orange-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  in_progress: "bg-indigo-100 text-indigo-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
+  en_route:           "bg-yellow-100 text-yellow-800",
+  confirmed:          "bg-blue-100 text-blue-800",
+  in_progress:        "bg-indigo-100 text-indigo-800",
+  pending_approval:   "bg-purple-100 text-purple-800",
+  completed:          "bg-green-100 text-green-800",
+  cancelled:          "bg-red-100 text-red-800",
 };
 
 const PAGE_SIZE = 25;
@@ -45,7 +58,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("active");
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -238,22 +251,64 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
           </div>
         )}
 
-        {/* Status filter tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {STATUS_OPTIONS.map((s) => (
+        {/* Primary filter tabs */}
+        <div className="flex gap-2 mb-3 flex-wrap">
+          {STATUS_OPTIONS.map((s) => {
+            const isActive = statusFilter === s || (s === "active" && ACTIVE_SUB_FILTERS.includes(statusFilter as typeof ACTIVE_SUB_FILTERS[number]));
+            return (
+              <button
+                key={s}
+                onClick={() => { setStatusFilter(s); setPage(1); }}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  isActive
+                    ? s === "archive" ? "bg-red-600 text-white" : "bg-blue-600 text-white"
+                    : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {locale === "es" ? TAB_LABELS[s].es : TAB_LABELS[s].en}
+                {s === "archive" && (locale === "es" ? " 🗃" : " 🗃")}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Sub-filters — only shown when on Active tab */}
+        {(statusFilter === "active" || ACTIVE_SUB_FILTERS.includes(statusFilter as typeof ACTIVE_SUB_FILTERS[number])) && (
+          <div className="flex gap-1.5 mb-6 flex-wrap">
             <button
-              key={s}
-              onClick={() => { setStatusFilter(s); setPage(1); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${
-                statusFilter === s
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+              onClick={() => { setStatusFilter("active"); setPage(1); }}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                statusFilter === "active"
+                  ? "bg-gray-700 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              {s === "all" ? (locale === "es" ? "Todos" : "All") : s.replace(/_/g, " ")}
+              {locale === "es" ? "Todos los activos" : "All active"}
             </button>
-          ))}
-        </div>
+            {ACTIVE_SUB_FILTERS.map((s) => (
+              <button
+                key={s}
+                onClick={() => { setStatusFilter(s); setPage(1); }}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors capitalize ${
+                  statusFilter === s
+                    ? "bg-gray-700 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {s.replace(/_/g, " ")}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Archive notice */}
+        {(statusFilter === "archive") && (
+          <div className="mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {locale === "es"
+              ? "Mostrando reservas canceladas. El historial completo se conserva."
+              : "Showing cancelled bookings. Full history is preserved — nothing is deleted."}
+          </div>
+        )}
 
         {/* Table */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
