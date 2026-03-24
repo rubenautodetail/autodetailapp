@@ -8,6 +8,7 @@ import { StatusTimeline } from '@/components/dashboard/StatusTimeline';
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
 import { motion } from 'framer-motion';
 import { ChevronLeft, MapPin, Star } from 'lucide-react';
+import { fmtDate } from '@/lib/dateUtils';
 
 interface BookingDetailPageProps {
     params: Promise<{
@@ -33,7 +34,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                 <div className="container mx-auto px-4 h-16 flex items-center">
                     <Link href={`/${lang}/customer`} className="text-text-secondary hover:text-white flex items-center text-sm font-medium transition-colors">
                         <ChevronLeft className="w-5 h-5 mr-1" />
-                        Back to Dashboard
+                        {lang === 'es' ? 'Volver al Panel' : 'Back to Dashboard'}
                     </Link>
                 </div>
             </div>
@@ -53,13 +54,13 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
 
                             <div className="flex justify-between items-start mb-8 relative z-10">
                                 <div>
-                                    <h1 className="text-3xl font-display font-bold text-white mb-1">Order {booking.confirmationCode || `#${booking.id}`}</h1>
+                                    <h1 className="text-3xl font-display font-bold text-white mb-1">{lang === 'es' ? 'Orden' : 'Order'} {booking.confirmationCode || `#${booking.id}`}</h1>
                                     <p className="text-text-secondary text-lg">{booking.serviceName}</p>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-sm text-text-muted uppercase tracking-wider mb-1">Scheduled For</div>
+                                    <div className="text-sm text-text-muted uppercase tracking-wider mb-1">{lang === 'es' ? 'Programado' : 'Scheduled For'}</div>
                                     <div className="text-xl font-mono text-accent-gold font-bold">{booking.time}</div>
-                                    <div className="text-sm text-text-secondary">{new Date(booking.date).toLocaleDateString()}</div>
+                                    <div className="text-sm text-text-secondary">{fmtDate(booking.date, lang === 'es' ? 'es-US' : 'en-US')}</div>
                                 </div>
                             </div>
 
@@ -82,7 +83,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                                     <div className="flex items-center text-white">
                                         <MapPin className="w-5 h-5 text-accent-gold mr-3" />
                                         <div>
-                                            <p className="text-xs text-text-muted uppercase">Service Location</p>
+                                            <p className="text-xs text-text-muted uppercase">{lang === 'es' ? 'Ubicación del Servicio' : 'Service Location'}</p>
                                             <p className="font-medium text-sm">{booking.customerAddress}</p>
                                         </div>
                                     </div>
@@ -125,19 +126,11 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                             transition={{ delay: 0.3 }}
                             className="glass-card p-8 rounded-2xl"
                         >
-                            <h3 className="font-bold text-white mb-6 uppercase text-xs tracking-wider border-b border-white/10 pb-2 text-text-muted">Payment Summary</h3>
+                            <h3 className="font-bold text-white mb-6 uppercase text-xs tracking-wider border-b border-white/10 pb-2 text-text-muted">{lang === 'es' ? 'Resumen de Pago' : 'Payment Summary'}</h3>
                             <div className="space-y-4 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-text-secondary">Service Total</span>
-                                    <span className="font-bold text-white">${booking.price.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-text-secondary">Taxes & Fees</span>
-                                    <span className="font-medium text-white">$12.50</span>
-                                </div>
-                                <div className="flex justify-between pt-4 border-t border-white/10">
-                                    <span className="text-white font-bold text-lg">Total Paid</span>
-                                    <span className="font-bold text-accent-gold text-xl">${(booking.price + 12.50).toFixed(2)}</span>
+                                <div className="flex justify-between pt-2">
+                                    <span className="text-white font-bold text-lg">{lang === 'es' ? 'Total Pagado' : 'Total Paid'}</span>
+                                    <span className="font-bold text-accent-gold text-xl">${booking.price.toFixed(2)}</span>
                                 </div>
                             </div>
                         </motion.div>

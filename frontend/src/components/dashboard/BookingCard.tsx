@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { fmtDate, hoursFromNow } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -97,7 +98,7 @@ export function BookingCard({
     const [cancelling, setCancelling] = useState(false);
     const [cancelError, setCancelError] = useState('');
 
-    const hoursUntil = (new Date(date).getTime() - Date.now()) / (1000 * 60 * 60);
+    const hoursUntil = hoursFromNow(date);
     const within24h = hoursUntil < 24;
 
     const handleCancel = async () => {
@@ -161,7 +162,7 @@ export function BookingCard({
                 <div className="space-y-3 mb-6">
                     <div className="flex items-center text-text-secondary text-sm">
                         <Calendar className="w-4 h-4 mr-2 text-text-muted" />
-                        {new Date(date).toLocaleDateString(lang, { weekday: 'long', month: 'long', day: 'numeric' })}
+                        {fmtDate(date, lang, { weekday: 'long', month: 'long', day: 'numeric' })}
                     </div>
                     <div className="flex items-center text-text-secondary text-sm">
                         <Clock className="w-4 h-4 mr-2 text-text-muted" />

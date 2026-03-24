@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rateLimit";
 
 export async function GET(request: NextRequest) {
+  if (await rateLimit(request, { maxRequests: 30, windowMs: 60_000, keyPrefix: "geocode" })) {
+    return NextResponse.json({ features: [] }, { status: 429 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q");

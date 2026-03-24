@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 
 interface AddedItem {
     id: number;
@@ -22,6 +22,13 @@ export async function POST(req: NextRequest) {
         body = await req.json();
     } catch {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    // Require authentication
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { bookingId, confirmationCode, items } = body;

@@ -13,15 +13,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { capturePaymentIntent } from '@/lib/stripe/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/verifyAdmin';
 
 export async function POST(req: NextRequest) {
-    // Guard: require ADMIN_API_SECRET header so only internal admin UI can trigger this.
-    const adminSecret = process.env.ADMIN_API_SECRET;
-    if (adminSecret) {
-        const provided = req.headers.get('x-admin-secret');
-        if (!provided || provided !== adminSecret) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    // Guard: require admin auth (cookie session, Bearer JWT, or ADMIN_SECRET).
+    const isAdmin = await verifyAdmin(req);
+    if (!isAdmin) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
@@ -62,9 +60,8 @@ export async function POST(req: NextRequest) {
 
         let paymentIntent;
         try {
-            // Capture the funds via Stripe.
-            // If the PaymentIntent was created with transfer_data, Stripe routes
-            // (amount - application_fee_amount) to the contractor automatically.
+            // Capture the funds via Stripe. All captured funds go to the platform
+            // account; contractor payouts (70%) are handled manually by admin.
             paymentIntent = await capturePaymentIntent(booking.payment_intent_id);
         } catch (stripeError) {
             // Capture failed — revert booking to cancelled so it can be re-queued.
@@ -87,10 +84,10 @@ export async function POST(req: NextRequest) {
             .eq('id', safeBookingId);
 
         // Notify contractor that the job payment has been captured.
+        // Contractor payout = 70% of total (paid manually by admin via Zelle/ACH/check).
         if (booking.contractor_id) {
             const totalAmount = Number(booking.total_amount ?? 0);
-            const serviceFee = Number(booking.service_fee ?? 0);
-            const contractorPayout = (totalAmount - serviceFee).toFixed(2);
+            const contractorPayout = (totalAmount * 0.70).toFixed(2);
             const serviceName = booking.service_name ?? 'Detailing Service';
 
             const { error: notifError } = await supabase

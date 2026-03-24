@@ -38,21 +38,17 @@ export async function GET(req: NextRequest) {
       return sum + amt;
     }, 0);
 
+  const allContractors = profileList.filter((p) => p.role === "contractor").length;
   const activeContractors = profileList.filter(
     (p) => p.role === "contractor" && p.approval_status === "approved"
   ).length;
-
-  // Pending = applicants waiting for admin approval
-  const { data: pendingProfiles } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("approval_status", "pending");
-
-  const pendingContractors = pendingProfiles?.length ?? 0;
+  const pendingContractors = profileList.filter(
+    (p) => p.role === "contractor" && p.approval_status === "pending"
+  ).length;
 
   return NextResponse.json({
     contractors: {
-      total: activeContractors,
+      total: allContractors,
       pending: pendingContractors,
       active: activeContractors,
     },

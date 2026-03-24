@@ -102,11 +102,8 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
     setSaving((prev) => ({ ...prev, [contractorId]: true }));
     setSuccessMsg((prev) => ({ ...prev, [contractorId]: false }));
     try {
-      const res = await fetch(`/api/admin/contractors/${contractorId}`, {
+      const res = await adminFetch(`/api/admin/contractors/${contractorId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           availability: {
             days: formData.days,
@@ -212,7 +209,7 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
                           type="checkbox"
                           value={day.id}
                           name="days"
-                          checked={
+                          defaultChecked={
                             contractor.availability?.days.includes(day.id) ||
                             false
                           }

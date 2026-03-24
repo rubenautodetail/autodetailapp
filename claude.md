@@ -18,6 +18,6 @@ Location: `/Users/othmarcasilla/Rubens Auto detail platfomr/`
 - **Strict TypeScript & Pathing:** No `any`. Always use `/[lang]/page-name` for frontend routes. Backend is entirely in `frontend/src/app/api/` (no Strapi).
 - **State Management:** React Context API (`BookingContext`, `ContractorContext`) only. NO Zustand or Redux.
 - **Supabase Clients:** Use Server contexts: `createClient()` from `@/lib/supabase/server`. For admin operations needing RLS bypass, use `createServiceClient()` (requires `SUPABASE_SERVICE_ROLE_KEY`).
-- **Dependencies:** Mapbox for addresses (`NEXT_PUBLIC_MAPBOX_TOKEN`), Stripe Connect for payments (`STRIPE_SECRET_KEY`, `PLATFORM_FEE_PERCENTAGE=15`). Tailwind CSS for styling (utility only, no modules).
+- **Dependencies:** Mapbox for addresses (`NEXT_PUBLIC_MAPBOX_TOKEN`), Stripe Connect for payments (`STRIPE_SECRET_KEY`, `PLATFORM_FEE_PERCENTAGE=30`). Tailwind CSS for styling (utility only, no modules).
 - **Common Gotchas:** `booking/create` and `payments/create-intent` are rate-limited (5 req/min/IP). ZIP validation is handled via `SERVICE_ZIP_CODES` env var.
 </rules>

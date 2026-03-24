@@ -25,8 +25,8 @@ const PERKS = [
     },
     {
         icon: '⚡',
-        en: { title: 'Fast Payouts', desc: 'Payments hit your account within 1–2 business days via Stripe.' },
-        es: { title: 'Pagos Rápidos', desc: 'Los pagos llegan a tu cuenta en 1–2 días hábiles vía Stripe.' },
+        en: { title: 'Fast Payouts', desc: 'Get paid weekly via Zelle, ACH, or check — fast and reliable.' },
+        es: { title: 'Pagos Rápidos', desc: 'Recibe pagos semanales vía Zelle, ACH o cheque — rápido y confiable.' },
     },
     {
         icon: '🛡️',
@@ -222,8 +222,8 @@ export default async function ContractorsPage({
                             },
                             {
                                 n: '03',
-                                en: { t: 'Get approved & start earning', d: 'We review in 1–2 business days. Once approved, connect Stripe and start accepting jobs.' },
-                                es: { t: 'Aprobación y a ganar', d: 'Revisamos en 1–2 días hábiles. Una vez aprobado, conecta Stripe y empieza a aceptar trabajos.' },
+                                en: { t: 'Get approved & start earning', d: 'We review in 1–2 business days. Once approved, set up your profile and start accepting jobs.' },
+                                es: { t: 'Aprobación y a ganar', d: 'Revisamos en 1–2 días hábiles. Una vez aprobado, configura tu perfil y empieza a aceptar trabajos.' },
                             },
                         ].map((step) => {
                             const c = isEs ? step.es : step.en;

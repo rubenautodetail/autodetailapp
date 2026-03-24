@@ -38,8 +38,7 @@ const t = {
         date: "Date",
         service: "Service",
         amount: "Amount",
-        platformFee: "Platform Fee (30%)",
-        yourPayout: "Your Payout (70%)",
+        yourPayout: "Your Payout",
         total: "Total",
         payoutHistory: "Weekly Payouts",
         noPayouts: "No payout records yet",
@@ -65,8 +64,7 @@ const t = {
         date: "Fecha",
         service: "Servicio",
         amount: "Monto",
-        platformFee: "Comisión Plataforma (30%)",
-        yourPayout: "Tu Pago (70%)",
+        yourPayout: "Tu Pago",
         total: "Total",
         payoutHistory: "Pagos Semanales",
         noPayouts: "Sin registros de pago aún",
@@ -146,7 +144,7 @@ export default function EarningsPage({ params }: EarningsProps) {
 
     const earnings = data?.earnings ?? { thisWeek: 0, total: 0 };
     const completed = data?.completedJobs ?? [];
-    const PLATFORM_FEE = 0.30;
+    const CONTRACTOR_SHARE = 0.70;
     const avgPerJob =
         completed.length > 0
             ? earnings.total / completed.length
@@ -205,8 +203,7 @@ export default function EarningsPage({ params }: EarningsProps) {
                         <div className="divide-y divide-[#2C355E]">
                             {completed.map((job) => {
                                 const gross = Number(job.total_amount) || 0;
-                                const fee = gross * PLATFORM_FEE;
-                                const payout = gross - fee;
+                                const payout = gross * CONTRACTOR_SHARE;
                                 const dateStr = job.date
                                     ? new Date(job.date + "T12:00:00").toLocaleDateString(
                                         lang === "es" ? "es-US" : "en-US",
@@ -226,12 +223,6 @@ export default function EarningsPage({ params }: EarningsProps) {
                                                 <p className="text-sm text-[#5E698F]">{dateStr}</p>
                                             </div>
                                             <div className="text-sm space-y-0.5 sm:text-right">
-                                                <p className="text-[#5E698F]">
-                                                    {labels.total}: <span className="text-white">${gross.toFixed(2)}</span>
-                                                </p>
-                                                <p className="text-red-400/80">
-                                                    {labels.platformFee}: −${fee.toFixed(2)}
-                                                </p>
                                                 <p className="text-green-400 font-semibold">
                                                     {labels.yourPayout}: ${payout.toFixed(2)}
                                                 </p>
@@ -277,12 +268,6 @@ export default function EarningsPage({ params }: EarningsProps) {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <div className="text-sm space-y-0.5 text-right">
-                                                <p className="text-[#5E698F]">
-                                                    {labels.total}: <span className="text-white">${Number(p.gross_amount).toFixed(2)}</span>
-                                                </p>
-                                                <p className="text-red-400/80">
-                                                    {labels.platformFee}: −${Number(p.platform_fee).toFixed(2)}
-                                                </p>
                                                 <p className="text-green-400 font-semibold">
                                                     {labels.yourPayout}: ${Number(p.contractor_amount).toFixed(2)}
                                                 </p>

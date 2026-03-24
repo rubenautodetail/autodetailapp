@@ -4,6 +4,7 @@ import { useState, useEffect, use, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { adminFetch } from "@/lib/adminFetch";
+import { fmtDate } from "@/lib/dateUtils";
 
 interface AdminContractorsProps {
     params: Promise<{ lang: "en" | "es" }>;
@@ -322,7 +323,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
-                                                    {new Date(c.created_at).toLocaleDateString(locale)}
+                                                    {fmtDate(c.created_at, locale)}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex gap-2 flex-wrap">
@@ -460,9 +461,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                             />
                             <DetailRow
                                 label={t.registeredOn}
-                                value={new Date(detailModal.created_at).toLocaleDateString(locale, {
-                                    year: "numeric", month: "long", day: "numeric",
-                                })}
+                                value={fmtDate(detailModal.created_at, locale, { year: "numeric", month: "long", day: "numeric" })}
                             />
                         </div>
 

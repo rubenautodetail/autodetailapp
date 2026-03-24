@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { logBookingEvent } from "@/lib/supabase/logBookingEvent";
 
 export async function POST(req: NextRequest) {
   try {
+    // Require authentication
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const { bookingId, issueType, description } = await req.json();
 
     if (!bookingId || !issueType || !description?.trim()) {
@@ -22,12 +29,17 @@ export async function POST(req: NextRequest) {
     // Fetch booking for customer info
     const { data: booking, error: fetchError } = await supabase
       .from("bookings")
-      .select("id, customer_name, customer_email, confirmation_code, service_name, status")
+      .select("id, customer_name, customer_email, confirmation_code, service_name, status, user_id")
       .eq('id', safeBookingId)
       .single();
 
     if (fetchError || !booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    // Ownership check: only the booking owner can report issues
+    if (booking.customer_email !== user.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // Guard: only allow dispute when booking is in pending_approval state

@@ -3,10 +3,8 @@
  * Creates a Stripe PaymentIntent for a booking.
  *
  * - Uses idempotency keys (scoped to bookingId) to prevent duplicate charges on retry.
- * - Passes transfer_data + application_fee_amount when a contractor with a connected
- *   Stripe account is already assigned, so funds route automatically on capture.
- * - If no contractor is assigned yet, transfer_data is omitted; the admin must
- *   handle payouts manually or re-create the intent once a contractor is assigned.
+ * - All funds go to the platform account. Contractor payouts (70%) are handled
+ *   manually by admin via Zelle/ACH/check — no Stripe Connect transfers.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -88,7 +86,9 @@ export async function POST(req: NextRequest) {
                     .from('bookings')
                     .update({
                         payment_intent_id: paymentIntent.paymentIntentId,
-                        payment_status: 'authorized',
+                        // Do NOT set payment_status here — the intent is created but not yet
+                        // authorized by the bank. The webhook sets payment_status='authorized'
+                        // after stripe confirms the charge.
                     })
                     .eq('id', safeBookingId);
             } catch (err) {

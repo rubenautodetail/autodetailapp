@@ -31,7 +31,7 @@ interface ContractorSummary {
   jobs: CompletedJob[];
 }
 
-const PLATFORM_FEE_RATE = 0.15;
+const PLATFORM_FEE_RATE = 0.30;
 
 export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
   const { lang } = use(params);
@@ -122,7 +122,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
               <p className="text-2xl font-bold text-gray-900">${totalGross.toFixed(2)}</p>
             </div>
             <div className="bg-purple-50 rounded-xl border border-purple-200 p-5">
-              <p className="text-xs text-purple-600 mb-1">{locale === "es" ? "Ingresos Plataforma (15%)" : "Platform Revenue (15%)"}</p>
+              <p className="text-xs text-purple-600 mb-1">{locale === "es" ? "Ingresos Plataforma (30%)" : "Platform Revenue (30%)"}</p>
               <p className="text-2xl font-bold text-purple-700">${totalPlatformFee.toFixed(2)}</p>
             </div>
             <div className="bg-green-50 rounded-xl border border-green-200 p-5">

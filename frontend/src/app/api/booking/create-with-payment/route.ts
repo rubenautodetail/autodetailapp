@@ -135,7 +135,8 @@ export async function POST(req: NextRequest) {
         customer_phone: customerPhone || '',
         special_instructions: specialInstructions || '',
         subtotal: perVehicleAmount,
-        service_fee: serviceFee ? (serviceFee / vehicleCount) : 0,
+        // serviceFee from client is already per-vehicle — do NOT divide by vehicleCount
+        service_fee: serviceFee ?? 0,
         total_amount: perVehicleAmount,
         service_name: serviceName || null,
         vehicle_make: v.make || null,

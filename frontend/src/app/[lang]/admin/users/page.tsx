@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { adminFetch } from "@/lib/adminFetch";
+import { fmtDateTime } from "@/lib/dateUtils";
 
 interface AdminUsersProps {
   params: Promise<{ lang: "en" | "es" }>;
@@ -177,7 +178,7 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-500">
-                        {new Date(u.createdAt).toLocaleDateString(locale)}
+                        {fmtDateTime(u.createdAt, locale)}
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">

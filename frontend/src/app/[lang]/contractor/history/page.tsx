@@ -12,11 +12,15 @@ export default function ContractorHistory({ params }: Props) {
     const { session } = useAuth();
 
     const [earnings, setEarnings] = useState({ thisWeek: 0, total: 0 });
-    const [jobs, setJobs] = useState<any[]>([]);
+    const [jobs, setJobs] = useState<{ id: number; service_name: string | null; date: string; total_amount: number | string }[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         const load = async () => {
+            setLoading(true);
+            setError(false);
             try {
                 const res = await fetch('/api/contractors/dashboard', {
                     headers: session?.access_token
@@ -27,17 +31,37 @@ export default function ContractorHistory({ params }: Props) {
                     const data = await res.json();
                     setEarnings(data.earnings ?? { thisWeek: 0, total: 0 });
                     setJobs(data.completedJobs ?? []);
+                } else {
+                    setError(true);
                 }
+            } catch {
+                setError(true);
             } finally {
                 setLoading(false);
             }
         };
         load();
-    }, [session]);
+    }, [session, retryCount]);
 
     const label = lang === 'es'
         ? { title: "Historial", thisWeek: "Esta Semana", total: "Total Ganado", noJobs: "Aún no hay trabajos completados.", completed: "Completado" }
         : { title: "Job History", thisWeek: "This Week", total: "Total Earned", noJobs: "No completed jobs yet.", completed: "Completed" };
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-[#131835] flex items-center justify-center px-4">
+                <div className="text-center space-y-4">
+                    <p className="text-red-400 text-sm">{lang === 'es' ? 'Error al cargar el historial.' : 'Failed to load history.'}</p>
+                    <button
+                        onClick={() => setRetryCount(c => c + 1)}
+                        className="px-5 py-2 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90"
+                    >
+                        {lang === 'es' ? 'Reintentar' : 'Retry'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

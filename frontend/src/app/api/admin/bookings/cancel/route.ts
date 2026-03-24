@@ -18,12 +18,24 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // Fetch booking to get payment intent before cancelling
+    // Fetch booking to get status + payment intent before cancelling
     const { data: booking } = await supabase
       .from("bookings")
-      .select("payment_intent_id, payment_status")
+      .select("status, payment_intent_id, payment_status")
       .eq("id", bookingId)
       .single();
+
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    // Guard: do not cancel completed bookings
+    if (booking.status === "completed") {
+      return NextResponse.json(
+        { error: "Cannot cancel a completed booking" },
+        { status: 400 }
+      );
+    }
 
     // Cancel Stripe hold if payment was authorized but not yet captured
     if (booking?.payment_intent_id && booking.payment_status === "authorized") {

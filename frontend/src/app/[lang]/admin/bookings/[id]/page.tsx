@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { adminFetch } from "@/lib/adminFetch";
+import { fmtDate, fmtDateTime } from "@/lib/dateUtils";
 
 interface PageProps {
   params: Promise<{ lang: "en" | "es"; id: string }>;
@@ -112,7 +113,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
     }
   }
 
-  const PLATFORM_FEE = 0.15;
+  const PLATFORM_FEE = 0.30;
 
   if (loading) {
     return (
@@ -208,7 +209,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
           <Field label={locale === "es" ? "Servicio" : "Service"} value={booking.serviceName} />
           <Field
             label={locale === "es" ? "Fecha" : "Date"}
-            value={booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString(locale) : "—"}
+            value={fmtDate(booking.scheduledDate, locale)}
           />
           <Field label={locale === "es" ? "Horario" : "Time Window"} value={booking.timeWindow} />
           <Field label={locale === "es" ? "Dirección" : "Address"} value={`${booking.address}, ${booking.city}, ${booking.state} ${booking.zipCode}`} />
@@ -243,7 +244,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
             bold
           />
           <Field
-            label={locale === "es" ? "Comisión plataforma (15%)" : "Platform Fee (15%)"}
+            label={locale === "es" ? "Comisión plataforma (30%)" : "Platform Fee (30%)"}
             value={`$${platformFee.toFixed(2)}`}
           />
           <Field
@@ -264,11 +265,11 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
         <Section title={locale === "es" ? "Historial" : "Timeline"}>
           <Field
             label={locale === "es" ? "Creada" : "Created"}
-            value={new Date(booking.createdAt).toLocaleString(locale)}
+            value={fmtDateTime(booking.createdAt, locale)}
           />
           <Field
             label={locale === "es" ? "Actualizada" : "Updated"}
-            value={new Date(booking.updatedAt).toLocaleString(locale)}
+            value={fmtDateTime(booking.updatedAt, locale)}
           />
         </Section>
       </div>

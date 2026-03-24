@@ -16,6 +16,22 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient();
+
+    // Guard: only allow requeue of bookings that can be reassigned
+    const { data: existing } = await supabase
+      .from("bookings")
+      .select("status")
+      .eq("id", bookingId)
+      .single();
+
+    const REQUEUEABLE = ["confirmed", "cancelled", "pending_assignment"];
+    if (!existing || !REQUEUEABLE.includes(existing.status)) {
+      return NextResponse.json(
+        { error: `Cannot requeue a booking with status "${existing?.status}"` },
+        { status: 400 }
+      );
+    }
+
     const { error } = await supabase
       .from("bookings")
       .update({

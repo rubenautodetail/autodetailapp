@@ -13,6 +13,8 @@ const NAV = [
   { segment: "admin/services", label: "Services", labelEs: "Servicios", icon: "🛁", exact: false },
   { segment: "admin/users", label: "Users", labelEs: "Usuarios", icon: "👥", exact: false },
   { segment: "admin/payments", label: "Payments", labelEs: "Pagos", icon: "💳", exact: false },
+  { segment: "admin/schedule", label: "Schedule", labelEs: "Horarios", icon: "🗓️", exact: false },
+  { segment: "admin/payouts", label: "Payouts", labelEs: "Pagos Técnicos", icon: "💰", exact: false },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -127,7 +129,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div className="grid grid-cols-7 h-16">
+        <div className="grid grid-cols-9 h-16">
           {NAV.map((item) => {
             const active = isActive(item.segment, item.exact);
             return (

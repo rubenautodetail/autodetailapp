@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { fmtDate } from '@/lib/dateUtils';
 import { useAuth } from './AuthContext';
 
 // --- Types ---
@@ -146,7 +147,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                     name: profileData.full_name || userEmail.split('@')[0] || 'User',
                     email: userEmail,
                     phone: profileData.phone || '',
-                    memberSince: new Date(profileData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+                    memberSince: fmtDate(profileData.created_at, 'en-US', { month: 'long', year: 'numeric' }),
                     path: profileData.avatar_url || '/avatars/default.png'
                 });
             }

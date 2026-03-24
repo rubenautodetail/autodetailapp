@@ -73,8 +73,8 @@ export async function GET(req: NextRequest) {
     specialInstructions: b.special_instructions ?? "—",
     confirmationCode: b.confirmation_code ?? "—",
     contractorId: b.contractor_id ?? null,
-    createdAt: b.created_at,
-    updatedAt: b.updated_at,
+    createdAt: b.created_at ?? null,
+    updatedAt: b.updated_at ?? null,
   };
 
   return NextResponse.json({ booking, contractor });

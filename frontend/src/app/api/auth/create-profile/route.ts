@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createAuthClient, createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "").trim();
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { user, error: authError } = await createAuthClient(token);
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { userId, name, role } = await req.json();
+
+    // Only allow creating a profile for yourself
+    if (userId !== user.id) {
+      return NextResponse.json({ error: "Cannot create profile for another user" }, { status: 403 });
+    }
+
     if (!userId || !name) {
       return NextResponse.json({ error: "Missing userId or name" }, { status: 400 });
     }
@@ -11,9 +28,15 @@ export async function POST(req: NextRequest) {
     const assignedRole = role === "contractor" ? "contractor" : "user";
 
     const supabase = createServiceClient();
-    const { error } = await supabase.from("profiles").upsert(
-      { id: userId, full_name: name, role: assignedRole, updated_at: new Date().toISOString() },
-      { onConflict: "id", ignoreDuplicates: false }
+
+    // Only insert if profile doesn't exist — prevent role escalation via upsert
+    const { data: existing } = await supabase.from("profiles").select("id").eq("id", userId).single();
+    if (existing) {
+      return NextResponse.json({ ok: true, message: "Profile already exists" });
+    }
+
+    const { error } = await supabase.from("profiles").insert(
+      { id: userId, full_name: name, role: assignedRole, updated_at: new Date().toISOString() }
     );
 
     if (error) throw error;

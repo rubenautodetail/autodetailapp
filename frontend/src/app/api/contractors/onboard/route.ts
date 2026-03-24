@@ -62,10 +62,14 @@ export async function POST(req: NextRequest) {
                 }
 
                 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+                // Extract locale from Referer header so Spanish contractors aren't redirected to /en/
+                const referer = req.headers.get('referer') || '';
+                const localeMatch = referer.match(/\/([a-z]{2})\//);
+                const locale = localeMatch ? localeMatch[1] : 'en';
                 const accountLink = await stripe.accountLinks.create({
                     account: accountId,
-                    refresh_url: `${appUrl}/en/contractor/settings`,
-                    return_url: `${appUrl}/en/contractor/settings?onboarding=complete`,
+                    refresh_url: `${appUrl}/${locale}/contractor/settings`,
+                    return_url: `${appUrl}/${locale}/contractor/settings?onboarding=complete`,
                     type: 'account_onboarding',
                 });
 

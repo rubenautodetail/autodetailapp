@@ -33,7 +33,7 @@ export default function RequestCard({ request, onAccept, onDecline, showActions 
                     <h3 className="text-lg font-bold text-[var(--text-primary)] mt-1">{serviceName}</h3>
                 </div>
                 <div className="text-right">
-                    <span className="text-xl font-bold text-accent-gold">${estimatedTotal}</span>
+                    <span className="text-xl font-bold text-accent-gold">${(estimatedTotal * 0.70).toFixed(2)}</span>
                     <div className="text-xs text-text-secondary">{timeAgo(timestamp)}</div>
                 </div>
             </div>

@@ -66,25 +66,39 @@ function ResumeCheckoutForm({
     setIsProcessing(true);
     setError(null);
 
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(submitError.message || "Failed to submit payment details");
+    // Safety valve — if stripe.confirmPayment never resolves (network hang),
+    // reset after 45s so the user can retry.
+    const timeout = setTimeout(() => {
       setIsProcessing(false);
-      return;
-    }
+      setError(locale === "es" ? "La solicitud tardó demasiado. Por favor intenta de nuevo." : "Request timed out. Please try again.");
+    }, 45_000);
 
-    const returnUrl = new URL(`${window.location.origin}/${locale}/booking/confirmation`);
-    returnUrl.searchParams.set("code", confirmationCode);
-    returnUrl.searchParams.set("service", encodeURIComponent(serviceName));
-    returnUrl.searchParams.set("total", total.toFixed(2));
+    try {
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setError(submitError.message || "Failed to submit payment details");
+        return;
+      }
 
-    const { error: confirmError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: returnUrl.toString() },
-    });
+      const returnUrl = new URL(`${window.location.origin}/${locale}/booking/confirmation`);
+      returnUrl.searchParams.set("code", confirmationCode);
+      returnUrl.searchParams.set("service", encodeURIComponent(serviceName));
+      returnUrl.searchParams.set("total", total.toFixed(2));
 
-    if (confirmError) {
-      setError(confirmError.message || "Payment failed");
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: returnUrl.toString() },
+      });
+
+      if (confirmError) {
+        setError(confirmError.message || "Payment failed");
+      }
+      // No else — Stripe handles the redirect on success.
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(msg);
+    } finally {
+      clearTimeout(timeout);
       setIsProcessing(false);
     }
   };

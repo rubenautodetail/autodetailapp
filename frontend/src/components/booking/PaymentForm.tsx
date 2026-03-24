@@ -48,29 +48,40 @@ function CheckoutForm({
     setInternalIsProcessing(true);
     setError(null);
 
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(submitError.message || "Failed to submit payment details");
+    const timeout = setTimeout(() => {
       setInternalIsProcessing(false);
-      return;
-    }
+      setError(locale === "es" ? "La solicitud tardó demasiado. Por favor intenta de nuevo." : "Request timed out. Please try again.");
+    }, 45_000);
 
-    const returnUrl = new URL(`${window.location.origin}/${locale}/booking/confirmation`);
-    returnUrl.searchParams.set("code", confirmationCode);
-    returnUrl.searchParams.set("service", encodeURIComponent(serviceName));
-    returnUrl.searchParams.set("total", total.toFixed(2));
-    if (vehicleCount > 1) returnUrl.searchParams.set("vehicles", String(vehicleCount));
+    try {
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setError(submitError.message || "Failed to submit payment details");
+        return;
+      }
 
-    const { error: confirmError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: returnUrl.toString() },
-    });
+      const returnUrl = new URL(`${window.location.origin}/${locale}/booking/confirmation`);
+      returnUrl.searchParams.set("code", confirmationCode);
+      returnUrl.searchParams.set("service", encodeURIComponent(serviceName));
+      returnUrl.searchParams.set("total", total.toFixed(2));
+      if (vehicleCount > 1) returnUrl.searchParams.set("vehicles", String(vehicleCount));
 
-    if (confirmError) {
-      setError(confirmError.message || "Payment failed");
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: returnUrl.toString() },
+      });
+
+      if (confirmError) {
+        setError(confirmError.message || "Payment failed");
+      } else {
+        onSuccess();
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(msg);
+    } finally {
+      clearTimeout(timeout);
       setInternalIsProcessing(false);
-    } else {
-      onSuccess();
     }
   };
 
@@ -163,6 +174,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   }, [isHydrated, selectedService, customerLocation, selectedDate, selectedTimeWindow, customerInfo, router, locale]);
 
   const handleCreateBooking = async () => {
+    if (isProcessing || bookingCreated) return;
     if (!customerInfo || !customerLocation || !selectedDate || !selectedTimeWindow || !selectedService) {
       setError(locale === "es" ? "Faltan datos de reserva" : "Missing booking data");
       return;

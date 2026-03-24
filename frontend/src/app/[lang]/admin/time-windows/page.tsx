@@ -100,9 +100,8 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
   }, [fetchTimeWindows]);
 
   function openNew() {
-    const maxId = Math.max(...timeWindows.map(w => w.id), 0);
     setEditWindow({
-      id: maxId + 1,
+      id: 0,
       slot: "",
       label: "",
       labelEs: "",

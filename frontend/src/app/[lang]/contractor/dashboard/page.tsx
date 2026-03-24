@@ -323,8 +323,15 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                     ? 'Este trabajo ya fue aceptado por otro contratista.'
                     : (body as { error?: string }).error || 'This job has already been accepted by another contractor.');
                 loadDashboard(); // Refresh to remove the claimed job from the list
+            } else {
+                const body = await res.json().catch(() => ({ error: '' }));
+                alert(lang === 'es'
+                    ? 'Error al aceptar el trabajo. Intenta de nuevo.'
+                    : (body as { error?: string }).error || 'Failed to accept job. Please try again.');
             }
-        } catch { /* non-fatal */ }
+        } catch {
+            alert(lang === 'es' ? 'Error de conexión.' : 'Connection error. Please try again.');
+        }
         finally { setAcceptingId(null); }
     };
 

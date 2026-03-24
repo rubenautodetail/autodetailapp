@@ -40,7 +40,7 @@ export default async function TermsPage({
                   },
                   {
                       heading: '6. Pagos, Tarifas y Devoluciones',
-                      body: 'Los pagos se procesan de forma segura a través de Stripe. La plataforma cobra una comisión del 15% sobre cada transacción. Los reembolsos por cancelaciones realizadas con más de 24 horas de anticipación son elegibles para reembolso completo. Las cancelaciones con menos de 24 horas de anticipación pueden estar sujetas a un cargo del 50% del costo del servicio. Los cargos fraudulentos deben reportarse dentro de los 7 días.',
+                      body: 'Los pagos se procesan de forma segura a través de Stripe. La plataforma cobra una comisión del 30% sobre cada transacción. Los reembolsos por cancelaciones realizadas con más de 24 horas de anticipación son elegibles para reembolso completo. Las cancelaciones con menos de 24 horas de anticipación pueden estar sujetas a un cargo del 50% del costo del servicio. Los cargos fraudulentos deben reportarse dentro de los 7 días.',
                   },
                   {
                       heading: '7. Política de Cancelación',
@@ -86,7 +86,7 @@ export default async function TermsPage({
                   },
                   {
                       heading: '6. Payments, Fees & Refunds',
-                      body: 'Payments are processed securely via Stripe. The platform charges a 15% commission on each transaction. Cancellations made more than 24 hours in advance are eligible for a full refund. Cancellations within 24 hours may be subject to a 50% cancellation fee. Fraudulent charges must be reported within 7 days.',
+                      body: 'Payments are processed securely via Stripe. The platform charges a 30% commission on each transaction. Cancellations made more than 24 hours in advance are eligible for a full refund. Cancellations within 24 hours may be subject to a 50% cancellation fee. Fraudulent charges must be reported within 7 days.',
                   },
                   {
                       heading: '7. Cancellation Policy',

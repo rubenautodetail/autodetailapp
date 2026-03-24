@@ -46,11 +46,17 @@ export default function CheckoutForm({ amount, onSuccess, onError, onBeforeSubmi
         setIsProcessing(true);
         setErrorMessage(null);
 
+        const timeout = setTimeout(() => {
+            setIsProcessing(false);
+            const msg = 'Request timed out. Please try again.';
+            setErrorMessage(msg);
+            onError(msg);
+        }, 45_000);
+
         try {
             if (onBeforeSubmit) {
                 const shouldProceed = await onBeforeSubmit(customerDetails);
                 if (!shouldProceed) {
-                    setIsProcessing(false);
                     return;
                 }
             }
@@ -80,6 +86,7 @@ export default function CheckoutForm({ amount, onSuccess, onError, onBeforeSubmi
             setErrorMessage(message);
             onError(message);
         } finally {
+            clearTimeout(timeout);
             setIsProcessing(false);
         }
     };

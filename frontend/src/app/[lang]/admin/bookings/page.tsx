@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { adminFetch } from "@/lib/adminFetch";
+import { fmtDate, fmtDateTime } from "@/lib/dateUtils";
 
 interface AdminBookingsProps {
   params: Promise<{ lang: "en" | "es" }>;
@@ -282,8 +283,8 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-500">
                         {b.scheduledDate
-                          ? new Date(b.scheduledDate).toLocaleDateString(locale)
-                          : new Date(b.createdAt).toLocaleDateString(locale)}
+                          ? fmtDate(b.scheduledDate, locale)
+                          : fmtDateTime(b.createdAt, locale)}
                         {b.timeWindow && (
                           <div className="text-xs text-gray-400 capitalize">{b.timeWindow}</div>
                         )}
