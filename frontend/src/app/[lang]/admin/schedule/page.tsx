@@ -215,7 +215,7 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
                           }
                           className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                         />
-                        <span className="ml-2">{day.label}</span>
+                        <span className="ml-2 text-gray-900">{day.label}</span>
                       </label>
                     ))}
                   </div>
@@ -259,7 +259,7 @@ export default function ContractorSchedule({ params }: ScheduleProps) {
                     checked={contractor.is_available}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                   />
-                  <label className="ml-2 text-sm font-medium">
+                  <label className="ml-2 text-sm font-medium text-gray-900">
                     {contractor.is_available ? t.available : t.notAvailable}
                   </label>
                 </div>

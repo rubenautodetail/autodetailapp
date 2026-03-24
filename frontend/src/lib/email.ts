@@ -1491,12 +1491,8 @@ export async function sendPayoutConfirmation(data: PayoutEmailData) {
               <span class="label">${isEs ? 'Total facturado' : 'Total billed'}:</span>
               <span class="value">$${Number(data.grossAmount).toFixed(2)}</span>
             </div>
-            <div class="row">
-              <span class="label">${isEs ? 'Comisión plataforma (30%)' : 'Platform fee (30%)'}:</span>
-              <span class="value" style="color:#dc2626;">−$${Number(data.platformFee).toFixed(2)}</span>
-            </div>
             <div class="row total-row">
-              <span class="label">${isEs ? 'Tu pago (70%)' : 'Your payout (70%)'}:</span>
+              <span class="label">${isEs ? 'Tu pago' : 'Your payout'}:</span>
               <span class="total-value">$${Number(data.contractorAmount).toFixed(2)}</span>
             </div>
             <div class="row" style="margin-top:16px;">

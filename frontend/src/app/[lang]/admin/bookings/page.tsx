@@ -22,12 +22,13 @@ interface Booking {
   zipCode?: string;
   contractorId?: string;
   contractorName?: string;
+  paymentIntentId?: string;
 }
 
-const STATUS_OPTIONS = ["all", "pending", "pending_assignment", "confirmed", "in_progress", "completed", "cancelled"] as const;
+const STATUS_OPTIONS = ["all", "pending_payment", "pending_assignment", "confirmed", "in_progress", "completed", "cancelled"] as const;
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
+  pending_payment: "bg-gray-100 text-gray-700",
   pending_assignment: "bg-orange-100 text-orange-800",
   confirmed: "bg-blue-100 text-blue-800",
   in_progress: "bg-indigo-100 text-indigo-800",
@@ -52,6 +53,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
   const [stats, setStats] = useState<{
     todayCount: number;
     pendingAssignment: number;
+    pendingPayment: number;
     totalRevenue: number;
     completedThisMonth: number;
   } | null>(null);
@@ -134,6 +136,36 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     }
   }
 
+  async function handleRecover(bookingId: number, paymentIntentId: string) {
+    setActionLoading(bookingId);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/booking/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentIntentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      if (data.updated) {
+        setBookings((prev) =>
+          prev.map((b) => b.id === bookingId ? { ...b, status: "pending_assignment" } : b)
+        );
+        setMessage({ type: "success", text: locale === "es" ? "Reserva recuperada y contratistas notificados." : "Booking recovered and contractors notified." });
+      } else if (data.alreadyProcessed) {
+        setMessage({ type: "success", text: locale === "es" ? "Esta reserva ya fue procesada." : "This booking was already processed." });
+        fetchBookings();
+      } else {
+        setMessage({ type: "error", text: locale === "es" ? "El pago aún no fue autorizado por Stripe." : `Payment not yet authorized by Stripe (status: ${data.status}).` });
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: locale === "es" ? "Error al recuperar la reserva." : `Recovery failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -163,12 +195,18 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
 
         {/* Stats bar */}
         {stats ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
             <div className="bg-white border border-gray-200 rounded-xl px-5 py-4">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                 {locale === "es" ? "Hoy" : "Today"}
               </p>
               <p className="text-2xl font-bold text-gray-900">{stats.todayCount}</p>
+            </div>
+            <div className={`bg-white rounded-xl px-5 py-4 ${stats.pendingPayment > 0 ? "border border-red-300" : "border border-gray-200"}`}>
+              <p className={`text-xs font-medium uppercase tracking-wider mb-1 ${stats.pendingPayment > 0 ? "text-red-500" : "text-gray-500"}`}>
+                {locale === "es" ? "Pago Pendiente" : "Payment Pending"}
+              </p>
+              <p className={`text-2xl font-bold ${stats.pendingPayment > 0 ? "text-red-600" : "text-gray-400"}`}>{stats.pendingPayment}</p>
             </div>
             <div className="bg-white border border-orange-200 rounded-xl px-5 py-4">
               <p className="text-xs font-medium text-orange-500 uppercase tracking-wider mb-1">
@@ -190,8 +228,8 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+            {[...Array(5)].map((_, i) => (
               <div key={i} className="bg-white border border-gray-200 rounded-xl px-5 py-4 animate-pulse">
                 <div className="h-2.5 w-20 bg-gray-200 rounded mb-2" />
                 <div className="h-7 w-12 bg-gray-200 rounded" />
@@ -302,14 +340,23 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                         {b.total != null ? `$${b.total.toFixed(2)}` : "—"}
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-1.5 flex-wrap">
                           <Link
                             href={`/${locale}/admin/bookings/${b.id}`}
                             className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
                           >
                             {locale === "es" ? "Ver" : "View"}
                           </Link>
-                          {b.status !== "cancelled" && b.status !== "completed" && (
+                          {b.status === "pending_payment" && b.paymentIntentId && (
+                            <button
+                              onClick={() => handleRecover(b.id, b.paymentIntentId!)}
+                              disabled={actionLoading === b.id}
+                              className="px-2 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 transition-colors disabled:opacity-50 font-semibold"
+                            >
+                              {actionLoading === b.id ? "..." : (locale === "es" ? "Recuperar" : "Recover")}
+                            </button>
+                          )}
+                          {b.status !== "cancelled" && b.status !== "completed" && b.status !== "pending_payment" && (
                             <>
                               <button
                                 onClick={() => handleAction(b.id, "requeue")}

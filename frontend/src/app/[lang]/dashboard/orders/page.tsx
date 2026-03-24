@@ -17,7 +17,9 @@ interface Booking {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+    pending_payment: { bg: 'bg-gray-500/10', text: 'text-gray-400' },
     pending: { bg: 'bg-yellow-500/10', text: 'text-yellow-500' },
+    pending_assignment: { bg: 'bg-yellow-500/10', text: 'text-yellow-500' },
     confirmed: { bg: 'bg-blue-500/10', text: 'text-blue-500' },
     in_progress: { bg: 'bg-[var(--accent)]/10', text: 'text-[var(--accent)]' },
     completed: { bg: 'bg-green-500/10', text: 'text-green-500' },
@@ -59,7 +61,9 @@ export default function MyOrdersPage() {
 
     const statusLabel = (status: string) => {
         const labels: Record<string, { en: string; es: string }> = {
+            pending_payment: { en: 'Processing Payment', es: 'Procesando Pago' },
             pending: { en: 'Pending', es: 'Pendiente' },
+            pending_assignment: { en: 'Confirmed – Assigning Technician', es: 'Confirmado – Asignando Técnico' },
             confirmed: { en: 'Confirmed', es: 'Confirmado' },
             in_progress: { en: 'In Progress', es: 'En Progreso' },
             completed: { en: 'Completed', es: 'Completado' },

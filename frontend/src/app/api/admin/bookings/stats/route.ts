@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-        const [todayRes, pendingRes, revenueRes, completedMonthRes] = await Promise.all([
+        const [todayRes, pendingRes, pendingPaymentRes, revenueRes, completedMonthRes] = await Promise.all([
             // Bookings created today
             supabase
                 .from('bookings')
@@ -31,6 +31,12 @@ export async function GET(req: NextRequest) {
                 .from('bookings')
                 .select('id', { count: 'exact', head: true })
                 .eq('status', 'pending_assignment'),
+
+            // Stuck in pending_payment (payment authorized but booking not transitioned)
+            supabase
+                .from('bookings')
+                .select('id', { count: 'exact', head: true })
+                .eq('status', 'pending_payment'),
 
             // Total revenue from all completed+paid bookings
             supabase
@@ -55,6 +61,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
             todayCount: todayRes.count ?? 0,
             pendingAssignment: pendingRes.count ?? 0,
+            pendingPayment: pendingPaymentRes.count ?? 0,
             totalRevenue,
             completedThisMonth: completedMonthRes.count ?? 0,
         });

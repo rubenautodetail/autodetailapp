@@ -1,6 +1,6 @@
 "use client";
 
-import { use, Suspense, useState } from "react";
+import { use, Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts";
@@ -19,11 +19,31 @@ function ConfirmationContent({ locale }: { locale: string }) {
   const vehicleCountParam = searchParams.get("vehicles");
   const vehicleCount = vehicleCountParam ? parseInt(vehicleCountParam, 10) : 1;
 
+  // Stripe redirect params — present when Stripe redirects back after payment
+  const paymentIntentId = searchParams.get("payment_intent");
+  const redirectStatus = searchParams.get("redirect_status");
+
   const { isAuthenticated, isLoading } = useAuth();
   const [guestDismissed, setGuestDismissed] = useState(false);
 
   // Show guest prompt if not signed in and hasn't dismissed it
   const showGuestPrompt = !isLoading && !isAuthenticated && !guestDismissed;
+
+  // Fallback: if Stripe redirected here with a payment_intent param, verify the
+  // payment status and ensure the booking transitions out of pending_payment even
+  // if the webhook was delayed or failed.
+  useEffect(() => {
+    if (!paymentIntentId) return;
+    if (redirectStatus !== "requires_capture" && redirectStatus !== "succeeded") return;
+
+    fetch("/api/booking/verify-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentIntentId }),
+    }).catch((err) => {
+      console.warn("verify-payment fallback failed (non-fatal):", err);
+    });
+  }, [paymentIntentId, redirectStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-[#131835] flex items-center justify-center py-12 px-4">
