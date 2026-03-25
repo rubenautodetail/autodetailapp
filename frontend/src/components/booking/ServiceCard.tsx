@@ -20,7 +20,7 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
         <Card
             onClick={() => onSelect(service)}
             className={`
-                relative cursor-pointer p-6 transition-all duration-300 flex flex-col h-full
+                relative cursor-pointer p-5 transition-all duration-300 flex flex-col h-full overflow-hidden
                 ${isSelected
                     ? 'border-[#D0B078] ring-1 ring-[#D0B078] bg-[#D0B078]/5'
                     : 'border-[var(--divider)] hover:border-[#D0B078]/50 hover:shadow-lg'
@@ -38,29 +38,29 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
             }}
         >
             {isSelected && (
-                <div className="absolute -top-3 right-6 bg-[#D0B078] text-[#131835] p-1 rounded-full shadow-md">
+                <div className="absolute top-3 right-3 bg-[#D0B078] text-[#131835] p-1 rounded-full shadow-md">
                     <Check className="w-4 h-4" />
                 </div>
             )}
 
-            <div className="flex justify-between items-start mb-4">
-                <h3 className={`text-xl font-bold ${isSelected ? 'text-[#D0B078]' : 'text-[var(--text-primary)]'}`}>
+            <div className="mb-3 pr-6">
+                <h3 className={`text-base font-bold leading-tight break-words ${isSelected ? 'text-[#D0B078]' : 'text-[var(--text-primary)]'}`}>
                     {service.name}
                 </h3>
-                <div className="text-right">
-                    <span className="text-[var(--text-secondary)] text-sm font-semibold mr-1">$</span>
-                    <span className="text-2xl font-bold text-[#D0B078]">
+                <div className="mt-1">
+                    <span className="text-[var(--text-secondary)] text-sm font-semibold">$</span>
+                    <span className="text-xl font-bold text-[#D0B078] ml-0.5">
                         {service.basePrice.toFixed(2)}
                     </span>
                 </div>
             </div>
 
-            <p className="text-[var(--text-secondary)] mb-6 text-sm flex-grow">
+            <p className="text-[var(--text-secondary)] mb-4 text-xs leading-relaxed flex-grow line-clamp-5">
                 {service.description}
             </p>
 
-            <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--divider)]">
-                <div className="flex items-center text-[var(--text-muted)] text-sm">
+            <div className="flex items-center justify-between mt-auto pt-3 border-t border-[var(--divider)] gap-2">
+                <div className="flex items-center text-[var(--text-muted)] text-xs shrink-0">
                     <svg
                         className="w-4 h-4 mr-2"
                         fill="none"
@@ -82,7 +82,7 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
 
                 <div
                     className={`
-                        px-4 py-2 rounded-full font-semibold text-sm transition-all duration-300
+                        px-3 py-1.5 rounded-full font-semibold text-xs transition-all duration-300 shrink-0
                         ${isSelected
                             ? 'bg-[#131835] border border-[#D0B078] text-[#D0B078]'
                             : 'bg-[#D0B078] text-[#131835] hover:shadow-[var(--shadow-glow)]'

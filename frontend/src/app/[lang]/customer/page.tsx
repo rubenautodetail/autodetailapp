@@ -6,7 +6,7 @@ import { BookingCard, BookingCardSkeleton } from '@/components/dashboard/Booking
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { motion } from 'framer-motion';
-import { Plus, Car, Settings, CalendarDays } from 'lucide-react';
+import { Plus, Car, Settings, CalendarDays, CheckCircle, XCircle, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -18,11 +18,18 @@ export default function CustomerDashboardPage() {
     const isEs = lang === 'es';
     const { bookings, notifications, dismissNotification, userProfile, isLoading } = useBookingStatus();
     const [tab, setTab] = useState<'active' | 'history'>('active');
+    const [showAllHistory, setShowAllHistory] = useState(false);
 
     const sorted = [...bookings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const activeBookings = sorted.filter(b => ACTIVE_STATUSES.has(b.status));
     const historyBookings = sorted.filter(b => !ACTIVE_STATUSES.has(b.status));
-    const displayed = tab === 'active' ? activeBookings : historyBookings;
+    // Non-cancelled first, then cancelled — both by date desc
+    const sortedHistory = [
+        ...historyBookings.filter(b => b.status !== 'cancelled'),
+        ...historyBookings.filter(b => b.status === 'cancelled'),
+    ];
+    const HISTORY_PREVIEW = 4;
+    const visibleHistory = showAllHistory ? sortedHistory : sortedHistory.slice(0, HISTORY_PREVIEW);
 
     const RESCHEDULE_ELIGIBLE = new Set(['pending', 'pending_assignment', 'confirmed']);
     const reschedulable = activeBookings.filter(b =>
@@ -102,30 +109,87 @@ export default function CustomerDashboardPage() {
                                 </button>
                             </div>
 
-                            {displayed.length === 0 ? (
-                                <div className="glass-card rounded-2xl p-12 text-center text-text-secondary">
-                                    <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                    <p className="text-lg">
-                                        {tab === 'active'
-                                            ? (isEs ? 'No tienes servicios activos.' : 'No active bookings.')
-                                            : (isEs ? 'No tienes historial de servicios.' : 'No past bookings yet.')}
-                                    </p>
-                                    {tab === 'active' && (
+                            {tab === 'active' ? (
+                                activeBookings.length === 0 ? (
+                                    <div className="glass-card rounded-2xl p-12 text-center text-text-secondary">
+                                        <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                        <p className="text-lg">{isEs ? 'No tienes servicios activos.' : 'No active bookings.'}</p>
                                         <Link href={`/${lang}/booking/select`} className="mt-4 text-accent-gold font-bold hover:text-white transition-colors block">
                                             {isEs ? 'Reservar un servicio' : 'Book your first service'}
                                         </Link>
-                                    )}
-                                </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {activeBookings.map((booking, index) => (
+                                            <BookingCard key={booking.id} {...booking} index={index} />
+                                        ))}
+                                    </div>
+                                )
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {displayed.map((booking, index) => (
-                                        <BookingCard
-                                            key={booking.id}
-                                            {...booking}
-                                            index={index}
-                                        />
-                                    ))}
-                                </div>
+                                /* History — compact list */
+                                sortedHistory.length === 0 ? (
+                                    <div className="glass-card rounded-2xl p-12 text-center text-text-secondary">
+                                        <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                        <p className="text-lg">{isEs ? 'No tienes historial de servicios.' : 'No past bookings yet.'}</p>
+                                    </div>
+                                ) : (
+                                    <div className="glass-card rounded-2xl overflow-hidden divide-y divide-white/5">
+                                        {visibleHistory.map((b) => {
+                                            const isCancelled = b.status === 'cancelled';
+                                            const isCompleted = b.status === 'completed';
+                                            const RowIcon = isCompleted ? CheckCircle : isCancelled ? XCircle : Clock;
+                                            const iconColor = isCompleted ? 'text-green-500' : isCancelled ? 'text-red-400/60' : 'text-yellow-400';
+                                            return (
+                                                <div
+                                                    key={b.id}
+                                                    className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-white/3 ${isCancelled ? 'opacity-45' : ''}`}
+                                                >
+                                                    <RowIcon className={`w-4 h-4 shrink-0 ${iconColor}`} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={`text-sm font-semibold truncate ${isCancelled ? 'text-text-secondary' : 'text-white'}`}>
+                                                            {b.serviceName}
+                                                        </p>
+                                                        <p className="text-xs text-text-muted mt-0.5">
+                                                            {new Date(b.date).toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                            {b.time ? ` · ${b.time}` : ''}
+                                                        </p>
+                                                    </div>
+                                                    <span className={`text-sm font-bold shrink-0 ${isCancelled ? 'text-text-muted' : 'text-accent-gold'}`}>
+                                                        ${b.price}
+                                                    </span>
+                                                    {isCompleted && (
+                                                        <Link
+                                                            href={`/${lang}/booking/select?service=${encodeURIComponent(b.serviceName)}`}
+                                                            className="shrink-0 text-xs text-accent-gold hover:text-white font-bold px-2 py-1 rounded-lg bg-accent-gold/10 hover:bg-accent-gold/20 transition-all"
+                                                        >
+                                                            {isEs ? 'Repetir' : 'Book Again'}
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        {/* Footer: See more / See all link */}
+                                        <div className="px-5 py-3 flex items-center justify-between">
+                                            {sortedHistory.length > HISTORY_PREVIEW && (
+                                                <button
+                                                    onClick={() => setShowAllHistory(v => !v)}
+                                                    className="text-xs text-text-secondary hover:text-white transition-colors font-medium"
+                                                >
+                                                    {showAllHistory
+                                                        ? (isEs ? 'Mostrar menos' : 'Show less')
+                                                        : (isEs ? `Ver ${sortedHistory.length - HISTORY_PREVIEW} más` : `See ${sortedHistory.length - HISTORY_PREVIEW} more`)}
+                                                </button>
+                                            )}
+                                            <Link
+                                                href={`/${lang}/dashboard/orders`}
+                                                className="ml-auto flex items-center gap-1 text-xs text-accent-gold hover:text-white font-bold transition-colors"
+                                            >
+                                                {isEs ? 'Ver todas las reservas' : 'See all bookings'}
+                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )
                             )}
                         </motion.section>
                     </div>

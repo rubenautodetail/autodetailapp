@@ -21,13 +21,13 @@ interface Contractor {
 }
 
 const DAYS = [
-  { id: "monday",    en: "Mon", es: "Lun" },
-  { id: "tuesday",   en: "Tue", es: "Mar" },
-  { id: "wednesday", en: "Wed", es: "Mié" },
-  { id: "thursday",  en: "Thu", es: "Jue" },
-  { id: "friday",    en: "Fri", es: "Vie" },
-  { id: "saturday",  en: "Sat", es: "Sáb" },
-  { id: "sunday",    en: "Sun", es: "Dom" },
+  { id: "Mon", en: "Mon", es: "Lun" },
+  { id: "Tue", en: "Tue", es: "Mar" },
+  { id: "Wed", en: "Wed", es: "Mié" },
+  { id: "Thu", en: "Thu", es: "Jue" },
+  { id: "Fri", en: "Fri", es: "Vie" },
+  { id: "Sat", en: "Sat", es: "Sáb" },
+  { id: "Sun", en: "Sun", es: "Dom" },
 ];
 
 const HOURS = Array.from({ length: 24 }, (_, i) => ({
