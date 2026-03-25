@@ -129,11 +129,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) throw error;
 
-    // Create profile row via service-role API route (anon key can't write with RLS enabled)
-    // If this is the contractor flow, create the profile with role: contractor from the start
+    // Create profile row via service-role API route (anon key can't write with RLS enabled).
+    // This is BLOCKING — if it fails the user exists in auth but has no profile, causing errors everywhere.
     const isContractorFlow = postConfirmRedirect.includes('contractors/apply');
     if (data.user?.id) {
-      fetch('/api/auth/create-profile', {
+      const profileRes = await fetch('/api/auth/create-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,7 +141,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           name,
           role: isContractorFlow ? 'contractor' : 'user',
         }),
-      }).catch((err) => console.warn('Profile creation failed (non-critical):', err));
+      });
+      if (!profileRes.ok) {
+        let detail = '';
+        try { detail = await profileRes.text(); } catch { /* ignore */ }
+        throw new Error(`Profile creation failed (${profileRes.status})${detail ? `: ${detail}` : ''}`);
+      }
     }
 
     // Fire welcome email immediately after signup (non-blocking — won't break registration if it fails)

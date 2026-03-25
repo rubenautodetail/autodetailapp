@@ -6,20 +6,30 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createApiClient } from '@/lib/supabase/server';
+import { PriceCalculateSchema } from '@/lib/validation/booking';
+
+type AddOn = {
+  id: number;
+  document_id: string | null;
+  name: string;
+  price: number;
+  duration_minutes: number | null;
+};
 
 export async function POST(req: NextRequest) {
     try {
-        const { serviceId, addOnIds = [], zipCode } = await req.json();
+        const rawBody = await req.json();
 
-        if (!serviceId) {
-            return NextResponse.json({ error: 'serviceId is required' }, { status: 400 });
+        const parsed = PriceCalculateSchema.safeParse(rawBody);
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: parsed.error.flatten().fieldErrors },
+                { status: 400 }
+            );
         }
 
-        // Sanitize serviceId to prevent PostgREST filter injection
-        const safeServiceId = String(serviceId).trim();
-        if (!/^[a-zA-Z0-9\-_]+$/.test(safeServiceId)) {
-            return NextResponse.json({ error: 'Invalid service ID format' }, { status: 400 });
-        }
+        const { serviceId, addOnIds = [], zipCode } = parsed.data;
+        const safeServiceId = serviceId;
 
         const supabase = createApiClient();
 
@@ -35,13 +45,13 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch add-ons if any
-        let addOns: any[] = [];
+        let addOns: AddOn[] = [];
         if (addOnIds.length > 0) {
             const { data: addOnsData } = await supabase
                 .from('add_ons')
                 .select('*')
                 .in('document_id', addOnIds);
-            addOns = addOnsData || [];
+            addOns = (addOnsData as AddOn[]) || [];
         }
 
         const basePrice = Number(service.base_price);

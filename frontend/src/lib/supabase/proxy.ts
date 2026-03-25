@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getProfile, isAdmin, isContractor, isApprovedContractor, type UserProfile } from '@/lib/auth/guards'
 
 /**
  * Extract locale from path (/en/... or /es/...).
@@ -112,37 +113,42 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    // ─── Redirect authenticated users away from auth pages ─────────────────────
+    // ─── Single profile fetch for all remaining guard checks ──────────────────
+    // Only fetch when we have a logged-in user and might need role info.
+    let profile: UserProfile | null = null
+    const needsProfile = user && (isAuthPage || isAnyLoginPage() || isCustomerRoute || isAdminRoute || isContractorRoute)
+
+    function isAnyLoginPage(): boolean {
+        return path.includes('/contractor/login') || path.includes('/admin/login') || path.endsWith('/login')
+    }
+
+    if (needsProfile) {
+        profile = await getProfile(supabase, user.id)
+    }
+
     const isContractorLogin = path.includes('/contractor/login')
     const isAdminLogin = path.includes('/admin/login')
-    const isAnyLoginPage = isContractorLogin || isAdminLogin || path.endsWith('/login')
-    // Redirect logged-in users away from /register and other auth pages
-    // For contractor flow: send them straight to /contractors/apply (skip register)
-    if (user && isAuthPage && !isAnyLoginPage) {
-        // Fetch role to validate the ?next= destination matches their actual role
-        const { data: authProfile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-        const authRole = (authProfile as { role?: string } | null)?.role
+    const anyLoginPage = isAnyLoginPage()
 
+    // ─── Redirect authenticated users away from auth pages ─────────────────────
+    // For contractor flow: send them straight to /contractors/apply (skip register)
+    if (user && isAuthPage && !anyLoginPage) {
         const next = request.nextUrl.searchParams.get('next')
         const dest = request.nextUrl.clone()
         dest.search = ''
 
         // Only honor ?next= if it matches the user's role (prevent cross-role redirect)
         const nextAllowed = next && next.startsWith('/') &&
-            (authRole === 'admin' ? next.includes('/admin') :
-             authRole === 'contractor' ? (next.includes('/contractor') || next.includes('/contractors')) :
+            (isAdmin(profile) ? next.includes('/admin') :
+             isContractor(profile) ? (next.includes('/contractor') || next.includes('/contractors')) :
              !next.includes('/admin') && !next.includes('/contractor'))
 
         if (nextAllowed) {
             dest.pathname = next
         } else {
             // Default destination by role
-            dest.pathname = authRole === 'admin' ? `/${locale}/admin`
-                : authRole === 'contractor' ? `/${locale}/contractor/dashboard`
+            dest.pathname = isAdmin(profile) ? `/${locale}/admin`
+                : isContractor(profile) ? `/${locale}/contractor/dashboard`
                 : `/${locale}/dashboard`
         }
         return cookiedRedirect(supabaseResponse, dest)
@@ -150,58 +156,40 @@ export async function updateSession(request: NextRequest) {
 
     // ─── Redirect logged-in users on login pages to their correct portal ────────
     // Prevents e.g. a contractor sitting on user login, or user sitting on contractor login
-    if (user && isAnyLoginPage) {
-        const { data: loginProfile } = await supabase
-            .from('profiles')
-            .select('role, approval_status')
-            .eq('id', user.id)
-            .single()
+    if (user && anyLoginPage && profile?.role) {
+        // Already on correct login page → let client-side handle it
+        const onCorrectPage =
+            (profile.role === 'user' && !isContractorLogin && !isAdminLogin) ||
+            (profile.role === 'contractor' && isContractorLogin) ||
+            (profile.role === 'admin' && isAdminLogin)
 
-        const loginRole = (loginProfile as { role?: string } | null)?.role
-
-        if (loginRole) {
-            // Already on correct login page → let client-side handle it
-            const onCorrectPage =
-                (loginRole === 'user' && !isContractorLogin && !isAdminLogin) ||
-                (loginRole === 'contractor' && isContractorLogin) ||
-                (loginRole === 'admin' && isAdminLogin)
-
-            if (!onCorrectPage) {
-                const dest = request.nextUrl.clone()
-                dest.search = ''
-                if (loginRole === 'admin') {
-                    dest.pathname = `/${locale}/admin`
-                } else if (loginRole === 'contractor') {
-                    const approvalStatus = (loginProfile as { approval_status?: string } | null)?.approval_status
-                    dest.pathname = approvalStatus === 'approved'
-                        ? `/${locale}/contractor/dashboard`
-                        : !approvalStatus
-                            ? `/${locale}/contractors/apply`
-                            : `/${locale}/contractor/pending`
-                } else {
-                    dest.pathname = `/${locale}/dashboard`
-                }
-                return cookiedRedirect(supabaseResponse, dest)
+        if (!onCorrectPage) {
+            const dest = request.nextUrl.clone()
+            dest.search = ''
+            if (isAdmin(profile)) {
+                dest.pathname = `/${locale}/admin`
+            } else if (isContractor(profile)) {
+                dest.pathname = isApprovedContractor(profile)
+                    ? `/${locale}/contractor/dashboard`
+                    : !profile.approval_status
+                        ? `/${locale}/contractors/apply`
+                        : `/${locale}/contractor/pending`
+            } else {
+                dest.pathname = `/${locale}/dashboard`
             }
+            return cookiedRedirect(supabaseResponse, dest)
         }
     }
 
     // ─── Role enforcement for customer dashboard — redirect non-users ─────────
     if (user && isCustomerRoute && !isAdminRoute && !isContractorRoute) {
-        const { data: custProfile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-
-        const custRole = (custProfile as { role?: string } | null)?.role
-        if (custRole === 'contractor') {
+        if (isContractor(profile)) {
             const dest = request.nextUrl.clone()
             dest.pathname = `/${locale}/contractor/dashboard`
             dest.search = ''
             return cookiedRedirect(supabaseResponse, dest)
         }
-        if (custRole === 'admin') {
+        if (isAdmin(profile)) {
             const dest = request.nextUrl.clone()
             dest.pathname = `/${locale}/admin`
             dest.search = ''
@@ -211,14 +199,6 @@ export async function updateSession(request: NextRequest) {
 
     // ─── Role enforcement for admin & contractor pages ─────────────────────────
     if (user && ((isAdminRoute && !isAdminLogin) || (isContractorRoute && !isContractorLogin))) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role, approval_status')
-            .eq('id', user.id)
-            .single()
-
-        const role = (profile as { role?: string } | null)?.role
-
         if (!profile) {
             if (isAdminRoute) {
                 const loginUrl = request.nextUrl.clone()
@@ -234,7 +214,7 @@ export async function updateSession(request: NextRequest) {
             }
         }
 
-        if (isAdminRoute && role !== 'admin') {
+        if (isAdminRoute && !isAdmin(profile)) {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             const loginUrl = request.nextUrl.clone()
             loginUrl.pathname = `/${locale}/admin/login`
@@ -242,7 +222,7 @@ export async function updateSession(request: NextRequest) {
             return cookiedRedirect(supabaseResponse, loginUrl)
         }
 
-        if (isContractorRoute && role !== 'contractor' && role !== 'admin') {
+        if (isContractorRoute && !isContractor(profile) && !isAdmin(profile)) {
             if (path.startsWith('/api/')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             const loginUrl = request.nextUrl.clone()
             loginUrl.pathname = `/${locale}/contractor/login`
@@ -250,17 +230,16 @@ export async function updateSession(request: NextRequest) {
             return cookiedRedirect(supabaseResponse, loginUrl)
         }
 
-        const approvalStatus = (profile as { approval_status?: string } | null)?.approval_status
-        if (isContractorRoute && role === 'contractor' && approvalStatus !== 'approved') {
+        if (isContractorRoute && isContractor(profile) && !isApprovedContractor(profile)) {
             // No application submitted yet → send to apply form
-            if (!approvalStatus && !path.includes('/contractors/apply')) {
+            if (!profile!.approval_status && !path.includes('/contractors/apply')) {
                 const applyUrl = request.nextUrl.clone()
                 applyUrl.pathname = `/${locale}/contractors/apply`
                 applyUrl.search = ''
                 return cookiedRedirect(supabaseResponse, applyUrl)
             }
             // Applied but not yet approved → send to pending
-            if (approvalStatus && !path.includes('/contractor/pending')) {
+            if (profile!.approval_status && !path.includes('/contractor/pending')) {
                 const pendingUrl = request.nextUrl.clone()
                 pendingUrl.pathname = `/${locale}/contractor/pending`
                 pendingUrl.search = ''

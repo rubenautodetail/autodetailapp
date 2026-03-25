@@ -6,6 +6,7 @@
  *  2. Cookie-based Supabase session (browser UI navigation)
  *  3. Bearer JWT issued by Supabase (client-side adminFetch calls)
  */
+import { timingSafeEqual } from "crypto";
 import { type NextRequest } from "next/server";
 import { createAuthClient, createClient, createServiceClient } from "@/lib/supabase/server";
 
@@ -14,7 +15,12 @@ export async function verifyAdmin(req: NextRequest): Promise<boolean> {
   const token = req.headers.get("Authorization")?.replace("Bearer ", "").trim();
 
   // 1. ADMIN_SECRET shortcut (server-to-server or manual calls)
-  if (adminSecret && token === adminSecret) return true;
+  // Uses timing-safe comparison to prevent timing attacks.
+  if (adminSecret && token) {
+    const a = Buffer.from(token);
+    const b = Buffer.from(adminSecret);
+    if (a.length === b.length && timingSafeEqual(a, b)) return true;
+  }
 
   // 2. Cookie-based session (browser navigating the admin UI)
   try {

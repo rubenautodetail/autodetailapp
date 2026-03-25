@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rateLimit';
+import { BookingCreateSchema } from '@/lib/validation/booking';
 
 function generateConfirmationCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -22,7 +23,20 @@ function generateConfirmationCode(): string {
 // function parseTimeToHour(timeStr: string): number { ... }
 
 export async function POST(req: NextRequest) {
-  if (await rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'booking-create' })) {
+  // Parse body once up-front so we can use customerEmail as a rate-limit identifier.
+  // This prevents spray attacks where an attacker submits thousands of different
+  // email addresses from a single IP to stay under the IP-only limit.
+  let rawBody: unknown;
+  try {
+    rawBody = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+  const earlyEmail = rawBody !== null && typeof rawBody === 'object' && 'customerEmail' in rawBody && typeof (rawBody as Record<string, unknown>).customerEmail === 'string'
+    ? (rawBody as Record<string, unknown>).customerEmail as string
+    : undefined;
+
+  if (await rateLimit(req, { maxRequests: 5, windowMs: 60_000, keyPrefix: 'booking-create', identifier: earlyEmail })) {
     return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
   }
 
@@ -34,7 +48,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json();
+    // rawBody was already parsed above
+
+    const parsed = BookingCreateSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
     const {
       date,
@@ -55,32 +77,10 @@ export async function POST(req: NextRequest) {
       vehicleModel,
       vehicleYear,
       vehicleColor,
-    } = body;
+    } = parsed.data;
 
     // Prevent spoofing — use authenticated user's ID
     const userId = user.id;
-
-    // Basic validation
-    if (!date || !timeWindow || !address || !customerEmail || !customerName) {
-      return NextResponse.json(
-        { error: 'Missing required booking fields' },
-        { status: 400 }
-      );
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(customerEmail)) {
-      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
-    }
-
-    // Phone validation — require exactly 10 digits when provided
-    if (customerPhone) {
-      const digits = customerPhone.replace(/\D/g, '');
-      if (digits.length !== 10) {
-        return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
-      }
-    }
 
     const supabase = createServiceClient();
     const confirmationCode = generateConfirmationCode();
@@ -139,8 +139,8 @@ export async function POST(req: NextRequest) {
       .eq('is_available', true);
 
     if (contractorsError) {
-      console.error('Error fetching contractors:', contractorsError);
-      // We don't fail the booking because of this; we just won't notify contractors.
+      // Non-fatal: booking is confirmed, admin can manually notify contractor
+      console.error('[booking/create] contractor notification failed', { bookingId: booking.id, error: contractorsError });
     } else if (contractors && contractors.length > 0) {
       // Send emails to all available contractors
       await Promise.all(

@@ -92,17 +92,18 @@ function getClientIp(req: NextRequest | { headers: { get(name: string): string |
 
 export async function rateLimit(
     req: NextRequest | { headers: { get(name: string): string | null } },
-    options: { maxRequests?: number; windowMs?: number; keyPrefix?: string } = {}
+    options: { maxRequests?: number; windowMs?: number; keyPrefix?: string; identifier?: string } = {}
 ): Promise<boolean> {
-    const { maxRequests = 10, windowMs = 60_000, keyPrefix = 'rl' } = options;
+    const { maxRequests = 10, windowMs = 60_000, keyPrefix = 'rl', identifier } = options;
     const ip = getClientIp(req);
-    const key = `${keyPrefix}:${ip}`;
+    const rateLimitKey = identifier ? `${ip}:${identifier}` : ip;
+    const key = `${keyPrefix}:${rateLimitKey}`;
 
     // Try Upstash first (production)
     const upstash = await getUpstashLimiter(keyPrefix, maxRequests, windowMs);
     if (upstash) {
         try {
-            const { success } = await upstash.limit(ip);
+            const { success } = await upstash.limit(rateLimitKey);
             return !success; // true = rate limited
         } catch (err) {
             console.warn('Upstash rate limit check failed, falling back to in-memory:', err);

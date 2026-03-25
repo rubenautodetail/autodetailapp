@@ -19,6 +19,16 @@ import Stripe from 'stripe';
 // Required for raw body access in Next.js Route Handlers
 export const runtime = 'nodejs';
 
+/** Minimal shape of a booking row as returned by Supabase .select().single() */
+interface BookingRow {
+    id: string;
+    service_name?: string | null;
+    zip_code?: string | null;
+    status?: string | null;
+    payment_status?: string | null;
+    [key: string]: unknown;
+}
+
 export async function POST(req: NextRequest) {
     const signature = req.headers.get('stripe-signature');
 
@@ -58,11 +68,20 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true, skipped: true });
     }
 
-    // Record this event before processing to prevent race condition on concurrent retries
-    try {
-        await supabase.from('webhook_events').insert({ stripe_event_id: event.id, type: event.type });
-    } catch {
-        // Non-fatal if table doesn't exist yet — status guards below still protect against duplicates
+    // Record this event before processing to prevent race condition on concurrent retries.
+    // A UNIQUE constraint on stripe_event_id guarantees exactly-once delivery at the DB level.
+    const { error: insertError } = await supabase
+        .from('webhook_events')
+        .insert({ stripe_event_id: event.id, type: event.type });
+
+    if (insertError) {
+        // code 23505 = Postgres UNIQUE_VIOLATION — duplicate event, already processed
+        if ((insertError as { code?: string }).code === '23505') {
+            return NextResponse.json({ received: true, skipped: true });
+        }
+        // Any other insert failure is a hard error — do not process to avoid duplicate side-effects
+        console.error('webhook: failed to record event for idempotency:', insertError);
+        return NextResponse.json({ error: 'Failed to record webhook event' }, { status: 500 });
     }
 
     console.log(`Webhook received: ${event.type}`);
@@ -85,8 +104,9 @@ export async function POST(req: NextRequest) {
                     .single();
 
                 if (updatedBooking) {
-                    const serviceName = (updatedBooking as Record<string, unknown>).service_name as string || 'Detailing Service';
-                    const zipCode = (updatedBooking as Record<string, unknown>).zip_code as string || '';
+                    const booking = updatedBooking as BookingRow;
+                    const serviceName = booking.service_name ?? 'Detailing Service';
+                    const zipCode = booking.zip_code ?? '';
                     const bookingWithService = { ...updatedBooking, service_name: serviceName };
 
                     const { notify } = await import('@/lib/notifications');
@@ -173,7 +193,7 @@ export async function POST(req: NextRequest) {
                 console.warn(`Payment failed for booking ${bookingId}: ${failureMessage}`);
 
                 if (updatedBooking) {
-                    const serviceName = (updatedBooking as Record<string, unknown>).service_name as string || 'Detailing Service';
+                    const serviceName = (updatedBooking as BookingRow).service_name ?? 'Detailing Service';
                     const { notify } = await import('@/lib/notifications');
                     await notify({
                         type: 'booking.failed',
