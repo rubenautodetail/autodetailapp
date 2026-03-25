@@ -21,7 +21,14 @@ export async function GET(req: NextRequest) {
             try {
                 const { user } = await createAuthClient(token);
                 contractorId = user?.id ?? null;
-                contractorName = user?.email?.split('@')[0] ?? null;
+                if (contractorId) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', contractorId)
+                        .single();
+                    contractorName = profile?.full_name?.split(' ')[0] ?? null;
+                }
             } catch {
                 // Ignore auth errors — fall through as unauthenticated
             }

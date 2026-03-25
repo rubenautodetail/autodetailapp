@@ -65,7 +65,7 @@ export default function CustomerDashboardPage() {
     return (
         <div className="min-h-screen bg-bg-primary pb-20 overflow-x-hidden">
             <div className="container mx-auto px-4 pt-8">
-                <DashboardHero userName={userProfile?.name} />
+                <DashboardHero userName={userProfile?.name?.split(' ')[0]} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Main Content: Bookings */}

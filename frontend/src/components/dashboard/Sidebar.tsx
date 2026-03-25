@@ -51,7 +51,7 @@ export default function Sidebar({ lang }: { lang: string }) {
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-medium text-white truncate">
-                            {profile?.full_name || user?.email?.split('@')[0] || '—'}
+                            {profile?.full_name || '—'}
                         </p>
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-accent-gold/15 text-accent-gold uppercase tracking-wider">
                             Customer

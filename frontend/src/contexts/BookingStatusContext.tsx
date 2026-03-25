@@ -144,7 +144,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
             if (profileData) {
                 setUserProfile({
-                    name: profileData.full_name || userEmail.split('@')[0] || 'User',
+                    name: profileData.full_name?.split(' ')[0] || 'there',
                     email: userEmail,
                     phone: profileData.phone || '',
                     memberSince: fmtDate(profileData.created_at, 'en-US', { month: 'long', year: 'numeric' }),
