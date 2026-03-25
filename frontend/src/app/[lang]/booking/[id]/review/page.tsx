@@ -112,13 +112,20 @@ export default function LeaveReviewPage() {
                 }),
             });
 
-            if (!res.ok && res.status !== 403) {
-                // Non-fatal — still show success to user
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                if (res.status === 409) {
+                    // Already reviewed — treat as success
+                    setSubmitted(true);
+                    return;
+                }
+                setError(data.error || (lang === 'es' ? 'Error al enviar la reseña.' : 'Failed to submit review. Please try again.'));
+                return;
             }
+
             setSubmitted(true);
         } catch {
-            // Non-fatal — still show success to user
-            setSubmitted(true);
+            setError(lang === 'es' ? 'Error de conexión. Intenta de nuevo.' : 'Connection error. Please try again.');
         } finally {
             setSubmitting(false);
         }

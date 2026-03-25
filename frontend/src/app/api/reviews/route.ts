@@ -1,7 +1,8 @@
 /**
  * POST /api/reviews
  * Submit a review for a completed booking.
- * Validates that the authenticated user owns the booking before saving.
+ * Stores rating + comment on the booking row, then recalculates
+ * the contractor's average rating in profiles.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -39,14 +40,14 @@ export async function POST(req: NextRequest) {
 
         const supabase = createServiceClient();
 
-        // Verify the booking belongs to this user
-        const { data: booking } = await supabase
+        // Verify booking belongs to this user and is completed
+        const { data: booking, error: bookingError } = await supabase
             .from('bookings')
-            .select('id, contractor_id, status, customer_email')
+            .select('id, contractor_id, status, customer_email, review_rating')
             .eq('id', safeId)
             .single();
 
-        if (!booking) {
+        if (bookingError || !booking) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
         }
 
@@ -54,37 +55,50 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // Store review in notifications table (server-side validated)
-        await supabase.from('notifications').insert({
-            type: 'review',
-            payload: {
-                booking_id: booking.id,
-                contractor_id: booking.contractor_id,
-                customer_email: user.email,
-                rating,
-                comment: comment?.trim() ?? '',
-                submitted_at: new Date().toISOString(),
-            },
-        });
+        if (booking.status !== 'completed') {
+            return NextResponse.json({ error: 'Can only review completed bookings' }, { status: 400 });
+        }
 
-        // Recalculate and update contractor's average rating
+        if (booking.review_rating !== null && booking.review_rating !== undefined) {
+            return NextResponse.json({ error: 'Booking already reviewed' }, { status: 409 });
+        }
+
+        // Save review on the booking row
+        const { error: updateError } = await supabase
+            .from('bookings')
+            .update({
+                review_rating: rating,
+                review_comment: comment?.trim() ?? null,
+                reviewed_at: new Date().toISOString(),
+            })
+            .eq('id', safeId);
+
+        if (updateError) {
+            console.error('Review save error:', updateError);
+            return NextResponse.json({ error: 'Failed to save review' }, { status: 500 });
+        }
+
+        // Recalculate contractor average rating from all reviewed bookings
         if (booking.contractor_id) {
-            const { data: allReviews } = await supabase
-                .from('notifications')
-                .select('payload')
-                .eq('type', 'review')
-                .filter('payload->>contractor_id', 'eq', booking.contractor_id);
+            const { data: reviews } = await supabase
+                .from('bookings')
+                .select('review_rating')
+                .eq('contractor_id', booking.contractor_id)
+                .not('review_rating', 'is', null);
 
-            if (allReviews && allReviews.length > 0) {
-                const ratings = allReviews
-                    .map((r) => (r.payload as { rating?: number })?.rating)
+            if (reviews && reviews.length > 0) {
+                const ratings = reviews
+                    .map((r) => r.review_rating)
                     .filter((r): r is number => typeof r === 'number' && r >= 1 && r <= 5);
 
                 if (ratings.length > 0) {
                     const avg = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
                     await supabase
                         .from('profiles')
-                        .update({ rating: Math.round(avg * 10) / 10 })
+                        .update({
+                            rating: Math.round(avg * 10) / 10,
+                            total_ratings: ratings.length,
+                        })
                         .eq('id', booking.contractor_id);
                 }
             }
