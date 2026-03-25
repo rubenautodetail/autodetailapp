@@ -55,29 +55,25 @@ export async function GET(req: NextRequest) {
 
     for (const booking of completedBookings) {
       try {
-        // Check if a review has been submitted for this booking
-        const { data: existingReview, error: reviewError } = await supabase
-          .from('notifications')
-          .select('id')
-          .eq('payload->>booking_id', booking.id)
-          .eq('type', 'review')
+        // Check if a review has been submitted — reviews now stored on bookings.review_rating
+        const { data: reviewedBooking, error: reviewError } = await supabase
+          .from('bookings')
+          .select('review_rating')
+          .eq('id', booking.id)
           .single();
 
-        if (reviewError && reviewError.code !== 'PGRST116') {
-          // PGRST116 means no rows returned, which is okay (no review yet)
-          throw reviewError;
-        }
+        if (reviewError) throw reviewError;
 
-        if (existingReview) {
-          // Review already exists, skip
+        if (reviewedBooking?.review_rating !== null && reviewedBooking?.review_rating !== undefined) {
+          // Review already submitted, skip
           continue;
         }
 
         // Count how many review reminders have been sent for this booking
-        const { data, error: countError, count } = await supabase
+        const { error: countError, count } = await supabase
           .from('notifications')
           .select('id', { count: 'exact' })
-          .eq('payload->>booking_id', booking.id)
+          .eq('booking_id', booking.id)
           .eq('type', 'booking.review_request');
 
         if (countError) {
@@ -104,7 +100,7 @@ export async function GET(req: NextRequest) {
             payment_status: 'paid',
             customer: {
               email: booking.customer_email,
-              first_name: booking.customer_email.split('@')[0] || 'Customer',
+              first_name: 'there',
               last_name: '',
               phone: ''
             }

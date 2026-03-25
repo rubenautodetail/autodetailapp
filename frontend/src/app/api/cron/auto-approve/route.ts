@@ -42,16 +42,9 @@ async function runAutoApprove(): Promise<NextResponse> {
         if (expiringBookings && expiringBookings.length > 0) {
             const ids = expiringBookings.map((b) => b.confirmation_code).join(', ');
             console.error(`URGENT: ${expiringBookings.length} booking(s) approaching 7-day Stripe void window: ${ids}`);
-            await supabase.from('notifications').insert(
-                expiringBookings.map((b) => ({
-                    user_id: null,
-                    type: 'admin.expiring_payment',
-                    title: 'Payment About to Expire',
-                    message: `Booking #${b.confirmation_code} has an authorized payment voiding in <24h. Capture or cancel now.`,
-                    booking_id: b.id,
-                    is_read: false,
-                }))
-            );
+            // Log to console only — notifications table requires user_id NOT NULL
+            // Admin should monitor server logs or set up a Slack/email alert here
+            console.error(`EXPIRING PAYMENTS (${expiringBookings.length}): ${ids}`);
         }
 
         // --- Fetch all pending_approval bookings ---
