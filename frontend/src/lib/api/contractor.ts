@@ -153,7 +153,8 @@ export async function completeJob(
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to complete job: ${response.status}`);
+        const body = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error((body as { error?: string }).error || `Failed to complete job: ${response.status}`);
     }
 
     return response.json();

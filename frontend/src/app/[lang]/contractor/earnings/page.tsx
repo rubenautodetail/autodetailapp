@@ -41,10 +41,10 @@ const t = {
         yourPayout: "Your Payout",
         total: "Total",
         payoutHistory: "Weekly Payouts",
-        noPayouts: "No payout records yet",
-        noPayoutsDesc: "Payouts are processed weekly.",
+        noPayouts: "No payment records yet",
+        noPayoutsDesc: "Payments will appear here once processed.",
         period: "Period",
-        paidBadge: "Paid",
+        paidBadge: "Paid ✓",
         pendingBadge: "Pending",
         via: "via",
     },
@@ -66,11 +66,11 @@ const t = {
         amount: "Monto",
         yourPayout: "Tu Pago",
         total: "Total",
-        payoutHistory: "Pagos Semanales",
+        payoutHistory: "Historial de Pagos",
         noPayouts: "Sin registros de pago aún",
-        noPayoutsDesc: "Los pagos se procesan semanalmente.",
+        noPayoutsDesc: "Los pagos aparecerán aquí una vez procesados.",
         period: "Período",
-        paidBadge: "Pagado",
+        paidBadge: "Pagado ✓",
         pendingBadge: "Pendiente",
         via: "vía",
     },
@@ -144,7 +144,6 @@ export default function EarningsPage({ params }: EarningsProps) {
 
     const earnings = data?.earnings ?? { thisWeek: 0, total: 0 };
     const completed = data?.completedJobs ?? [];
-    const CONTRACTOR_SHARE = 0.70;
     const avgPerJob =
         completed.length > 0
             ? earnings.total / completed.length
@@ -202,8 +201,6 @@ export default function EarningsPage({ params }: EarningsProps) {
                     ) : (
                         <div className="divide-y divide-[#2C355E]">
                             {completed.map((job) => {
-                                const gross = Number(job.total_amount) || 0;
-                                const payout = gross * CONTRACTOR_SHARE;
                                 const dateStr = job.date
                                     ? new Date(job.date + "T12:00:00").toLocaleDateString(
                                         lang === "es" ? "es-US" : "en-US",
@@ -222,11 +219,9 @@ export default function EarningsPage({ params }: EarningsProps) {
                                                 </p>
                                                 <p className="text-sm text-[#5E698F]">{dateStr}</p>
                                             </div>
-                                            <div className="text-sm space-y-0.5 sm:text-right">
-                                                <p className="text-green-400 font-semibold">
-                                                    {labels.yourPayout}: ${payout.toFixed(2)}
-                                                </p>
-                                            </div>
+                                            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-400">
+                                                {lang === "es" ? "Completado" : "Completed"}
+                                            </span>
                                         </div>
                                     </div>
                                 );
@@ -253,39 +248,39 @@ export default function EarningsPage({ params }: EarningsProps) {
                                 .toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric" });
                             const endStr = new Date(p.period_end + "T12:00:00Z")
                                 .toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric" });
+                            const paidDateStr = p.paid_at
+                                ? new Date(p.paid_at).toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
+                                : null;
                             const methodMap: Record<string, string> = {
                                 ach: "ACH", zelle: "Zelle", check: lang === "es" ? "Cheque" : "Check",
                                 cash: lang === "es" ? "Efectivo" : "Cash",
                             };
                             return (
-                                <div key={p.id} className="px-6 py-4 hover:bg-white/[0.02] transition-colors">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div key={p.id} className={`px-6 py-4 hover:bg-white/[0.02] transition-colors ${p.status === "paid" ? "border-l-4 border-green-500" : "border-l-4 border-yellow-500"}`}>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                         <div className="space-y-0.5">
                                             <p className="font-medium text-white">{startStr} – {endStr}</p>
                                             <p className="text-sm text-[#5E698F]">
                                                 {p.total_bookings} {lang === "es" ? "trabajos" : "jobs"}
                                             </p>
+                                            {p.status === "paid" && paidDateStr && (
+                                                <p className="text-xs text-[#5E698F]">
+                                                    {lang === "es" ? "Pagado el" : "Paid on"} {paidDateStr}
+                                                    {p.payment_method ? ` ${labels.via} ${methodMap[p.payment_method] ?? p.payment_method}` : ""}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <div className="text-sm space-y-0.5 text-right">
-                                                <p className="text-green-400 font-semibold">
-                                                    {labels.yourPayout}: ${Number(p.contractor_amount).toFixed(2)}
-                                                </p>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-1">
-                                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                                    p.status === "paid"
-                                                        ? "bg-green-500/20 text-green-400"
-                                                        : "bg-yellow-500/20 text-yellow-400"
-                                                }`}>
-                                                    {p.status === "paid" ? labels.paidBadge : labels.pendingBadge}
-                                                </span>
-                                                {p.status === "paid" && p.payment_method && (
-                                                    <span className="text-xs text-[#A5B0D1]">
-                                                        {labels.via} {methodMap[p.payment_method] ?? p.payment_method}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <p className="text-2xl font-bold text-green-400">
+                                                ${Number(p.contractor_amount).toFixed(2)}
+                                            </p>
+                                            <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-bold ${
+                                                p.status === "paid"
+                                                    ? "bg-green-500/20 text-green-400 ring-1 ring-green-500/30"
+                                                    : "bg-yellow-500/20 text-yellow-400"
+                                            }`}>
+                                                {p.status === "paid" ? labels.paidBadge : labels.pendingBadge}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

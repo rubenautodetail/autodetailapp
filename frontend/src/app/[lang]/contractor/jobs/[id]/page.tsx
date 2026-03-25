@@ -346,7 +346,8 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             setTimeout(() => router.push(`/${lang}/contractor/dashboard`), 2500);
         } catch (err: unknown) {
             console.error("Complete job error:", err);
-            setActionError(t.completeError);
+            const msg = err instanceof Error ? err.message : null;
+            setActionError(msg || t.completeError);
         } finally {
             setCompleting(false);
         }

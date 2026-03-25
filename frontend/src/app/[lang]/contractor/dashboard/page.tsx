@@ -49,6 +49,7 @@ const t = {
         statusMap: {
             pending_assignment: "Pending Assignment",
             confirmed: "Confirmed",
+            en_route: "En Route",
             in_progress: "In Progress",
             pending_approval: "Awaiting Approval",
         } as Record<string, string>,
@@ -86,6 +87,7 @@ const t = {
         statusMap: {
             pending_assignment: "Pendiente de Asignación",
             confirmed: "Confirmado",
+            en_route: "En Camino",
             in_progress: "En Progreso",
             pending_approval: "Esperando Aprobación",
         } as Record<string, string>,
@@ -98,6 +100,7 @@ function StatusBadge({ status, lang }: { status: string; lang: "en" | "es" }) {
     const colors: Record<string, string> = {
         pending_assignment: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
         confirmed: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+        en_route: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
         in_progress: "bg-amber-500/20 text-amber-300 border-amber-500/30",
         pending_approval: "bg-purple-500/20 text-purple-300 border-purple-500/30",
     };
@@ -536,13 +539,6 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                 </p>
                                 <p className="text-xl font-bold text-green-400">{earningSummary.completedJobs}</p>
                             </div>
-                        </div>
-                        <div className="px-6 py-2.5 border-t border-[#2C355E]">
-                            <p className="text-[10px] text-[#5E698F]">
-                                {lang === 'es'
-                                    ? 'Todos los montos reflejan tu parte neta (70% del total del servicio).'
-                                    : 'All amounts reflect your net share (70% of service total).'}
-                            </p>
                         </div>
                     </div>
                 )}

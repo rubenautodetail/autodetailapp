@@ -185,8 +185,12 @@ export async function sendBookingConfirmation(booking: BookingEmailData) {
  */
 export async function sendNewJobToContractor(booking: BookingEmailData, contractorEmail: string) {
   try {
-    const { customer, service, location } = booking;
+    const { service, location } = booking;
 
+    // This email is a notification only — full job details (customer info, address,
+    // confirmation code) are NOT included. Contractors must log in to their dashboard
+    // to view details and accept. This prevents non-accepting contractors from
+    // accessing job information that belongs to whoever accepts first.
     const html = `
         <!DOCTYPE html>
         <html>
@@ -207,18 +211,14 @@ export async function sendNewJobToContractor(booking: BookingEmailData, contract
           </head>
           <body>
             <div class="header">
-              <h1>💼 New Job Assigned!</h1>
+              <h1>🔔 New Job Available!</h1>
             </div>
 
             <div class="content">
-              <p><strong>You have a new detailing appointment!</strong></p>
+              <p><strong>A new detailing job is available in your area. Log in to accept it before someone else does!</strong></p>
 
               <div class="job-box">
-                <h3 style="margin-top: 0; color: #065f46;">Job Details</h3>
-                <div class="detail-row">
-                  <span class="label">Confirmation Code:</span>
-                  <span class="value"><strong>${booking.confirmationCode}</strong></span>
-                </div>
+                <h3 style="margin-top: 0; color: #065f46;">Job Overview</h3>
                 <div class="detail-row">
                   <span class="label">Service:</span>
                   <span class="value">${service.name}</span>
@@ -232,33 +232,15 @@ export async function sendNewJobToContractor(booking: BookingEmailData, contract
                   <span class="value">${booking.scheduledTime}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="label">Location:</span>
-                  <span class="value">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Customer:</span>
-                  <span class="value">${customer.firstName} ${customer.lastName}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Contact:</span>
-                  <span class="value">${customer.phone}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Your Earnings:</span>
-                  <span class="value"><strong>$${(booking.totalAmount * 0.70).toFixed(2)}</strong> (70% of $${booking.totalAmount.toFixed(2)})</span>
+                  <span class="label">Area:</span>
+                  <span class="value">ZIP ${location.zipCode}</span>
                 </div>
               </div>
 
-              <h3>Next Steps:</h3>
-              <ul>
-                <li>Review the job details in your dashboard</li>
-                <li>Prepare your equipment and supplies</li>
-                <li>Contact customer if you need additional information</li>
-                <li>Arrive on time and provide excellent service!</li>
-              </ul>
+              <p>Log in to your contractor dashboard to view the full details and accept this job. First come, first served!</p>
 
               <p style="margin-top: 30px; text-align: center;">
-                <a href="${APP_URL}/en/contractor/jobs/${booking.id}" class="button">View Job Details</a>
+                <a href="${APP_URL}/en/contractor/dashboard" class="button">Go to My Dashboard</a>
               </p>
             </div>
 
@@ -273,7 +255,7 @@ export async function sendNewJobToContractor(booking: BookingEmailData, contract
     const { data, error } = await getResend().emails.send({
       from: FROM_EMAIL,
       to: contractorEmail,
-      subject: '💼 New Job Assigned - ' + booking.confirmationCode,
+      subject: '🔔 New Job Available — Log in to Accept',
       html,
     });
 
@@ -680,6 +662,101 @@ export async function sendJobAcceptedEmail(booking: BookingEmailData) {
 }
 
 /**
+ * Send full job details to the contractor who accepted the job.
+ * Only called AFTER successful acceptance — not part of the broadcast.
+ */
+export async function sendContractorJobConfirmation(contractorEmail: string, booking: BookingEmailData) {
+  try {
+    const { service, location, customer } = booking;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
+            .job-box { background: #f0fdf4; border: 2px solid #10b981; padding: 20px; margin: 20px 0; border-radius: 8px; }
+            .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #d1fae5; }
+            .label { font-weight: 600; color: #065f46; }
+            .value { color: #111827; }
+            .button { display: inline-block; background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+            .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>✅ Job Confirmed!</h1>
+          </div>
+          <div class="content">
+            <p><strong>You have successfully accepted this job. Here are the full details:</strong></p>
+            <div class="job-box">
+              <h3 style="margin-top: 0; color: #065f46;">Job Details</h3>
+              <div class="detail-row">
+                <span class="label">Confirmation Code:</span>
+                <span class="value"><strong>${booking.confirmationCode}</strong></span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Service:</span>
+                <span class="value">${service.name}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Date:</span>
+                <span class="value">${new Date(booking.scheduledDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Time:</span>
+                <span class="value">${booking.scheduledTime}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Location:</span>
+                <span class="value">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Customer:</span>
+                <span class="value">${customer.firstName} ${customer.lastName}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Contact:</span>
+                <span class="value">${customer.phone}</span>
+              </div>
+            </div>
+            <h3>Next Steps:</h3>
+            <ul>
+              <li>Prepare your equipment and supplies</li>
+              <li>Arrive on time and provide excellent service!</li>
+            </ul>
+            <p style="margin-top: 30px; text-align: center;">
+              <a href="${APP_URL}/en/contractor/jobs/${booking.id}" class="button">View Job in Dashboard</a>
+            </p>
+          </div>
+          <div class="footer">
+            <p>DetailWash - Contractor Portal</p>
+            <p>Questions? <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: contractorEmail,
+      subject: `✅ Job Confirmed — ${booking.confirmationCode}`,
+      html,
+    });
+
+    if (error) throw error;
+    console.log(`Contractor job confirmation sent to ${contractorEmail}`);
+    return data;
+  } catch (error) {
+    console.error('Failed to send contractor job confirmation:', error);
+    throw error;
+  }
+}
+
+/**
  * Send job rejected alert to admin
  */
 export async function sendJobRejectedToAdmin(booking: BookingEmailData) {
@@ -811,10 +888,6 @@ export async function sendJobPendingApprovalEmail(booking: BookingEmailData) {
               </ol>
             </div>
 
-            <p style="color: #ef4444; font-weight: 600; font-size: 14px; text-align: left;">
-              ⚠️ Note: Your card will not be charged until you click approve.
-            </p>
-
             <a href="${APP_URL}/en/booking/${booking.id}/approve?code=${booking.confirmationCode}" class="button">
               INSPECT & APPROVE JOB
             </a>
@@ -835,6 +908,75 @@ export async function sendJobPendingApprovalEmail(booking: BookingEmailData) {
     return data;
   } catch (error) {
     console.error('Failed to send pending approval email:', error);
+    throw error;
+  }
+}
+
+export interface ApprovalReminderData {
+  id: number | string;
+  confirmationCode: string;
+  service: { name: string };
+  customer: { email: string; firstName: string };
+}
+
+/**
+ * Send approval reminder email to customer during the 15-minute auto-approve window
+ * minutesRemaining: how many minutes they have left (e.g. 13, 10, 5, 2)
+ */
+export async function sendApprovalReminderEmail(booking: ApprovalReminderData, minutesRemaining: number) {
+  try {
+    const { customer } = booking;
+    const isUrgent = minutesRemaining <= 2;
+    const headerColor = isUrgent ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+    const urgencyLine = isUrgent
+      ? `<p style="font-size:15px;font-weight:700;color:#ef4444;text-align:left;">⏰ Auto-approval in ${minutesRemaining} minute${minutesRemaining === 1 ? '' : 's'}!</p>`
+      : `<p style="font-size:15px;font-weight:600;color:#b45309;text-align:left;">⏳ ${minutesRemaining} minute${minutesRemaining === 1 ? '' : 's'} left to inspect your vehicle.</p>`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: ${headerColor}; color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; text-align: center; }
+            .button { display: inline-block; background: #8b5cf6; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: 700; font-size: 16px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin: 0; font-size: 22px;">Reminder: Your Car is Ready! 🚘</h1>
+          </div>
+          <div class="content">
+            <p style="font-size: 16px; text-align: left;">Hi ${customer.firstName},</p>
+            <p style="font-size: 16px; text-align: left;">Your <strong>${booking.service.name}</strong> is complete and waiting for your inspection.</p>
+            ${urgencyLine}
+            <p style="font-size: 14px; color: #6b7280; text-align: left;">If we don't hear from you, the job will be automatically approved.</p>
+            <a href="${APP_URL}/en/booking/${booking.id}/approve?code=${booking.confirmationCode}" class="button">
+              INSPECT &amp; APPROVE NOW
+            </a>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const subject = isUrgent
+      ? `⏰ Final Reminder: Auto-approval in ${minutesRemaining} min — ${booking.service.name}`
+      : `⏳ Reminder: ${minutesRemaining} min left to approve your detail`;
+
+    const { data: resendData, error } = await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: customer.email,
+      subject,
+      html,
+    });
+
+    if (error) throw error;
+    console.log(`Approval reminder (${minutesRemaining}min left) sent to ${customer.email}`);
+    return resendData;
+  } catch (error) {
+    console.error('Failed to send approval reminder email:', error);
     throw error;
   }
 }
@@ -1268,7 +1410,6 @@ export async function sendContractorRejectedEmail(contractor: {
 
 export async function sendContractorPaidEmail(contractorEmail: string, booking: BookingEmailData) {
   try {
-    const amount = (booking.totalAmount * 0.70).toFixed(2); // 70% contractor payout
     const html = `
       <!DOCTYPE html>
       <html>
@@ -1282,16 +1423,11 @@ export async function sendContractorPaidEmail(contractorEmail: string, booking: 
         </head>
         <body>
           <div class="header">
-            <h1 style="margin: 0; font-size: 24px;">Job Approved & Paid! 💰</h1>
+            <h1 style="margin: 0; font-size: 24px;">Job Approved! 💰</h1>
           </div>
           <div class="content">
             <p>Great work!</p>
-            <p>The customer has approved booking <strong>${booking.confirmationCode}</strong>.</p>
-            <div style="background: #f0fdf4; border: 2px solid #10b981; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; font-size: 14px; color: #065f46; font-weight: 600; text-transform: uppercase;">Earnings Added to Balance</p>
-              <h2 style="margin: 5px 0 0 0; color: #059669; font-size: 32px;">$${amount}</h2>
-            </div>
-            <p>This amount will be included in your next Stripe payout according to your payout schedule.</p>
+            <p>The customer has approved booking <strong>${booking.confirmationCode}</strong>. Your payment will be processed per your agreement.</p>
             <p>Keep up the great work!</p>
           </div>
         </body>
@@ -1301,7 +1437,7 @@ export async function sendContractorPaidEmail(contractorEmail: string, booking: 
     const { data, error } = await getResend().emails.send({
       from: FROM_EMAIL,
       to: contractorEmail,
-      subject: `Job Approved! You earned $${amount} 💰`,
+      subject: `Job Approved! Booking ${booking.confirmationCode} 💰`,
       html,
     });
 

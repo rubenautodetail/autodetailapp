@@ -6,6 +6,7 @@ import {
     sendJobAcceptedEmail,
     sendJobRejectedToAdmin,
     sendNewJobToContractor,
+    sendContractorJobConfirmation,
     sendJobPendingApprovalEmail,
     sendJobApprovedReceiptEmail,
     sendContractorPaidEmail,
@@ -24,7 +25,7 @@ type NotificationEvent =
     | { type: 'booking.pending_approval'; booking: any }
     | { type: 'booking.approved'; booking: any; contractorEmail: string }
     | { type: 'contractor.job_assigned'; booking: any; contractorEmail: string }
-    | { type: 'contractor.job_accepted'; booking: any; contractor: any }
+    | { type: 'contractor.job_accepted'; booking: any; contractor: any; contractorEmail?: string }
     | { type: 'contractor.job_rejected'; booking: any }
     | { type: 'contractor.en_route'; booking: any }
     | { type: 'contractor.job_started'; booking: any }
@@ -151,6 +152,10 @@ export async function notify(event: NotificationEvent): Promise<void> {
             case 'contractor.job_accepted':
                 await sendJobAcceptedEmail(mapBookingData(event.booking, event.contractor));
                 await createInAppNotification(event.booking.user_id, 'Contractor Accepted Job', `${event.contractor.full_name || 'A contractor'} has accepted your booking and is on their way.`, 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}`);
+                // Send full job details to the contractor who accepted
+                if (event.contractorEmail) {
+                    await sendContractorJobConfirmation(event.contractorEmail, mapBookingData(event.booking, event.contractor));
+                }
                 break;
 
             case 'contractor.job_rejected':

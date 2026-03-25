@@ -80,19 +80,44 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'bookingId is required' }, { status: 400 });
         }
 
+        // For JWT-auth path: verify the booking exists, belongs to this contractor, and is in_progress
+        if (contractorId) {
+            const { data: existing } = await supabase
+                .from('bookings')
+                .select('id, contractor_id, status')
+                .eq('id', safeId)
+                .single();
+
+            if (!existing) {
+                return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+            }
+            if (existing.contractor_id !== contractorId) {
+                return NextResponse.json({ error: 'This job is not assigned to your account' }, { status: 403 });
+            }
+            if (existing.status !== 'in_progress') {
+                return NextResponse.json(
+                    { error: `Cannot complete a job with status '${existing.status}'` },
+                    { status: 409 }
+                );
+            }
+        }
+
+        const nowIso = new Date().toISOString();
         const updateQuery = supabase
             .from('bookings')
             .update({
                 status: 'pending_approval',
-                updated_at: new Date().toISOString(),
+                updated_at: nowIso,
+                pending_approval_at: nowIso,
                 ...(checklist ? { completion_notes: checklist } : {}),
             })
             .eq('id', safeId);
 
-        // Only enforce contractor_id check when using JWT auth
+        // Only enforce contractor_id check when using JWT auth.
+        // Always include status check in WHERE to prevent TOCTOU race condition.
         const { data: updatedBooking, error } = contractorId
-            ? await updateQuery.eq('contractor_id', contractorId).select().single()
-            : await updateQuery.select().single();
+            ? await updateQuery.eq('status', 'in_progress').eq('contractor_id', contractorId).select().single()
+            : await updateQuery.eq('status', 'in_progress').select().single();
 
         if (error) {
             console.error('Error completing job:', error);

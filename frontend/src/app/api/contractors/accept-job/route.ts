@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
         // Send notification email to customer. Fetch contractor profile for the email.
         let contractorData: any = null;
 
+        let contractorEmail = '';
         if (contractorId) {
             const { data: contractorInfo } = await supabase
                 .from('profiles')
@@ -113,6 +114,9 @@ export async function POST(req: NextRequest) {
                 .eq('id', contractorId)
                 .single();
             contractorData = contractorInfo;
+            // Fetch email from auth so we can send the confirmation
+            const { data: authUser } = await supabase.auth.admin.getUserById(contractorId);
+            contractorEmail = authUser?.user?.email ?? '';
         }
 
         if (updatedBooking) {
@@ -121,6 +125,7 @@ export async function POST(req: NextRequest) {
                 type: 'contractor.job_accepted',
                 booking: updatedBooking,
                 contractor: contractorData ?? {},
+                contractorEmail,
             });
 
             await logBookingEvent({

@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         const supabase = createServiceClient();
         const { data, error } = await supabase
             .from('payouts')
-            .select('*')
+            .select('id, period_start, period_end, total_bookings, gross_amount, platform_fee, contractor_amount, status, payment_method, paid_at, created_at')
             .eq('contractor_id', contractorId)
             .order('period_start', { ascending: false })
             .limit(52); // last 52 weeks

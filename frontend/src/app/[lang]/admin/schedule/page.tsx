@@ -10,8 +10,8 @@ interface ScheduleProps {
 
 interface Contractor {
   id: string;
-  full_name: string;
-  email: string;
+  full_name: string | null;
+  email: string | null;
   availability: {
     days: string[];
     start_hour: number;
@@ -20,273 +20,278 @@ interface Contractor {
   is_available: boolean;
 }
 
-const daysOfWeek = [
-  { id: "monday", label: "Monday" },
-  { id: "tuesday", label: "Tuesday" },
-  { id: "wednesday", label: "Wednesday" },
-  { id: "thursday", label: "Thursday" },
-  { id: "friday", label: "Friday" },
-  { id: "saturday", label: "Saturday" },
-  { id: "sunday", label: "Sunday" },
+const DAYS = [
+  { id: "monday",    en: "Mon", es: "Lun" },
+  { id: "tuesday",   en: "Tue", es: "Mar" },
+  { id: "wednesday", en: "Wed", es: "Mié" },
+  { id: "thursday",  en: "Thu", es: "Jue" },
+  { id: "friday",    en: "Fri", es: "Vie" },
+  { id: "saturday",  en: "Sat", es: "Sáb" },
+  { id: "sunday",    en: "Sun", es: "Dom" },
 ];
 
-const timeOptions = Array.from({ length: 24 }, (_, i) => ({
+const HOURS = Array.from({ length: 24 }, (_, i) => ({
   value: i,
-  label: i.toString().padStart(2, "0") + ":00",
+  label: i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`,
 }));
 
-export default function ContractorSchedule({ params }: ScheduleProps) {
+const T = {
+  en: {
+    title: "Schedule Management",
+    subtitle: "Set working hours and availability for each contractor",
+    back: "← Dashboard",
+    days: "Working Days",
+    start: "Start",
+    end: "End",
+    available: "Available for jobs",
+    save: "Save",
+    saving: "Saving…",
+    saved: "Saved ✓",
+    error: "Failed to save",
+    loading: "Loading…",
+    none: "No active contractors",
+  },
+  es: {
+    title: "Gestión de Horarios",
+    subtitle: "Establece horas de trabajo y disponibilidad por contratista",
+    back: "← Panel",
+    days: "Días de Trabajo",
+    start: "Inicio",
+    end: "Fin",
+    available: "Disponible para trabajos",
+    save: "Guardar",
+    saving: "Guardando…",
+    saved: "Guardado ✓",
+    error: "Error al guardar",
+    loading: "Cargando…",
+    none: "Sin contratistas activos",
+  },
+};
+
+export default function SchedulePage({ params }: ScheduleProps) {
   const { lang } = use(params);
-  const t = {
-    en: {
-      title: "Contractor Schedule Management",
-      subtitle: "Set working hours and availability for contractors",
-      contractor: "Contractor",
-      days: "Days",
-      startTime: "Start Time",
-      endTime: "End Time",
-      available: "Available for jobs",
-      notAvailable: "Not available",
-      saveChanges: "Save Changes",
-      saving: "Saving...",
-      error: "Error saving schedule",
-      success: "Schedule saved",
-      loading: "Loading contractors...",
-      noContractors: "No contractors found",
-    },
-    es: {
-      title: "Gestión de Horarios de Contratistas",
-      subtitle: "Establece horas de trabajo y disponibilidad para contratistas",
-      contractor: "Contratista",
-      days: "Días",
-      startTime: "Hora de inicio",
-      endTime: "Hora de finalización",
-      available: "Disponible para trabajos",
-      notAvailable: "No disponible",
-      saveChanges: "Guardar Cambios",
-      saving: "Guardando...",
-      error: "Error al guardar el horario",
-      success: "Horario guardado",
-      loading: "Cargando contratistas...",
-      noContractors: "No se encontraron contratistas",
-    },
-  }[lang];
+  const t = T[lang];
 
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<Record<string, boolean>>({});
-  const [successMsg, setSuccessMsg] = useState<Record<string, boolean>>({});
+  const [feedback, setFeedback] = useState<Record<string, "saved" | "error" | null>>({});
 
   useEffect(() => {
-    fetchContractors();
+    adminFetch("/api/admin/contractors?status=active")
+      .then((r) => r.json())
+      .then((d) => setContractors(d.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchContractors = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await adminFetch("/api/admin/contractors?status=active");
-      if (!res.ok) throw new Error("Failed to fetch contractors");
-      const data = await res.json();
-      setContractors(data.data || []);
-    } catch (err) {
-      setError("Failed to load contractors");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async (contractorId: string, formData: { days: string[]; start_hour: number; end_hour: number; is_available: boolean }) => {
-    setSaving((prev) => ({ ...prev, [contractorId]: true }));
-    setSuccessMsg((prev) => ({ ...prev, [contractorId]: false }));
+  const handleSave = async (
+    contractorId: string,
+    days: string[],
+    start_hour: number,
+    end_hour: number,
+    is_available: boolean
+  ) => {
+    setSaving((p) => ({ ...p, [contractorId]: true }));
+    setFeedback((p) => ({ ...p, [contractorId]: null }));
     try {
       const res = await adminFetch(`/api/admin/contractors/${contractorId}`, {
         method: "PATCH",
-        body: JSON.stringify({
-          availability: {
-            days: formData.days,
-            start_hour: formData.start_hour,
-            end_hour: formData.end_hour,
-          },
-          is_available: formData.is_available,
-        }),
+        body: JSON.stringify({ availability: { days, start_hour, end_hour }, is_available }),
       });
-      if (!res.ok) throw new Error("Failed to save");
-      setSuccessMsg((prev) => ({ ...prev, [contractorId]: true }));
-    } catch (err) {
-      setError(t.error);
-      console.error(err);
+      setFeedback((p) => ({ ...p, [contractorId]: res.ok ? "saved" : "error" }));
+    } catch {
+      setFeedback((p) => ({ ...p, [contractorId]: "error" }));
     } finally {
-      setSaving((prev) => ({ ...prev, [contractorId]: false }));
+      setSaving((p) => ({ ...p, [contractorId]: false }));
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-2xl font-bold mb-4">{t.title}</h1>
-          <p className="text-gray-600 mb-6">{t.subtitle}</p>
-          <div className="animate-pulse rounded-xl bg-white p-6 h-96">
-            {/* Loading skeleton */}
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <Link
+            href={`/${lang}/admin`}
+            className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            {t.back}
+          </Link>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">{t.title}</h1>
+          <p className="mt-1 text-sm text-gray-500">{t.subtitle}</p>
+        </div>
+
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
           </div>
-        </div>
-      </div>
-    );
-  }
+        )}
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-2xl font-bold mb-4">{t.title}</h1>
-          <p className="text-red-600">{error}</p>
-          <Link
-            href={`/${lang}/admin`}
-            className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            ← Back to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
+        {!loading && contractors.length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <p className="text-gray-500">{t.none}</p>
+          </div>
+        )}
 
-  if (contractors.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-2xl font-bold mb-4">{t.title}</h1>
-          <p className="text-gray-600">{t.subtitle}</p>
-          <p className="mt-6 text-gray-500">{t.noContractors}</p>
-          <Link
-            href={`/${lang}/admin`}
-            className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            ← Back to Dashboard
-          </Link>
-        </div>
+        {contractors.map((c) => (
+          <ContractorCard
+            key={c.id}
+            contractor={c}
+            lang={lang}
+            t={t}
+            saving={!!saving[c.id]}
+            feedback={feedback[c.id] ?? null}
+            onSave={(days, start, end, avail) => handleSave(c.id, days, start, end, avail)}
+          />
+        ))}
       </div>
-    );
-  }
+    </div>
+  );
+}
+
+function ContractorCard({
+  contractor: c,
+  lang,
+  t,
+  saving,
+  feedback,
+  onSave,
+}: {
+  contractor: Contractor;
+  lang: "en" | "es";
+  t: (typeof T)["en"];
+  saving: boolean;
+  feedback: "saved" | "error" | null;
+  onSave: (days: string[], start: number, end: number, avail: boolean) => void;
+}) {
+  const initDays = c.availability?.days ?? [];
+  const [days, setDays] = useState<string[]>(initDays);
+  const [startHour, setStartHour] = useState(c.availability?.start_hour ?? 8);
+  const [endHour, setEndHour] = useState(c.availability?.end_hour ?? 18);
+  const [isAvailable, setIsAvailable] = useState(c.is_available);
+
+  const toggleDay = (id: string) =>
+    setDays((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-2xl font-bold mb-4">{t.title}</h1>
-        <p className="text-gray-600 mb-6">{t.subtitle}</p>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Card header */}
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <p className="text-base font-semibold text-gray-900">
+            {c.full_name ?? "—"}
+          </p>
+          <p className="text-sm text-gray-400">{c.email ?? ""}</p>
+        </div>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+            isAvailable
+              ? "bg-green-100 text-green-700"
+              : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          {isAvailable ? (lang === "es" ? "Disponible" : "Available") : (lang === "es" ? "No disponible" : "Unavailable")}
+        </span>
+      </div>
 
-        <div className="space-y-6">
-          {contractors.map((contractor) => (
-            <div key={contractor.id} className="bg-white rounded-xl shadow p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">{contractor.full_name}</h2>
-                <p className="text-sm text-gray-500">{contractor.email}</p>
-              </div>
-
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget as HTMLFormElement);
-                  const days = formData.getAll("days") as string[];
-                  handleSave(contractor.id, {
-                    days,
-                    start_hour: parseInt(formData.get("start_hour") as string, 10),
-                    end_hour: parseInt(formData.get("end_hour") as string, 10),
-                    is_available: formData.get("is_available") === "true",
-                  });
-                }}
-                className="space-y-4"
-              >
-                <div>
-                  <label className="block text-sm font-medium mb-2">{t.days}</label>
-                  <div className="flex flex-wrap gap-2">
-                    {daysOfWeek.map((day) => (
-                      <label key={day.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          value={day.id}
-                          name="days"
-                          defaultChecked={
-                            contractor.availability?.days.includes(day.id) ||
-                            false
-                          }
-                          className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                        />
-                        <span className="ml-2 text-gray-900">{day.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t.startTime}</label>
-                    <select
-                      name="start_hour"
-                      value={contractor.availability?.start_hour ?? 9}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {timeOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t.endTime}</label>
-                    <select
-                      name="end_hour"
-                      value={contractor.availability?.end_hour ?? 17}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {timeOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="is_available"
-                    checked={contractor.is_available}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 text-sm font-medium text-gray-900">
-                    {contractor.is_available ? t.available : t.notAvailable}
-                  </label>
-                </div>
-
-                <div className="mt-4 flex items-center space-x-3">
-                  <button
-                    type="submit"
-                    disabled={saving[contractor.id]}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {saving[contractor.id] ? t.saving : t.saveChanges}
-                  </button>
-                  {successMsg[contractor.id] && (
-                    <span className="text-green-600 text-sm">{t.success}</span>
-                  )}
-                </div>
-              </form>
-            </div>
-          ))}
+      <div className="px-6 py-5 space-y-5">
+        {/* Days */}
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            {t.days}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {DAYS.map((day) => {
+              const active = days.includes(day.id);
+              return (
+                <button
+                  key={day.id}
+                  type="button"
+                  onClick={() => toggleDay(day.id)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                    active
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "bg-white border-gray-300 text-gray-600 hover:border-blue-400"
+                  }`}
+                >
+                  {lang === "es" ? day.es : day.en}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <Link
-          href={`/${lang}/admin`}
-          className="mt-8 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          ← Back to Dashboard
-        </Link>
+        {/* Hours */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+              {t.start}
+            </label>
+            <select
+              value={startHour}
+              onChange={(e) => setStartHour(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {HOURS.map((h) => (
+                <option key={h.value} value={h.value}>
+                  {h.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+              {t.end}
+            </label>
+            <select
+              value={endHour}
+              onChange={(e) => setEndHour(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {HOURS.map((h) => (
+                <option key={h.value} value={h.value}>
+                  {h.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Available toggle */}
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <div
+            onClick={() => setIsAvailable((v) => !v)}
+            className={`relative w-11 h-6 rounded-full transition-colors ${
+              isAvailable ? "bg-blue-600" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                isAvailable ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </div>
+          <span className="text-sm font-medium text-gray-700">{t.available}</span>
+        </label>
+
+        {/* Save row */}
+        <div className="flex items-center gap-3 pt-1">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => onSave(days, startHour, endHour, isAvailable)}
+            className="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {saving ? t.saving : t.save}
+          </button>
+          {feedback === "saved" && (
+            <span className="text-sm font-medium text-green-600">{t.saved}</span>
+          )}
+          {feedback === "error" && (
+            <span className="text-sm font-medium text-red-600">{t.error}</span>
+          )}
+        </div>
       </div>
     </div>
   );

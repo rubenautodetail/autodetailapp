@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
                 .from('bookings')
                 .select('id, document_id, service_name, time_window, address, city, zip_code, date, total_amount, status, confirmation_code')
                 .eq('contractor_id', contractorId)
-                .in('status', ['confirmed', 'in_progress', 'pending_approval'])
+                .in('status', ['confirmed', 'en_route', 'in_progress', 'pending_approval'])
                 .order('date', { ascending: true });
 
             activeJobs = (activeRaw ?? []).map((b) => ({
