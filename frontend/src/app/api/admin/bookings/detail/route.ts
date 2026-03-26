@@ -75,6 +75,9 @@ export async function GET(req: NextRequest) {
     contractorId: b.contractor_id ?? null,
     createdAt: b.created_at ?? null,
     updatedAt: b.updated_at ?? null,
+    reviewRating: b.review_rating ?? null,
+    reviewComment: b.review_comment ?? null,
+    reviewedAt: b.reviewed_at ?? null,
   };
 
   return NextResponse.json({ booking, contractor });

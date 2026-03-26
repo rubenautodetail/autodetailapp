@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
             // Earnings from completed jobs
             const { data: completed } = await supabase
                 .from('bookings')
-                .select('id, service_name, date, total_amount, created_at')
+                .select('id, service_name, date, total_amount, created_at, review_rating, review_comment')
                 .eq('contractor_id', contractorId)
                 .eq('status', 'completed')
                 .order('date', { ascending: false });

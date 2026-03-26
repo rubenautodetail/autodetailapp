@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         // Verify booking belongs to this user and is completed
         const { data: booking, error: bookingError } = await supabase
             .from('bookings')
-            .select('id, contractor_id, status, customer_email, review_rating')
+            .select('id, contractor_id, status, customer_email, user_id, review_rating')
             .eq('id', safeId)
             .single();
 
@@ -51,7 +51,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
         }
 
-        if (booking.customer_email !== user.email) {
+        // Allow if email matches OR if user_id matches (booking may be linked by either)
+        const ownsBooking =
+            booking.customer_email === user.email ||
+            (booking.user_id && booking.user_id === user.id);
+
+        if (!ownsBooking) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

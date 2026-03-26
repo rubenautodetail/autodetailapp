@@ -157,21 +157,81 @@ export async function POST(req: NextRequest) {
         }
 
         case 'payment_intent.succeeded': {
-            // Payment was captured (via approve or auto-approve cron). Mark as paid.
+            // Payment was captured. Two cases:
+            // 1. Manual capture flow (cards): booking was 'authorized', admin captured → mark paid.
+            // 2. Auto-capture payment methods (Cash App Pay etc.): Stripe skips
+            //    'amount_capturable_updated' and fires 'succeeded' directly while booking is
+            //    still 'unpaid'. Must handle both paths.
             const pi = event.data.object as Stripe.PaymentIntent;
             const bookingId = pi.metadata?.bookingId;
             const safeId2 = bookingId ? String(bookingId).replace(/[^a-zA-Z0-9\-_]/g, '') : '';
-            if (safeId2 && safeId2 !== 'test_booking' && safeId2 === bookingId) {
-                // .eq('payment_status', 'authorized') ensures idempotency: only capture once
-                await supabase
-                    .from('bookings')
-                    .update({ payment_status: 'paid', status: 'confirmed' })
-                    .eq('id', safeId2)
-                    .eq('payment_status', 'authorized');
+            if (!safeId2 || safeId2 === 'test_booking' || safeId2 !== bookingId) break;
 
-                console.log(`Payment succeeded for booking ${bookingId}`);
-                // Receipt email is sent by the approve route (booking.approved notification)
-                // to avoid duplicates if amount_capturable_updated already fired booking.confirmed.
+            // Fetch current state BEFORE updating so we can detect which path this is
+            const { data: preUpdateBooking } = await supabase
+                .from('bookings')
+                .select('payment_status, service_name, zip_code, status')
+                .eq('id', safeId2)
+                .single();
+
+            const wasAutoCapture = preUpdateBooking?.payment_status === 'unpaid';
+
+            const { data: updatedBooking2 } = await supabase
+                .from('bookings')
+                .update({ payment_status: 'paid', status: 'confirmed' })
+                .eq('id', safeId2)
+                .in('payment_status', ['authorized', 'unpaid']) // covers both paths
+                .select()
+                .single();
+
+            console.log(`Payment succeeded for booking ${bookingId} (auto-capture: ${wasAutoCapture})`);
+
+            // For auto-capture methods (Cash App etc.) the 'amount_capturable_updated' event
+            // never fired — contractor assignment + confirmation email were never sent. Do it now.
+            if (updatedBooking2 && wasAutoCapture) {
+                const booking2 = updatedBooking2 as BookingRow;
+                const serviceName2 = booking2.service_name ?? 'Detailing Service';
+                const zipCode2 = booking2.zip_code ?? '';
+                const bookingWithService2 = { ...updatedBooking2, service_name: serviceName2 };
+                const { notify: notify2 } = await import('@/lib/notifications');
+
+                await notify2({ type: 'booking.confirmed', booking: bookingWithService2 }).catch(
+                    (err) => console.error('webhook: customer confirmation email (auto-capture) failed:', err)
+                );
+
+                const { data: contractors2 } = await supabase
+                    .from('profiles')
+                    .select('id, email')
+                    .eq('role', 'contractor')
+                    .eq('approval_status', 'approved')
+                    .eq('is_available', true);
+
+                if (contractors2 && contractors2.length > 0) {
+                    await Promise.all(
+                        contractors2.map((c: { id: string; email: string }) =>
+                            notify2({
+                                type: 'contractor.job_assigned',
+                                booking: bookingWithService2,
+                                contractorEmail: c.email,
+                            })
+                        )
+                    );
+
+                    const notificationRows2 = contractors2.map((c: { id: string; email: string }) => ({
+                        user_id: c.id,
+                        type: 'info' as const,
+                        title: 'New Job Available',
+                        message: `New detailing job in ${zipCode2}. Tap to view and accept.`,
+                        booking_id: updatedBooking2.id,
+                        is_read: false,
+                        link: `/contractor/jobs/${updatedBooking2.id}`,
+                    }));
+
+                    const { error: notifErr2 } = await supabase.from('notifications').insert(notificationRows2);
+                    if (notifErr2) console.error('webhook: contractor notification insert (auto-capture) failed:', notifErr2);
+                } else {
+                    console.warn(`webhook (auto-capture): no available contractors for booking ${bookingId}`);
+                }
             }
             break;
         }

@@ -21,7 +21,7 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
 
     const navItems = [
         { icon: Home, label: "Home", labelEs: "Inicio", path: "/dashboard" },
-        { icon: Sparkles, label: "Book", labelEs: "Reservar", path: "/booking/select" },
+        { icon: Sparkles, label: "Book", labelEs: "Servicios", path: "/dashboard/services" },
         { icon: ClipboardList, label: "Orders", labelEs: "Reservas", path: "/dashboard/orders" },
         { icon: User, label: "Account", labelEs: "Cuenta", path: "/dashboard/profile" },
     ];
@@ -30,8 +30,8 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
         const fullPath = `/${lang}${itemPath}`;
         // Home = exact dashboard match
         if (itemPath === "/dashboard") return pathname === `/${lang}/dashboard`;
-        // Booking section — active for any /booking/* page
-        if (itemPath === "/booking/select") return pathname?.startsWith(`/${lang}/booking`);
+        // Book/Services section — active for services page or any /booking/* flow
+        if (itemPath === "/dashboard/services") return pathname?.startsWith(`/${lang}/dashboard/services`) || pathname?.startsWith(`/${lang}/booking`);
         // Orders
         if (itemPath === "/dashboard/orders") return pathname?.startsWith(`/${lang}/dashboard/orders`);
         // Profile
