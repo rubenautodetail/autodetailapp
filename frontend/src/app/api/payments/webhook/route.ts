@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
                             message: `New detailing job in ${zipCode}. Tap to view and accept.`,
                             booking_id: updatedBooking.id,
                             is_read: false,
-                            link: `/contractor/jobs/${updatedBooking.id}`,
+                            link: `/en/contractor/jobs/${updatedBooking.id}`,
                         }));
 
                         const { error: notifError } = await supabase.from('notifications').insert(notificationRows);
@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
                         message: `New detailing job in ${zipCode2}. Tap to view and accept.`,
                         booking_id: updatedBooking2.id,
                         is_read: false,
-                        link: `/contractor/jobs/${updatedBooking2.id}`,
+                        link: `/en/contractor/jobs/${updatedBooking2.id}`,
                     }));
 
                     const { error: notifErr2 } = await supabase.from('notifications').insert(notificationRows2);

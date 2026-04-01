@@ -115,7 +115,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
 
             case 'booking.confirmed':
                 await sendBookingConfirmation(mapBookingData(event.booking));
-                await createInAppNotification(event.booking.user_id, 'Booking Confirmed', `Your booking for ${event.booking.service_name || 'Detailing'} is confirmed!`, 'success', `/${event.booking.locale || 'en'}/booking/${event.booking.id}`);
+                await createInAppNotification(event.booking.user_id, 'Booking Confirmed', `Your booking for ${event.booking.service_name || 'Detailing'} is confirmed!`, 'success', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/track`);
                 break;
 
             case 'booking.failed':
@@ -133,7 +133,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 await sendJobApprovedReceiptEmail(approvedBooking);
 
                 // Notify Customer
-                await createInAppNotification(event.booking.user_id, 'Receipt', `Thank you for your business! Payment has been captured.`, 'success', `/${event.booking.locale || 'en'}/booking/${event.booking.id}`);
+                await createInAppNotification(event.booking.user_id, 'Receipt', `Thank you for your business! Payment has been captured.`, 'success', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/receipt`);
 
                 // Notify Contractor
                 await createInAppNotification(event.booking.contractor_id, 'Job Approved', `The customer approved your job. Payment is being processed.`, 'success');
@@ -151,7 +151,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
 
             case 'contractor.job_accepted':
                 await sendJobAcceptedEmail(mapBookingData(event.booking, event.contractor));
-                await createInAppNotification(event.booking.user_id, 'Contractor Accepted Job', `${event.contractor.full_name || 'A contractor'} has accepted your booking and is on their way.`, 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}`);
+                await createInAppNotification(event.booking.user_id, 'Contractor Accepted Job', `${event.contractor.full_name || 'A contractor'} has accepted your booking and is on their way.`, 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/track`);
                 // Send full job details to the contractor who accepted
                 if (event.contractorEmail) {
                     await sendContractorJobConfirmation(event.contractorEmail, mapBookingData(event.booking, event.contractor));
@@ -164,7 +164,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
 
             case 'contractor.en_route':
                 await sendEnRouteEmail(mapBookingData(event.booking));
-                await createInAppNotification(event.booking.user_id, 'Detailer On The Way', 'Your detailer is heading to you now! They should arrive shortly.', 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}`);
+                await createInAppNotification(event.booking.user_id, 'Detailer On The Way', 'Your detailer is heading to you now! They should arrive shortly.', 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/track`);
                 break;
 
             case 'contractor.job_started':
