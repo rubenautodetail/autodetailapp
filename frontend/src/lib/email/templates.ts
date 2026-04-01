@@ -56,6 +56,7 @@ function baseLayout(opts: {
 function fmtDate(date: string, locale = 'en-US'): string {
   return new Date(date).toLocaleDateString(locale, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    timeZone: 'America/New_York',
   });
 }
 

@@ -104,9 +104,9 @@ export default function ContractorHistory({ params }: Props) {
                                 <div className="space-y-1 min-w-0">
                                     <p className="font-semibold text-white truncate">{job.service_name || 'Detailing Service'}</p>
                                     <p className="text-sm text-[#A5B0D1]">
-                                        {job.date ? new Date(job.date + 'T12:00:00').toLocaleDateString(
+                                        {job.date ? new Date(job.date + 'T12:00:00Z').toLocaleDateString(
                                             lang === 'es' ? 'es-US' : 'en-US',
-                                            { month: 'short', day: 'numeric', year: 'numeric' }
+                                            { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }
                                         ) : '—'}
                                     </p>
                                     {job.review_rating && (

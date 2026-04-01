@@ -202,9 +202,9 @@ export default function EarningsPage({ params }: EarningsProps) {
                         <div className="divide-y divide-[#2C355E]">
                             {completed.map((job) => {
                                 const dateStr = job.date
-                                    ? new Date(job.date + "T12:00:00").toLocaleDateString(
+                                    ? new Date(job.date + "T12:00:00Z").toLocaleDateString(
                                         lang === "es" ? "es-US" : "en-US",
-                                        { month: "short", day: "numeric", year: "numeric" }
+                                        { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }
                                     )
                                     : "—";
                                 return (
@@ -245,11 +245,11 @@ export default function EarningsPage({ params }: EarningsProps) {
                     <div className="divide-y divide-[#2C355E]">
                         {payouts.map((p) => {
                             const startStr = new Date(p.period_start + "T12:00:00Z")
-                                .toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric" });
+                                .toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
                             const endStr = new Date(p.period_end + "T12:00:00Z")
-                                .toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric" });
+                                .toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" });
                             const paidDateStr = p.paid_at
-                                ? new Date(p.paid_at).toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
+                                ? new Date(p.paid_at).toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" })
                                 : null;
                             const methodMap: Record<string, string> = {
                                 ach: "ACH", zelle: "Zelle", check: lang === "es" ? "Cheque" : "Check",

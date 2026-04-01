@@ -1,11 +1,13 @@
 /**
  * Safe date utilities — never return Unix epoch (Dec 31 1969) for null/invalid values.
+ * All display output is in America/New_York (Eastern) time.
  *
  * Rules:
  * - Always pass DB date strings through these helpers instead of calling new Date() directly.
  * - For plain YYYY-MM-DD date columns, use fmtDate() — appends T12:00:00Z to avoid TZ shift.
  * - For full ISO timestamps (created_at, updated_at), use fmtDateTime().
  * - Both return "—" for null, undefined, or invalid dates.
+ * - NEVER call toLocaleString/toLocaleDateString without timeZone: "America/New_York".
  */
 
 const FALLBACK = "—";
@@ -31,7 +33,7 @@ export function fmtDate(
     const iso = value.length === 10 ? value + "T12:00:00Z" : value;
     const d = safeDate(iso);
     if (!d) return FALLBACK;
-    return d.toLocaleDateString(locale, options);
+    return d.toLocaleDateString(locale, { timeZone: "America/New_York", ...options });
 }
 
 /**
@@ -43,7 +45,7 @@ export function fmtDateTime(
 ): string {
     const d = safeDate(value ?? null);
     if (!d) return FALLBACK;
-    return d.toLocaleString(locale);
+    return d.toLocaleString(locale, { timeZone: "America/New_York" });
 }
 
 /**
