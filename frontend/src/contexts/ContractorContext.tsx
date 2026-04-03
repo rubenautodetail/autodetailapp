@@ -57,9 +57,9 @@ function mapBookingToRequest(booking: any): ServiceRequest {
     serviceId: 'S-N/A',
     serviceName: booking.service_name || 'Auto Detailing',
     address,
-    estimatedTotal: typeof booking.total_amount === 'string'
+    estimatedTotal: (typeof booking.total_amount === 'string'
       ? parseFloat(booking.total_amount)
-      : (booking.total_amount || 0),
+      : (booking.total_amount || 0)) * 0.70,
     notes: booking.special_instructions,
     status: (booking.status as RequestStatus) || 'pending',
     timestamp: booking.created_at || new Date().toISOString(),

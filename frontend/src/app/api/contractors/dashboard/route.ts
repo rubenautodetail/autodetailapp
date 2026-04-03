@@ -110,7 +110,10 @@ export async function GET(req: NextRequest) {
                 .filter((b) => new Date(b.created_at) >= weekAgo)
                 .reduce((s, b) => s + contractorAmount(Number(b.total_amount) || 0), 0);
 
-            completedJobs = completed ?? [];
+            completedJobs = (completed ?? []).map((b) => ({
+                ...b,
+                total_amount: contractorAmount(Number(b.total_amount) || 0),
+            }));
         }
 
         return NextResponse.json({
