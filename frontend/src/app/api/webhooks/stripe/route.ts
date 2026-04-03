@@ -46,15 +46,24 @@ export async function POST(req: NextRequest) {
     const { data: existing } = await supabase
         .from('webhook_events')
         .select('id')
-        .eq('event_id', event.id)
-        .single();
+        .eq('stripe_event_id', event.id)
+        .maybeSingle();
 
     if (existing) {
         return NextResponse.json({ received: true, skipped: true });
     }
 
     // Record event before processing to prevent double-processing on retry
-    await supabase.from('webhook_events').insert({ event_id: event.id, type: event.type });
+    const { error: insertError } = await supabase.from('webhook_events').insert({ stripe_event_id: event.id, type: event.type });
+
+    if (insertError) {
+        // code 23505 = Postgres UNIQUE_VIOLATION — duplicate event, already processed
+        if ((insertError as { code?: string }).code === '23505') {
+            return NextResponse.json({ received: true, skipped: true });
+        }
+        console.error('webhook: failed to record event for idempotency:', insertError);
+        return NextResponse.json({ error: 'Failed to record webhook event' }, { status: 500 });
+    }
 
     const paymentIntent = event.data.object as { id: string; metadata?: { bookingId?: string } };
     const bookingId = paymentIntent.metadata?.bookingId;

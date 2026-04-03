@@ -221,6 +221,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           vehicleYear: vehicles[0]?.year,
           vehicleColor: vehicles[0]?.color,
           currency: "usd",
+          locale,
         }),
       });
 

@@ -2,17 +2,18 @@
 
 import LocationMap from "@/components/maps/LocationMap";
 import { ArrowLeft, Navigation } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LocationPage() {
     const router = useRouter();
+    const { lang = "en" } = useParams<{ lang: string }>();
     const [address, setAddress] = useState("123 Biscayne Blvd, Miami, FL");
     const [apartment, setApartment] = useState("");
     const [notes, setNotes] = useState("");
 
     const handleConfirm = () => {
-        router.push("/dashboard/request");
+        router.push(`/${lang}/dashboard/request`);
     };
 
     return (

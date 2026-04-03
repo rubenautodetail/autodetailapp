@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
         serviceName, vehicles: vehiclesInput,
         vehicleMake, vehicleModel, vehicleYear, vehicleColor,
         currency = 'usd',
+        locale = 'en',
     } = body;
 
     // Build vehicles array — backwards compat: if no vehicles array, use single vehicle fields
@@ -124,6 +125,7 @@ export async function POST(req: NextRequest) {
         customer_email: customerEmail,
         customer_phone: customerPhone || '',
         special_instructions: specialInstructions || '',
+        locale,
         subtotal: perVehicleAmount,
         // serviceFee from client is already per-vehicle — do NOT divide by vehicleCount
         service_fee: serviceFee ?? 0,

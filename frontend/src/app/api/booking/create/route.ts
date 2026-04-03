@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
         customer_email: customerEmail,
         customer_phone: customerPhone || '',
         special_instructions: specialInstructions || '',
+        locale: parsed.data.locale || 'en',
         subtotal: subtotal || 0,
         service_fee: serviceFee || 0,
         total_amount: total || 0,

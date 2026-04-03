@@ -83,7 +83,7 @@ export default function ReportIssuePage() {
                             : 'Your payment will NOT be captured while we review the issue.'}
                     </p>
                     <button
-                        onClick={() => router.push(`/${lang}/dashboard`)}
+                        onClick={() => router.push(`/${lang}/customer`)}
                         className="w-full bg-[#D0B078] text-[#131835] font-bold py-3 rounded-xl hover:opacity-90 transition-all"
                     >
                         {lang === 'es' ? 'Ver Mis Reservas' : 'View My Bookings'}
