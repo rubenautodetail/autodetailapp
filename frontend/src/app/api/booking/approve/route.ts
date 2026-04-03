@@ -7,13 +7,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { capturePaymentIntent } from '@/lib/stripe/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notify } from '@/lib/notifications';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
 
 export async function POST(req: NextRequest) {
     try {
-        let body: any;
+        let body: { bookingId?: string; confirmationCode?: string };
         try {
             body = await req.json();
         } catch {
@@ -52,6 +52,14 @@ export async function POST(req: NextRequest) {
         // Verify confirmation code matches — prevents unauthorized payment captures
         if (booking.confirmation_code !== confirmationCode) {
             return NextResponse.json({ error: 'Invalid confirmation code' }, { status: 403 });
+        }
+
+        // If a session exists, verify the user owns this booking
+        // (No session is allowed — supports email link approvals with valid confirmation code)
+        const supabaseAuth = await createClient();
+        const { data: { user } } = await supabaseAuth.auth.getUser();
+        if (user && user.email !== booking.customer_email) {
+            return NextResponse.json({ error: 'Unauthorized: email mismatch' }, { status: 403 });
         }
 
         if (!booking.payment_intent_id) {

@@ -57,10 +57,32 @@ export async function POST(req: NextRequest) {
       await stripe.paymentIntents.cancel(booking.payment_intent_id);
     } catch (e) {
       console.error("Stripe cancel error:", e);
+      return NextResponse.json(
+        { error: "Failed to cancel payment authorization with Stripe" },
+        { status: 500 }
+      );
     }
   }
 
-  const newPaymentStatus = booking.payment_intent_id ? "cancelled" : "unpaid";
+  // Refund captured payment if already paid (only allowed 24h+ in advance, enforced above)
+  if (booking.payment_intent_id && booking.payment_status === "paid") {
+    try {
+      const refund = await stripe.refunds.create({
+        payment_intent: booking.payment_intent_id,
+      });
+      console.log("Stripe refund created:", refund.id, "status:", refund.status);
+    } catch (e) {
+      console.error("Stripe refund error:", e);
+      return NextResponse.json(
+        { error: "Failed to refund payment. Please contact support." },
+        { status: 500 }
+      );
+    }
+  }
+
+  const newPaymentStatus = booking.payment_intent_id
+    ? booking.payment_status === "paid" ? "refunded" : "cancelled"
+    : "unpaid";
 
   const now = new Date().toISOString();
   const { error } = await supabase
