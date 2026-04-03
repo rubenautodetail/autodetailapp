@@ -138,39 +138,45 @@ export interface ContractorApplicationData {
 
 export function bookingConfirmationTemplate(booking: BookingEmailData): string {
   const { customer, service, location } = booking;
+  const locale = booking.locale || 'en';
+  const isEs = locale === 'es';
   const vehicleRow =
     booking.vehicle && (booking.vehicle.make || booking.vehicle.model)
-      ? `<div class="detail-row"><span class="lbl">Vehicle:</span><span class="val">${booking.vehicle.year ?? ''} ${booking.vehicle.make ?? ''} ${booking.vehicle.model ?? ''} - ${booking.vehicle.color ?? ''}</span></div>`
+      ? `<div class="detail-row"><span class="lbl">${isEs ? 'Vehículo' : 'Vehicle'}:</span><span class="val">${booking.vehicle.year ?? ''} ${booking.vehicle.make ?? ''} ${booking.vehicle.model ?? ''} - ${booking.vehicle.color ?? ''}</span></div>`
       : '';
 
   const body = `
-    <p>Hi ${customer.firstName},</p>
-    <p>Great news! Your detailing appointment has been confirmed. We can't wait to make your vehicle shine!</p>
+    <p>${isEs ? 'Hola' : 'Hi'} ${customer.firstName},</p>
+    <p>${isEs
+      ? '¡Buenas noticias! Tu cita de detallado ha sido confirmada. ¡Estamos listos para dejar tu vehículo impecable!'
+      : "Great news! Your detailing appointment has been confirmed. We can't wait to make your vehicle shine!"}</p>
     <div class="detail-box">
-      <h3 style="margin-top:0;color:#667eea;">Booking Details</h3>
-      <div class="detail-row"><span class="lbl">Confirmation Code:</span><span class="val"><strong>${booking.confirmationCode}</strong></span></div>
-      <div class="detail-row"><span class="lbl">Service:</span><span class="val">${service.name}</span></div>
-      <div class="detail-row"><span class="lbl">Date:</span><span class="val">${fmtDate(booking.scheduledDate)}</span></div>
-      <div class="detail-row"><span class="lbl">Time:</span><span class="val">${booking.scheduledTime}</span></div>
-      <div class="detail-row"><span class="lbl">Location:</span><span class="val">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
+      <h3 style="margin-top:0;color:#667eea;">${isEs ? 'Detalles de la Reserva' : 'Booking Details'}</h3>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Código de Confirmación' : 'Confirmation Code'}:</span><span class="val"><strong>${booking.confirmationCode}</strong></span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Servicio' : 'Service'}:</span><span class="val">${service.name}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Fecha' : 'Date'}:</span><span class="val">${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Hora' : 'Time'}:</span><span class="val">${booking.scheduledTime}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Ubicación' : 'Location'}:</span><span class="val">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
       ${vehicleRow}
-      <div class="detail-row"><span class="lbl">Total Amount:</span><span class="val"><strong>$${booking.totalAmount.toFixed(2)}</strong></span></div>
-      <div class="detail-row"><span class="lbl">Payment Status:</span><span class="val"><span class="highlight">Authorized (charged when service complete)</span></span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Monto Total' : 'Total Amount'}:</span><span class="val"><strong>$${booking.totalAmount.toFixed(2)}</strong></span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Estado del Pago' : 'Payment Status'}:</span><span class="val"><span class="highlight">${isEs ? 'Autorizado (se cobra al completar el servicio)' : 'Authorized (charged when service complete)'}</span></span></div>
     </div>
-    <h3>What's Next?</h3>
+    <h3>${isEs ? '¿Qué sigue?' : "What's Next?"}</h3>
     <ul>
-      <li>We're assigning a professional detailer to your appointment</li>
-      <li>You'll receive an introduction email within 30 minutes</li>
-      <li>Your detailer will arrive at the scheduled time</li>
+      <li>${isEs ? 'Estamos asignando un detallador profesional a tu cita' : "We're assigning a professional detailer to your appointment"}</li>
+      <li>${isEs ? 'Recibirás un correo de presentación en los próximos 30 minutos' : "You'll receive an introduction email within 30 minutes"}</li>
+      <li>${isEs ? 'Tu detallador llegará a la hora programada' : 'Your detailer will arrive at the scheduled time'}</li>
     </ul>
-    <p style="margin-top:30px;"><a href="${APP_URL}/en/booking/${booking.id}/track" class="btn" style="background:#667eea;color:white;">View Booking Details</a></p>
-    <p style="color:#6b7280;font-size:14px;margin-top:30px;">Need to make changes? Reply to this email or call us at ${SUPPORT_PHONE}</p>`;
+    <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#667eea;color:white;">${isEs ? 'Ver Detalles de la Reserva' : 'View Booking Details'}</a></p>
+    <p style="color:#6b7280;font-size:14px;margin-top:30px;">${isEs
+      ? `¿Necesitas hacer cambios? Responde a este correo o llámanos al ${SUPPORT_PHONE}`
+      : `Need to make changes? Reply to this email or call us at ${SUPPORT_PHONE}`}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
-    headerText: '🚗 Booking Confirmed!',
+    headerText: isEs ? '🚗 ¡Reserva Confirmada!' : '🚗 Booking Confirmed!',
     body,
-    footerLine: 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
   });
 }
 
@@ -198,36 +204,44 @@ export function newJobContractorTemplate(booking: BookingEmailData): string {
 
 export function paymentReceiptTemplate(booking: BookingEmailData): string {
   const { customer, service, contractor } = booking;
-  const contractorName = contractor ? `${contractor.firstName} ${contractor.lastName}` : 'Your Detailer';
+  const locale = booking.locale || 'en';
+  const isEs = locale === 'es';
+  const contractorName = contractor
+    ? `${contractor.firstName} ${contractor.lastName}`
+    : (isEs ? 'Tu Detallador' : 'Your Detailer');
 
   const body = `
-    <p>Hi ${customer.firstName},</p>
-    <p>Thank you for choosing DTailWash! Here's your receipt for the service.</p>
+    <p>${isEs ? 'Hola' : 'Hi'} ${customer.firstName},</p>
+    <p>${isEs
+      ? '¡Gracias por elegir DTailWash! Aquí tienes tu recibo del servicio.'
+      : "Thank you for choosing DTailWash! Here's your receipt for the service."}</p>
     <div style="background:#f9fafb;border:2px solid #3b82f6;padding:20px;margin:20px 0;border-radius:8px;">
-      <h3 style="margin-top:0;color:#1e40af;">Receipt #${booking.confirmationCode}</h3>
-      <p style="color:#6b7280;font-size:14px;">Date: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'America/New_York'})}</p>
-      <p style="color:#6b7280;font-size:14px;">Service Provider: ${contractorName}</p>
+      <h3 style="margin-top:0;color:#1e40af;">${isEs ? 'Recibo' : 'Receipt'} #${booking.confirmationCode}</h3>
+      <p style="color:#6b7280;font-size:14px;">${isEs ? 'Fecha' : 'Date'}: ${new Date().toLocaleDateString(isEs ? 'es-US' : 'en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'America/New_York'})}</p>
+      <p style="color:#6b7280;font-size:14px;">${isEs ? 'Proveedor del Servicio' : 'Service Provider'}: ${contractorName}</p>
       <div style="margin-top:20px;">
         <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;"><span>${service.name}</span><span>$${booking.totalAmount.toFixed(2)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:15px 0;font-size:18px;font-weight:bold;color:#1e40af;border-top:2px solid #3b82f6;margin-top:10px;"><span>Total Charged</span><span>$${booking.totalAmount.toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:15px 0;font-size:18px;font-weight:bold;color:#1e40af;border-top:2px solid #3b82f6;margin-top:10px;"><span>${isEs ? 'Total Cobrado' : 'Total Charged'}</span><span>$${booking.totalAmount.toFixed(2)}</span></div>
       </div>
-      ${booking.paymentIntentId ? `<p style="color:#6b7280;font-size:12px;margin-top:15px;">Transaction ID: ${booking.paymentIntentId}</p>` : ''}
+      ${booking.paymentIntentId ? `<p style="color:#6b7280;font-size:12px;margin-top:15px;">${isEs ? 'ID de Transacción' : 'Transaction ID'}: ${booking.paymentIntentId}</p>` : ''}
     </div>
     <div style="background:#dbeafe;border-left:4px solid #3b82f6;padding:15px;margin:20px 0;">
-      <h3 style="margin:0 0 10px 0;color:#1e40af;">Love your results? 🌟</h3>
-      <p style="margin:0;"><a href="${APP_URL}/en/booking/${booking.id}/review" class="btn" style="background:#3b82f6;color:white;">⭐ Rate Your Service</a></p>
+      <h3 style="margin:0 0 10px 0;color:#1e40af;">${isEs ? '¿Te encantaron los resultados?' : 'Love your results?'} 🌟</h3>
+      <p style="margin:0;"><a href="${APP_URL}/${locale}/booking/${booking.id}/review" class="btn" style="background:#3b82f6;color:white;">⭐ ${isEs ? 'Califica Tu Servicio' : 'Rate Your Service'}</a></p>
     </div>
     <div style="background:#dbeafe;border-left:4px solid #3b82f6;padding:15px;margin:20px 0;">
-      <h3 style="margin:0 0 10px 0;color:#1e40af;">Book Again &amp; Save!</h3>
-      <p style="margin:0;">Use code <strong>LOYAL10</strong> for 10% off your next service.</p>
-      <p style="margin:10px 0 0 0;"><a href="${APP_URL}/en/booking/select" class="btn" style="background:#3b82f6;color:white;">Schedule Another Appointment</a></p>
+      <h3 style="margin:0 0 10px 0;color:#1e40af;">${isEs ? '¡Reserva de Nuevo y Ahorra!' : 'Book Again &amp; Save!'}</h3>
+      <p style="margin:0;">${isEs
+        ? 'Usa el código <strong>LOYAL10</strong> para 10% de descuento en tu próximo servicio.'
+        : 'Use code <strong>LOYAL10</strong> for 10% off your next service.'}</p>
+      <p style="margin:10px 0 0 0;"><a href="${APP_URL}/${locale}/booking/select" class="btn" style="background:#3b82f6;color:white;">${isEs ? 'Agendar Otra Cita' : 'Schedule Another Appointment'}</a></p>
     </div>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#3b82f6 0%,#2563eb 100%)',
-    headerText: '💳 Payment Receipt',
+    headerText: isEs ? '💳 Recibo de Pago' : '💳 Payment Receipt',
     body,
-    footerLine: 'Thank you for your business!',
+    footerLine: isEs ? '¡Gracias por tu preferencia!' : 'Thank you for your business!',
   });
 }
 
@@ -293,32 +307,43 @@ export function welcomeEmailTemplate(user: { name: string }): string {
 }
 
 export function bookingPendingTemplate(booking: BookingEmailData): string {
+  const isEs = (booking.locale || 'en') === 'es';
   const body = `
-    <p>Hi ${booking.customer.firstName},</p>
-    <p>We've received your booking request for a <strong>${booking.service.name}</strong>.</p>
-    <p>Your booking is currently marked as <strong>Pending</strong> while we process the payment authorization. Once the payment hold is successful, you will receive a confirmation email with all the details and we will assign a detailer to your job.</p>
-    <p>Thank you for choosing DTailWash!</p>`;
+    <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p>${isEs
+      ? `Hemos recibido tu solicitud de reserva para un <strong>${booking.service.name}</strong>.`
+      : `We've received your booking request for a <strong>${booking.service.name}</strong>.`}</p>
+    <p>${isEs
+      ? 'Tu reserva está marcada como <strong>Pendiente</strong> mientras procesamos la autorización de pago. Una vez que la retención del pago sea exitosa, recibirás un correo de confirmación con todos los detalles y asignaremos un detallador a tu trabajo.'
+      : 'Your booking is currently marked as <strong>Pending</strong> while we process the payment authorization. Once the payment hold is successful, you will receive a confirmation email with all the details and we will assign a detailer to your job.'}</p>
+    <p>${isEs ? '¡Gracias por elegir DTailWash!' : 'Thank you for choosing DTailWash!'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)',
-    headerText: 'Booking Received',
+    headerText: isEs ? 'Reserva Recibida' : 'Booking Received',
     body,
   });
 }
 
 export function jobAcceptedTemplate(booking: BookingEmailData): string {
+  const locale = booking.locale || 'en';
+  const isEs = locale === 'es';
   const contractorName = booking.contractor
     ? `${booking.contractor.firstName} ${booking.contractor.lastName}`
-    : 'A detailer';
+    : (isEs ? 'Un detallador' : 'A detailer');
 
   const body = `
-    <p>Hi ${booking.customer.firstName},</p>
-    <p>Great news! <strong>${contractorName}</strong> has been assigned to your booking (${booking.confirmationCode}) and will be arriving at the scheduled time.</p>
-    <p>If you need to contact your detailer before they arrive or make any changes to your appointment, please visit your dashboard.</p>`;
+    <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p>${isEs
+      ? `¡Buenas noticias! <strong>${contractorName}</strong> ha sido asignado a tu reserva (${booking.confirmationCode}) y llegará a la hora programada.`
+      : `Great news! <strong>${contractorName}</strong> has been assigned to your booking (${booking.confirmationCode}) and will be arriving at the scheduled time.`}</p>
+    <p>${isEs
+      ? 'Si necesitas contactar a tu detallador antes de que llegue o hacer cambios a tu cita, visita tu panel de control.'
+      : 'If you need to contact your detailer before they arrive or make any changes to your appointment, please visit your dashboard.'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)',
-    headerText: 'Detailer Assigned! ✨',
+    headerText: isEs ? '¡Detallador Asignado! ✨' : 'Detailer Assigned! ✨',
     body,
   });
 }
@@ -368,39 +393,50 @@ export function jobRejectedAdminTemplate(booking: BookingEmailData): string {
 }
 
 export function bookingCancelledTemplate(booking: BookingEmailData): string {
+  const isEs = (booking.locale || 'en') === 'es';
   const body = `
-    <p>Hi ${booking.customer.firstName},</p>
-    <p>Your booking <strong>${booking.confirmationCode}</strong> has been cancelled.</p>
-    <p>If this was due to a payment failure, your card has not been charged.</p>
-    <p>If you'd like to reschedule, please visit our website to place a new booking.</p>
-    <p>Thank you,<br/>DTailWash Team</p>`;
+    <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p>${isEs
+      ? `Tu reserva <strong>${booking.confirmationCode}</strong> ha sido cancelada.`
+      : `Your booking <strong>${booking.confirmationCode}</strong> has been cancelled.`}</p>
+    <p>${isEs
+      ? 'Si esto se debió a un fallo en el pago, no se ha realizado ningún cargo a tu tarjeta.'
+      : 'If this was due to a payment failure, your card has not been charged.'}</p>
+    <p>${isEs
+      ? 'Si deseas reprogramar, visita nuestro sitio web para hacer una nueva reserva.'
+      : "If you'd like to reschedule, please visit our website to place a new booking."}</p>
+    <p>${isEs ? 'Gracias,' : 'Thank you,'}<br/>${isEs ? 'El equipo de DTailWash' : 'DTailWash Team'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#ef4444 0%,#dc2626 100%)',
-    headerText: 'Booking Cancelled',
+    headerText: isEs ? 'Reserva Cancelada' : 'Booking Cancelled',
     body,
   });
 }
 
 export function jobPendingApprovalTemplate(booking: BookingEmailData): string {
+  const locale = booking.locale || 'en';
+  const isEs = locale === 'es';
   const body = `
-    <p style="font-size:16px;">Hi ${booking.customer.firstName},</p>
-    <p style="font-size:16px;">Your detailer has just finished the <strong>${booking.service.name}</strong> service!</p>
+    <p style="font-size:16px;">${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p style="font-size:16px;">${isEs
+      ? `¡Tu detallador acaba de terminar el servicio de <strong>${booking.service.name}</strong>!`
+      : `Your detailer has just finished the <strong>${booking.service.name}</strong> service!`}</p>
     <div style="background:#f3f4f6;padding:20px;border-radius:8px;margin:20px 0;border:1px solid #e5e7eb;">
-      <h3 style="margin-top:0;color:#4b5563;">Next Steps:</h3>
+      <h3 style="margin-top:0;color:#4b5563;">${isEs ? 'Próximos Pasos:' : 'Next Steps:'}</h3>
       <ol style="margin-bottom:0;">
-        <li>Please walk out to your vehicle and inspect the work with your detailer.</li>
-        <li>Make sure everything is to your satisfaction.</li>
-        <li>Click the button below to approve the job and release the final payment.</li>
+        <li>${isEs ? 'Sal a tu vehículo e inspecciona el trabajo con tu detallador.' : 'Please walk out to your vehicle and inspect the work with your detailer.'}</li>
+        <li>${isEs ? 'Asegúrate de que todo esté a tu satisfacción.' : 'Make sure everything is to your satisfaction.'}</li>
+        <li>${isEs ? 'Haz clic en el botón de abajo para aprobar el trabajo y liberar el pago final.' : 'Click the button below to approve the job and release the final payment.'}</li>
       </ol>
     </div>
     <div style="text-align:center;">
-      <a href="${APP_URL}/en/booking/${booking.id}/approve?code=${booking.confirmationCode}" class="btn" style="background:#8b5cf6;color:white;padding:15px 40px;font-size:16px;font-weight:700;">INSPECT &amp; APPROVE JOB</a>
+      <a href="${APP_URL}/${locale}/booking/${booking.id}/approve?code=${booking.confirmationCode}" class="btn" style="background:#8b5cf6;color:white;padding:15px 40px;font-size:16px;font-weight:700;">${isEs ? 'INSPECCIONAR Y APROBAR TRABAJO' : 'INSPECT &amp; APPROVE JOB'}</a>
     </div>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%)',
-    headerText: 'Your Car is Ready! 🚘✨',
+    headerText: isEs ? '¡Tu Auto Está Listo! 🚘✨' : 'Your Car is Ready! 🚘✨',
     body,
   });
 }
@@ -462,70 +498,81 @@ export function chargebackAlertTemplate(data: {
 
 export function jobStartedTemplate(booking: BookingEmailData): string {
   const locale = booking.locale || 'en';
+  const isEs = locale === 'es';
   const body = `
-    <p>Hi ${booking.customer.firstName},</p>
-    <p>Your detailer has arrived and started working on your vehicle. They'll update you when they're finished.</p>
+    <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p>${isEs
+      ? 'Tu detallador ha llegado y comenzó a trabajar en tu vehículo. Te avisarán cuando terminen.'
+      : "Your detailer has arrived and started working on your vehicle. They'll update you when they're finished."}</p>
     <div style="background:#fff7ed;border-left:4px solid #f97316;padding:20px;margin:20px 0;border-radius:4px;">
-      <h3 style="margin-top:0;color:#ea580c;">Service in Progress</h3>
-      <p><strong>Booking:</strong> ${booking.confirmationCode}</p>
-      <p><strong>Service:</strong> ${booking.service.name}</p>
-      <p><strong>Date:</strong> ${fmtDate(booking.scheduledDate)}</p>
-      <p><strong>Time:</strong> ${booking.scheduledTime}</p>
+      <h3 style="margin-top:0;color:#ea580c;">${isEs ? 'Servicio en Progreso' : 'Service in Progress'}</h3>
+      <p><strong>${isEs ? 'Reserva' : 'Booking'}:</strong> ${booking.confirmationCode}</p>
+      <p><strong>${isEs ? 'Servicio' : 'Service'}:</strong> ${booking.service.name}</p>
+      <p><strong>${isEs ? 'Fecha' : 'Date'}:</strong> ${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</p>
+      <p><strong>${isEs ? 'Hora' : 'Time'}:</strong> ${booking.scheduledTime}</p>
     </div>
-    <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#f97316;color:white;">View Booking Details</a></p>`;
+    <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#f97316;color:white;">${isEs ? 'Ver Detalles de la Reserva' : 'View Booking Details'}</a></p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#f97316 0%,#ea580c 100%)',
-    headerText: 'Detailer Has Started Work! 🚿',
+    headerText: isEs ? '¡El Detallador Ha Comenzado! 🚿' : 'Detailer Has Started Work! 🚿',
     body,
-    footerLine: 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
   });
 }
 
 export function enRouteTemplate(booking: BookingEmailData): string {
   const locale = booking.locale || 'en';
+  const isEs = locale === 'es';
   const body = `
-    <p>Hi ${booking.customer.firstName},</p>
-    <p>Great news! Your detailer is heading to you now and should arrive shortly. Please make sure your vehicle is accessible.</p>
+    <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p>${isEs
+      ? '¡Buenas noticias! Tu detallador va en camino y llegará pronto. Por favor asegúrate de que tu vehículo esté accesible.'
+      : 'Great news! Your detailer is heading to you now and should arrive shortly. Please make sure your vehicle is accessible.'}</p>
     <div style="background:#eef2ff;border-left:4px solid #6366f1;padding:20px;margin:20px 0;border-radius:4px;">
-      <h3 style="margin-top:0;color:#4f46e5;">Appointment Details</h3>
-      <p><strong>Booking:</strong> ${booking.confirmationCode}</p>
-      <p><strong>Service:</strong> ${booking.service.name}</p>
-      <p><strong>Date:</strong> ${fmtDate(booking.scheduledDate)}</p>
-      <p><strong>Time:</strong> ${booking.scheduledTime}</p>
-      <p><strong>Address:</strong> ${booking.location.address}, ${booking.location.city}, ${booking.location.state} ${booking.location.zipCode}</p>
+      <h3 style="margin-top:0;color:#4f46e5;">${isEs ? 'Detalles de la Cita' : 'Appointment Details'}</h3>
+      <p><strong>${isEs ? 'Reserva' : 'Booking'}:</strong> ${booking.confirmationCode}</p>
+      <p><strong>${isEs ? 'Servicio' : 'Service'}:</strong> ${booking.service.name}</p>
+      <p><strong>${isEs ? 'Fecha' : 'Date'}:</strong> ${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</p>
+      <p><strong>${isEs ? 'Hora' : 'Time'}:</strong> ${booking.scheduledTime}</p>
+      <p><strong>${isEs ? 'Dirección' : 'Address'}:</strong> ${booking.location.address}, ${booking.location.city}, ${booking.location.state} ${booking.location.zipCode}</p>
     </div>
-    <p>If you have any questions, contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
-    <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#6366f1;color:white;">View Booking Details</a></p>`;
+    <p>${isEs
+      ? `Si tienes alguna pregunta, contáctanos en <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.`
+      : `If you have any questions, contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.`}</p>
+    <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#6366f1;color:white;">${isEs ? 'Ver Detalles de la Reserva' : 'View Booking Details'}</a></p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#6366f1 0%,#4f46e5 100%)',
-    headerText: 'Your Detailer Is On The Way! 🚗',
+    headerText: isEs ? '¡Tu Detallador Va en Camino! 🚗' : 'Your Detailer Is On The Way! 🚗',
     body,
-    footerLine: 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
   });
 }
 
 export function reviewRequestTemplate(booking: BookingEmailData): string {
   const locale = booking.locale || 'en';
+  const isEs = locale === 'es';
   const reviewUrl = `${APP_URL}/${locale}/booking/${booking.id}/review`;
   const body = `
-    <p>Hi ${booking.customer.firstName},</p>
-    <p>We hope you loved your ${booking.service.name} experience! Your feedback helps us serve you better and helps other customers find great detailers.</p>
+    <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p>${isEs
+      ? `¡Esperamos que te haya encantado tu experiencia de ${booking.service.name}! Tu opinión nos ayuda a mejorar y ayuda a otros clientes a encontrar excelentes detalladores.`
+      : `We hope you loved your ${booking.service.name} experience! Your feedback helps us serve you better and helps other customers find great detailers.`}</p>
     <div style="text-align:center;">
-      <p style="font-size:18px;font-weight:600;color:#333;margin-bottom:20px;">Please take 30 seconds to leave a review:</p>
+      <p style="font-size:18px;font-weight:600;color:#333;margin-bottom:20px;">${isEs ? 'Tómate 30 segundos para dejar una reseña:' : 'Please take 30 seconds to leave a review:'}</p>
       <div style="font-size:24px;color:#fbbf24;margin:20px 0;">☆ ☆ ☆ ☆ ☆</div>
     </div>
-    <p style="margin-top:30px;"><a href="${reviewUrl}" class="btn" style="background:#8b5cf6;color:white;">Leave Your Review Now</a></p>
+    <p style="margin-top:30px;"><a href="${reviewUrl}" class="btn" style="background:#8b5cf6;color:white;">${isEs ? 'Deja Tu Reseña Ahora' : 'Leave Your Review Now'}</a></p>
     <p style="font-size:14px;color:#6b7280;text-align:center;margin-top:20px;">
-      Or copy and paste: <a href="${reviewUrl}" style="word-break:break-all;">${reviewUrl}</a>
+      ${isEs ? 'O copia y pega' : 'Or copy and paste'}: <a href="${reviewUrl}" style="word-break:break-all;">${reviewUrl}</a>
     </p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%)',
-    headerText: 'How Was Your Detail? ⭐',
+    headerText: isEs ? '¿Cómo Fue Tu Detallado? ⭐' : 'How Was Your Detail? ⭐',
     body,
-    footerLine: 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
   });
 }
 

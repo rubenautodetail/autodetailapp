@@ -81,30 +81,45 @@ export type EmailPayload =
 
 function resolveSubject(payload: EmailPayload): string {
   switch (payload.type) {
-    case 'booking_confirmation':
-      return 'Your Detailing Appointment is Confirmed! 🚗';
+    case 'booking_confirmation': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? '¡Tu cita de detallado está confirmada! 🚗' : 'Your Detailing Appointment is Confirmed! 🚗';
+    }
     case 'new_job_contractor':
       return '🔔 New Job Available — Log in to Accept';
-    case 'payment_receipt':
-      return `Receipt for Your Detailing Service - $${(payload.data as BookingEmailData).totalAmount.toFixed(2)}`;
+    case 'payment_receipt': {
+      const d = payload.data as BookingEmailData;
+      const isEs = d.locale === 'es';
+      return isEs
+        ? `Recibo de tu servicio de detallado - $${d.totalAmount.toFixed(2)}`
+        : `Receipt for Your Detailing Service - $${d.totalAmount.toFixed(2)}`;
+    }
     case 'contractor_application_admin':
       return `New Contractor Application: ${(payload.data as ContractorApplicationData).fullName}`;
     case 'contractor_application_received':
       return 'Application Received — DTailWash';
     case 'welcome':
       return 'Welcome to DTailWash! 🚗';
-    case 'booking_pending':
-      return 'Booking Received - Pending Payment';
-    case 'job_accepted':
-      return 'Your Detailer is Assigned!';
+    case 'booking_pending': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? 'Reserva Recibida - Pago Pendiente' : 'Booking Received - Pending Payment';
+    }
+    case 'job_accepted': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? '¡Tu detallador ha sido asignado!' : 'Your Detailer is Assigned!';
+    }
     case 'contractor_job_confirmation':
       return `✅ Job Confirmed — ${(payload.data as BookingEmailData).confirmationCode}`;
     case 'job_rejected_admin':
       return `Alert: Job Rejected - ${(payload.data as BookingEmailData).confirmationCode}`;
-    case 'booking_cancelled':
-      return 'Booking Cancelled';
-    case 'job_pending_approval':
-      return 'Action Required: Your Car is Ready for Inspection! ✨';
+    case 'booking_cancelled': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? 'Reserva Cancelada' : 'Booking Cancelled';
+    }
+    case 'job_pending_approval': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? 'Acción Requerida: ¡Tu auto está listo para inspección! ✨' : 'Action Required: Your Car is Ready for Inspection! ✨';
+    }
     case 'approval_reminder': {
       const isUrgent = payload.minutesRemaining <= 2;
       return isUrgent
@@ -113,12 +128,18 @@ function resolveSubject(payload: EmailPayload): string {
     }
     case 'chargeback_alert':
       return `⚠️ Chargeback Alert — Booking ${payload.data.bookingId} ($${(payload.data.amount / 100).toFixed(2)})`;
-    case 'job_started':
-      return 'Your Detailer Has Started Work! 🚿';
-    case 'en_route':
-      return 'Your Detailer Is On The Way! 🚗';
-    case 'review_request':
-      return 'How Was Your Detail? Leave a Review ⭐';
+    case 'job_started': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? '¡Tu detallador ha comenzado a trabajar! 🚿' : 'Your Detailer Has Started Work! 🚿';
+    }
+    case 'en_route': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? '¡Tu detallador va en camino! 🚗' : 'Your Detailer Is On The Way! 🚗';
+    }
+    case 'review_request': {
+      const isEs = (payload.data as BookingEmailData).locale === 'es';
+      return isEs ? '¿Cómo fue tu detallado? Deja una reseña ⭐' : 'How Was Your Detail? Leave a Review ⭐';
+    }
     case 'contractor_approved': {
       const isEs = payload.data.locale === 'es';
       return isEs ? '¡Aprobado! Bienvenido a DTailWash 🎉' : "You're Approved! Welcome to DTailWash 🎉";
