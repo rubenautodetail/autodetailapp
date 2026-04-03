@@ -461,8 +461,8 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white">{t.title}</h1>
-                        <p className="text-[#A5B0D1] text-sm mt-1">
-                            {t.booking} #{String(job.id).slice(0, 8).toUpperCase()}
+                        <p className="text-[#D0B078] text-sm mt-1 font-mono font-semibold">
+                            {job.confirmation_code || `#${String(job.id).slice(0, 8).toUpperCase()}`}
                         </p>
                     </div>
                     <StatusBadge status={job.status} t={t} locale={lang} />

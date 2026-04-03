@@ -149,12 +149,9 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
         </Link>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {locale === "es" ? "Reserva" : "Booking"} #{booking.id}
+            <h1 className="text-2xl font-bold text-gray-900 font-mono">
+              {booking.confirmationCode || `#${String(booking.id).slice(0, 8)}`}
             </h1>
-            {booking.confirmationCode && (
-              <p className="text-sm text-gray-500 font-mono">{booking.confirmationCode}</p>
-            )}
           </div>
           <div className="flex items-center gap-3">
             <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${STATUS_COLORS[booking.status] || "bg-gray-100 text-gray-700"}`}>

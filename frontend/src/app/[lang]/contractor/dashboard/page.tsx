@@ -558,7 +558,10 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                             <div key={job.id} className="px-6 py-5 hover:bg-white/[0.02] transition-colors">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="space-y-1.5 min-w-0">
-                                        <h3 className="font-semibold text-white text-base truncate">{job.serviceName}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-semibold text-white text-base truncate">{job.serviceName}</h3>
+                                            {job.confirmationCode && <span className="text-xs font-mono text-[#D0B078] bg-[#D0B078]/10 px-2 py-0.5 rounded">{job.confirmationCode}</span>}
+                                        </div>
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#A5B0D1]">
                                             <span className="flex items-center gap-1.5">
                                                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -630,6 +633,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                     <div className="space-y-1.5 min-w-0">
                                         <div className="flex items-center gap-2.5 flex-wrap">
                                             <h3 className="font-semibold text-white text-base">{job.serviceName}</h3>
+                                            {job.confirmationCode && <span className="text-xs font-mono text-[#D0B078] bg-[#D0B078]/10 px-2 py-0.5 rounded">{job.confirmationCode}</span>}
                                             <StatusBadge status={job.status} lang={lang} />
                                         </div>
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#A5B0D1]">

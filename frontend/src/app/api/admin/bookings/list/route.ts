@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookings = (data ?? []).map((b: any) => ({
     id: b.id,
+    confirmationCode: b.confirmation_code ?? null,
     customerName: b.customer_name ?? null,
     customerEmail: b.customer_email ?? null,
     status: b.status ?? "pending",

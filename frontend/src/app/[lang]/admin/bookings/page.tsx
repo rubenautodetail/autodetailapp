@@ -75,6 +75,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     title: locale === "es" ? "Gestión de Reservas" : "Booking Management",
     back: locale === "es" ? "← Volver al Panel" : "← Back to Dashboard",
     noBookings: locale === "es" ? "No hay reservas" : "No bookings found",
+    code: locale === "es" ? "Código" : "Code",
     customer: locale === "es" ? "Cliente" : "Customer",
     service: locale === "es" ? "Servicio" : "Service",
     status: locale === "es" ? "Estado" : "Status",
@@ -347,6 +348,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.code}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.customer}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.service}</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.status}</th>
@@ -359,6 +361,11 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                 <tbody className="divide-y divide-gray-100">
                   {bookings.map((b) => (
                     <tr key={b.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-4">
+                        <Link href={`/${locale}/admin/bookings/${b.id}`} className="font-mono text-sm font-semibold text-blue-600 hover:text-blue-800">
+                          {b.confirmationCode || `#${String(b.id).slice(0, 8)}`}
+                        </Link>
+                      </td>
                       <td className="px-5 py-4">
                         <Link href={`/${locale}/admin/bookings/${b.id}`} className="block hover:text-blue-600">
                           <div className="text-sm font-medium text-gray-900">{b.customerName || "—"}</div>
