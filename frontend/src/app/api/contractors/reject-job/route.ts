@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date().toISOString(),
             })
             .eq('id', existingBooking.id)
+            .in('status', ['pending_assignment', 'confirmed'])
             .select()
             .single();
 

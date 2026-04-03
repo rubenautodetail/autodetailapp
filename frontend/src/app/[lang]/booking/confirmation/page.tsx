@@ -132,7 +132,7 @@ function ConfirmationContent({ locale }: { locale: string }) {
           {/* Actions */}
           <div className="space-y-3">
             <Link
-              href={`/${locale}/dashboard`}
+              href={`/${locale}/customer`}
               className="block w-full bg-[#D0B078] text-[#131835] font-bold py-4 rounded-xl hover:opacity-90 transition-all duration-200 text-center"
             >
               {locale === "es" ? "Ver Mis Reservas" : "View My Bookings"}

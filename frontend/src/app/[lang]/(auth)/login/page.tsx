@@ -90,7 +90,7 @@ function LoginForm() {
         const next = searchParams.get("next");
         const safeNext = next && next.startsWith("/") && !next.includes("/admin") && !next.includes("/contractor");
         if (safeNext) { router.replace(next); return; }
-        router.replace(`/${lang}/dashboard`);
+        router.replace(`/${lang}/customer`);
     }, [user, profile, isLoading, router, lang, searchParams, logout]);
 
     const handleLogin = async (e: React.FormEvent) => {

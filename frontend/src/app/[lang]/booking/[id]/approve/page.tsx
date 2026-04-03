@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -25,7 +25,7 @@ interface Booking {
     };
 }
 
-export default function ApproveServicePage() {
+function ApproveServiceContent() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -152,7 +152,7 @@ export default function ApproveServicePage() {
                             : 'This service has already been approved and payment processed.'}
                     </p>
                     <button
-                        onClick={() => router.push(`/${lang}/dashboard`)}
+                        onClick={() => router.push(`/${lang}/customer`)}
                         className="bg-[#D0B078] text-[#131835] font-bold py-3 px-6 rounded-xl hover:opacity-90 transition-all"
                     >
                         {lang === 'es' ? 'Ver Mis Reservas' : 'View My Bookings'}
@@ -313,5 +313,19 @@ export default function ApproveServicePage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function ApproveServicePage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen bg-[#131835] flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078]" />
+                </div>
+            }
+        >
+            <ApproveServiceContent />
+        </Suspense>
     );
 }

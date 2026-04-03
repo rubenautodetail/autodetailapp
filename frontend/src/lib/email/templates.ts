@@ -205,7 +205,7 @@ export function paymentReceiptTemplate(booking: BookingEmailData): string {
     <p>Thank you for choosing DTailWash! Here's your receipt for the service.</p>
     <div style="background:#f9fafb;border:2px solid #3b82f6;padding:20px;margin:20px 0;border-radius:8px;">
       <h3 style="margin-top:0;color:#1e40af;">Receipt #${booking.confirmationCode}</h3>
-      <p style="color:#6b7280;font-size:14px;">Date: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</p>
+      <p style="color:#6b7280;font-size:14px;">Date: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'America/New_York'})}</p>
       <p style="color:#6b7280;font-size:14px;">Service Provider: ${contractorName}</p>
       <div style="margin-top:20px;">
         <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;"><span>${service.name}</span><span>$${booking.totalAmount.toFixed(2)}</span></div>
@@ -642,7 +642,7 @@ export function paymentReminderTemplate(
     ${c.urgency ? `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;margin:16px 0;border-radius:4px;font-size:14px;">${c.urgency}</div>` : ''}
     <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;">
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Service</span><strong>${service.name}</strong></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Date</span><strong>${new Date(booking.scheduledDate).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Date</span><strong>${new Date(booking.scheduledDate).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'America/New_York'})}</strong></div>
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Amount</span><strong>$${Number(booking.totalAmount).toFixed(2)}</strong></div>
       <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;"><span>Confirmation</span><strong>${booking.confirmationCode}</strong></div>
     </div>

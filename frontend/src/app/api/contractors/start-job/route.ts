@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date().toISOString(),
             })
             .eq('id', safeId)
+            .in('status', ['confirmed', 'en_route'])
             .select('id');
 
         // Scope the update to this contractor when using JWT auth

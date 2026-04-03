@@ -83,8 +83,30 @@ export async function GET(
         }
 
         // Normalize to the shape the job detail page expects
+        // IMPORTANT: Do NOT spread `...data` — it would leak `total_amount` at 100%.
+        // Contractors receive 70% (CONTRACTOR_SHARE).
+        const CONTRACTOR_SHARE = 0.70;
         const normalized = {
-            ...data,
+            id: data.id,
+            status: data.status,
+            service_name: data.service_name,
+            date: data.date,
+            time_window: data.time_window,
+            address: data.address,
+            city: data.city,
+            state: data.state,
+            zip_code: data.zip_code,
+            contractor_id: data.contractor_id,
+            customer_name: data.customer_name,
+            customer_phone: data.customer_phone,
+            special_instructions: data.special_instructions,
+            confirmation_code: data.confirmation_code,
+            document_id: data.document_id,
+            vehicle_make: data.vehicle_make,
+            vehicle_model: data.vehicle_model,
+            vehicle_year: data.vehicle_year,
+            vehicle_color: data.vehicle_color,
+            total_amount: data.total_amount != null ? data.total_amount * CONTRACTOR_SHARE : null,
             // Camel-case aliases consumed by the job page
             scheduled_date: data.date,
             timeWindow: data.time_window,

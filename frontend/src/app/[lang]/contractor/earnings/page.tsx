@@ -229,7 +229,6 @@ export default function EarningsPage({ params }: EarningsProps) {
                         </div>
                     )}
                 </div>
-            </div>
 
             {/* Payout history */}
             <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
@@ -288,6 +287,7 @@ export default function EarningsPage({ params }: EarningsProps) {
                         })}
                     </div>
                 )}
+            </div>
             </div>
         </div>
     );

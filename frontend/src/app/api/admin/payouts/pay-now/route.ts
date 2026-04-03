@@ -76,8 +76,27 @@ export async function POST(req: NextRequest) {
         const contractorAmount = +(gross * CONTRACTOR_SHARE).toFixed(2);
 
         const dates = bookings.map((b) => b.date).filter(Boolean).sort();
-        const periodStart = dates[0] ?? new Date().toISOString().slice(0, 10);
-        const periodEnd = dates[dates.length - 1] ?? periodStart;
+        const earliest = dates[0] ?? new Date().toISOString().slice(0, 10);
+        const latest = dates[dates.length - 1] ?? earliest;
+
+        // Align period_start to Monday and period_end to Sunday so History tab can match
+        const toMonday = (iso: string): string => {
+            const d = new Date(iso + 'T00:00:00');
+            const day = d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+            const diff = day === 0 ? -6 : 1 - day;
+            d.setDate(d.getDate() + diff);
+            return d.toISOString().slice(0, 10);
+        };
+        const toSunday = (iso: string): string => {
+            const d = new Date(iso + 'T00:00:00');
+            const day = d.getDay();
+            const diff = day === 0 ? 0 : 7 - day;
+            d.setDate(d.getDate() + diff);
+            return d.toISOString().slice(0, 10);
+        };
+
+        const periodStart = toMonday(earliest);
+        const periodEnd = toSunday(latest);
 
         // Build combined notes
         const combinedNotes = [

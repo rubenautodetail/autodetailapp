@@ -549,7 +549,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                         <h2 className="text-lg font-semibold text-white">{labels.incomingJobs}</h2>
                         {incomingJobs.length > 0 && (
                             <span className="text-xs font-semibold bg-[#D0B078]/10 text-[#D0B078] border border-[#D0B078]/20 px-2.5 py-1 rounded-full">
-                                {incomingJobs.length} new
+                                {incomingJobs.length} {lang === 'es' ? 'nuevo(s)' : 'new'}
                             </span>
                         )}
                     </div>

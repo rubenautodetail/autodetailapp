@@ -204,7 +204,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             const supabase = createClient();
             const { data, error: fetchError } = await supabase
                 .from("bookings")
-                .select("*")
+                .select("id, status, service_name, time_window, address, city, zip_code, date, contractor_id, customer_name, customer_phone, special_instructions, confirmation_code, document_id, vehicle_make, vehicle_model, vehicle_year, vehicle_color")
                 .eq('id', id)
                 .eq("confirmation_code", code)
                 .single();

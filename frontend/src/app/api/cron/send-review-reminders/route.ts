@@ -16,7 +16,7 @@ const MAX_REMINDERS = 2; // Maximum number of reminders to send per booking
 
 export async function GET(req: NextRequest) {
   // Verify cron secret to prevent unauthorized triggers
-  const secret = req.headers.get('x-cron-secret') || req.nextUrl.searchParams.get('secret');
+  const secret = req.headers.get('x-cron-secret');
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || secret !== cronSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
