@@ -514,7 +514,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                 {lang === 'es' ? 'Ver historial →' : 'Full history →'}
                             </Link>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#2C355E]">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#2C355E]">
                             <div className="px-5 py-4">
                                 <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
                                     {lang === 'es' ? 'Total Ganado' : 'Total Earned'}

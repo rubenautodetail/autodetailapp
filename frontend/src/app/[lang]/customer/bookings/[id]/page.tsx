@@ -47,17 +47,17 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="glass-card rounded-3xl p-8 relative overflow-hidden"
+                            className="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 relative overflow-hidden"
                         >
                             {/* Glow Effect */}
                             <div className="absolute top-0 right-0 w-64 h-64 bg-accent-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-                            <div className="flex justify-between items-start mb-8 relative z-10">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8 relative z-10">
                                 <div>
-                                    <h1 className="text-3xl font-display font-bold text-white mb-1">{lang === 'es' ? 'Orden' : 'Order'} {booking.confirmationCode || `#${booking.id}`}</h1>
-                                    <p className="text-text-secondary text-lg">{booking.serviceName}</p>
+                                    <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-1">{lang === 'es' ? 'Orden' : 'Order'} {booking.confirmationCode || `#${booking.id}`}</h1>
+                                    <p className="text-text-secondary text-base sm:text-lg">{booking.serviceName}</p>
                                 </div>
-                                <div className="text-right">
+                                <div className="sm:text-right">
                                     <div className="text-sm text-text-muted uppercase tracking-wider mb-1">{lang === 'es' ? 'Programado' : 'Scheduled For'}</div>
                                     <div className="text-xl font-mono text-accent-gold font-bold">{booking.time}</div>
                                     <div className="text-sm text-text-secondary">{fmtDate(booking.date, lang === 'es' ? 'es-US' : 'en-US')}</div>

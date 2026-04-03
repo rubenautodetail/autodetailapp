@@ -69,14 +69,14 @@ export default function VehiclesPage() {
             </div>
 
             <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-between items-end mb-8">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">My Garage</h1>
-                        <p className="text-text-secondary">Manage the vehicles in your premium fleet.</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">My Garage</h1>
+                        <p className="text-text-secondary text-sm sm:text-base">Manage the vehicles in your premium fleet.</p>
                     </div>
                     <button
                         onClick={() => setIsAdding(true)}
-                        className="btn-primary py-2 px-4 rounded-lg font-bold flex items-center shadow-glow"
+                        className="btn-primary py-2.5 px-4 rounded-lg font-bold flex items-center shadow-glow self-start sm:self-auto"
                     >
                         <Plus className="w-5 h-5 mr-2" />
                         Add Vehicle

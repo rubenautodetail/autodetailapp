@@ -144,7 +144,7 @@ export default async function LandingPage({
 
                     {/* Heading */}
                     <h1
-                        className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]"
+                        className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]"
                         style={{ fontFamily: 'var(--font-display)' }}
                     >
                         {hero.heading.split(' ').map((word, i, arr) =>
@@ -187,14 +187,14 @@ export default async function LandingPage({
 
             {/* ─── Stats ─────────────────────────────────────────────────────── */}
             <section className="border-y border-white/5 bg-white/[0.02]">
-                <div className="max-w-4xl mx-auto px-6 py-10 grid grid-cols-3 gap-4 text-center">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-3 gap-2 sm:gap-4 text-center">
                     {[
                         { value: '2,400+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
                         { value: '4.97', label: locale === 'es' ? 'Calificación promedio' : 'Average rating' },
                         { value: '1', label: locale === 'es' ? 'Ciudad servida' : 'City served' },
                     ].map((stat) => (
                         <div key={stat.label} className="space-y-1">
-                            <div className="text-3xl sm:text-4xl font-bold text-gold-gradient">{stat.value}</div>
+                            <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gold-gradient">{stat.value}</div>
                             <div className="text-xs text-white/40 tracking-wide">{stat.label}</div>
                         </div>
                     ))}
@@ -208,7 +208,7 @@ export default async function LandingPage({
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {locale === 'es' ? 'El proceso' : 'The process'}
                         </p>
-                        <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                        <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                             {dict.home.howItWorks.title}
                         </h2>
                     </div>
@@ -250,7 +250,7 @@ export default async function LandingPage({
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {locale === 'es' ? 'Nuestros servicios' : 'Our services'}
                         </p>
-                        <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                        <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                             {dict.home.services.title}
                         </h2>
                         <p className="text-white/40 text-sm">{dict.home.services.subtitle}</p>
@@ -341,7 +341,7 @@ export default async function LandingPage({
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {locale === 'es' ? 'Clientes satisfechos' : 'Happy clients'}
                         </p>
-                        <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                        <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                             {dict.home.testimonials.title}
                         </h2>
                     </div>
@@ -370,7 +370,7 @@ export default async function LandingPage({
             <section className="py-16 px-6 border-y border-white/5">
                 <div className="max-w-5xl mx-auto">
                     <div
-                        className="rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6"
+                        className="rounded-2xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6"
                         style={{
                             background: 'linear-gradient(135deg, rgba(208,176,120,0.07) 0%, rgba(208,176,120,0.02) 100%)',
                             border: '1px solid rgba(208,176,120,0.12)',
@@ -411,7 +411,7 @@ export default async function LandingPage({
             <section className="py-14 sm:py-24 px-6">
                 <div className="max-w-2xl mx-auto text-center space-y-8">
                     <div
-                        className="rounded-3xl p-12 space-y-6 relative overflow-hidden"
+                        className="rounded-3xl p-6 sm:p-12 space-y-6 relative overflow-hidden"
                         style={{
                             background: 'linear-gradient(135deg, rgba(208, 176, 120, 0.08) 0%, rgba(208, 176, 120, 0.02) 100%)',
                             border: '1px solid rgba(208, 176, 120, 0.15)',
@@ -425,7 +425,7 @@ export default async function LandingPage({
                             }}
                         />
                         <div className="relative z-10 space-y-4">
-                            <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                                 {locale === 'es'
                                     ? 'Tu auto merece lo mejor.'
                                     : 'Your car deserves the best.'}
@@ -465,7 +465,7 @@ export default async function LandingPage({
                             <span className="text-white/45 font-medium">OAC Digital Innovations</span>
                         </p>
                     </div>
-                    <div className="flex gap-6">
+                    <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">
                         <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Términos' : 'Terms'}
                         </Link>

@@ -67,6 +67,31 @@ export default function CustomerDashboardPage() {
             <div className="container mx-auto px-4 pt-8">
                 <DashboardHero userName={userProfile?.name?.split(' ')[0]} />
 
+                {/* Mobile Quick Actions — shown only on small screens above bookings */}
+                <div className="lg:hidden mb-6 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <Link
+                        href={`/${params.lang}/booking/select`}
+                        className="shrink-0 py-2.5 px-4 btn-primary rounded-xl font-bold flex items-center gap-2 text-sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        {isEs ? 'Reservar' : 'Book Now'}
+                    </Link>
+                    <Link
+                        href={`/${params.lang}/customer/vehicles`}
+                        className="shrink-0 py-2.5 px-4 glass-card hover:bg-white/5 text-text-secondary rounded-xl flex items-center gap-2 text-sm"
+                    >
+                        <Car className="w-4 h-4" />
+                        {isEs ? 'Vehículos' : 'Vehicles'}
+                    </Link>
+                    <Link
+                        href={`/${params.lang}/customer/settings`}
+                        className="shrink-0 py-2.5 px-4 glass-card hover:bg-white/5 text-text-secondary rounded-xl flex items-center gap-2 text-sm"
+                    >
+                        <Settings className="w-4 h-4" />
+                        {isEs ? 'Configuración' : 'Settings'}
+                    </Link>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Main Content: Bookings */}
                     <div className="lg:col-span-3 space-y-8">
@@ -194,8 +219,8 @@ export default function CustomerDashboardPage() {
                         </motion.section>
                     </div>
 
-                    {/* Sidebar: Quick Actions */}
-                    <div className="lg:col-span-1 space-y-6">
+                    {/* Sidebar: Quick Actions — hidden on mobile (shown as inline bar above) */}
+                    <div className="hidden lg:block lg:col-span-1 space-y-6">
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}

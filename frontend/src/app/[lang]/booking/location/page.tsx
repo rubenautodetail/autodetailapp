@@ -239,8 +239,8 @@ export default function LocationPage({ params }: LocationPageProps) {
         <ProgressIndicator currentStep={currentStep} locale={locale} />
 
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             {locale === "es"
               ? "¿Dónde te gustaría el servicio?"
               : "Where would you like service?"}
@@ -293,9 +293,9 @@ export default function LocationPage({ params }: LocationPageProps) {
             )}
 
             {/* ZIP Code Input */}
-            <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+            <Card className="p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                   </svg>
@@ -359,9 +359,9 @@ export default function LocationPage({ params }: LocationPageProps) {
 
             {/* Address Input (only show if ZIP is valid) */}
             {isValid && (
-              <Card className="p-8 animate-fade-in-up !bg-[#1A2142] !border-[#2C355E]">
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+              <Card className="p-5 sm:p-8 animate-fade-in-up !bg-[#1A2142] !border-[#2C355E]">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     </svg>

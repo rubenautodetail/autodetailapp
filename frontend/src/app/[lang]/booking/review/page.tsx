@@ -210,8 +210,8 @@ export default function ReviewPage({ params }: ReviewPageProps) {
         <ProgressIndicator currentStep={currentStep} locale={locale} />
 
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             {locale === "es"
               ? "Revisa y Confirma"
               : "Review & Confirm"}
@@ -227,9 +227,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
           {/* Left column: Contact Form & Booking Summary */}
           <div className="lg:col-span-2 space-y-8">
             {/* Contact Information */}
-            <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+            <Card className="p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -356,9 +356,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
             </Card>
 
             {/* Vehicle Selection — Multi-Vehicle */}
-            <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
-              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+            <Card className="p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                   <Car className="w-5 h-5 text-[#D0B078]" />
                 </div>
                 {locale === "es" ? "Vehículos" : "Vehicles"}

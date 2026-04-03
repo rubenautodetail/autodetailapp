@@ -76,7 +76,7 @@ export default function ZipChecker({ dict, lang }: ZipCheckerProps) {
                         value={zipCode}
                         onChange={handleZipChange}
                         placeholder={t.placeholder}
-                        className="w-full bg-transparent text-white text-3xl py-5 px-6 focus:outline-none placeholder:text-white/20 text-center tracking-[0.15em] font-light"
+                        className="w-full bg-transparent text-white text-2xl sm:text-3xl py-4 sm:py-5 px-4 sm:px-6 focus:outline-none placeholder:text-white/20 text-center tracking-[0.15em] font-light"
                         style={{ fontFamily: 'var(--font-display)' }}
                         maxLength={5}
                         inputMode="numeric"

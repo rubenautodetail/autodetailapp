@@ -263,8 +263,8 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
         <ProgressIndicator currentStep={currentStep} locale={locale} />
 
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4" style={{ fontFamily: "var(--font-display)" }}>
             {locale === "es" ? "Pago Seguro" : "Secure Payment"}
           </h1>
           <p className="text-lg text-[#A5B0D1]">
@@ -278,9 +278,9 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           {/* Left column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Booking Summary */}
-            <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+            <Card className="p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>

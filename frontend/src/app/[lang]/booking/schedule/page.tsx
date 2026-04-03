@@ -289,8 +289,8 @@ export default function SchedulePage({ params }: SchedulePageProps) {
         <ProgressIndicator currentStep={currentStep} locale={locale} />
 
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             {locale === "es"
               ? "Elige Fecha y Horario"
               : "Choose Date & Time"}
@@ -306,7 +306,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           {/* Left column: Calendar & Time Selection */}
           <div className="lg:col-span-2 space-y-8">
             {/* Calendar */}
-            <Card className="p-8 relative !bg-[#1A2142] !border-[#2C355E]">
+            <Card className="p-4 sm:p-8 relative !bg-[#1A2142] !border-[#2C355E]">
               {isLoadingAvailability && (
                 <div className="absolute top-6 right-6 flex items-center gap-2 text-sm text-[#D0B078] animate-fade-in">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#D0B078]"></div>
@@ -346,7 +346,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-x-2 gap-y-4">
+              <div className="grid grid-cols-7 gap-x-1 sm:gap-x-2 gap-y-2 sm:gap-y-4">
                 {/* Week day headers */}
                 {weekDays.map((day) => (
                   <div key={day} className="text-center text-xs font-semibold uppercase tracking-wider text-[#5E698F] py-2">
@@ -403,7 +403,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                     : "Select Time"}
                 </h3>
 
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                   {timeWindows.map((window) => {
                     const isSelected = tempSelectedWindow?.slot === window.slot;
                     const isAvailable = isTimeWindowAvailable(window);
