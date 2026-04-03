@@ -44,6 +44,7 @@ export const BookingCreateSchema = z.object({
   addOnIds: z.array(uuidSchema).optional(),
   vehicleId: uuidSchema.optional(),
   notes: z.string().optional(),
+  locale: z.enum(['en', 'es']).optional(),
 });
 
 export type BookingCreateInput = z.infer<typeof BookingCreateSchema>;

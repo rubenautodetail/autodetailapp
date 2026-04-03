@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
         vehicleYear?: string;
         vehicleColor?: string;
         currency?: string;
+        locale?: string;
     };
 
     try {
