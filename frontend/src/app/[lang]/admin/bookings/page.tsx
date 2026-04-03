@@ -11,6 +11,7 @@ interface AdminBookingsProps {
 
 interface Booking {
   id: number;
+  confirmationCode?: string;
   customerName?: string;
   customerEmail?: string;
   status: string;
