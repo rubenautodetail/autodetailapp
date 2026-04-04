@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Failed to reject application' }, { status: 500 });
         }
 
-        // Send rejection email
+        // Send rejection email + in-app notification
         try {
             const { data: profile } = await supabase
                 .from('profiles')
@@ -56,9 +56,17 @@ export async function POST(req: NextRequest) {
                     email: profile.email,
                 });
             }
+
+            // In-app notification for the rejected applicant
+            await supabase.from('notifications').insert({
+                user_id: userId,
+                title: 'Application Update',
+                message: 'Your contractor application was not approved at this time. Please contact support for more information.',
+                type: 'warning',
+            });
         } catch (emailErr) {
-            // Don't fail the rejection if email fails
-            console.error('Failed to send rejection email:', emailErr);
+            // Don't fail the rejection if email/notification fails
+            console.error('Failed to send rejection email or notification:', emailErr);
         }
 
         return NextResponse.json({ success: true });

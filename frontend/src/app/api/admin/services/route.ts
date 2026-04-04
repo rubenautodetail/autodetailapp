@@ -67,6 +67,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ data });
     }
 
+    // Validate required fields before calling Stripe
+    if (!fields.name || typeof fields.name !== 'string' || !fields.name.trim()) {
+        return NextResponse.json({ error: 'Service name is required' }, { status: 400 });
+    }
+    if (fields.base_price == null || isNaN(parseFloat(fields.base_price)) || parseFloat(fields.base_price) <= 0) {
+        return NextResponse.json({ error: 'A valid base_price is required' }, { status: 400 });
+    }
+
     // Default: service — Create Stripe Product + Price first
     let stripeProductId: string;
     try {

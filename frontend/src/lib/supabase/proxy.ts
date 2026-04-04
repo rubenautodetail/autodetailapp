@@ -232,14 +232,14 @@ export async function updateSession(request: NextRequest) {
 
         if (isContractorRoute && isContractor(profile) && !isApprovedContractor(profile)) {
             // No application submitted yet → send to apply form
-            if (!profile!.approval_status && !path.includes('/contractors/apply')) {
+            if (!profile?.approval_status && !path.includes('/contractors/apply')) {
                 const applyUrl = request.nextUrl.clone()
                 applyUrl.pathname = `/${locale}/contractors/apply`
                 applyUrl.search = ''
                 return cookiedRedirect(supabaseResponse, applyUrl)
             }
             // Applied but not yet approved → send to pending
-            if (profile!.approval_status && !path.includes('/contractor/pending')) {
+            if (profile?.approval_status && !path.includes('/contractor/pending')) {
                 const pendingUrl = request.nextUrl.clone()
                 pendingUrl.pathname = `/${locale}/contractor/pending`
                 pendingUrl.search = ''

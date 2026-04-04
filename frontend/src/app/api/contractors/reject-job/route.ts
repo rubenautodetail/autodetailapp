@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
 
+interface ApprovalCheck {
+    approval_status: string | null;
+}
+
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
@@ -31,7 +35,7 @@ export async function POST(req: NextRequest) {
             .select('approval_status')
             .eq('id', actorId)
             .single();
-        if ((approvalCheck as any)?.approval_status !== 'approved') {
+        if ((approvalCheck as ApprovalCheck | null)?.approval_status !== 'approved') {
             return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
         }
 

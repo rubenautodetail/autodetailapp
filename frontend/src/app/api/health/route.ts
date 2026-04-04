@@ -1,49 +1,121 @@
 /**
  * GET /api/health
- * Lightweight liveness + readiness probe.
+ * Liveness + readiness probe with env validation and external service checks.
  * - Vercel uptime monitors, status pages, and load balancers can poll this.
- * - Checks DB connectivity so a cold-start DB issue shows up immediately.
- * - Never returns 500 for non-critical failures (e.g. Stripe not configured)
- *   because that would trigger false-positive alerts.
+ * - Checks DB and Stripe connectivity.
+ * - Never exposes secret values in the response.
  */
 
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
-import { validateEnv } from '@/lib/env';
+import { validateEnv } from '@/lib/env-check';
 
 export const runtime = 'nodejs';
-// Disable caching so monitors always get a fresh response
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-    const start = Date.now();
-    const checks: Record<string, 'ok' | 'error'> = {};
+interface CheckStatus {
+  status: 'ok' | 'error';
+  message?: string;
+  latencyMs?: number;
+}
 
-    // ── Database connectivity ─────────────────────────────────────────────────
-    try {
-        const supabase = createServiceClient();
-        // Lightweight query — count row from a small table
-        const { error } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
-        checks.database = error ? 'error' : 'ok';
-    } catch {
-        checks.database = 'error';
-    }
+interface HealthResponse {
+  status: 'ok' | 'degraded' | 'error';
+  timestamp: string;
+  latencyMs: number;
+  checks: {
+    env: CheckStatus;
+    supabase: CheckStatus;
+    stripe: CheckStatus;
+  };
+  missingEnv?: string[];
+}
 
-    // ── Env var presence (not values — never expose secrets) ─────────────────
-    const { ok: envOk, missing: missingEnv } = validateEnv();
-    checks.env = envOk ? 'ok' : 'error';
+async function checkSupabase(): Promise<CheckStatus> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    const allOk = Object.values(checks).every((v) => v === 'ok');
+  if (!url || !key) {
+    return { status: 'error', message: 'Supabase credentials not configured' };
+  }
+
+  const start = Date.now();
+  try {
+    const res = await fetch(`${url}/rest/v1/`, {
+      method: 'HEAD',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+
     const latencyMs = Date.now() - start;
+    if (res.ok || res.status === 204) {
+      return { status: 'ok', latencyMs };
+    }
+    return { status: 'error', message: `HTTP ${res.status}`, latencyMs };
+  } catch (err) {
+    const latencyMs = Date.now() - start;
+    const message = err instanceof Error ? err.message : 'Connection failed';
+    return { status: 'error', message, latencyMs };
+  }
+}
 
-    return NextResponse.json(
-        {
-            status: allOk ? 'ok' : 'degraded',
-            checks,
-            ...(missingEnv.length > 0 ? { missingEnv } : {}),
-            latencyMs,
-            timestamp: new Date().toISOString(),
-        },
-        { status: allOk ? 200 : 503 }
-    );
+async function checkStripe(): Promise<CheckStatus> {
+  const key = process.env.STRIPE_SECRET_KEY;
+
+  if (!key) {
+    return { status: 'error', message: 'Stripe secret key not configured' };
+  }
+
+  const start = Date.now();
+  try {
+    const res = await fetch('https://api.stripe.com/v1/balance', {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    const latencyMs = Date.now() - start;
+    if (res.ok) {
+      return { status: 'ok', latencyMs };
+    }
+    return { status: 'error', message: `HTTP ${res.status}`, latencyMs };
+  } catch (err) {
+    const latencyMs = Date.now() - start;
+    const message = err instanceof Error ? err.message : 'Connection failed';
+    return { status: 'error', message, latencyMs };
+  }
+}
+
+export async function GET(): Promise<NextResponse<HealthResponse>> {
+  const overallStart = Date.now();
+
+  // 1. Env validation
+  const envResult = validateEnv();
+  const envCheck: CheckStatus = envResult.valid
+    ? { status: 'ok' }
+    : { status: 'error', message: `${envResult.missing.length} required var(s) missing` };
+
+  // 2. External service checks (parallel)
+  const [supabaseCheck, stripeCheck] = await Promise.all([
+    checkSupabase(),
+    checkStripe(),
+  ]);
+
+  // 3. Determine overall status
+  const checks = { env: envCheck, supabase: supabaseCheck, stripe: stripeCheck };
+  const allOk = Object.values(checks).every((c) => c.status === 'ok');
+  const envFailed = !envResult.valid;
+  const status: HealthResponse['status'] = envFailed ? 'error' : allOk ? 'ok' : 'degraded';
+
+  const response: HealthResponse = {
+    status,
+    timestamp: new Date().toISOString(),
+    latencyMs: Date.now() - overallStart,
+    checks,
+    ...(envResult.missing.length > 0 ? { missingEnv: envResult.missing } : {}),
+  };
+
+  const httpStatus = status === 'error' ? 503 : 200;
+  return NextResponse.json(response, { status: httpStatus });
 }

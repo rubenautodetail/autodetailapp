@@ -8,6 +8,7 @@ import { useState } from "react";
 export default function LocationPage() {
     const router = useRouter();
     const { lang = "en" } = useParams<{ lang: string }>();
+    const isEs = lang === "es";
     const [address, setAddress] = useState("123 Biscayne Blvd, Miami, FL");
     const [apartment, setApartment] = useState("");
     const [notes, setNotes] = useState("");
@@ -26,7 +27,7 @@ export default function LocationPage() {
                 >
                     <ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
                 </button>
-                <h1 className="text-lg font-bold text-white drop-shadow-md">Confirm Location</h1>
+                <h1 className="text-lg font-bold text-white drop-shadow-md">{isEs ? "Confirmar Ubicación" : "Confirm Location"}</h1>
             </div>
 
             {/* Map Area */}
@@ -45,7 +46,7 @@ export default function LocationPage() {
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase">Address</label>
+                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase">{isEs ? "Dirección" : "Address"}</label>
                         <input
                             type="text"
                             value={address}
@@ -56,22 +57,22 @@ export default function LocationPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase">Apt / Gate Code</label>
+                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase">{isEs ? "Apto / Código" : "Apt / Gate Code"}</label>
                             <input
                                 type="text"
                                 value={apartment}
                                 onChange={(e) => setApartment(e.target.value)}
-                                placeholder="Optional"
+                                placeholder={isEs ? "Opcional" : "Optional"}
                                 className="w-full p-3 bg-[var(--background)] border border-[var(--divider)] rounded-xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all placeholder:text-[var(--text-secondary)]/50"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase">Notes</label>
+                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1 uppercase">{isEs ? "Notas" : "Notes"}</label>
                             <input
                                 type="text"
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
-                                placeholder="Gate helper?"
+                                placeholder={isEs ? "¿Código de acceso?" : "Gate helper?"}
                                 className="w-full p-3 bg-[var(--background)] border border-[var(--divider)] rounded-xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all placeholder:text-[var(--text-secondary)]/50"
                             />
                         </div>
@@ -82,7 +83,7 @@ export default function LocationPage() {
                     onClick={handleConfirm}
                     className="w-full py-4 rounded-xl bg-[var(--accent)] text-white font-bold text-lg shadow-lg hover:brightness-110 active:scale-[0.98] transition-all"
                 >
-                    Confirm Location
+                    {isEs ? "Confirmar Ubicación" : "Confirm Location"}
                 </button>
             </div>
         </div>

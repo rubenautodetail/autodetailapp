@@ -2,6 +2,45 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyAdmin } from "@/lib/verifyAdmin";
 import { createServiceClient } from "@/lib/supabase/server";
 
+interface BookingDetail {
+  id: string;
+  status: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
+  customer_phone: string | null;
+  service_name: string | null;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  vehicle_year: string | null;
+  vehicle_color: string | null;
+  vehicle_type: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  date: string | null;
+  time_window: string | null;
+  total_amount: number | string | null;
+  payment_status: string | null;
+  payment_intent_id: string | null;
+  special_instructions: string | null;
+  confirmation_code: string | null;
+  contractor_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  review_rating: number | null;
+  review_comment: string | null;
+  reviewed_at: string | null;
+}
+
+interface ContractorProfileRow {
+  id: string;
+  full_name: string | null;
+  phone_number: string | null;
+  stripe_account_id: string | null;
+  onboarding_complete: boolean | null;
+}
+
 export async function GET(req: NextRequest) {
   if (!(await verifyAdmin(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,8 +65,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const b = data as any;
+  const b = data as BookingDetail;
 
   let contractor = null;
   if (b.contractor_id) {
@@ -37,8 +75,7 @@ export async function GET(req: NextRequest) {
       .eq("id", b.contractor_id)
       .single();
     if (p) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const cp = p as any;
+      const cp = p as ContractorProfileRow;
       contractor = {
         id: cp.id,
         name: cp.full_name ?? "Unknown",

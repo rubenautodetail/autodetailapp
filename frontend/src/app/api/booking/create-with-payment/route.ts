@@ -99,9 +99,12 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    // Amount validation
-    const amountCents = Math.round((total ?? 0) * 100);
-    if (!total || amountCents <= 0) {
+    // Amount validation — reject non-numeric or non-positive totals
+    if (typeof total !== 'number' || total <= 0) {
+        return NextResponse.json({ error: 'Invalid booking total' }, { status: 400 });
+    }
+    const amountCents = Math.round(total * 100);
+    if (amountCents <= 0) {
         return NextResponse.json({ error: 'Invalid booking total' }, { status: 400 });
     }
 

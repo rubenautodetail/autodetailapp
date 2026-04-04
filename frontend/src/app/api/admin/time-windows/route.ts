@@ -54,9 +54,18 @@ export async function POST(req: NextRequest) {
   try {
     const { slot, label, label_es, range, range_es, is_active, sort_order } = await req.json();
 
-    // Basic validation
+    // Field validation
     if (!slot || !label) {
       return NextResponse.json({ error: 'Slot and label are required' }, { status: 400 });
+    }
+    if (!range || typeof range !== 'string' || !range.trim()) {
+      return NextResponse.json({ error: 'Range is required' }, { status: 400 });
+    }
+    if (!range_es || typeof range_es !== 'string' || !range_es.trim()) {
+      return NextResponse.json({ error: 'Range (Spanish) is required' }, { status: 400 });
+    }
+    if (sort_order == null || typeof sort_order !== 'number') {
+      return NextResponse.json({ error: 'sort_order (number) is required' }, { status: 400 });
     }
 
     const supabase = createServiceClient();

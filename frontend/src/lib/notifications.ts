@@ -104,45 +104,93 @@ function mapBookingData(rawBooking: any, contractor?: any): BookingEmailData {
  */
 export async function notify(event: NotificationEvent): Promise<void> {
     try {
+        // Helper: resolve locale from booking or default to 'en'
+        const loc = (b?: { locale?: string }): 'en' | 'es' =>
+            (b?.locale === 'es' ? 'es' : 'en');
+
         switch (event.type) {
             case 'user.welcome':
                 await sendWelcomeEmail(event.user);
-                await createInAppNotification(event.user.id, 'Welcome to DetailWash!', 'We are excited to have you on board. Book your first detail today.', 'info');
+                await createInAppNotification(
+                    event.user.id,
+                    'Welcome to DetailWash!',
+                    'We are excited to have you on board. Book your first detail today.',
+                    'info'
+                );
                 break;
 
             case 'booking.created':
                 await sendBookingPendingEmail(mapBookingData(event.booking));
                 break;
 
-            case 'booking.confirmed':
+            case 'booking.confirmed': {
+                const l = loc(event.booking);
                 await sendBookingConfirmation(mapBookingData(event.booking));
-                await createInAppNotification(event.booking.user_id, 'Booking Confirmed', `Your booking for ${event.booking.service_name || 'Detailing'} is confirmed!`, 'success', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/track`);
+                await createInAppNotification(
+                    event.booking.user_id,
+                    l === 'es' ? 'Reserva Confirmada' : 'Booking Confirmed',
+                    l === 'es'
+                        ? `Tu reserva para ${event.booking.service_name || 'Detallado'} ha sido confirmada.`
+                        : `Your booking for ${event.booking.service_name || 'Detailing'} is confirmed!`,
+                    'success',
+                    `/${l}/booking/${event.booking.id}/track`
+                );
                 break;
+            }
 
-            case 'booking.failed':
+            case 'booking.failed': {
+                const l = loc(event.booking);
                 await sendBookingCancelledEmail(mapBookingData(event.booking));
-                await createInAppNotification(event.booking.user_id, 'Payment Failed', `The payment for your booking failed to process.`, 'error');
+                await createInAppNotification(
+                    event.booking.user_id,
+                    l === 'es' ? 'Pago Fallido' : 'Payment Failed',
+                    l === 'es'
+                        ? 'El pago de tu reserva no pudo ser procesado.'
+                        : 'The payment for your booking failed to process.',
+                    'error'
+                );
                 break;
+            }
 
-            case 'booking.pending_approval':
+            case 'booking.pending_approval': {
+                const l = loc(event.booking);
                 await sendJobPendingApprovalEmail(mapBookingData(event.booking));
-                await createInAppNotification(event.booking.user_id, 'Job Complete - Approval Needed', `Your detail is complete! Please approve the work so we can capture payment.`, 'warning', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/approve`);
+                await createInAppNotification(
+                    event.booking.user_id,
+                    l === 'es' ? 'Trabajo Completado - Aprobacion Necesaria' : 'Job Complete - Approval Needed',
+                    l === 'es'
+                        ? 'Tu detallado esta completo. Por favor aprueba el trabajo para que podamos procesar el pago.'
+                        : 'Your detail is complete! Please approve the work so we can capture payment.',
+                    'warning',
+                    `/${l}/booking/${event.booking.id}/approve`
+                );
                 break;
+            }
 
-            case 'booking.approved':
+            case 'booking.approved': {
+                const l = loc(event.booking);
                 const approvedBooking = mapBookingData(event.booking);
                 await sendJobApprovedReceiptEmail(approvedBooking);
 
                 // Notify Customer
-                await createInAppNotification(event.booking.user_id, 'Receipt', `Thank you for your business! Payment has been captured.`, 'success', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/receipt`);
+                await createInAppNotification(
+                    event.booking.user_id,
+                    l === 'es' ? 'Recibo' : 'Receipt',
+                    l === 'es'
+                        ? 'Gracias por tu preferencia. El pago ha sido procesado.'
+                        : 'Thank you for your business! Payment has been captured.',
+                    'success',
+                    `/${l}/booking/${event.booking.id}/receipt`
+                );
 
-                // Notify Contractor
-                await createInAppNotification(event.booking.contractor_id, 'Job Approved', `The customer approved your job. Payment is being processed.`, 'success');
+                // Notify Contractor (contractors use 'en' — internal-facing)
+                await createInAppNotification(event.booking.contractor_id, 'Job Approved', 'The customer approved your job. Payment is being processed.', 'success');
 
                 if (event.contractorEmail) {
                     await sendContractorPaidEmail(event.contractorEmail, approvedBooking);
                 }
                 break;
+            }
 
             case 'contractor.job_assigned':
                 // Email only — in-app notifications are batch-inserted by the caller
@@ -150,23 +198,43 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 await sendNewJobToContractor(mapBookingData(event.booking), event.contractorEmail);
                 break;
 
-            case 'contractor.job_accepted':
+            case 'contractor.job_accepted': {
+                const l = loc(event.booking);
                 await sendJobAcceptedEmail(mapBookingData(event.booking, event.contractor));
-                await createInAppNotification(event.booking.user_id, 'Contractor Accepted Job', `${event.contractor.full_name || 'A contractor'} has accepted your booking and is on their way.`, 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/track`);
+                await createInAppNotification(
+                    event.booking.user_id,
+                    l === 'es' ? 'Contratista Acepto el Trabajo' : 'Contractor Accepted Job',
+                    l === 'es'
+                        ? `${event.contractor.full_name || 'Un contratista'} ha aceptado tu reserva y esta en camino.`
+                        : `${event.contractor.full_name || 'A contractor'} has accepted your booking and is on their way.`,
+                    'info',
+                    `/${l}/booking/${event.booking.id}/track`
+                );
                 // Send full job details to the contractor who accepted
                 if (event.contractorEmail) {
                     await sendContractorJobConfirmation(event.contractorEmail, mapBookingData(event.booking, event.contractor));
                 }
                 break;
+            }
 
             case 'contractor.job_rejected':
                 await sendJobRejectedToAdmin(mapBookingData(event.booking));
                 break;
 
-            case 'contractor.en_route':
+            case 'contractor.en_route': {
+                const l = loc(event.booking);
                 await sendEnRouteEmail(mapBookingData(event.booking));
-                await createInAppNotification(event.booking.user_id, 'Detailer On The Way', 'Your detailer is heading to you now! They should arrive shortly.', 'info', `/${event.booking.locale || 'en'}/booking/${event.booking.id}/track`);
+                await createInAppNotification(
+                    event.booking.user_id,
+                    l === 'es' ? 'Detallador en Camino' : 'Detailer On The Way',
+                    l === 'es'
+                        ? 'Tu detallador va en camino. Llegara en breve.'
+                        : 'Your detailer is heading to you now! They should arrive shortly.',
+                    'info',
+                    `/${l}/booking/${event.booking.id}/track`
+                );
                 break;
+            }
 
             case 'contractor.job_started':
                 await sendJobStartedEmail(mapBookingData(event.booking));

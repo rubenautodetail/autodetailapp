@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
             if (!fullBooking.customer_email && fullBooking.user_id) {
                 const { data: authData } = await supabase.auth.admin.getUserById(fullBooking.user_id);
                 if (authData?.user?.email) {
-                    (fullBooking as any).customer_email = authData.user.email;
+                    (fullBooking as { customer_email: string | null }).customer_email = authData.user.email;
                 }
             }
             console.log(`[en-route] sending notification for booking ${safeId}, customer_email: ${fullBooking.customer_email}`);

@@ -27,21 +27,26 @@ export async function POST(req: NextRequest) {
     try {
         const { bookingId, amount, currency = 'usd' } = await req.json();
 
-        if (!amount || amount <= 0) {
+        if (typeof amount !== 'number' || !amount || amount <= 0) {
             return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
         }
 
         // Sanitize bookingId to prevent PostgREST filter injection
         const safeBookingId = bookingId ? String(bookingId).trim() : '';
-        if (safeBookingId && safeBookingId !== 'temp_booking' && safeBookingId !== 'temp_booking_id' && !/^[a-zA-Z0-9\-_]+$/.test(safeBookingId)) {
+        if (safeBookingId && !/^[a-zA-Z0-9\-_]+$/.test(safeBookingId)) {
             return NextResponse.json({ error: 'Invalid booking ID format' }, { status: 400 });
+        }
+
+        // Reject temp booking IDs — only real persisted bookings may create payment intents
+        if (safeBookingId.startsWith('temp_booking')) {
+            return NextResponse.json({ error: 'Cannot create payment intent for temporary booking. Please create the booking first.' }, { status: 400 });
         }
 
         let customerId = 'guest';
         let verifiedAmount = amount;
 
         // Look up the booking to validate amount and get customer email.
-        if (safeBookingId && safeBookingId !== 'temp_booking' && safeBookingId !== 'temp_booking_id') {
+        if (safeBookingId) {
             try {
                 const supabase = createServiceClient();
                 const { data: booking } = await supabase
@@ -79,7 +84,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Persist payment intent ID on the booking.
-        if (safeBookingId && safeBookingId !== 'temp_booking' && safeBookingId !== 'temp_booking_id') {
+        if (safeBookingId) {
             try {
                 const supabase = createServiceClient();
                 await supabase

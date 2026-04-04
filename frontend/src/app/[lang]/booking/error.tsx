@@ -5,6 +5,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Error({
@@ -14,6 +15,10 @@ export default function Error({
     error: Error & { digest?: string };
     reset: () => void;
 }) {
+    const pathname = usePathname();
+    const lang = pathname.split('/')[1] || 'en';
+    const isEs = lang === 'es';
+
     useEffect(() => {
         // Log error to error reporting service
         console.error('Booking flow error:', error);
@@ -39,11 +44,13 @@ export default function Error({
                 </div>
 
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Something went wrong
+                    {isEs ? 'Algo salió mal' : 'Something went wrong'}
                 </h2>
 
                 <p className="text-gray-600 mb-6">
-                    We encountered an error while loading the booking page. Please try again.
+                    {isEs
+                        ? 'Encontramos un error al cargar la página de reserva. Por favor intenta de nuevo.'
+                        : 'We encountered an error while loading the booking page. Please try again.'}
                 </p>
 
                 {error.message && (
@@ -59,13 +66,13 @@ export default function Error({
                         onClick={reset}
                         className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                     >
-                        Try again
+                        {isEs ? 'Intentar de nuevo' : 'Try again'}
                     </button>
                     <Link
-                        href="/"
+                        href={`/${lang}`}
                         className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
                     >
-                        Go home
+                        {isEs ? 'Ir al inicio' : 'Go home'}
                     </Link>
                 </div>
             </div>

@@ -109,7 +109,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                                         {booking.providerRating != null ? (
                                             <span className="font-bold">{booking.providerRating.toFixed(1)}</span>
                                         ) : (
-                                            <span className="text-text-secondary">No rating yet</span>
+                                            <span className="text-text-secondary">{lang === 'es' ? 'Sin calificación' : 'No rating yet'}</span>
                                         )}
                                     </div>
                                 </div>

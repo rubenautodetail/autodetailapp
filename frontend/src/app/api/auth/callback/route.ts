@@ -100,11 +100,18 @@ export async function GET(request: NextRequest) {
             .eq('id', verifiedUser.id)
             .single()
         const cbRole = (cbProfile as { role?: string } | null)?.role
+        const validRoles = ['user', 'contractor', 'admin'] as const
+        type ValidRole = typeof validRoles[number]
+        const isValidRole = (r: string | undefined): r is ValidRole =>
+            r !== undefined && (validRoles as readonly string[]).includes(r)
+
         const goesAdmin = resolvedNext.includes('/admin')
         const goesContractor = resolvedNext.includes('/contractor') || resolvedNext.includes('/contractors')
 
-        // If destination doesn't match role, override to correct portal
-        if (cbRole === 'user' && (goesAdmin || goesContractor)) {
+        // If role is missing or invalid, send to a safe default
+        if (!isValidRole(cbRole)) {
+            resolvedNext = `/${locale}`
+        } else if (cbRole === 'user' && (goesAdmin || goesContractor)) {
             resolvedNext = `/${locale}/dashboard`
         } else if (cbRole === 'contractor' && goesAdmin) {
             resolvedNext = `/${locale}/contractor/dashboard`

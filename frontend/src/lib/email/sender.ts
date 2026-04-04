@@ -208,7 +208,12 @@ function resolveHtml(payload: EmailPayload): string {
  * Pass `to` as the recipient; for admin-targeted emails (chargeback, job_rejected_admin,
  * contractor_application_admin) the caller should pass SUPPORT_EMAIL.
  */
-export async function sendEmail(payload: EmailPayload): Promise<void> {
+export interface EmailResult {
+  success: boolean;
+  error?: string;
+}
+
+export async function sendEmail(payload: EmailPayload): Promise<EmailResult> {
   const subject = resolveSubject(payload);
   const html    = resolveHtml(payload);
 
@@ -222,13 +227,14 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
 
     if (error) {
       console.error(`[email] Error sending "${payload.type}" to ${payload.to}:`, error);
-      throw error;
+      return { success: false, error: String(error.message ?? error) };
     }
 
     console.log(`[email] Sent "${payload.type}" to ${payload.to}`);
+    return { success: true };
   } catch (err) {
     console.error(`[email] Failed to send "${payload.type}" to ${payload.to}:`, err);
-    throw err;
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown email error' };
   }
 }
 

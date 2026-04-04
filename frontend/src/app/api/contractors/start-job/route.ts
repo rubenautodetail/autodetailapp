@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
 
+interface ApprovalCheck {
+    approval_status: string | null;
+}
+
 export async function POST(req: NextRequest) {
     try {
         const supabase = createServiceClient();
@@ -24,7 +28,7 @@ export async function POST(req: NextRequest) {
                 .select('approval_status')
                 .eq('id', user.id)
                 .single();
-            if ((approvalCheck as any)?.approval_status !== 'approved') {
+            if ((approvalCheck as ApprovalCheck | null)?.approval_status !== 'approved') {
                 return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
             }
 
@@ -98,7 +102,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: updateError.message }, { status: 500 });
         }
 
-        const updatedId = String((updatedRows as any)?.[0]?.id ?? bookingId);
+        const updatedId = String((updatedRows as Array<{ id: string }> | null)?.[0]?.id ?? bookingId);
         await logBookingEvent({
             bookingId: updatedId,
             fromStatus: contractorId ? 'en_route' : 'confirmed',
@@ -118,14 +122,14 @@ export async function POST(req: NextRequest) {
             if (fullBooking && !fullBooking.customer_email && fullBooking.user_id) {
                 const { data: authData } = await supabase.auth.admin.getUserById(fullBooking.user_id);
                 if (authData?.user?.email) {
-                    (fullBooking as any).customer_email = authData.user.email;
+                    (fullBooking as { customer_email: string | null }).customer_email = authData.user.email;
                 }
             }
 
             const { notify } = await import('@/lib/notifications');
             await notify({
                 type: 'contractor.job_started',
-                booking: fullBooking ?? ({ id: updatedId } as any),
+                booking: fullBooking ?? ({ id: updatedId } as Record<string, string>),
             });
         }
 

@@ -46,11 +46,12 @@ describe('sendEmail', () => {
       data: mockBookingData,
     }
 
-    // Since the module-level singleton is already set, we test it doesn't throw.
-    await expect(sendEmail(payload)).resolves.toBeUndefined()
+    // Since the module-level singleton is already set, we test it returns success.
+    const result = await sendEmail(payload)
+    expect(result).toEqual({ success: true })
   })
 
-  it('throws when Resend returns an error object', async () => {
+  it('returns failure result when Resend returns an error object', async () => {
     // Override to return an error
     const resendError = { message: 'Invalid API key', name: 'resend_error' }
     const failInstance = {
@@ -75,6 +76,8 @@ describe('sendEmail', () => {
       data: mockBookingData,
     }
 
-    await expect(freshSendEmail(payload)).rejects.toBeDefined()
+    const result = await freshSendEmail(payload)
+    expect(result.success).toBe(false)
+    expect(result.error).toBeDefined()
   })
 })

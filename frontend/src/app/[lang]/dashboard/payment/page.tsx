@@ -1,10 +1,12 @@
 "use client";
 
 import { ArrowLeft, CreditCard, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function PaymentMethodsPage() {
     const router = useRouter();
+    const { lang = "en" } = useParams<{ lang: string }>();
+    const isEs = lang === "es";
 
     return (
         <div className="min-h-screen bg-[var(--background)] p-6">
@@ -15,7 +17,7 @@ export default function PaymentMethodsPage() {
                 >
                     <ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
                 </button>
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">Payment Methods</h1>
+                <h1 className="text-2xl font-bold text-[var(--text-primary)]">{isEs ? "Métodos de Pago" : "Payment Methods"}</h1>
             </header>
 
             <div className="space-y-4">
@@ -30,13 +32,13 @@ export default function PaymentMethodsPage() {
                             <p className="text-sm text-[var(--text-secondary)]">Expires 12/26</p>
                         </div>
                     </div>
-                    <span className="text-xs font-bold px-2 py-1 bg-[var(--accent)]/10 text-[var(--accent)] rounded-md">Default</span>
+                    <span className="text-xs font-bold px-2 py-1 bg-[var(--accent)]/10 text-[var(--accent)] rounded-md">{isEs ? "Predeterminado" : "Default"}</span>
                 </div>
 
                 {/* Add New Method */}
                 <button className="w-full py-4 rounded-xl border-2 border-dashed border-[var(--divider)] text-[var(--text-secondary)] font-medium flex items-center justify-center gap-2 hover:bg-[var(--card)] transition-colors">
                     <Plus className="w-5 h-5" />
-                    Add Payment Method
+                    {isEs ? "Agregar Método de Pago" : "Add Payment Method"}
                 </button>
             </div>
         </div>

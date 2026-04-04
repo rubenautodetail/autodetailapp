@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         } else if (status === 'rejected') {
             query = query.eq('approval_status', 'rejected');
         } else {
-            // All: approved contractors + pending/rejected applicants
+            // All: any profile that is a contractor OR has a pending/rejected application
             query = query.or("role.eq.contractor,approval_status.in.(pending,rejected)");
         }
 

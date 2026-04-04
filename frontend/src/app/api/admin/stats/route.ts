@@ -12,13 +12,22 @@ export async function GET(req: NextRequest) {
   try {
   const supabase = createServiceClient();
 
-  const [{ data: bookings }, { data: profiles }] = await Promise.all([
+  const [bookingsRes, profilesRes] = await Promise.all([
     supabase.from("bookings").select("status, total_amount"),
     supabase.from("profiles").select("role, approval_status"),
   ]);
 
-  const bookingList = bookings ?? [];
-  const profileList = profiles ?? [];
+  if (bookingsRes.error) {
+    console.error('admin/stats bookings query error:', bookingsRes.error);
+    return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
+  }
+  if (profilesRes.error) {
+    console.error('admin/stats profiles query error:', profilesRes.error);
+    return NextResponse.json({ error: 'Failed to fetch profiles' }, { status: 500 });
+  }
+
+  const bookingList = bookingsRes.data ?? [];
+  const profileList = profilesRes.data ?? [];
 
   const totalBookings = bookingList.length;
   const pendingBookings = bookingList.filter(

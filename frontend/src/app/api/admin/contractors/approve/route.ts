@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Failed to approve contractor' }, { status: 500 });
         }
 
-        // Send approval email with login link
+        // Send approval email with login link + in-app notification
         try {
             const { data: profile } = await supabase
                 .from('profiles')
@@ -56,9 +56,18 @@ export async function POST(req: NextRequest) {
                     email: profile.email,
                 });
             }
+
+            // In-app notification for the contractor
+            await supabase.from('notifications').insert({
+                user_id: userId,
+                title: 'Application Approved',
+                message: 'Congratulations! Your contractor application has been approved. You can now accept jobs.',
+                type: 'success',
+                link: '/en/contractor/dashboard',
+            });
         } catch (emailErr) {
-            // Don't fail the approval if email fails
-            console.error('Failed to send approval email:', emailErr);
+            // Don't fail the approval if email/notification fails
+            console.error('Failed to send approval email or notification:', emailErr);
         }
 
         return NextResponse.json({ success: true });

@@ -38,7 +38,7 @@ export default function GlobalError({
                 </div>
 
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Something went wrong
+                    Something went wrong / Algo salió mal
                 </h2>
 
                 <p className="text-gray-600 mb-6">
@@ -59,7 +59,7 @@ export default function GlobalError({
                         Try again
                     </button>
                     <Link
-                        href="/"
+                        href="/en"
                         className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
                     >
                         Go home

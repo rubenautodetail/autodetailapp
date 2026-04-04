@@ -19,14 +19,21 @@ import Stripe from 'stripe';
 // Required for raw body access in Next.js Route Handlers
 export const runtime = 'nodejs';
 
-/** Minimal shape of a booking row as returned by Supabase .select().single() */
+/** Shape of a booking row matching columns used in this webhook handler */
 interface BookingRow {
     id: string;
-    service_name?: string | null;
-    zip_code?: string | null;
-    status?: string | null;
-    payment_status?: string | null;
-    [key: string]: unknown;
+    user_id: string | null;
+    contractor_id: string | null;
+    service_name: string | null;
+    zip_code: string | null;
+    status: string | null;
+    payment_status: string | null;
+    payment_intent_id: string | null;
+    confirmation_code: string | null;
+    total_amount: number | null;
+    scheduled_date: string | null;
+    scheduled_time: string | null;
+    locale: string | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -136,6 +143,7 @@ export async function POST(req: NextRequest) {
                             )
                         );
 
+                        const bookingLocale = updatedBooking.locale || 'en';
                         const notificationRows = contractors.map((c: { id: string; email: string }) => ({
                             user_id: c.id,
                             type: 'info' as const,
@@ -143,7 +151,7 @@ export async function POST(req: NextRequest) {
                             message: `New detailing job in ${zipCode}. Tap to view and accept.`,
                             booking_id: updatedBooking.id,
                             is_read: false,
-                            link: `/en/contractor/jobs/${updatedBooking.id}`,
+                            link: `/${bookingLocale}/contractor/jobs/${updatedBooking.id}`,
                         }));
 
                         const { error: notifError } = await supabase.from('notifications').insert(notificationRows);
@@ -217,6 +225,7 @@ export async function POST(req: NextRequest) {
                         )
                     );
 
+                    const bookingLocale2 = updatedBooking2.locale || 'en';
                     const notificationRows2 = contractors2.map((c: { id: string; email: string }) => ({
                         user_id: c.id,
                         type: 'info' as const,
@@ -224,7 +233,7 @@ export async function POST(req: NextRequest) {
                         message: `New detailing job in ${zipCode2}. Tap to view and accept.`,
                         booking_id: updatedBooking2.id,
                         is_read: false,
-                        link: `/en/contractor/jobs/${updatedBooking2.id}`,
+                        link: `/${bookingLocale2}/contractor/jobs/${updatedBooking2.id}`,
                     }));
 
                     const { error: notifErr2 } = await supabase.from('notifications').insert(notificationRows2);
