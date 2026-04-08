@@ -5,7 +5,7 @@ import { fmtDate, hoursFromNow } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle, CreditCard, Star, AlertTriangle, CalendarClock } from 'lucide-react';
+import { Calendar, Clock, ShieldCheck, ChevronRight, CheckCircle, Truck, Wrench, XCircle, CreditCard, Star, AlertTriangle, CalendarClock, Info, ChevronDown } from 'lucide-react';
 import { BookingStatus } from './StatusTimeline';
 
 interface BookingCardProps {
@@ -97,6 +97,7 @@ export function BookingCard({
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [cancelError, setCancelError] = useState('');
+    const [showPolicy, setShowPolicy] = useState(false);
 
     const hoursUntil = hoursFromNow(date);
     const within24h = hoursUntil < 24;
@@ -232,11 +233,48 @@ export function BookingCard({
                         <div className="space-y-2">
                             {/* Late cancellation penalty warning */}
                             {hasLatePenalty && (
-                                <div className="flex items-start gap-1.5 text-xs text-amber-400/80">
-                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                                    {isEs
-                                        ? 'Cancelar con menos de 24h de anticipación aplica un cargo del 50%.'
-                                        : 'Cancelling less than 24 hours before your appointment incurs a 50% fee.'}
+                                <div className="bg-amber-400/5 border border-amber-400/20 rounded-xl p-3 flex items-start gap-2">
+                                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-semibold text-amber-400">
+                                            {isEs ? 'Cancelación tardía' : 'Late cancellation'}
+                                        </p>
+                                        <p className="text-xs text-amber-300/80">
+                                            {isEs
+                                                ? `Tu cita es en menos de 24 horas. Cancelar ahora aplicará un cargo del 50% ($${(price * 0.5).toFixed(2)}).`
+                                                : `Your appointment is less than 24 hours away. Cancelling now will incur a 50% fee ($${(price * 0.5).toFixed(2)}).`}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Policy info toggle */}
+                            <button
+                                onClick={() => setShowPolicy(!showPolicy)}
+                                className="flex items-center gap-1.5 text-xs text-[#A5B0D1]/70 hover:text-[#A5B0D1] transition-colors"
+                            >
+                                <Info className="w-3.5 h-3.5" />
+                                {isEs ? 'Políticas de cancelación y reprogramación' : 'Cancellation & reschedule policy'}
+                                <ChevronDown className={`w-3 h-3 transition-transform ${showPolicy ? 'rotate-180' : ''}`} />
+                            </button>
+                            {showPolicy && (
+                                <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl p-3 space-y-2 text-xs text-[#A5B0D1]/80">
+                                    <div className="flex items-start gap-2">
+                                        <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                                        <p>
+                                            {isEs
+                                                ? 'Cancelación gratuita hasta 24 horas antes de la cita. Cancelaciones con menos de 24 horas incurren un cargo del 50% del servicio.'
+                                                : 'Free cancellation up to 24 hours before your appointment. Cancellations within 24 hours incur a 50% service fee.'}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <CalendarClock className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                                        <p>
+                                            {isEs
+                                                ? 'Reprogramación gratuita hasta 2 horas antes de la cita. No se permite reprogramar con menos de 2 horas de anticipación.'
+                                                : 'Free rescheduling up to 2 hours before your appointment. Rescheduling is not available less than 2 hours before.'}
+                                        </p>
+                                    </div>
                                 </div>
                             )}
 
@@ -260,14 +298,26 @@ export function BookingCard({
                                     </button>
                                 </div>
                             ) : (
-                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 space-y-2">
-                                    <p className="text-xs text-red-300 font-medium">
-                                        {hasLatePenalty
-                                            ? (isEs
-                                                ? '¿Seguro? Se aplicará un cargo del 50% por cancelación tardía.'
-                                                : 'Are you sure? A 50% late cancellation fee will apply.')
-                                            : (isEs ? '¿Seguro que deseas cancelar?' : 'Are you sure you want to cancel?')}
-                                    </p>
+                                <div className={`${hasLatePenalty ? 'bg-red-500/15 border-red-500/30' : 'bg-red-500/10 border-red-500/20'} border rounded-xl p-3 space-y-2`}>
+                                    {hasLatePenalty ? (
+                                        <>
+                                            <div className="flex items-center gap-1.5">
+                                                <AlertTriangle className="w-4 h-4 text-red-400" />
+                                                <p className="text-xs font-bold text-red-300">
+                                                    {isEs ? 'Penalidad del 50%' : '50% penalty applies'}
+                                                </p>
+                                            </div>
+                                            <p className="text-xs text-red-300/90">
+                                                {isEs
+                                                    ? `Se te cobrará $${(price * 0.5).toFixed(2)} (50% de $${price.toFixed(2)}) por cancelar con menos de 24 horas de anticipación. Solo se reembolsará el 50% restante.`
+                                                    : `You will be charged $${(price * 0.5).toFixed(2)} (50% of $${price.toFixed(2)}) for cancelling less than 24 hours before your appointment. Only the remaining 50% will be refunded.`}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <p className="text-xs text-red-300 font-medium">
+                                            {isEs ? '¿Seguro que deseas cancelar? Recibirás un reembolso completo.' : 'Are you sure you want to cancel? You will receive a full refund.'}
+                                        </p>
+                                    )}
                                     {cancelError && (
                                         <p className="text-xs text-red-400">{cancelError}</p>
                                     )}
@@ -283,7 +333,9 @@ export function BookingCard({
                                             disabled={cancelling}
                                             className="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 py-2 rounded-lg transition-all"
                                         >
-                                            {cancelling ? '...' : (isEs ? 'Sí, cancelar' : 'Yes, cancel')}
+                                            {cancelling ? '...' : (isEs
+                                                ? (hasLatePenalty ? 'Sí, cancelar (50% cargo)' : 'Sí, cancelar')
+                                                : (hasLatePenalty ? 'Yes, cancel (50% fee)' : 'Yes, cancel'))}
                                         </button>
                                     </div>
                                 </div>

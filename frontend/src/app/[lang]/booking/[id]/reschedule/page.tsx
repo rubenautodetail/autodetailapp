@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Clock, ChevronLeft, AlertCircle } from "lucide-react";
+import { Clock, ChevronLeft, AlertCircle, Info, ChevronDown, XCircle, CalendarClock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const TIME_WINDOWS = [
@@ -25,6 +25,7 @@ export default function ReschedulePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showPolicy, setShowPolicy] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -121,14 +122,48 @@ export default function ReschedulePage() {
         </div>
       ) : (
         <>
-          {/* Notice */}
-          <div className="bg-amber-400/10 border border-amber-400/20 rounded-xl p-3 flex gap-2 mb-6">
-            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-amber-300 text-xs">
-              {isEs
-                ? "Solo puedes reprogramar con 2 horas de anticipación o más."
-                : "Rescheduling is only allowed 2+ hours before your appointment."}
-            </p>
+          {/* Contextual warning when within 24h */}
+          {booking && (new Date(booking.date).getTime() - Date.now()) / (1000 * 60 * 60) < 24 && (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex gap-2 mb-4">
+              <CalendarClock className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+              <p className="text-green-300 text-xs">
+                {isEs
+                  ? "Tu cita es en menos de 24 horas. Reprogramar es gratis, pero cancelar aplicaría un cargo del 50%."
+                  : "Your appointment is less than 24 hours away. Rescheduling is free, but cancelling would incur a 50% fee."}
+              </p>
+            </div>
+          )}
+
+          {/* Policy info toggle */}
+          <div className="mb-6 space-y-2">
+            <button
+              onClick={() => setShowPolicy(!showPolicy)}
+              className="flex items-center gap-1.5 text-xs text-[#A5B0D1]/70 hover:text-[#A5B0D1] transition-colors"
+            >
+              <Info className="w-3.5 h-3.5" />
+              {isEs ? "Políticas de cancelación y reprogramación" : "Cancellation & reschedule policy"}
+              <ChevronDown className={`w-3 h-3 transition-transform ${showPolicy ? "rotate-180" : ""}`} />
+            </button>
+            {showPolicy && (
+              <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl p-3 space-y-2 text-xs text-[#A5B0D1]/80">
+                <div className="flex items-start gap-2">
+                  <CalendarClock className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                  <p>
+                    {isEs
+                      ? "Reprogramación gratuita hasta 2 horas antes de la cita. No se permite reprogramar con menos de 2 horas de anticipación."
+                      : "Free rescheduling up to 2 hours before your appointment. Rescheduling is not available less than 2 hours before."}
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                  <p>
+                    {isEs
+                      ? "Cancelación gratuita hasta 24 horas antes de la cita. Cancelaciones con menos de 24 horas incurren un cargo del 50% del servicio."
+                      : "Free cancellation up to 24 hours before your appointment. Cancellations within 24 hours incur a 50% service fee."}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Calendar */}
