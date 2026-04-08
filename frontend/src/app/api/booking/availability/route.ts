@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
             if (timeWindowResponse.ok) {
                 const timeWindowData = await timeWindowResponse.json();
-                timeWindows = timeWindowData.timeWindows.map((w: any) => ({
+                timeWindows = timeWindowData.timeWindows.map((w: { slot: string; label: string; label_es?: string; is_active?: boolean }) => ({
                     slot: w.slot,
                     label: w.label,
                     label_es: w.label_es || w.label,

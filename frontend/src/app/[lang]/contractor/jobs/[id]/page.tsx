@@ -234,7 +234,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             setError(null);
             const accessToken = session?.access_token;
             const data = await contractorApi.fetchJobDetails(id, accessToken);
-            setJob(data);
+            setJob(data as unknown as JobData);
         } catch {
             setError(t.error);
         } finally {

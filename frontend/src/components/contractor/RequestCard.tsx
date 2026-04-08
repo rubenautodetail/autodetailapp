@@ -1,23 +1,39 @@
 "use client";
 
-import { MapPin, Clock, Calendar, ChevronRight, User, Phone } from 'lucide-react';
-import { ServiceRequest, useContractor } from '@/contexts/ContractorContext';
+import { MapPin, ChevronRight, User } from 'lucide-react';
+import Link from 'next/link';
+import { ServiceRequest } from '@/contexts/ContractorContext';
 import { motion } from 'framer-motion';
 
 interface RequestCardProps {
     request: ServiceRequest;
+    locale?: "en" | "es";
     onAccept?: () => void;
     onDecline?: () => void;
     showActions?: boolean;
 }
 
-export default function RequestCard({ request, onAccept, onDecline, showActions = false }: RequestCardProps) {
+const labels = {
+    en: {
+        decline: "Decline",
+        accept: "Accept Job",
+        viewDetails: "View Details",
+    },
+    es: {
+        decline: "Rechazar",
+        accept: "Aceptar Trabajo",
+        viewDetails: "Ver Detalles",
+    },
+};
+
+export default function RequestCard({ request, locale = "en", onAccept, onDecline, showActions = false }: RequestCardProps) {
     const { id, confirmationCode, customerName, vehicleName, serviceName, address, estimatedTotal, status, timestamp } = request;
+    const t = labels[locale];
 
     const timeAgo = (dateString: string) => {
         const minutes = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 60000);
-        if (minutes < 60) return `${minutes}m ago`;
-        return `${Math.floor(minutes / 60)}h ago`;
+        if (minutes < 60) return `${minutes}m ${locale === "es" ? "atrás" : "ago"}`;
+        return `${Math.floor(minutes / 60)}h ${locale === "es" ? "atrás" : "ago"}`;
     };
 
     return (
@@ -63,13 +79,13 @@ export default function RequestCard({ request, onAccept, onDecline, showActions 
                         onClick={onDecline}
                         className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-text-secondary font-medium transition-colors"
                     >
-                        Decline
+                        {t.decline}
                     </button>
                     <button
                         onClick={onAccept}
                         className="py-3 rounded-xl bg-accent-gold hover:bg-accent-gold/90 text-black font-bold transition-colors shadow-lg shadow-accent-gold/20"
                     >
-                        Accept Job
+                        {t.accept}
                     </button>
                 </div>
             )}
@@ -82,9 +98,12 @@ export default function RequestCard({ request, onAccept, onDecline, showActions 
                                 'bg-gray-500/10 text-gray-400'}`}>
                         {status.replace('_', ' ')}
                     </span>
-                    <button className="text-sm font-medium text-[var(--text-primary)] flex items-center hover:text-accent-gold transition-colors">
-                        View Details <ChevronRight className="w-4 h-4 ml-1" />
-                    </button>
+                    <Link
+                        href={`/${locale}/contractor/jobs/${id}`}
+                        className="text-sm font-medium text-[var(--text-primary)] flex items-center hover:text-accent-gold transition-colors"
+                    >
+                        {t.viewDetails} <ChevronRight className="w-4 h-4 ml-1" />
+                    </Link>
                 </div>
             )}
         </motion.div>

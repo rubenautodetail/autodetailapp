@@ -52,9 +52,44 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   pending_assignment: "bg-orange-100 text-orange-800",
   confirmed: "bg-blue-100 text-blue-800",
+  en_route: "bg-cyan-100 text-cyan-800",
   in_progress: "bg-indigo-100 text-indigo-800",
+  pending_approval: "bg-purple-100 text-purple-800",
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
+};
+
+const ALL_STATUSES = [
+  "pending",
+  "pending_assignment",
+  "confirmed",
+  "en_route",
+  "in_progress",
+  "pending_approval",
+  "completed",
+  "cancelled",
+] as const;
+
+const STATUS_LABELS_EN: Record<string, string> = {
+  pending: "Pending",
+  pending_assignment: "Pending Assignment",
+  confirmed: "Confirmed",
+  en_route: "En Route",
+  in_progress: "In Progress",
+  pending_approval: "Pending Approval",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+const STATUS_LABELS_ES: Record<string, string> = {
+  pending: "Pendiente",
+  pending_assignment: "Pendiente de asignacion",
+  confirmed: "Confirmada",
+  en_route: "En camino",
+  in_progress: "En progreso",
+  pending_approval: "Pendiente de aprobacion",
+  completed: "Completada",
+  cancelled: "Cancelada",
 };
 
 export default function AdminBookingDetailPage({ params }: PageProps) {
@@ -66,6 +101,10 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [capturePayment, setCapturePayment] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -79,6 +118,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
 
         const { booking: detail, contractor: contractorData } = await res.json();
         setBooking(detail);
+        setSelectedStatus(detail.status);
         if (contractorData) setContractor(contractorData);
       } catch (err) {
         console.error("Error loading booking:", err);
@@ -108,12 +148,71 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
       const newStatus = action === "cancel" ? "cancelled" : "pending_assignment";
       setBooking((prev) => prev ? { ...prev, status: newStatus, contractorId: action === "requeue" ? null : prev.contractorId } : prev);
       if (action === "requeue") setContractor(null);
-      setMessage({ type: "success", text: action === "cancel" ? "Booking cancelled." : "Job re-queued for assignment." });
+      setMessage({
+        type: "success",
+        text: action === "cancel"
+          ? (locale === "es" ? "Reserva cancelada." : "Booking cancelled.")
+          : (locale === "es" ? "Trabajo re-asignado a la cola." : "Job re-queued for assignment."),
+      });
     } catch {
-      setMessage({ type: "error", text: "Action failed. Please try again." });
+      setMessage({ type: "error", text: locale === "es" ? "Error. Inténtalo de nuevo." : "Action failed. Please try again." });
     } finally {
       setActionLoading(false);
     }
+  }
+
+  async function handleStatusSave() {
+    if (!booking || selectedStatus === booking.status) return;
+    setStatusSaving(true);
+    setMessage(null);
+    setShowConfirm(false);
+    try {
+      const res = await adminFetch("/api/admin/bookings/update-status", {
+        method: "POST",
+        body: JSON.stringify({
+          bookingId: booking.id,
+          newStatus: selectedStatus,
+          capturePayment,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Request failed");
+      }
+      setBooking((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: selectedStatus,
+              updatedAt: new Date().toISOString(),
+              ...(selectedStatus === "completed" && capturePayment && prev.paymentStatus === "authorized"
+                ? { paymentStatus: "captured" }
+                : {}),
+            }
+          : prev
+      );
+      setCapturePayment(false);
+      const labels = locale === "es" ? STATUS_LABELS_ES : STATUS_LABELS_EN;
+      setMessage({
+        type: "success",
+        text: locale === "es"
+          ? `Estado cambiado a "${labels[selectedStatus] || selectedStatus}".`
+          : `Status changed to "${labels[selectedStatus] || selectedStatus}".`,
+      });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Unknown error";
+      setMessage({ type: "error", text: errorMsg });
+      setSelectedStatus(booking.status);
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
+  // Determine allowed statuses based on current booking status
+  function getAllowedStatuses(): string[] {
+    if (!booking) return [];
+    if (booking.status === "completed") return ["completed", "cancelled"];
+    return ALL_STATUSES.map((s) => s);
   }
 
   const PLATFORM_FEE = 0.30;
@@ -153,7 +252,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
               {booking.confirmationCode || `#${String(booking.id).slice(0, 8)}`}
             </h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${STATUS_COLORS[booking.status] || "bg-gray-100 text-gray-700"}`}>
               {booking.status.replace(/_/g, " ")}
             </span>
@@ -176,6 +275,85 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
               </>
             )}
           </div>
+        </div>
+
+        {/* Manual Status Override */}
+        <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            {locale === "es" ? "Cambio manual de estado" : "Manual Status Override"}
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <select
+              value={selectedStatus}
+              onChange={(e) => {
+                setSelectedStatus(e.target.value);
+                setCapturePayment(false);
+              }}
+              disabled={statusSaving}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            >
+              {getAllowedStatuses().map((s) => (
+                <option key={s} value={s}>
+                  {(locale === "es" ? STATUS_LABELS_ES : STATUS_LABELS_EN)[s] || s}
+                </option>
+              ))}
+            </select>
+
+            {/* Capture payment checkbox when completing an authorized booking */}
+            {selectedStatus === "completed" &&
+              booking.paymentStatus === "authorized" &&
+              booking.status !== "completed" && (
+                <label className="flex items-center gap-1.5 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={capturePayment}
+                    onChange={(e) => setCapturePayment(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  {locale === "es" ? "Capturar pago" : "Capture payment"}
+                </label>
+              )}
+
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={statusSaving || selectedStatus === booking.status}
+              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {statusSaving
+                ? (locale === "es" ? "Guardando..." : "Saving...")
+                : (locale === "es" ? "Guardar" : "Save")}
+            </button>
+          </div>
+
+          {/* Confirmation dialog */}
+          {showConfirm && (
+            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                {locale === "es"
+                  ? `Cambiar estado de "${STATUS_LABELS_ES[booking.status] || booking.status}" a "${STATUS_LABELS_ES[selectedStatus] || selectedStatus}"?`
+                  : `Change status from "${STATUS_LABELS_EN[booking.status] || booking.status}" to "${STATUS_LABELS_EN[selectedStatus] || selectedStatus}"?`}
+              </p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={handleStatusSave}
+                  disabled={statusSaving}
+                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {locale === "es" ? "Confirmar" : "Confirm"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirm(false);
+                    setSelectedStatus(booking.status);
+                    setCapturePayment(false);
+                  }}
+                  className="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50"
+                >
+                  {locale === "es" ? "Cancelar" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         {message && (
           <div className={`mt-3 px-4 py-2 rounded-lg text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>

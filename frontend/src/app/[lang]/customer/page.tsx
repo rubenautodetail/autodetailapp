@@ -233,28 +233,28 @@ export default function CustomerDashboardPage() {
                             transition={{ delay: 0.4 }}
                             className="glass-card p-6 rounded-2xl"
                         >
-                            <h3 className="font-bold text-white mb-4 uppercase text-xs tracking-wider text-text-muted">Quick Actions</h3>
+                            <h3 className="font-bold text-white mb-4 uppercase text-xs tracking-wider text-text-muted">{isEs ? 'Acciones Rápidas' : 'Quick Actions'}</h3>
                             <div className="space-y-3">
                                 <Link
                                     href={`/${params.lang}/booking/select`}
                                     className="w-full py-3 px-4 btn-primary rounded-xl font-bold flex items-center justify-center gap-2 group text-center"
                                 >
                                     <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                                    Book New Service
+                                    {isEs ? 'Reservar Servicio' : 'Book New Service'}
                                 </Link>
                                 <Link
                                     href={`/${params.lang}/customer/vehicles`}
                                     className="w-full py-3 px-4 glass-card hover:bg-white/5 text-text-secondary hover:text-white rounded-xl transition-all flex items-center justify-start gap-3"
                                 >
                                     <Car className="w-5 h-5" />
-                                    Manage Vehicles
+                                    {isEs ? 'Mis Vehículos' : 'Manage Vehicles'}
                                 </Link>
                                 <Link
                                     href={`/${params.lang}/customer/settings`}
                                     className="w-full py-3 px-4 glass-card hover:bg-white/5 text-text-secondary hover:text-white rounded-xl transition-all flex items-center justify-start gap-3"
                                 >
                                     <Settings className="w-5 h-5" />
-                                    Account Settings
+                                    {isEs ? 'Configuración' : 'Account Settings'}
                                 </Link>
                             </div>
                         </motion.div>

@@ -23,7 +23,7 @@ function buildHeaders(token?: string): HeadersInit {
 /**
  * Fetch dashboard data (Active jobs, earnings summary, today's schedule)
  */
-export async function fetchDashboard(token?: string): Promise<any> {
+export async function fetchDashboard(token?: string): Promise<Record<string, unknown>> {
     const response = await fetch(`${getBase()}/api/contractors/dashboard`, {
         headers: buildHeaders(token),
         cache: 'no-store',
@@ -39,7 +39,7 @@ export async function fetchDashboard(token?: string): Promise<any> {
 /**
  * Fetch detailed job info by booking ID
  */
-export async function fetchJobDetails(bookingId: string, token?: string): Promise<any> {
+export async function fetchJobDetails(bookingId: string, token?: string): Promise<Record<string, unknown>> {
     const response = await fetch(`${getBase()}/api/contractors/jobs/${bookingId}`, {
         headers: buildHeaders(token),
         cache: 'no-store',
@@ -59,7 +59,7 @@ export interface OnboardingStatus {
     chargesEnabled?: boolean;
     payoutsEnabled?: boolean;
     needsAccount?: boolean;
-    requirements?: any;
+    requirements?: Record<string, unknown>;
 }
 
 /**

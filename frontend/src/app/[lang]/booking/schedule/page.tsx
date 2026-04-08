@@ -139,7 +139,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
         // Convert available dates to Set for quick lookup
         const dateSet = new Set<string>();
         if (data.availableDates && Array.isArray(data.availableDates)) {
-          data.availableDates.forEach((dateInfo: any) => {
+          data.availableDates.forEach((dateInfo: { date?: string }) => {
             if (dateInfo.date) {
               dateSet.add(dateInfo.date);
             }

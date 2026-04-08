@@ -192,7 +192,7 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
     );
   }
 
-  if (error) {
+  if (error && timeWindows.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
@@ -202,7 +202,7 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
             href={`/${lang}/admin`}
             className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
-            ← Back to Dashboard
+            {t.back}
           </Link>
         </div>
       </div>
@@ -459,7 +459,7 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
                     disabled={saving}
                     className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
                   >
-                    {saving ? t.save : t.save}
+                    {saving ? t.loading : t.save}
                   </button>
                 </div>
               </div>

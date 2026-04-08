@@ -3,12 +3,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 interface DashboardHeroProps {
     userName?: string;
 }
 
-export function DashboardHero({ userName = "Valued Customer" }: DashboardHeroProps) {
+export function DashboardHero({ userName }: DashboardHeroProps) {
+    const params = useParams();
+    const isEs = (params?.lang as string) === 'es';
+    const displayName = userName || (isEs ? 'Cliente' : 'Valued Customer');
+
     return (
         <div className="relative overflow-hidden rounded-3xl glass-card p-10 mb-10">
             {/* Background Decorative Elements */}
@@ -22,15 +27,17 @@ export function DashboardHero({ userName = "Valued Customer" }: DashboardHeroPro
                 >
                     <div className="flex items-center space-x-2 mb-2">
                         <Sparkles className="w-5 h-5 text-accent-gold" />
-                        <span className="text-accent-gold font-medium uppercase tracking-wider text-xs">Premium Member</span>
+                        <span className="text-accent-gold font-medium uppercase tracking-wider text-xs">{isEs ? 'Miembro Premium' : 'Premium Member'}</span>
                     </div>
 
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                        Welcome back, <span className="text-gold-gradient">{userName}</span>
+                        {isEs ? 'Bienvenido de vuelta, ' : 'Welcome back, '}<span className="text-gold-gradient">{displayName}</span>
                     </h1>
 
                     <p className="text-text-secondary text-lg max-w-2xl">
-                        Your vehicle deserves the best. track your services, manage your garage, and book your next premium detail.
+                        {isEs
+                            ? 'Tu vehículo merece lo mejor. Rastrea tus servicios, administra tu garaje y reserva tu próximo detallado premium.'
+                            : 'Your vehicle deserves the best. Track your services, manage your garage, and book your next premium detail.'}
                     </p>
                 </motion.div>
             </div>

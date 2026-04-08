@@ -1,7 +1,8 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useContractor } from "@/contexts/ContractorContext";
+import { useAuth } from "@/contexts/AuthContext";
 import RequestCard from "@/components/contractor/RequestCard";
 import { toast } from "react-hot-toast";
 
@@ -11,8 +12,10 @@ interface Props {
 
 export default function InboxPage({ params }: Props) {
     const { lang } = use(params);
-    const { getRequestsByStatus, updateStatus, isLoading } = useContractor();
+    const { getRequestsByStatus, isLoading } = useContractor();
+    const { session } = useAuth();
     const pendingRequests = getRequestsByStatus('pending');
+    const [processingId, setProcessingId] = useState<string | null>(null);
 
     const t = lang === 'es'
         ? {
@@ -22,6 +25,8 @@ export default function InboxPage({ params }: Props) {
             checkBack: '¡Vuelve más tarde!',
             accepted: 'Trabajo aceptado. Movido a Activos.',
             declined: 'Trabajo rechazado.',
+            alreadyClaimed: 'Este trabajo ya fue aceptado por otro contratista.',
+            error: 'Error al procesar. Intenta de nuevo.',
         }
         : {
             title: 'Inbox',
@@ -30,6 +35,8 @@ export default function InboxPage({ params }: Props) {
             checkBack: 'Check back later!',
             accepted: 'Job accepted! Moved to Active tab.',
             declined: 'Job declined.',
+            alreadyClaimed: 'This job has already been accepted by another contractor.',
+            error: 'Failed to process. Please try again.',
         };
 
     if (isLoading) {
@@ -40,14 +47,48 @@ export default function InboxPage({ params }: Props) {
         );
     }
 
-    const handleAccept = (id: string) => {
-        updateStatus(id, 'confirmed');
-        toast.success(t.accepted);
+    const handleAccept = async (id: string) => {
+        setProcessingId(id);
+        try {
+            const res = await fetch('/api/contractors/accept-job', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({ bookingId: id }),
+            });
+            if (res.status === 409) {
+                toast.error(t.alreadyClaimed);
+            } else if (res.ok) {
+                toast.success(t.accepted);
+            } else {
+                toast.error(t.error);
+            }
+        } catch {
+            toast.error(t.error);
+        } finally {
+            setProcessingId(null);
+        }
     };
 
-    const handleDecline = (id: string) => {
-        updateStatus(id, 'cancelled');
-        toast.error(t.declined);
+    const handleDecline = async (id: string) => {
+        setProcessingId(id);
+        try {
+            await fetch('/api/contractors/reject-job', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({ bookingId: id }),
+            });
+            toast.error(t.declined);
+        } catch {
+            toast.error(t.error);
+        } finally {
+            setProcessingId(null);
+        }
     };
 
     return (
@@ -71,6 +112,7 @@ export default function InboxPage({ params }: Props) {
                         <RequestCard
                             key={request.id}
                             request={request}
+                            locale={lang}
                             showActions={true}
                             onAccept={() => handleAccept(request.id)}
                             onDecline={() => handleDecline(request.id)}

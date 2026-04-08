@@ -9,6 +9,8 @@ import { useParams } from 'next/navigation';
 
 export default function SettingsPage() {
     const params = useParams();
+    const lang = (params?.lang as string) || 'en';
+    const isEs = lang === 'es';
     const { userProfile, updateProfile, settings, updateSettings, notifications, dismissNotification, isLoading } = useBookingStatus();
 
     // Local state for form values
@@ -43,9 +45,9 @@ export default function SettingsPage() {
     if (!userProfile) {
         return (
             <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-4">
-                <h2 className="text-white text-2xl font-bold mb-4">Profile Not Found</h2>
+                <h2 className="text-white text-2xl font-bold mb-4">{isEs ? 'Perfil No Encontrado' : 'Profile Not Found'}</h2>
                 <Link href={`/${params.lang || 'en'}/customer`} className="btn-primary px-6 py-2 rounded-lg">
-                    Back to Dashboard
+                    {isEs ? 'Volver al Panel' : 'Back to Dashboard'}
                 </Link>
             </div>
         );
@@ -58,16 +60,16 @@ export default function SettingsPage() {
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href={`/${params.lang || 'en'}/customer`} className="text-text-secondary hover:text-white flex items-center text-sm font-medium transition-colors">
                         <ChevronLeft className="w-5 h-5 mr-1" />
-                        Back to Dashboard
+                        {isEs ? 'Volver al Panel' : 'Back to Dashboard'}
                     </Link>
-                    <h1 className="font-bold hidden md:block">Settings</h1>
+                    <h1 className="font-bold hidden md:block">{isEs ? 'Configuración' : 'Settings'}</h1>
                     <div className="w-20"></div>
                 </div>
             </div>
 
             <div className="container mx-auto px-4 py-8 max-w-4xl">
-                <h1 className="text-3xl font-bold mb-2">Account Settings</h1>
-                <p className="text-text-secondary mb-8">Manage your profile and application preferences.</p>
+                <h1 className="text-3xl font-bold mb-2">{isEs ? 'Configuración de Cuenta' : 'Account Settings'}</h1>
+                <p className="text-text-secondary mb-8">{isEs ? 'Administra tu perfil y preferencias.' : 'Manage your profile and application preferences.'}</p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Navigation */}
@@ -75,15 +77,15 @@ export default function SettingsPage() {
                         <div className="glass-card p-4 rounded-xl">
                             <button className="w-full text-left px-4 py-3 rounded-lg bg-white/10 text-white font-medium flex items-center transition-colors">
                                 <User className="w-5 h-5 mr-3 text-accent-gold" />
-                                Profile
+                                {isEs ? 'Perfil' : 'Profile'}
                             </button>
                             <button className="w-full text-left px-4 py-3 rounded-lg text-text-secondary hover:bg-white/5 hover:text-white transition-colors flex items-center">
                                 <Bell className="w-5 h-5 mr-3" />
-                                Notifications
+                                {isEs ? 'Notificaciones' : 'Notifications'}
                             </button>
                             <button className="w-full text-left px-4 py-3 rounded-lg text-text-secondary hover:bg-white/5 hover:text-white transition-colors flex items-center">
                                 <Shield className="w-5 h-5 mr-3" />
-                                Security
+                                {isEs ? 'Seguridad' : 'Security'}
                             </button>
                         </div>
                     </div>
@@ -103,14 +105,14 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="ml-6">
                                     <h2 className="text-xl font-bold">{userProfile.name}</h2>
-                                    <p className="text-text-secondary text-sm">Member since {userProfile.memberSince}</p>
+                                    <p className="text-text-secondary text-sm">{isEs ? 'Miembro desde' : 'Member since'} {userProfile.memberSince}</p>
                                 </div>
                             </div>
 
                             <form onSubmit={handleProfileSave} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">Full Name</label>
+                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Nombre Completo' : 'Full Name'}</label>
                                         <input
                                             type="text"
                                             className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors"
@@ -119,7 +121,7 @@ export default function SettingsPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">Phone Number</label>
+                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Teléfono' : 'Phone Number'}</label>
                                         <input
                                             type="tel"
                                             className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors"
@@ -130,20 +132,20 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs uppercase text-text-muted font-bold mb-1">Email Address</label>
+                                    <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Correo Electrónico' : 'Email Address'}</label>
                                     <input
                                         type="email"
                                         disabled
                                         className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-text-muted focus:outline-none cursor-not-allowed"
                                         value={profileForm.email}
                                     />
-                                    <p className="text-[10px] text-text-muted mt-1 italic">Email cannot be changed directly.</p>
+                                    <p className="text-[10px] text-text-muted mt-1 italic">{isEs ? 'El correo no se puede cambiar directamente.' : 'Email cannot be changed directly.'}</p>
                                 </div>
 
                                 <div className="pt-4 flex justify-end">
                                     <button type="submit" className="btn-primary py-2 px-6 rounded-lg font-bold shadow-glow flex items-center">
                                         <Save className="w-4 h-4 mr-2" />
-                                        Save Changes
+                                        {isEs ? 'Guardar Cambios' : 'Save Changes'}
                                     </button>
                                 </div>
                             </form>
@@ -159,8 +161,8 @@ export default function SettingsPage() {
                                             <Bell className="w-5 h-5 text-blue-500" />
                                         </div>
                                         <div>
-                                            <p className="font-medium">Push Notifications</p>
-                                            <p className="text-text-secondary text-sm">Receive updates about your booking status</p>
+                                            <p className="font-medium">{isEs ? 'Notificaciones Push' : 'Push Notifications'}</p>
+                                            <p className="text-text-secondary text-sm">{isEs ? 'Recibe actualizaciones sobre el estado de tu reserva' : 'Receive updates about your booking status'}</p>
                                         </div>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -180,8 +182,8 @@ export default function SettingsPage() {
                                             <Moon className="w-5 h-5 text-purple-500" />
                                         </div>
                                         <div>
-                                            <p className="font-medium">Dark Mode</p>
-                                            <p className="text-text-secondary text-sm">Always use dark theme (Recommended)</p>
+                                            <p className="font-medium">{isEs ? 'Modo Oscuro' : 'Dark Mode'}</p>
+                                            <p className="text-text-secondary text-sm">{isEs ? 'Usar siempre tema oscuro (Recomendado)' : 'Always use dark theme (Recommended)'}</p>
                                         </div>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">

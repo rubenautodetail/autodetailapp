@@ -51,7 +51,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   useEffect(() => {
     if (!name && profile?.full_name) setName(profile.full_name);
     if (!email && user?.email) setEmail(user.email);
-    if (!phone && (profile as any)?.phone) setPhone((profile as any).phone);
+    if (!phone && (profile as unknown as Record<string, string> | null)?.phone) setPhone((profile as unknown as Record<string, string>).phone);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, user]);
   const [specialNotes, setSpecialNotes] = useState(customerInfo?.specialNotes || "");

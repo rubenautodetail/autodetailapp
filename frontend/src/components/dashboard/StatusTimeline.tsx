@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Clock, Truck, Wrench, ShieldCheck } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import type { BookingStatus } from '@/contexts/BookingStatusContext';
 
 export type { BookingStatus };
@@ -10,14 +11,16 @@ interface StatusTimelineProps {
 }
 
 const steps = [
-    { id: 'pending', label: 'Booked', icon: Clock },
-    { id: 'confirmed', label: 'Confirmed', icon: Check },
-    { id: 'en_route', label: 'En Route', icon: Truck },
-    { id: 'working', label: 'Working', icon: Wrench },
-    { id: 'completed', label: 'Complete', icon: ShieldCheck },
+    { id: 'pending', label: 'Booked', labelEs: 'Reservado', icon: Clock },
+    { id: 'confirmed', label: 'Confirmed', labelEs: 'Confirmado', icon: Check },
+    { id: 'en_route', label: 'En Route', labelEs: 'En Camino', icon: Truck },
+    { id: 'working', label: 'Working', labelEs: 'En Progreso', icon: Wrench },
+    { id: 'completed', label: 'Complete', labelEs: 'Completado', icon: ShieldCheck },
 ];
 
 export function StatusTimeline({ status }: StatusTimelineProps) {
+    const params = useParams();
+    const isEs = (params?.lang as string) === 'es';
     const currentStepIndex = steps.findIndex((s) => s.id === status);
     const isCancelled = status === 'cancelled';
 
@@ -25,7 +28,7 @@ export function StatusTimeline({ status }: StatusTimelineProps) {
         return (
             <div className="w-full py-6">
                 <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-6 py-4 rounded-xl text-center font-bold">
-                    Booking Cancelled
+                    {isEs ? 'Reserva Cancelada' : 'Booking Cancelled'}
                 </div>
             </div>
         )
@@ -77,7 +80,7 @@ export function StatusTimeline({ status }: StatusTimelineProps) {
                                     }}
                                     className="mt-3 text-xs font-semibold uppercase tracking-wider bg-black/50 backdrop-blur-sm px-2 py-1 rounded-md"
                                 >
-                                    {step.label}
+                                    {isEs ? step.labelEs : step.label}
                                 </motion.span>
                             </div>
                         )

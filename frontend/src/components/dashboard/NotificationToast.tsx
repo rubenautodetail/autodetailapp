@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertTriangle, Info, XCircle, X, ChevronRight } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 export interface ToastMessage {
     id: string;
@@ -31,6 +32,8 @@ const colors = {
 };
 
 export function NotificationToast({ notifications, onDismiss }: NotificationToastProps) {
+    const params = useParams();
+    const isEs = (params?.lang as string) === 'es';
     return (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col space-y-4 pointer-events-none">
             <AnimatePresence>
@@ -48,7 +51,7 @@ export function NotificationToast({ notifications, onDismiss }: NotificationToas
                                 <p className="text-text-secondary text-sm leading-snug mt-1">{notification.message}</p>
                                 {notification.link && (
                                     <span className="inline-flex items-center gap-1 text-xs font-bold text-accent-gold mt-2">
-                                        Tap to open <ChevronRight className="w-3 h-3" />
+                                        {isEs ? 'Toca para abrir' : 'Tap to open'} <ChevronRight className="w-3 h-3" />
                                     </span>
                                 )}
                             </div>

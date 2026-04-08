@@ -187,7 +187,10 @@ export default function ReschedulePage() {
             </div>
 
             <div className="grid grid-cols-7 gap-1 mb-2">
-              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
+              {(isEs
+                ? ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"]
+                : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+              ).map(d => (
                 <div key={d} className="text-center text-xs text-[#A5B0D1] py-1">{d}</div>
               ))}
             </div>

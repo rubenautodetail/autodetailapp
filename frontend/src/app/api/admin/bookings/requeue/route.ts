@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       .eq("id", bookingId)
       .single();
 
-    const REQUEUEABLE = ["confirmed", "cancelled", "pending_assignment"];
+    const REQUEUEABLE = ["confirmed", "cancelled", "pending_assignment", "en_route", "in_progress", "pending_approval"];
     if (!existing || !REQUEUEABLE.includes(existing.status)) {
       return NextResponse.json(
         { error: `Cannot requeue a booking with status "${existing?.status}"` },

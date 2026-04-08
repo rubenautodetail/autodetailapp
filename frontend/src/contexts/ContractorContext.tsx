@@ -29,8 +29,29 @@ interface ContractorContextType {
 
 const ContractorContext = createContext<ContractorContextType | undefined>(undefined);
 
+interface BookingRow {
+  id: string | number;
+  confirmation_code?: string | null;
+  customer_email?: string | null;
+  customer_name?: string | null;
+  vehicle_year?: string | null;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  vehicle_color?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  service_name?: string | null;
+  total_amount?: string | number | null;
+  special_instructions?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  contractor_id?: string | null;
+}
+
 // Helper to map Supabase booking to ServiceRequest
-function mapBookingToRequest(booking: any): ServiceRequest {
+function mapBookingToRequest(booking: BookingRow): ServiceRequest {
   // Build vehicle name from individual columns; fall back gracefully
   const vehicleParts = [
     booking.vehicle_year,
@@ -61,8 +82,8 @@ function mapBookingToRequest(booking: any): ServiceRequest {
     address,
     estimatedTotal: (typeof booking.total_amount === 'string'
       ? parseFloat(booking.total_amount)
-      : (booking.total_amount || 0)) * 0.70,
-    notes: booking.special_instructions,
+      : (Number(booking.total_amount) || 0)) * 0.70,
+    notes: booking.special_instructions || undefined,
     status: (booking.status as RequestStatus) || 'pending',
     timestamp: booking.created_at || new Date().toISOString(),
   };
@@ -89,7 +110,7 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Error fetching bookings:', error);
       } else if (data) {
-        setRequests(data.map(mapBookingToRequest));
+        setRequests((data as BookingRow[]).map(mapBookingToRequest));
       }
       setIsLoading(false);
     }
@@ -105,15 +126,16 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
         { event: '*', schema: 'public', table: 'bookings', filter: `contractor_id=eq.${contractorId}` },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            const newRequest = mapBookingToRequest(payload.new);
+            const newRequest = mapBookingToRequest(payload.new as BookingRow);
             setRequests(prev => [newRequest, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
-            const updatedRequest = mapBookingToRequest(payload.new);
+            const updatedRequest = mapBookingToRequest(payload.new as BookingRow);
             setRequests(prev => prev.map(req =>
               req.id === updatedRequest.id ? updatedRequest : req
             ));
           } else if (payload.eventType === 'DELETE') {
-            setRequests(prev => prev.filter(req => req.id !== payload.old.id.toString()));
+            const oldRow = payload.old as BookingRow;
+            setRequests(prev => prev.filter(req => req.id !== String(oldRow.id)));
           }
         }
       )

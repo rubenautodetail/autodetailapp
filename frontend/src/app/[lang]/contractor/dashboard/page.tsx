@@ -111,12 +111,32 @@ function StatusBadge({ status, lang }: { status: string; lang: "en" | "es" }) {
     );
 }
 
+interface DashboardJob {
+    id: string;
+    serviceName: string;
+    confirmationCode?: string;
+    date?: string;
+    timeWindow?: string;
+    area?: string;
+    address?: string;
+    totalAmount: number;
+    status: string;
+}
+
+interface DashboardData {
+    contractor?: { name: string };
+    incomingJobs?: DashboardJob[];
+    activeJobs?: DashboardJob[];
+    completedJobs?: { id: number; service_name: string | null; date: string; total_amount: number | string; confirmation_code?: string | null }[];
+    earnings?: { thisWeek: number; total: number };
+}
+
 export default function ContractorDashboard({ params }: DashboardProps) {
     const { lang } = use(params);
     const labels = t[lang];
     const { session, isAuthenticated, isLoading: authLoading } = useAuth();
 
-    const [dashboardData, setDashboardData] = useState<any>(null);
+    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [paymentInfoSet, setPaymentInfoSet] = useState<boolean | null>(null);
@@ -402,8 +422,8 @@ export default function ContractorDashboard({ params }: DashboardProps) {
         );
     }
 
-    const incomingJobs: any[] = dashboardData?.incomingJobs ?? [];
-    const activeJobs: any[] = dashboardData?.activeJobs ?? [];
+    const incomingJobs: DashboardJob[] = dashboardData?.incomingJobs ?? [];
+    const activeJobs: DashboardJob[] = dashboardData?.activeJobs ?? [];
 
     return (
         <div className="min-h-screen bg-[#131835] py-8 px-4">

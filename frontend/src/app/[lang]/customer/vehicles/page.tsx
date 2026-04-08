@@ -12,6 +12,7 @@ import { useParams } from 'next/navigation';
 export default function VehiclesPage() {
     const params = useParams();
     const lang = (params?.lang as string) || 'en';
+    const isEs = lang === 'es';
     const { vehicles, addVehicle, removeVehicle, notifications, dismissNotification, isLoading } = useBookingStatus();
     const [isAdding, setIsAdding] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,9 +62,9 @@ export default function VehiclesPage() {
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href={`/${lang}/customer`} className="text-text-secondary hover:text-white flex items-center text-sm font-medium transition-colors">
                         <ChevronLeft className="w-5 h-5 mr-1" />
-                        Back to Dashboard
+                        {isEs ? 'Volver al Panel' : 'Back to Dashboard'}
                     </Link>
-                    <h1 className="text-white font-bold hidden md:block">Garage</h1>
+                    <h1 className="text-white font-bold hidden md:block">{isEs ? 'Garaje' : 'Garage'}</h1>
                     <div className="w-20"></div> {/* Spacer for centering */}
                 </div>
             </div>
@@ -71,15 +72,15 @@ export default function VehiclesPage() {
             <div className="container mx-auto px-4 py-8">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">My Garage</h1>
-                        <p className="text-text-secondary text-sm sm:text-base">Manage the vehicles in your premium fleet.</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">{isEs ? 'Mi Garaje' : 'My Garage'}</h1>
+                        <p className="text-text-secondary text-sm sm:text-base">{isEs ? 'Administra los vehículos de tu flota.' : 'Manage the vehicles in your premium fleet.'}</p>
                     </div>
                     <button
                         onClick={() => setIsAdding(true)}
                         className="btn-primary py-2.5 px-4 rounded-lg font-bold flex items-center shadow-glow self-start sm:self-auto"
                     >
                         <Plus className="w-5 h-5 mr-2" />
-                        Add Vehicle
+                        {isEs ? 'Agregar Vehículo' : 'Add Vehicle'}
                     </button>
                 </div>
 
@@ -97,7 +98,7 @@ export default function VehiclesPage() {
                     {vehicles.length === 0 && (
                         <div className="col-span-full py-12 text-center text-text-muted border border-dashed border-white/10 rounded-2xl">
                             <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>No vehicles in your garage yet.</p>
+                            <p>{isEs ? 'Aún no tienes vehículos en tu garaje.' : 'No vehicles in your garage yet.'}</p>
                         </div>
                     )}
                 </div>
@@ -123,31 +124,31 @@ export default function VehiclesPage() {
 
                             <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                                 <Plus className="w-6 h-6 text-accent-gold mr-2" />
-                                Add New Vehicle
+                                {isEs ? 'Agregar Nuevo Vehículo' : 'Add New Vehicle'}
                             </h2>
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">Make</label>
+                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Marca' : 'Make'}</label>
                                         <input
                                             type="text"
                                             required
                                             disabled={isSubmitting}
                                             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                            placeholder="e.g. Tesla"
+                                            placeholder={isEs ? 'Ej. Toyota' : 'e.g. Tesla'}
                                             value={newVehicle.make}
                                             onChange={e => setNewVehicle({ ...newVehicle, make: e.target.value })}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">Model</label>
+                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Modelo' : 'Model'}</label>
                                         <input
                                             type="text"
                                             required
                                             disabled={isSubmitting}
                                             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                            placeholder="e.g. Model Y"
+                                            placeholder={isEs ? 'Ej. Corolla' : 'e.g. Model Y'}
                                             value={newVehicle.model}
                                             onChange={e => setNewVehicle({ ...newVehicle, model: e.target.value })}
                                         />
@@ -156,7 +157,7 @@ export default function VehiclesPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">Year</label>
+                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Año' : 'Year'}</label>
                                         <input
                                             type="text"
                                             required
@@ -174,7 +175,7 @@ export default function VehiclesPage() {
                                             required
                                             disabled={isSubmitting}
                                             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                            placeholder="e.g. Black"
+                                            placeholder={isEs ? 'Ej. Negro' : 'e.g. Black'}
                                             value={newVehicle.color}
                                             onChange={e => setNewVehicle({ ...newVehicle, color: e.target.value })}
                                         />
@@ -182,7 +183,7 @@ export default function VehiclesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs uppercase text-text-muted font-bold mb-1">License Plate <span className="text-text-muted/50 normal-case font-normal">(optional)</span></label>
+                                    <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Placa' : 'License Plate'} <span className="text-text-muted/50 normal-case font-normal">({isEs ? 'opcional' : 'optional'})</span></label>
                                     <input
                                         type="text"
                                         disabled={isSubmitting}
@@ -202,7 +203,7 @@ export default function VehiclesPage() {
                                         {isSubmitting ? (
                                             <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                         ) : null}
-                                        {isSubmitting ? 'Saving...' : 'Save Vehicle'}
+                                        {isSubmitting ? (isEs ? 'Guardando...' : 'Saving...') : (isEs ? 'Guardar Vehículo' : 'Save Vehicle')}
                                     </button>
                                 </div>
                             </form>

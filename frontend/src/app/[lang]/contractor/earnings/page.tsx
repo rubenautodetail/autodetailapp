@@ -218,7 +218,7 @@ export default function EarningsPage({ params }: EarningsProps) {
                                                     <p className="font-mono text-sm font-semibold text-[#D0B078]">{job.confirmation_code}</p>
                                                 )}
                                                 <p className="font-medium text-white">
-                                                    {job.service_name || "Auto Detail"}
+                                                    {job.service_name || (lang === "es" ? "Detallado Auto" : "Auto Detail")}
                                                 </p>
                                                 <p className="text-sm text-[#5E698F]">{dateStr}</p>
                                             </div>
