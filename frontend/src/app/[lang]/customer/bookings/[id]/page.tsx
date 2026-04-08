@@ -130,7 +130,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                             <div className="space-y-4 text-sm">
                                 <div className="flex justify-between pt-2">
                                     <span className="text-white font-bold text-lg">{lang === 'es' ? 'Total Pagado' : 'Total Paid'}</span>
-                                    <span className="font-bold text-accent-gold text-xl">${booking.price.toFixed(2)}</span>
+                                    <span className="font-bold text-accent-gold text-xl">${(Number(booking.price) || 0).toFixed(2)}</span>
                                 </div>
                             </div>
                         </motion.div>

@@ -196,7 +196,7 @@ export default function CustomerDashboardPage() {
                                                             {b.serviceName}
                                                         </p>
                                                         <p className="text-xs text-text-muted mt-0.5">
-                                                            {new Date(b.date).toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                            {(() => { const d = new Date(b.date); return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' }); })()}
                                                             {b.time ? ` · ${formatTimeWindow(b.time, lang)}` : ''}
                                                         </p>
                                                     </div>

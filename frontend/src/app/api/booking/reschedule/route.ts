@@ -28,6 +28,7 @@ async function contractorHasConflict(
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const supabaseAuth = await createClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
   if (!user) {
@@ -174,4 +175,8 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, reassigned });
+  } catch (err) {
+    console.error('booking/reschedule error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

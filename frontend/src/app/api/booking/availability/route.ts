@@ -16,7 +16,13 @@ interface TimeWindow {
 
 export async function POST(req: NextRequest) {
     try {
-        const { zipCode, month } = await req.json();
+        let body;
+        try {
+            body = await req.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+        const { zipCode, month } = body;
 
         if (!zipCode || !month) {
             return NextResponse.json(

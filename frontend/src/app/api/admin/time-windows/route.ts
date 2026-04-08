@@ -52,7 +52,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { slot, label, label_es, range, range_es, is_active, sort_order } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const { slot, label, label_es, range, range_es, is_active, sort_order } = body;
 
     // Field validation
     if (!slot || !label) {

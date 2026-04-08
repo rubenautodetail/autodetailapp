@@ -262,7 +262,7 @@ function ApproveServiceContent() {
                             },
                             {
                                 label: lang === 'es' ? 'Total' : 'Total',
-                                value: `$${Number(booking.total_amount).toFixed(2)}`,
+                                value: `$${(Number(booking.total_amount) || 0).toFixed(2)}`,
                                 gold: true,
                             },
                         ].map(({ label, value, gold }) => (

@@ -12,7 +12,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { userId } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    const { userId } = body;
     if (!userId) {
       return NextResponse.json({ error: "userId is required" }, { status: 400 });
     }

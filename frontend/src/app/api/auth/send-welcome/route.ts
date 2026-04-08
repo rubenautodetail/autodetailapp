@@ -15,7 +15,13 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const { name, email, userId } = await req.json();
+        let body;
+        try {
+            body = await req.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+        const { name, email, userId } = body;
 
         if (!email || !name) {
             return NextResponse.json({ error: 'name and email are required' }, { status: 400 });

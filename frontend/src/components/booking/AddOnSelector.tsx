@@ -61,7 +61,7 @@ export default function AddOnSelector({
                     <span className={`font-bold text-lg ${selected ? 'text-[#D0B078]' : 'text-[var(--text-primary)]'}`}>
                       {addOn.name}
                     </span>
-                    <span className="font-semibold text-[#D0B078]">+${addOn.price.toFixed(2)}</span>
+                    <span className="font-semibold text-[#D0B078]">+${(Number(addOn.price) || 0).toFixed(2)}</span>
                   </div>
                   {addOn.description && (
                     <p className="text-sm text-[var(--text-secondary)]">{addOn.description}</p>

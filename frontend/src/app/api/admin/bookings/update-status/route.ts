@@ -24,7 +24,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { bookingId, newStatus, capturePayment } = (await req.json()) as {
+    let rawBody;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    const { bookingId, newStatus, capturePayment } = rawBody as {
       bookingId: number;
       newStatus: BookingStatus;
       capturePayment?: boolean;

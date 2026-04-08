@@ -89,11 +89,11 @@ export default function ContractorHistory({ params }: Props) {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-4 sm:p-6">
                         <p className="text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-2 sm:mb-3">{label.thisWeek}</p>
-                        <p className="text-2xl sm:text-4xl font-bold text-green-400">${earnings.thisWeek.toFixed(2)}</p>
+                        <p className="text-2xl sm:text-4xl font-bold text-green-400">${(Number(earnings.thisWeek) || 0).toFixed(2)}</p>
                     </div>
                     <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-4 sm:p-6">
                         <p className="text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-2 sm:mb-3">{label.total}</p>
-                        <p className="text-2xl sm:text-4xl font-bold text-[#D0B078]">${earnings.total.toFixed(2)}</p>
+                        <p className="text-2xl sm:text-4xl font-bold text-[#D0B078]">${(Number(earnings.total) || 0).toFixed(2)}</p>
                     </div>
                 </div>
 

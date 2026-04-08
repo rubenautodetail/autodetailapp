@@ -83,7 +83,7 @@ function ResumeCheckoutForm({
       const returnUrl = new URL(`${window.location.origin}/${locale}/booking/confirmation`);
       returnUrl.searchParams.set("code", confirmationCode);
       returnUrl.searchParams.set("service", encodeURIComponent(serviceName));
-      returnUrl.searchParams.set("total", total.toFixed(2));
+      returnUrl.searchParams.set("total", (Number(total) || 0).toFixed(2));
 
       const { error: confirmError } = await stripe.confirmPayment({
         elements,
@@ -131,7 +131,7 @@ function ResumeCheckoutForm({
       >
         {isProcessing
           ? (locale === "es" ? "Procesando..." : "Processing...")
-          : (locale === "es" ? `Pagar $${total.toFixed(2)}` : `Pay $${total.toFixed(2)}`)}
+          : (locale === "es" ? `Pagar $${(Number(total) || 0).toFixed(2)}` : `Pay $${(Number(total) || 0).toFixed(2)}`)}
       </button>
 
       <div className="flex items-center justify-center text-sm text-[#5E698F]">
@@ -323,7 +323,7 @@ export default function ResumePaymentForm({ bookingId, locale }: ResumePaymentFo
               <div className="border-t border-[#2C355E] pt-4">
                 <div className="flex justify-between items-center">
                   <span className="text-[#A5B0D1] text-sm">{locale === "es" ? "Total a pagar" : "Total due"}</span>
-                  <span className="text-2xl font-bold text-[#D0B078]">${Number(booking.total_amount).toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-[#D0B078]">${(Number(booking.total_amount) || 0).toFixed(2)}</span>
                 </div>
               </div>
 

@@ -49,7 +49,7 @@ export default function RequestCard({ request, locale = "en", onAccept, onDeclin
                     <h3 className="text-lg font-bold text-[var(--text-primary)] mt-1">{serviceName}</h3>
                 </div>
                 <div className="text-right">
-                    <span className="text-xl font-bold text-accent-gold">${estimatedTotal.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-accent-gold">${(Number(estimatedTotal) || 0).toFixed(2)}</span>
                     <div className="text-xs text-text-secondary">{timeAgo(timestamp)}</div>
                 </div>
             </div>

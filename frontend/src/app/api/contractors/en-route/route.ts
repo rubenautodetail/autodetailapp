@@ -15,7 +15,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await req.json() as { bookingId: string };
+        let body: { bookingId: string };
+        try {
+            body = await req.json() as { bookingId: string };
+        } catch {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
         const { bookingId } = body;
 
         if (!bookingId) {

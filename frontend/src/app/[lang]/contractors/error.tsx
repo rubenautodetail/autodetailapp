@@ -1,17 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 
-export default function GlobalError({
+export default function ContractorsError({
   error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const params = useParams();
+  const lang = (params?.lang as string) || "en";
+  const isEs = lang === "es";
+
   useEffect(() => {
-    console.error("[Global Error]", error);
+    console.error("[Contractors Error]", error);
   }, [error]);
 
   return (
@@ -23,28 +28,25 @@ export default function GlobalError({
           </svg>
         </div>
         <h2 className="text-xl font-bold text-white">
-          Something went wrong / Algo sali&oacute; mal
+          {isEs ? "Algo sali\u00f3 mal" : "Something went wrong"}
         </h2>
         <p className="text-text-secondary text-sm">
-          An unexpected error occurred. Please try again or return home.
+          {isEs
+            ? "Hubo un error al cargar la p\u00e1gina. Por favor, int\u00e9ntalo de nuevo."
+            : "There was an error loading the page. Please try again."}
         </p>
-        {error.digest && (
-          <p className="text-xs text-text-secondary/50 font-mono">
-            Error ID: {error.digest}
-          </p>
-        )}
         <div className="flex gap-3">
           <button
             onClick={reset}
             className="flex-1 btn-primary px-6 py-2.5 rounded-xl font-bold text-sm"
           >
-            Try again
+            {isEs ? "Intentar de nuevo" : "Try again"}
           </button>
           <Link
-            href="/en"
+            href={`/${lang}`}
             className="flex-1 glass-card hover:bg-white/10 text-text-secondary px-6 py-2.5 rounded-xl font-bold text-sm transition-colors"
           >
-            Go home
+            {isEs ? "Ir al inicio" : "Go home"}
           </Link>
         </div>
       </div>

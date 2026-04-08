@@ -14,19 +14,39 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
     if (!(await verifyAdmin(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const supabase = createServiceClient();
-    const [{ data: services }, { data: addOns }] = await Promise.all([
-        supabase.from('services').select('*').order('sort_order', { ascending: true }),
-        supabase.from('add_ons').select('*').order('sort_order', { ascending: true }),
-    ]);
+    try {
+        const supabase = createServiceClient();
+        const [{ data: services, error: sErr }, { data: addOns, error: aErr }] = await Promise.all([
+            supabase.from('services').select('*').order('sort_order', { ascending: true }),
+            supabase.from('add_ons').select('*').order('sort_order', { ascending: true }),
+        ]);
 
-    return NextResponse.json({ services: services ?? [], addOns: addOns ?? [] });
+        if (sErr) {
+            console.error('admin/services GET services error:', sErr);
+            return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 });
+        }
+        if (aErr) {
+            console.error('admin/services GET add_ons error:', aErr);
+            return NextResponse.json({ error: 'Failed to fetch add-ons' }, { status: 500 });
+        }
+
+        return NextResponse.json({ services: services ?? [], addOns: addOns ?? [] });
+    } catch (err) {
+        console.error('GET /api/admin/services error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 export async function POST(req: NextRequest) {
     if (!(await verifyAdmin(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = await req.json();
+    try {
+    let body;
+    try {
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
     const { type, ...fields } = body; // type: 'service' | 'addon'
 
     const supabase = createServiceClient();
@@ -109,4 +129,8 @@ export async function POST(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ data });
+    } catch (err) {
+        console.error('POST /api/admin/services error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

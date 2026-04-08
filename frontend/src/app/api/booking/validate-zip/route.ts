@@ -22,7 +22,13 @@ function getServiceZipCodes(): Set<string> | null {
 
 export async function POST(req: NextRequest) {
     try {
-        const { zipCode } = await req.json();
+        let body;
+        try {
+            body = await req.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+        const { zipCode } = body;
 
         if (!zipCode) {
             return NextResponse.json({ error: 'ZIP code is required' }, { status: 400 });

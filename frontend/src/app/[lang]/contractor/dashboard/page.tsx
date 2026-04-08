@@ -512,12 +512,12 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                     {/* This Week */}
                     <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 shrink-0 sm:shrink sm:col-span-1">
                         <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.thisWeek}</p>
-                        <p className="text-2xl font-bold text-green-400">${(dashboardData?.earnings?.thisWeek || 0).toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-green-400">${(Number(dashboardData?.earnings?.thisWeek) || 0).toFixed(2)}</p>
                     </div>
                     {/* Total */}
                     <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 shrink-0 sm:shrink sm:col-span-1">
                         <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.total}</p>
-                        <p className="text-2xl font-bold text-white">${(dashboardData?.earnings?.total || 0).toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-white">${(Number(dashboardData?.earnings?.total) || 0).toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -540,19 +540,19 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                 <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
                                     {lang === 'es' ? 'Total Ganado' : 'Total Earned'}
                                 </p>
-                                <p className="text-xl font-bold text-white">${earningSummary.totalEarned.toFixed(2)}</p>
+                                <p className="text-xl font-bold text-white">${(Number(earningSummary.totalEarned) || 0).toFixed(2)}</p>
                             </div>
                             <div className="px-5 py-4">
                                 <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
                                     {lang === 'es' ? 'Este Mes' : 'This Month'}
                                 </p>
-                                <p className="text-xl font-bold text-[#D0B078]">${earningSummary.thisMonthEarned.toFixed(2)}</p>
+                                <p className="text-xl font-bold text-[#D0B078]">${(Number(earningSummary.thisMonthEarned) || 0).toFixed(2)}</p>
                             </div>
                             <div className="px-5 py-4">
                                 <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
                                     {lang === 'es' ? 'Por Cobrar' : 'Pending Payout'}
                                 </p>
-                                <p className="text-xl font-bold text-amber-400">${earningSummary.pendingPayout.toFixed(2)}</p>
+                                <p className="text-xl font-bold text-amber-400">${(Number(earningSummary.pendingPayout) || 0).toFixed(2)}</p>
                             </div>
                             <div className="px-5 py-4">
                                 <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
@@ -603,7 +603,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                                 {labels.area}: {job.area}
                                             </span>
                                         </div>
-                                        <p className="text-[#D0B078] font-semibold text-sm">${job.totalAmount.toFixed(2)} {labels.payout}</p>
+                                        <p className="text-[#D0B078] font-semibold text-sm">${(Number(job.totalAmount) || 0).toFixed(2)} {labels.payout}</p>
                                     </div>
                                     <div className="flex gap-2 shrink-0">
                                         <button
@@ -677,7 +677,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                                 {job.address}
                                             </span>
                                         </div>
-                                        <p className="text-[#D0B078] font-semibold text-sm">${job.totalAmount.toFixed(2)}</p>
+                                        <p className="text-[#D0B078] font-semibold text-sm">${(Number(job.totalAmount) || 0).toFixed(2)}</p>
                                     </div>
                                     <Link
                                         href={`/${lang}/contractor/jobs/${job.id}`}

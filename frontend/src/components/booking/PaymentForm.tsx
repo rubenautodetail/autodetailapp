@@ -63,7 +63,7 @@ function CheckoutForm({
       const returnUrl = new URL(`${window.location.origin}/${locale}/booking/confirmation`);
       returnUrl.searchParams.set("code", confirmationCode);
       returnUrl.searchParams.set("service", encodeURIComponent(serviceName));
-      returnUrl.searchParams.set("total", total.toFixed(2));
+      returnUrl.searchParams.set("total", (Number(total) || 0).toFixed(2));
       if (vehicleCount > 1) returnUrl.searchParams.set("vehicles", String(vehicleCount));
 
       const { error: confirmError } = await stripe.confirmPayment({
@@ -118,7 +118,7 @@ function CheckoutForm({
       >
         {isProcessing
           ? (locale === "es" ? "Procesando..." : "Processing...")
-          : (locale === "es" ? `Pagar $${total.toFixed(2)}` : `Pay $${total.toFixed(2)}`)}
+          : (locale === "es" ? `Pagar $${(Number(total) || 0).toFixed(2)}` : `Pay $${(Number(total) || 0).toFixed(2)}`)}
       </Button>
 
       <div className="flex items-center justify-center text-sm text-[#5E698F]">

@@ -515,7 +515,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                         {/* Time window */}
                         <div>
                             <p className="text-[#A5B0D1] text-xs font-medium uppercase tracking-wide mb-1">{t.timeWindow}</p>
-                            <p className="text-white">{formatTimeWindow(job.timeWindow || job.time_window, lang)}</p>
+                            <p className="text-white">{formatTimeWindow(job.timeWindow || job.time_window || null, lang)}</p>
                         </div>
 
                         {/* Address — full column */}

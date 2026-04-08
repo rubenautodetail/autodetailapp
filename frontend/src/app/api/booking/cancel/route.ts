@@ -5,6 +5,7 @@ import { stripe } from "@/lib/stripe/server";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  try {
   const supabaseAuth = await createClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
   if (!user) {
@@ -120,4 +121,8 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('booking/cancel error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

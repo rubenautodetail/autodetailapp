@@ -25,7 +25,13 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const { bookingId, amount, currency = 'usd' } = await req.json();
+        let body;
+        try {
+            body = await req.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+        const { bookingId, amount, currency = 'usd' } = body;
 
         if (typeof amount !== 'number' || !amount || amount <= 0) {
             return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });

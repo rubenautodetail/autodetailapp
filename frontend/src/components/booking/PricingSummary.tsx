@@ -46,7 +46,7 @@ export default function PricingSummary({
               {service.duration} {locale === "es" ? "min" : "min"}
             </p>
           </div>
-          <span className="font-bold text-white">${service.basePrice.toFixed(2)}</span>
+          <span className="font-bold text-white">${(Number(service.basePrice) || 0).toFixed(2)}</span>
         </div>
 
         {addOns.length > 0 && (
@@ -68,7 +68,7 @@ export default function PricingSummary({
                   )}
                   <span className="text-[#A5B0D1]">{addOn.name}</span>
                 </div>
-                <span className="font-medium text-white">+${addOn.price.toFixed(2)}</span>
+                <span className="font-medium text-white">+${(Number(addOn.price) || 0).toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -77,12 +77,12 @@ export default function PricingSummary({
         <div className="border-t border-[#2C355E] pt-4 mt-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[#A5B0D1] font-medium">{locale === "es" ? "Subtotal" : "Subtotal"}</span>
-            <span className="font-bold text-white">${subtotal.toFixed(2)}</span>
+            <span className="font-bold text-white">${(Number(subtotal) || 0).toFixed(2)}</span>
           </div>
           {serviceFee > 0 && (
             <div className="flex items-center justify-between mb-2">
               <span className="text-[#A5B0D1] text-sm">{locale === "es" ? "Tarifa de servicio" : "Service fee"}</span>
-              <span className="text-sm text-white">${serviceFee.toFixed(2)}</span>
+              <span className="text-sm text-white">${(Number(serviceFee) || 0).toFixed(2)}</span>
             </div>
           )}
         </div>
@@ -93,13 +93,13 @@ export default function PricingSummary({
               <span className="text-[#A5B0D1] font-medium">
                 {locale === "es" ? "Por vehículo" : "Per vehicle"}
               </span>
-              <span className="font-bold text-white">${total.toFixed(2)}</span>
+              <span className="font-bold text-white">${(Number(total) || 0).toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[#A5B0D1] text-sm">
                 &times; {vehicleCount} {locale === "es" ? "vehículos" : "vehicles"}
               </span>
-              <span className="text-sm text-[#A5B0D1]">${(total * vehicleCount).toFixed(2)}</span>
+              <span className="text-sm text-[#A5B0D1]">${((Number(total) || 0) * vehicleCount).toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -109,7 +109,7 @@ export default function PricingSummary({
             <span className="text-xl font-bold text-white">
               {locale === "es" ? "Total" : "Total"}
             </span>
-            <span className="text-2xl font-bold text-[#D0B078]">${(total * vehicleCount).toFixed(2)}</span>
+            <span className="text-2xl font-bold text-[#D0B078]">${((Number(total) || 0) * vehicleCount).toFixed(2)}</span>
           </div>
         </div>
       </div>

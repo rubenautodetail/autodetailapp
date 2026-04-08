@@ -165,10 +165,10 @@ export default function EarningsPage({ params }: EarningsProps) {
                 {/* Summary cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                        { label: labels.thisWeek, value: `$${earnings.thisWeek.toFixed(2)}`, color: "text-green-400" },
-                        { label: labels.totalEarned, value: `$${earnings.total.toFixed(2)}`, color: "text-white" },
+                        { label: labels.thisWeek, value: `$${(Number(earnings.thisWeek) || 0).toFixed(2)}`, color: "text-green-400" },
+                        { label: labels.totalEarned, value: `$${(Number(earnings.total) || 0).toFixed(2)}`, color: "text-white" },
                         { label: labels.completedJobs, value: String(completed.length), color: "text-blue-400" },
-                        { label: labels.avgPerJob, value: `$${avgPerJob.toFixed(2)}`, color: "text-[#D0B078]" },
+                        { label: labels.avgPerJob, value: `$${(Number(avgPerJob) || 0).toFixed(2)}`, color: "text-[#D0B078]" },
                     ].map((card) => (
                         <div
                             key={card.label}
@@ -274,7 +274,7 @@ export default function EarningsPage({ params }: EarningsProps) {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <p className="text-2xl font-bold text-green-400">
-                                                ${Number(p.contractor_amount).toFixed(2)}
+                                                ${(Number(p.contractor_amount) || 0).toFixed(2)}
                                             </p>
                                             <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-bold ${
                                                 p.status === "paid"

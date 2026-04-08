@@ -41,7 +41,7 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
             role="button"
             tabIndex={0}
             aria-pressed={isSelected}
-            aria-label={`${service.name} - $${service.basePrice.toFixed(2)}`}
+            aria-label={`${service.name} - $${(Number(service.basePrice) || 0).toFixed(2)}`}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -62,7 +62,7 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
                 <div className="mt-1">
                     <span className="text-[var(--text-secondary)] text-sm font-semibold">$</span>
                     <span className="text-xl font-bold text-[#D0B078] ml-0.5">
-                        {service.basePrice.toFixed(2)}
+                        {(Number(service.basePrice) || 0).toFixed(2)}
                     </span>
                 </div>
             </div>

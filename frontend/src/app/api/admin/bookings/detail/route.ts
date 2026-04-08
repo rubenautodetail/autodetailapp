@@ -70,20 +70,25 @@ export async function GET(req: NextRequest) {
 
   let contractor = null;
   if (b.contractor_id) {
-    const { data: p } = await db
-      .from("profiles")
-      .select("id, full_name, phone_number, stripe_account_id, onboarding_complete")
-      .eq("id", b.contractor_id)
-      .single();
-    if (p) {
-      const cp = p as ContractorProfileRow;
-      contractor = {
-        id: cp.id,
-        name: cp.full_name ?? "Unknown",
-        phone: cp.phone_number ?? "—",
-        stripeAccountId: cp.stripe_account_id ?? null,
-        onboardingComplete: cp.onboarding_complete ?? false,
-      };
+    try {
+      const { data: p } = await db
+        .from("profiles")
+        .select("id, full_name, phone_number, stripe_account_id, onboarding_complete")
+        .eq("id", b.contractor_id)
+        .single();
+      if (p) {
+        const cp = p as ContractorProfileRow;
+        contractor = {
+          id: cp.id,
+          name: cp.full_name ?? "Unknown",
+          phone: cp.phone_number ?? "—",
+          stripeAccountId: cp.stripe_account_id ?? null,
+          onboardingComplete: cp.onboarding_complete ?? false,
+        };
+      }
+    } catch (profileErr) {
+      console.error('admin/bookings/detail: contractor profile fetch failed:', profileErr);
+      // Non-fatal — return booking without contractor details
     }
   }
 

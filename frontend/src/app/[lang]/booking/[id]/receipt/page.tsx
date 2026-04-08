@@ -142,7 +142,7 @@ export default function ReceiptPage() {
                                 {isEs ? 'Total Cobrado' : 'Total Charged'}
                             </span>
                             <span className="text-xl font-bold text-accent-gold">
-                                ${Number(booking.total_amount).toFixed(2)}
+                                ${(Number(booking.total_amount) || 0).toFixed(2)}
                             </span>
                         </div>
                     </div>

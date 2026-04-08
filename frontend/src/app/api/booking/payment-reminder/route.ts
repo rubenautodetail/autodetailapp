@@ -59,26 +59,31 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 4. Send the reminder email ────────────────────────────────────────────
-    const emailData = {
-        id: booking.id,
-        confirmationCode: booking.confirmation_code ?? '',
-        scheduledDate: booking.date,
-        scheduledTime: booking.time_window ?? '',
-        totalAmount: Number(booking.total_amount),
-        paymentStatus: booking.status,
-        paymentIntentId: booking.payment_intent_id,
-        customer: {
-            firstName: booking.customer_name?.split(' ')[0] ?? '',
-            lastName: booking.customer_name?.split(' ').slice(1).join(' ') ?? '',
-            email: booking.customer_email ?? '',
-            phone: booking.customer_phone ?? '',
-        },
-        service: { name: booking.service_name ?? 'Detailing Service' },
-        location: { address: '', city: '', state: '', zipCode: '' },
-        vehicle: {},
-    };
+    try {
+        const emailData = {
+            id: booking.id,
+            confirmationCode: booking.confirmation_code ?? '',
+            scheduledDate: booking.date,
+            scheduledTime: booking.time_window ?? '',
+            totalAmount: Number(booking.total_amount),
+            paymentStatus: booking.status,
+            paymentIntentId: booking.payment_intent_id,
+            customer: {
+                firstName: booking.customer_name?.split(' ')[0] ?? '',
+                lastName: booking.customer_name?.split(' ').slice(1).join(' ') ?? '',
+                email: booking.customer_email ?? '',
+                phone: booking.customer_phone ?? '',
+            },
+            service: { name: booking.service_name ?? 'Detailing Service' },
+            location: { address: '', city: '', state: '', zipCode: '' },
+            vehicle: {},
+        };
 
-    await sendPaymentReminderEmail(emailData, reminderNumber);
+        await sendPaymentReminderEmail(emailData, reminderNumber);
+    } catch (emailErr) {
+        console.error('payment-reminder: email send failed:', emailErr);
+        return NextResponse.json({ error: 'Failed to send reminder email' }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true, reminderNumber, bookingId });
 }

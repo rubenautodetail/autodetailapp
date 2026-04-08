@@ -17,6 +17,7 @@ interface AddedItem {
 }
 
 export async function POST(req: NextRequest) {
+  try {
     let body: { bookingId: string; confirmationCode: string; items: AddedItem[] };
     try {
         body = await req.json();
@@ -122,4 +123,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, newTotal, newServiceName });
+  } catch (err) {
+    console.error('add-service error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

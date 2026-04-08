@@ -286,7 +286,7 @@ export default function ServiceSelectionForm({
                                     {locale === "es" ? "Total" : "Total"}
                                 </p>
                                 <p className="text-xl font-bold text-[#D0B078]">
-                                    ${total.toFixed(2)}
+                                    ${(Number(total) || 0).toFixed(2)}
                                 </p>
                             </div>
                         </div>

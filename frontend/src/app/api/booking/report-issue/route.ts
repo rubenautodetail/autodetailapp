@@ -12,7 +12,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const { bookingId, issueType, description } = await req.json();
+    let reqBody;
+    try {
+      reqBody = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    const { bookingId, issueType, description } = reqBody;
 
     if (!bookingId || !issueType || !description?.trim()) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

@@ -15,6 +15,7 @@ import type { EmailOtpType } from '@supabase/supabase-js'
  *   {{ .SiteURL }}/api/auth/callback?token_hash={{ .TokenHash }}&type=signup
  */
 export async function GET(request: NextRequest) {
+  try {
     const { searchParams, origin } = new URL(request.url)
 
     const code       = searchParams.get('code')
@@ -127,4 +128,9 @@ export async function GET(request: NextRequest) {
         successRedirect.cookies.set(c.name, c.value, c)
     })
     return successRedirect
+  } catch (err) {
+    console.error('auth/callback error:', err)
+    const origin = new URL(request.url).origin
+    return NextResponse.redirect(new URL('/en/login?error=callback_failed', origin))
+  }
 }

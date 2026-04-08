@@ -529,7 +529,7 @@ export default function TrackBookingPage() {
                         },
                         {
                             label: isEs ? 'Total' : 'Total',
-                            value: `$${Number(booking.total_amount).toFixed(2)}`,
+                            value: `$${(Number(booking.total_amount) || 0).toFixed(2)}`,
                             highlight: true,
                         },
                     ].map(({ label, value, highlight }) => (
@@ -687,7 +687,7 @@ export default function TrackBookingPage() {
                                                 </div>
                                                 <div className="flex items-center gap-3 flex-shrink-0">
                                                     <span className="text-sm font-semibold text-green-400">
-                                                        +${item.price.toFixed(2)}
+                                                        +${(Number(item.price) || 0).toFixed(2)}
                                                     </span>
                                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                                                         isSelected
@@ -716,7 +716,7 @@ export default function TrackBookingPage() {
                                         {isEs ? 'seleccionado(s)' : `item${selectedItems.length > 1 ? 's' : ''} selected`}
                                     </span>
                                     <span className="text-lg font-bold text-white">
-                                        +${selectedTotal.toFixed(2)}
+                                        +${(Number(selectedTotal) || 0).toFixed(2)}
                                     </span>
                                 </div>
                                 <button

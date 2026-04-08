@@ -16,7 +16,12 @@ export async function PATCH(
 
   try {
     const { id } = await params;
-    const updates = await req.json();
+    let updates;
+    try {
+      updates = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
 
     // Remove id from updates if present
     const { id: _, ...updateData } = updates;

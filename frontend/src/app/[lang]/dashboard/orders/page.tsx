@@ -88,8 +88,11 @@ export default function MyOrdersPage() {
     const active = bookings.filter(b => !['completed', 'cancelled'].includes(b.status));
     const past = bookings.filter(b => ['completed', 'cancelled'].includes(b.status));
 
-    const formatDate = (d: string) =>
-        new Date(d).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    const formatDate = (d: string) => {
+        const parsed = new Date(d);
+        if (isNaN(parsed.getTime())) return '—';
+        return parsed.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    };
 
     const BookingRow = ({ b }: { b: Booking }) => {
         const meta = STATUS_META[b.status] ?? DEFAULT_META;

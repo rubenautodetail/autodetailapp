@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  try {
   const { searchParams } = req.nextUrl;
   const status = searchParams.get("status") || "active";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -88,4 +89,8 @@ export async function GET(req: NextRequest) {
   }));
 
   return NextResponse.json({ bookings, total: count ?? 0 });
+  } catch (err) {
+    console.error('admin/bookings/list error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

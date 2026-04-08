@@ -236,8 +236,9 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
     );
   }
 
-  const platformFee = booking.totalAmount * PLATFORM_FEE;
-  const contractorPayout = booking.totalAmount - platformFee;
+  const safeTotalAmount = Number(booking.totalAmount) || 0;
+  const platformFee = safeTotalAmount * PLATFORM_FEE;
+  const contractorPayout = safeTotalAmount - platformFee;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -418,7 +419,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
         <Section title={locale === "es" ? "Pago" : "Payment"}>
           <Field
             label={locale === "es" ? "Total cobrado" : "Total Charged"}
-            value={`$${booking.totalAmount.toFixed(2)}`}
+            value={`$${safeTotalAmount.toFixed(2)}`}
             bold
           />
           <Field

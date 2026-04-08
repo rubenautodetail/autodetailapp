@@ -18,7 +18,12 @@ type AddOn = {
 
 export async function POST(req: NextRequest) {
     try {
-        const rawBody = await req.json();
+        let rawBody;
+        try {
+            rawBody = await req.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
 
         const parsed = PriceCalculateSchema.safeParse(rawBody);
         if (!parsed.success) {

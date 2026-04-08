@@ -530,8 +530,8 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   </svg>
                   <p className="text-xs text-[#D0B078]">
                     {locale === "es"
-                      ? `${bookingVehicles.length} vehículos × $${total.toFixed(2)} = $${(total * bookingVehicles.length).toFixed(2)} total`
-                      : `${bookingVehicles.length} vehicles × $${total.toFixed(2)} = $${(total * bookingVehicles.length).toFixed(2)} total`}
+                      ? `${bookingVehicles.length} vehículos × $${(Number(total) || 0).toFixed(2)} = $${((Number(total) || 0) * bookingVehicles.length).toFixed(2)} total`
+                      : `${bookingVehicles.length} vehicles × $${(Number(total) || 0).toFixed(2)} = $${((Number(total) || 0) * bookingVehicles.length).toFixed(2)} total`}
                   </p>
                 </div>
               )}
@@ -565,7 +565,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     </p>
                   </div>
                   <p className="font-bold text-lg text-white">
-                    ${selectedService.basePrice.toFixed(2)}
+                    ${(Number(selectedService.basePrice) || 0).toFixed(2)}
                   </p>
                 </div>
 
@@ -580,7 +580,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                         <div key={addOn.id} className="flex justify-between items-center group">
                           <p className="text-[#A5B0D1] group-hover:text-white transition-colors">{addOn.name}</p>
                           <p className="font-semibold text-white">
-                            ${addOn.price.toFixed(2)}
+                            ${(Number(addOn.price) || 0).toFixed(2)}
                           </p>
                         </div>
                       ))}
