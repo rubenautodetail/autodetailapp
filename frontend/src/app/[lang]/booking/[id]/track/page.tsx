@@ -72,7 +72,7 @@ interface CatalogItem {
 
 // ── Step config ───────────────────────────────────────────────────────────────
 
-type StepKey = 'confirmed' | 'assigned' | 'enRoute' | 'inProgress' | 'complete';
+type StepKey = 'reserved' | 'confirmed' | 'enRoute' | 'inProgress' | 'complete';
 
 interface Step {
     key: StepKey;
@@ -82,22 +82,26 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-    { key: 'confirmed',   labelEn: 'Booking Confirmed',    labelEs: 'Reserva Confirmada',    icon: 'check'  },
-    { key: 'assigned',    labelEn: 'Contractor Assigned',  labelEs: 'Técnico Asignado',      icon: 'check'  },
+    { key: 'reserved',    labelEn: 'Booked',               labelEs: 'Reservado',             icon: 'check'  },
+    { key: 'confirmed',   labelEn: 'Confirmed',            labelEs: 'Confirmado',            icon: 'check'  },
     { key: 'enRoute',     labelEn: 'On The Way',           labelEs: 'En Camino',             icon: 'truck'  },
-    { key: 'inProgress',  labelEn: 'Service In Progress',  labelEs: 'Servicio en Progreso',  icon: 'wrench' },
-    { key: 'complete',    labelEn: 'Service Complete',     labelEs: 'Servicio Completado',   icon: 'star'   },
+    { key: 'inProgress',  labelEn: 'In Progress',          labelEs: 'En Progreso',           icon: 'wrench' },
+    { key: 'complete',    labelEn: 'Completed',            labelEs: 'Completado',            icon: 'star'   },
 ];
 
 const ACTIVE_STATUSES: BookingStatus[] = ['confirmed', 'en_route', 'in_progress'];
 
+/**
+ * Maps booking status to the 0-based step index that is currently active.
+ * Steps: 0=reserved, 1=confirmed, 2=enRoute, 3=inProgress, 4=complete
+ */
 function getActiveStepIndex(status: BookingStatus): number {
     switch (status) {
-        case 'pending_assignment': return 1;
-        case 'confirmed':          return 2;
+        case 'pending_assignment': return 0;
+        case 'confirmed':          return 1;
         case 'en_route':           return 2;
         case 'in_progress':        return 3;
-        case 'pending_approval':
+        case 'pending_approval':   return 4;
         case 'completed':          return 4;
         default:                   return 0;
     }
@@ -110,7 +114,8 @@ function getStepState(
 ): 'complete' | 'active' | 'upcoming' {
     if (stepIdx < activeIdx) return 'complete';
     if (stepIdx === activeIdx) {
-        if (status === 'pending_approval' || status === 'completed') return 'complete';
+        // All steps lit when fully completed or pending_approval (work is done)
+        if (status === 'completed') return 'complete';
         return 'active';
     }
     return 'upcoming';
@@ -165,7 +170,7 @@ function PlusIcon({ className }: { className?: string }) {
 }
 
 function StepIcon({ icon, state }: { icon: Step['icon']; state: 'complete' | 'active' | 'upcoming' }) {
-    const iconClass = `w-5 h-5 ${state === 'upcoming' ? 'text-gray-600' : 'text-white'}`;
+    const iconClass = `w-5 h-5 ${state === 'upcoming' ? 'text-gray-600' : 'text-gray-950'}`;
     if (state === 'complete') return <CheckIcon className={iconClass} />;
     switch (icon) {
         case 'truck':  return <TruckIcon className={iconClass} />;
@@ -405,6 +410,32 @@ export default function TrackBookingPage() {
         );
     }
 
+    const [approving, setApproving] = useState(false);
+    const [approveError, setApproveError] = useState('');
+
+    const handleApprove = async () => {
+        if (!booking) return;
+        setApproving(true);
+        setApproveError('');
+        try {
+            const res = await fetch('/api/booking/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bookingId: String(booking.id),
+                    confirmationCode: booking.confirmation_code,
+                }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || 'Approval failed');
+            await fetchBooking();
+        } catch (err) {
+            setApproveError((err as Error).message);
+        } finally {
+            setApproving(false);
+        }
+    };
+
     const activeIdx = getActiveStepIndex(status);
     const contractorName = booking.profiles?.full_name ?? null;
     const showContractor = status !== 'pending_assignment' && contractorName;
@@ -425,8 +456,8 @@ export default function TrackBookingPage() {
                     </h1>
                     {booking.confirmation_code && (
                         <p className="text-sm text-gray-400 mt-1">
-                            {isEs ? 'Código: ' : 'Code: '}
-                            <span className="font-mono text-blue-400 font-semibold">
+                            {isEs ? 'Codigo: ' : 'Code: '}
+                            <span className="font-mono text-yellow-400 font-semibold">
                                 {booking.confirmation_code}
                             </span>
                         </p>
@@ -450,12 +481,12 @@ export default function TrackBookingPage() {
                                 <li key={step.key} className={`relative flex items-start gap-4 ${isLast ? '' : 'pb-8'}`}>
                                     <div className="relative z-10 flex-shrink-0">
                                         {state === 'complete' && (
-                                            <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center ring-4 ring-gray-950">
+                                            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center ring-4 ring-gray-950">
                                                 <StepIcon icon={step.icon} state="complete" />
                                             </div>
                                         )}
                                         {state === 'active' && (
-                                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center ring-4 ring-gray-950 animate-pulse">
+                                            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center ring-4 ring-gray-950 shadow-[0_0_12px_rgba(250,204,21,0.5)] animate-pulse">
                                                 <StepIcon icon={step.icon} state="active" />
                                             </div>
                                         )}
@@ -467,19 +498,19 @@ export default function TrackBookingPage() {
                                     </div>
                                     <div className="pt-2 min-w-0">
                                         <p className={`text-sm font-semibold leading-tight ${
-                                            state === 'complete' ? 'text-green-400' :
+                                            state === 'complete' ? 'text-yellow-400' :
                                             state === 'active'   ? 'text-white' :
                                                                    'text-gray-600'
                                         }`}>
                                             {isEs ? step.labelEs : step.labelEn}
                                         </p>
                                         {state === 'active' && (
-                                            <p className="text-xs text-blue-400 mt-0.5">
+                                            <p className="text-xs text-yellow-500 mt-0.5">
                                                 {isEs ? 'En curso...' : 'In progress...'}
                                             </p>
                                         )}
                                         {state === 'complete' && (
-                                            <p className="text-xs text-green-600 mt-0.5">
+                                            <p className="text-xs text-yellow-600 mt-0.5">
                                                 {isEs ? 'Completado' : 'Done'}
                                             </p>
                                         )}
@@ -489,6 +520,130 @@ export default function TrackBookingPage() {
                         })}
                     </ol>
                 </div>
+
+                {/* ── Contextual Status Content ───────────────────────────── */}
+                {(status === 'pending_assignment' || status === 'confirmed') && (
+                    <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">
+                                    {isEs ? 'Tu tecnico esta programado' : 'Your technician is scheduled'}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {contractorName
+                                        ? (isEs
+                                            ? `${contractorName} llegara en la fecha programada.`
+                                            : `${contractorName} will arrive on the scheduled date.`)
+                                        : (isEs
+                                            ? 'Un tecnico sera asignado pronto.'
+                                            : 'A technician will be assigned shortly.')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {status === 'en_route' && (
+                    <div className="bg-gray-900 rounded-2xl border border-yellow-500/30 p-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0 animate-pulse">
+                                <TruckIcon className="w-5 h-5 text-yellow-400" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">
+                                    {isEs ? 'Tu tecnico va en camino' : 'Your technician is on the way'}
+                                </p>
+                                {contractorName && (
+                                    <p className="text-xs text-yellow-500 mt-0.5">
+                                        {contractorName}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {status === 'in_progress' && (
+                    <div className="bg-gray-900 rounded-2xl border border-yellow-500/30 p-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
+                                <WrenchIcon className="w-5 h-5 text-yellow-400" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">
+                                    {isEs ? 'Trabajo en progreso' : 'Work in progress'}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {isEs
+                                        ? 'Tu vehiculo esta siendo atendido. Te notificaremos cuando termine.'
+                                        : 'Your vehicle is being serviced. We will notify you when it is done.'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {status === 'pending_approval' && (
+                    <div className="bg-gray-900 rounded-2xl border border-green-500/30 p-5 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-green-500/15 flex items-center justify-center flex-shrink-0">
+                                <CheckIcon className="w-5 h-5 text-green-400" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">
+                                    {isEs ? 'Trabajo terminado — aprueba tu servicio' : 'Work finished — approve your service'}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {isEs
+                                        ? 'Revisa el trabajo y aprueba para completar el pago.'
+                                        : 'Review the work and approve to finalize payment.'}
+                                </p>
+                            </div>
+                        </div>
+                        {approveError && (
+                            <p className="text-red-400 text-xs">{approveError}</p>
+                        )}
+                        <button
+                            onClick={handleApprove}
+                            disabled={approving}
+                            className="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-500 transition-colors text-base disabled:opacity-60"
+                        >
+                            {approving
+                                ? (isEs ? 'Aprobando...' : 'Approving...')
+                                : (isEs ? 'Aprobar Trabajo' : 'Approve Job')}
+                        </button>
+                    </div>
+                )}
+
+                {status === 'completed' && (
+                    <div className="bg-gray-900 rounded-2xl border border-yellow-400/30 p-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
+                                <StarIcon className="w-5 h-5 text-yellow-400" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">
+                                    {isEs ? 'Servicio completado' : 'Service completed'}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {isEs
+                                        ? 'Gracias por tu confianza. Total cobrado:'
+                                        : 'Thank you for your business. Total charged:'}
+                                    {' '}
+                                    <span className="text-green-400 font-semibold">
+                                        ${(Number(booking.total_amount) || 0).toFixed(2)}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── Contractor card ──────────────────────────────────────── */}
                 {showContractor && (
@@ -582,15 +737,7 @@ export default function TrackBookingPage() {
                     </div>
                 )}
 
-                {/* ── Approve CTA (when pending_approval) ─────────────────── */}
-                {status === 'pending_approval' && (
-                    <button
-                        onClick={() => router.push(`/${lang}/booking/${bookingId}/approve${booking.confirmation_code ? `?code=${booking.confirmation_code}` : ''}`)}
-                        className="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-500 transition-colors text-base"
-                    >
-                        {isEs ? 'Aprobar Servicio ✓' : 'Approve Service ✓'}
-                    </button>
-                )}
+                {/* Approve CTA is now rendered inline in the contextual status content above */}
             </div>
 
             {/* ── Sticky support CTA ──────────────────────────────────────── */}
