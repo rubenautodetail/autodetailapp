@@ -211,6 +211,7 @@ export default function TrackBookingPage() {
             .single();
 
         if (fetchError || !data) {
+            console.error('Track fetch error:', fetchError);
             setError(isEs ? 'Reserva no encontrada.' : 'Booking not found.');
         } else {
             setBooking(data as Booking);
