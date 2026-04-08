@@ -206,7 +206,7 @@ export default function CustomerDashboardPage() {
                                                 </button>
                                             )}
                                             <Link
-                                                href={`/${lang}/customer/bookings`}
+                                                href={`/${lang}/customer`}
                                                 className="ml-auto flex items-center gap-1 text-xs text-accent-gold hover:text-white font-bold transition-colors"
                                             >
                                                 {isEs ? 'Ver todas las reservas' : 'See all bookings'}
