@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Clock, Truck, Wrench, ShieldCheck } from 'lucide-react';
+import type { BookingStatus } from '@/contexts/BookingStatusContext';
 
-export type BookingStatus = 'pending_payment' | 'pending' | 'pending_assignment' | 'confirmed' | 'en_route' | 'working' | 'in_progress' | 'pending_approval' | 'completed' | 'cancelled';
+export type { BookingStatus };
 
 interface StatusTimelineProps {
     status: BookingStatus;

@@ -7,7 +7,7 @@ import { useAuth } from './AuthContext';
 
 // --- Types ---
 
-export type BookingStatus = 'pending_payment' | 'pending' | 'pending_assignment' | 'confirmed' | 'en_route' | 'working' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending_payment' | 'pending' | 'pending_assignment' | 'confirmed' | 'en_route' | 'working' | 'in_progress' | 'pending_approval' | 'completed' | 'cancelled';
 
 export interface Booking {
     id: string;

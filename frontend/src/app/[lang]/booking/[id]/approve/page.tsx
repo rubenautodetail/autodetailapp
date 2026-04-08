@@ -308,8 +308,8 @@ function ApproveServiceContent() {
 
                 <p className="text-xs text-[#5E698F] text-center">
                     {lang === 'es'
-                        ? 'Si no actúas en 24 horas, el pago se liberará automáticamente.'
-                        : 'If no action is taken within 24 hours, payment will be automatically released.'}
+                        ? 'Si no actúas en 15 minutos, el pago se liberará automáticamente.'
+                        : 'If no action is taken within 15 minutes, payment will be automatically released.'}
                 </p>
             </div>
         </div>
