@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
     const users = (data ?? []).map((p: any) => ({
       id: p.id,
       name: p.full_name || "—",
+      email: p.email || "—",
       phone: p.phone_number || "—",
       role: p.role || "user",
       createdAt: p.created_at,

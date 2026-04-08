@@ -73,6 +73,15 @@ const t = {
         roleLabel: "Role",
         logoutBtn: "Sign Out",
         logoutConfirm: "Signed out successfully",
+        deactivateBtn: "Deactivate Account",
+        deactivateTitle: "Leave Platform",
+        deactivateDesc: "Permanently deactivate your contractor account. You can contact support later to reactivate.",
+        deactivateConfirmTitle: "Deactivate your account?",
+        deactivateConfirmMsg: "This will remove your contractor access and you will no longer receive new jobs. Any pending payouts will still be processed.",
+        deactivateConfirmBtn: "Yes, Deactivate",
+        deactivateCancelBtn: "Cancel",
+        deactivateSuccess: "Account deactivated",
+        deactivateActiveBookings: "You have active bookings. Complete or cancel them first.",
         // Generic
         loading: "Loading settings...",
         saving: "Saving...",
@@ -144,6 +153,15 @@ const t = {
         roleLabel: "Rol",
         logoutBtn: "Cerrar Sesión",
         logoutConfirm: "Sesión cerrada exitosamente",
+        deactivateBtn: "Desactivar Cuenta",
+        deactivateTitle: "Salir de la Plataforma",
+        deactivateDesc: "Desactiva permanentemente tu cuenta de contratista. Puedes contactar soporte después para reactivarla.",
+        deactivateConfirmTitle: "¿Desactivar tu cuenta?",
+        deactivateConfirmMsg: "Esto eliminará tu acceso de contratista y ya no recibirás nuevos trabajos. Los pagos pendientes se procesarán normalmente.",
+        deactivateConfirmBtn: "Sí, Desactivar",
+        deactivateCancelBtn: "Cancelar",
+        deactivateSuccess: "Cuenta desactivada",
+        deactivateActiveBookings: "Tienes reservaciones activas. Complétalas o cancélalas primero.",
         // Generic
         loading: "Cargando configuración...",
         saving: "Guardando...",
@@ -359,6 +377,10 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const [notifPush, setNotifPush] = useState(false);
     const [savingNotifs, setSavingNotifs] = useState(false);
 
+    // ── Section G — Deactivate ───────────────────────────────────────────────
+    const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+    const [deactivating, setDeactivating] = useState(false);
+
     // ── Load profile ──────────────────────────────────────────────────────────
     useEffect(() => {
         if (authLoading) return;
@@ -542,6 +564,34 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
             toast.error(labels.errorSave);
         } finally {
             setSavingNotifs(false);
+        }
+    };
+
+    // ── Deactivate account ─────────────────────────────────────────────────────
+    const handleDeactivate = async () => {
+        setDeactivating(true);
+        try {
+            const res = await fetch("/api/contractors/deactivate", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${session!.access_token}` },
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                if (res.status === 409) {
+                    toast.error(labels.deactivateActiveBookings);
+                } else {
+                    toast.error(data.error || labels.errorSave);
+                }
+                return;
+            }
+            toast.success(labels.deactivateSuccess);
+            setShowDeactivateModal(false);
+            await logout();
+            router.push(`/${lang}/contractor/login`);
+        } catch {
+            toast.error(labels.errorSave);
+        } finally {
+            setDeactivating(false);
         }
     };
 
@@ -854,15 +904,53 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                     </div>
 
                     {/* Logout — separated visually from read-only fields */}
-                    <div className="border-t border-[#2C355E] pt-5">
+                    <div className="border-t border-[#2C355E] pt-5 space-y-4">
                         <button
                             onClick={handleLogout}
                             className="w-full sm:w-auto px-6 py-2.5 border border-red-500/40 text-red-400 text-sm font-semibold rounded-xl hover:bg-red-500/10 hover:border-red-500/60 transition-all"
                         >
                             {labels.logoutBtn}
                         </button>
+
+                        {/* Deactivate account */}
+                        <div className="border-t border-[#2C355E] pt-4">
+                            <p className="text-sm font-semibold text-white mb-1">{labels.deactivateTitle}</p>
+                            <p className="text-xs text-[#5E698F] mb-3">{labels.deactivateDesc}</p>
+                            <button
+                                onClick={() => setShowDeactivateModal(true)}
+                                className="w-full sm:w-auto px-6 py-2.5 bg-red-500/10 border border-red-500/40 text-red-400 text-sm font-semibold rounded-xl hover:bg-red-500/20 hover:border-red-500/60 transition-all"
+                            >
+                                {labels.deactivateBtn}
+                            </button>
+                        </div>
                     </div>
                 </SectionCard>
+
+                {/* ── Deactivation Confirmation Modal ────────────────────── */}
+                {showDeactivateModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                        <div className="bg-[#1A2142] border border-[#2C355E] rounded-2xl p-6 max-w-md w-full space-y-4">
+                            <h3 className="text-lg font-bold text-white">{labels.deactivateConfirmTitle}</h3>
+                            <p className="text-sm text-[#7D8DB5]">{labels.deactivateConfirmMsg}</p>
+                            <div className="flex gap-3 justify-end pt-2">
+                                <button
+                                    onClick={() => setShowDeactivateModal(false)}
+                                    disabled={deactivating}
+                                    className="px-5 py-2.5 border border-[#2C355E] text-white text-sm font-semibold rounded-xl hover:bg-white/5 transition-all"
+                                >
+                                    {labels.deactivateCancelBtn}
+                                </button>
+                                <button
+                                    onClick={handleDeactivate}
+                                    disabled={deactivating}
+                                    className="px-5 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 disabled:opacity-50 transition-all"
+                                >
+                                    {deactivating ? labels.saving : labels.deactivateConfirmBtn}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </div>

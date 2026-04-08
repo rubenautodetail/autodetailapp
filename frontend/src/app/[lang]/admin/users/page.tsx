@@ -14,6 +14,7 @@ type Role = "user" | "contractor" | "admin";
 interface UserProfile {
   id: string;
   name: string;
+  email: string;
   phone: string;
   role: Role;
   createdAt: string;
@@ -38,6 +39,8 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
   const [roleFilter, setRoleFilter] = useState<"all" | Role>("all");
   const [page, setPage] = useState(1);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const t = {
@@ -51,6 +54,10 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
     noUsers: locale === "es" ? "No hay usuarios" : "No users found",
     all: locale === "es" ? "Todos" : "All",
     changeRole: locale === "es" ? "Cambiar rol" : "Change role",
+    deleteUser: locale === "es" ? "Eliminar" : "Delete",
+    confirmDeleteMsg: locale === "es" ? "Eliminar este usuario y todos sus datos?" : "Delete this user and all their data?",
+    yes: locale === "es" ? "Si, eliminar" : "Yes, delete",
+    no: locale === "es" ? "No" : "No",
   };
 
   const fetchUsers = useCallback(async () => {
@@ -92,6 +99,28 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
       setMessage({ type: "error", text: locale === "es" ? "Error al actualizar el rol." : "Failed to update role." });
     } finally {
       setUpdating(null);
+    }
+  }
+
+  async function deleteUser(userId: string) {
+    setDeleting(userId);
+    setMessage(null);
+    try {
+      const res = await adminFetch("/api/admin/users/delete", {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      setTotal((prev) => prev - 1);
+      setMessage({ type: "success", text: locale === "es" ? "Usuario eliminado." : "User deleted successfully." });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to delete user.";
+      setMessage({ type: "error", text: msg });
+    } finally {
+      setDeleting(null);
+      setConfirmDelete(null);
     }
   }
 
@@ -171,7 +200,10 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
                         <div className="text-sm font-medium text-gray-900">{u.name}</div>
                         <div className="text-xs text-gray-400 font-mono">{u.id.slice(0, 8)}…</div>
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-500">{u.phone}</td>
+                      <td className="px-5 py-4">
+                        <div className="text-sm text-gray-500">{u.email}</div>
+                        <div className="text-xs text-gray-400">{u.phone}</div>
+                      </td>
                       <td className="px-5 py-4">
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${ROLE_COLORS[u.role] || "bg-gray-100 text-gray-700"}`}>
                           {u.role}
@@ -184,7 +216,7 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
                         <div className="flex items-center gap-2">
                           <select
                             value={u.role}
-                            disabled={updating === u.id}
+                            disabled={updating === u.id || u.role === "admin"}
                             onChange={(e) => changeRole(u.id, e.target.value as Role)}
                             className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                           >
@@ -194,6 +226,35 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
                           </select>
                           {updating === u.id && (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
+                          )}
+                          {u.role !== "admin" && (
+                            <>
+                              {confirmDelete === u.id ? (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-red-600 font-medium">{t.confirmDeleteMsg}</span>
+                                  <button
+                                    onClick={() => deleteUser(u.id)}
+                                    disabled={deleting === u.id}
+                                    className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 px-2 py-1 rounded"
+                                  >
+                                    {deleting === u.id ? "..." : t.yes}
+                                  </button>
+                                  <button
+                                    onClick={() => setConfirmDelete(null)}
+                                    className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1"
+                                  >
+                                    {t.no}
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setConfirmDelete(u.id)}
+                                  className="text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1.5 rounded-lg transition-colors"
+                                >
+                                  {t.deleteUser}
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>
