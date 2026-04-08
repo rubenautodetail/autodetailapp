@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { notify } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Checks whether a contractor already has a booking in the same time_window on the given date.
+ */
+async function contractorHasConflict(
+  supabase: ReturnType<typeof createServiceClient>,
+  contractorId: string,
+  bookingId: string,
+  date: string,
+  timeWindow: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("bookings")
+    .select("id")
+    .eq("contractor_id", contractorId)
+    .eq("date", date)
+    .eq("time_window", timeWindow)
+    .neq("id", bookingId) // exclude current booking
+    .in("status", ["pending_assignment", "accepted", "confirmed", "en_route", "working"])
+    .limit(1);
+
+  return (data?.length ?? 0) > 0;
+}
 
 export async function POST(req: NextRequest) {
   const supabaseAuth = await createClient();
@@ -22,7 +46,7 @@ export async function POST(req: NextRequest) {
 
   const { data: booking, error: fetchErr } = await supabase
     .from("bookings")
-    .select("id, date, status, customer_email")
+    .select("*")
     .eq("id", bookingId)
     .single();
 
@@ -49,11 +73,37 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const updateData: Record<string, string> = {
+  const finalTimeWindow = newTimeWindow || booking.time_window;
+  const originalContractorId: string | null = booking.contractor_id;
+
+  // Check if the original contractor has a conflict at the new date/time
+  let reassigned = false;
+  if (originalContractorId) {
+    const hasConflict = await contractorHasConflict(
+      supabase,
+      originalContractorId,
+      bookingId,
+      newDate,
+      finalTimeWindow
+    );
+
+    if (hasConflict) {
+      reassigned = true;
+    }
+  }
+
+  // Build the update
+  const updateData: Record<string, string | null> = {
     date: newDate,
     updated_at: new Date().toISOString(),
   };
   if (newTimeWindow) updateData.time_window = newTimeWindow;
+
+  if (reassigned) {
+    // Unassign contractor and put back in pool
+    updateData.contractor_id = null;
+    updateData.status = "pending_assignment";
+  }
 
   const { error } = await supabase
     .from("bookings")
@@ -64,5 +114,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to reschedule booking" }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  // If reassigned, broadcast to all available contractors (same as new booking flow)
+  if (reassigned) {
+    try {
+      const serviceName = booking.service_name || "Detailing Service";
+      const zipCode = booking.zip_code || "";
+      const bookingWithService = { ...booking, date: newDate, time_window: finalTimeWindow, service_name: serviceName };
+
+      // Broadcast to all available contractors
+      const { data: contractors } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .eq("role", "contractor")
+        .eq("approval_status", "approved")
+        .eq("is_available", true);
+
+      if (contractors && contractors.length > 0) {
+        await Promise.all(
+          contractors.map((c: { id: string; email: string }) =>
+            notify({
+              type: "contractor.job_assigned",
+              booking: bookingWithService,
+              contractorEmail: c.email,
+            })
+          )
+        );
+
+        const notificationRows = contractors.map((c: { id: string; email: string }) => ({
+          user_id: c.id,
+          type: "info" as const,
+          title: "New Job Available",
+          message: `Rescheduled detailing job in ${zipCode}. Tap to view and accept.`,
+          booking_id: booking.id,
+          is_read: false,
+          link: `/en/contractor/jobs/${booking.id}`,
+        }));
+
+        await supabase.from("notifications").insert(notificationRows);
+      }
+    } catch (notifyErr) {
+      console.error("reschedule: contractor notification failed:", notifyErr);
+      // Non-fatal — reschedule succeeded, notifications are best-effort
+    }
+  }
+
+  return NextResponse.json({ success: true, reassigned });
 }
