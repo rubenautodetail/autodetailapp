@@ -34,7 +34,7 @@ export default function CustomerDashboardPage() {
     const RESCHEDULE_ELIGIBLE = new Set(['pending', 'pending_assignment', 'confirmed']);
     const reschedulable = activeBookings.filter(b =>
         RESCHEDULE_ELIGIBLE.has(b.status) &&
-        (new Date(b.date).getTime() - Date.now()) / (1000 * 60 * 60) >= 24
+        (new Date(b.date).getTime() - Date.now()) / (1000 * 60 * 60) >= 2
     );
 
     if (isLoading) {
@@ -276,8 +276,8 @@ export default function CustomerDashboardPage() {
                             {reschedulable.length === 0 ? (
                                 <p className="text-text-secondary text-sm leading-relaxed">
                                     {isEs
-                                        ? 'No tienes citas disponibles para reprogramar. Solo se puede reprogramar con 24+ horas de anticipación.'
-                                        : 'No upcoming appointments available to reschedule. Rescheduling requires 24+ hours notice.'}
+                                        ? 'No tienes citas disponibles para reprogramar. Solo se puede reprogramar con 2+ horas de anticipación.'
+                                        : 'No upcoming appointments available to reschedule. Rescheduling requires 2+ hours notice.'}
                                 </p>
                             ) : (
                                 <div className="space-y-2">
