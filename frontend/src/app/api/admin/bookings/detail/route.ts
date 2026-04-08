@@ -28,6 +28,7 @@ interface BookingDetail {
   contractor_id: string | null;
   created_at: string | null;
   updated_at: string | null;
+  selected_add_ons: Array<{ name: string; price: number }> | null;
   review_rating: number | null;
   review_comment: string | null;
   reviewed_at: string | null;
@@ -112,6 +113,7 @@ export async function GET(req: NextRequest) {
     contractorId: b.contractor_id ?? null,
     createdAt: b.created_at ?? null,
     updatedAt: b.updated_at ?? null,
+    selectedAddOns: b.selected_add_ons ?? [],
     reviewRating: b.review_rating ?? null,
     reviewComment: b.review_comment ?? null,
     reviewedAt: b.reviewed_at ?? null,

@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { adminFetch } from "@/lib/adminFetch";
-import { fmtDate, fmtDateTime } from "@/lib/dateUtils";
+import { fmtDate, fmtDateTime, formatTimeWindow } from "@/lib/dateUtils";
 
 interface PageProps {
   params: Promise<{ lang: "en" | "es"; id: string }>;
@@ -290,7 +290,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
                 setCapturePayment(false);
               }}
               disabled={statusSaving}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
             >
               {getAllowedStatuses().map((s) => (
                 <option key={s} value={s}>
@@ -389,7 +389,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
             label={locale === "es" ? "Fecha" : "Date"}
             value={fmtDate(booking.scheduledDate, locale)}
           />
-          <Field label={locale === "es" ? "Horario" : "Time Window"} value={booking.timeWindow} />
+          <Field label={locale === "es" ? "Horario" : "Time Window"} value={formatTimeWindow(booking.timeWindow, locale)} />
           <Field label={locale === "es" ? "Dirección" : "Address"} value={`${booking.address}, ${booking.city}, ${booking.state} ${booking.zipCode}`} />
         </Section>
 

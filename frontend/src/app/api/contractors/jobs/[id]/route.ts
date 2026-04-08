@@ -106,6 +106,7 @@ export async function GET(
             vehicle_model: data.vehicle_model,
             vehicle_year: data.vehicle_year,
             vehicle_color: data.vehicle_color,
+            selected_add_ons: data.selected_add_ons ?? [],
             total_amount: data.total_amount != null ? data.total_amount * CONTRACTOR_SHARE : null,
             // Camel-case aliases consumed by the job page
             scheduled_date: data.date,

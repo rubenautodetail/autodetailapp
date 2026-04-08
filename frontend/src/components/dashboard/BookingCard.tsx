@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { fmtDate, hoursFromNow } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -19,6 +19,25 @@ interface BookingCardProps {
     providerName?: string;
     index?: number;
     onRefresh?: () => void;
+}
+
+/** Format time_window for display — legacy words get translated, HH:MM gets 12h format */
+function formatTimeWindow(raw: string, isEs: boolean): string {
+    const map: Record<string, { en: string; es: string }> = {
+        morning:   { en: 'Morning',   es: 'Mañana' },
+        afternoon: { en: 'Afternoon', es: 'Tarde' },
+        evening:   { en: 'Evening',   es: 'Noche' },
+    };
+    const hit = map[raw.toLowerCase().trim()];
+    if (hit) return isEs ? hit.es : hit.en;
+    const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (m) {
+        const h = parseInt(m[1], 10);
+        const period = h >= 12 ? 'PM' : 'AM';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${h12}:${m[2]} ${period}`;
+    }
+    return raw;
 }
 
 const statusConfig: Record<string, {
@@ -99,26 +118,37 @@ export function BookingCard({
     const [cancelError, setCancelError] = useState('');
     const [showPolicy, setShowPolicy] = useState(false);
 
+    // Safe price: guard against NaN/undefined so .toFixed() never crashes
+    const safePrice = Number.isFinite(price) ? price : 0;
+
     const hoursUntil = hoursFromNow(date);
     const within24h = hoursUntil < 24;
     const within2h = hoursUntil < 2;
 
-    const handleCancel = async () => {
+    const displayTime = formatTimeWindow(time, isEs);
+
+    const handleCancel = useCallback(async () => {
         setCancelling(true);
         setCancelError('');
-        const res = await fetch('/api/booking/cancel', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookingId: id }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            setCancelError(data.error || (isEs ? 'Error al cancelar' : 'Failed to cancel'));
+        try {
+            const res = await fetch('/api/booking/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId: id }),
+            });
+            const data: { error?: string; success?: boolean } = await res.json();
+            if (!res.ok) {
+                setCancelError(data.error || (isEs ? 'Error al cancelar' : 'Failed to cancel'));
+            } else {
+                setConfirmCancel(false);
+                onRefresh?.();
+            }
+        } catch {
+            setCancelError(isEs ? 'Error de conexión' : 'Network error');
+        } finally {
             setCancelling(false);
-        } else {
-            onRefresh?.();
         }
-    };
+    }, [id, isEs, onRefresh]);
 
     // Statuses where cancel/reschedule are available
     const canCancel = ['pending_payment', 'pending', 'pending_assignment', 'confirmed'].includes(status);
@@ -152,12 +182,12 @@ export function BookingCard({
                                 {isEs ? config.es : config.en}
                             </span>
                             <h3 className="text-xl font-bold text-white mt-1 group-hover:text-accent-gold transition-colors">
-                                {serviceName}
+                                {serviceName || (isEs ? 'Servicio de Detallado' : 'Auto Detail')}
                             </h3>
                         </div>
                     </div>
                     <div className="text-right">
-                        <span className="text-2xl font-bold text-accent-gold">${price}</span>
+                        <span className="text-2xl font-bold text-accent-gold">${safePrice.toFixed(2)}</span>
                     </div>
                 </div>
 
@@ -168,7 +198,7 @@ export function BookingCard({
                     </div>
                     <div className="flex items-center text-text-secondary text-sm">
                         <Clock className="w-4 h-4 mr-2 text-text-muted" />
-                        {time}
+                        {displayTime}
                     </div>
                     {providerName && (
                         <div className="flex items-center text-text-secondary text-sm">
@@ -241,8 +271,8 @@ export function BookingCard({
                                         </p>
                                         <p className="text-xs text-amber-300/80">
                                             {isEs
-                                                ? `Tu cita es en menos de 24 horas. Cancelar ahora aplicará un cargo del 50% ($${(price * 0.5).toFixed(2)}).`
-                                                : `Your appointment is less than 24 hours away. Cancelling now will incur a 50% fee ($${(price * 0.5).toFixed(2)}).`}
+                                                ? `Tu cita es en menos de 24 horas. Cancelar ahora aplicará un cargo del 50% ($${(safePrice * 0.5).toFixed(2)}).`
+                                                : `Your appointment is less than 24 hours away. Cancelling now will incur a 50% fee ($${(safePrice * 0.5).toFixed(2)}).`}
                                         </p>
                                     </div>
                                 </div>
@@ -309,8 +339,8 @@ export function BookingCard({
                                             </div>
                                             <p className="text-xs text-red-300/90">
                                                 {isEs
-                                                    ? `Se te cobrará $${(price * 0.5).toFixed(2)} (50% de $${price.toFixed(2)}) por cancelar con menos de 24 horas de anticipación. Solo se reembolsará el 50% restante.`
-                                                    : `You will be charged $${(price * 0.5).toFixed(2)} (50% of $${price.toFixed(2)}) for cancelling less than 24 hours before your appointment. Only the remaining 50% will be refunded.`}
+                                                    ? `Se te cobrará $${(safePrice * 0.5).toFixed(2)} (50% de $${safePrice.toFixed(2)}) por cancelar con menos de 24 horas de anticipación. Solo se reembolsará el 50% restante.`
+                                                    : `You will be charged $${(safePrice * 0.5).toFixed(2)} (50% of $${safePrice.toFixed(2)}) for cancelling less than 24 hours before your appointment. Only the remaining 50% will be refunded.`}
                                             </p>
                                         </>
                                     ) : (
@@ -324,18 +354,20 @@ export function BookingCard({
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => { setConfirmCancel(false); setCancelError(''); }}
-                                            className="flex-1 text-xs font-semibold text-[#A5B0D1] bg-white/5 hover:bg-white/10 py-2 rounded-lg transition-all"
+                                            className="flex-1 text-xs font-semibold text-[#A5B0D1] bg-white/5 hover:bg-white/10 py-2 px-3 rounded-lg transition-all whitespace-nowrap"
                                         >
                                             {isEs ? 'No, volver' : 'No, go back'}
                                         </button>
                                         <button
                                             onClick={handleCancel}
                                             disabled={cancelling}
-                                            className="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 py-2 rounded-lg transition-all"
+                                            className="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 py-2 px-3 rounded-lg transition-all whitespace-nowrap min-w-0"
                                         >
-                                            {cancelling ? '...' : (isEs
-                                                ? (hasLatePenalty ? 'Sí, cancelar (50% cargo)' : 'Sí, cancelar')
-                                                : (hasLatePenalty ? 'Yes, cancel (50% fee)' : 'Yes, cancel'))}
+                                            {cancelling
+                                                ? (isEs ? 'Cancelando…' : 'Cancelling…')
+                                                : (isEs
+                                                    ? (hasLatePenalty ? 'Sí, cancelar (50%)' : 'Sí, cancelar')
+                                                    : (hasLatePenalty ? 'Yes, cancel (50%)' : 'Yes, cancel'))}
                                         </button>
                                     </div>
                                 </div>

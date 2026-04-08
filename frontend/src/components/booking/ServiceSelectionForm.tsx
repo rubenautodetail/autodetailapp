@@ -210,6 +210,7 @@ export default function ServiceSelectionForm({
                                         serviceFee={serviceFee}
                                         total={total}
                                         locale={locale}
+                                        onRemoveAddOn={removeAddOn}
                                     />
 
                                     <div className="mt-6 space-y-3">
@@ -218,7 +219,7 @@ export default function ServiceSelectionForm({
                                             variant="primary"
                                             onClick={handleContinue}
                                         >
-                                            {locale === "es" ? "Continuar a Horario" : "Continue to Schedule"}
+                                            {locale === "es" ? "Continuar a Ubicación" : "Continue to Location"}
                                             <svg
                                                 className="inline-block ml-2 w-5 h-5"
                                                 fill="none"

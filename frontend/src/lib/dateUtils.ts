@@ -49,6 +49,32 @@ export function fmtDateTime(
 }
 
 /**
+ * Format a time_window value for display with locale support.
+ * Handles legacy ("morning"/"afternoon"/"evening") and new HH:MM ("09:00") formats.
+ */
+export function formatTimeWindow(tw: string | null | undefined, locale: string = "en"): string {
+    if (!tw) return FALLBACK;
+    const isEs = locale === "es";
+    const legacyMap: Record<string, { en: string; es: string }> = {
+        morning:   { en: "Morning",   es: "Mañana" },
+        afternoon: { en: "Afternoon", es: "Tarde" },
+        evening:   { en: "Evening",   es: "Noche" },
+    };
+    const key = tw.toLowerCase().trim();
+    if (legacyMap[key]) return isEs ? legacyMap[key].es : legacyMap[key].en;
+    // HH:MM format — convert to localized 12h string
+    const match = key.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+        const h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const d = new Date(2000, 0, 1, h, m);
+        return d.toLocaleTimeString(isEs ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" });
+    }
+    // Already a display string (e.g. "9:00 AM") — return as-is
+    return tw;
+}
+
+/**
  * Returns hours between a date string and now. Negative = in the past.
  */
 export function hoursFromNow(value: string | null | undefined): number {

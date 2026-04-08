@@ -11,7 +11,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  const { bookingId } = await req.json();
+  let bookingId: string | undefined;
+  try {
+    const body = await req.json();
+    bookingId = body.bookingId;
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!bookingId) {
     return NextResponse.json({ error: "bookingId is required" }, { status: 400 });
   }

@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
         total?: number;
         perVehicleTotal?: number;
         serviceName?: string;
+        selectedAddOns?: Array<{ name: string; price: number }>;
         vehicles?: Array<{ make?: string; model?: string; year?: string; color?: string }>;
         vehicleMake?: string;
         vehicleModel?: string;
@@ -67,7 +68,8 @@ export async function POST(req: NextRequest) {
         customerName, customerEmail, customerPhone,
         specialInstructions, subtotal, serviceFee, total,
         perVehicleTotal,
-        serviceName, vehicles: vehiclesInput,
+        serviceName, selectedAddOns: selectedAddOnsInput,
+        vehicles: vehiclesInput,
         vehicleMake, vehicleModel, vehicleYear, vehicleColor,
         currency = 'usd',
         locale = 'en',
@@ -135,6 +137,7 @@ export async function POST(req: NextRequest) {
         service_fee: serviceFee ?? 0,
         total_amount: perVehicleAmount,
         service_name: serviceName || null,
+        selected_add_ons: selectedAddOnsInput ?? [],
         vehicle_make: v.make || null,
         vehicle_model: v.model || null,
         vehicle_year: v.year || null,

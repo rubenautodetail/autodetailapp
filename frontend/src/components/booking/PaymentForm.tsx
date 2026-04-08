@@ -214,6 +214,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           total: groupTotal,
           perVehicleTotal: total,
           serviceName: selectedService.name,
+          selectedAddOns: selectedAddOns.map(a => ({ name: a.name, price: a.price })),
           vehicles,
           // Backwards compat — first vehicle
           vehicleMake: vehicles[0]?.make,

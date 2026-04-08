@@ -27,9 +27,12 @@ export async function PATCH(
     const table = isAddon ? 'add_ons' : 'services';
     const priceField = isAddon ? 'price' : 'base_price';
 
-    // Look up existing stripe_product_id from DB (don't rely on frontend sending it)
-    const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
-    const stripeProductId = existing?.stripe_product_id as string | null;
+    // Look up existing stripe_product_id from DB (only services have it; add_ons do not)
+    let stripeProductId: string | null = null;
+    if (!isAddon) {
+        const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
+        stripeProductId = existing?.stripe_product_id as string | null;
+    }
 
     if (stripeProductId) {
         try {
@@ -55,7 +58,9 @@ export async function PATCH(
         }
     }
 
-    const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const updatePayload: Record<string, unknown> = {};
+    // Only services table has updated_at column; add_ons does not
+    if (!isAddon) updatePayload.updated_at = new Date().toISOString();
     const allowedFields = isAddon
         ? ['name', 'name_es', 'description', 'description_es', 'price', 'duration_minutes', 'is_active', 'sort_order']
         : ['name', 'name_es', 'description', 'description_es', 'base_price', 'duration_minutes', 'is_active', 'sort_order'];
@@ -82,9 +87,12 @@ export async function DELETE(
     const supabase = createServiceClient();
     const permanent = new URL(req.url).searchParams.get('permanent') === 'true';
 
-    // Look up stripe_product_id before deleting so we can archive it in Stripe
-    const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
-    const stripeProductId = existing?.stripe_product_id as string | null;
+    // Look up stripe_product_id before deleting so we can archive it in Stripe (only services have it)
+    let stripeProductId: string | null = null;
+    if (table === 'services') {
+        const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
+        stripeProductId = existing?.stripe_product_id as string | null;
+    }
 
     if (permanent) {
         // Archive Stripe product (deactivate, not delete — Stripe doesn't allow product deletion with prices)
@@ -108,7 +116,10 @@ export async function DELETE(
             console.error('Stripe product archive failed:', err);
         }
     }
-    const { error } = await supabase.from(table).update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', id);
+    // Only services table has updated_at column; add_ons does not
+    const softDeletePayload: Record<string, unknown> = { is_active: false };
+    if (table === 'services') softDeletePayload.updated_at = new Date().toISOString();
+    const { error } = await supabase.from(table).update(softDeletePayload).eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
 }

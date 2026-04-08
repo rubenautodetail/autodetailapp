@@ -5,6 +5,28 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+/** Format raw time_window values for display. */
+function formatTrackTimeWindow(raw: string, isEs: boolean): string {
+    const legacyMap: Record<string, { en: string; es: string }> = {
+        morning:   { en: 'Morning',   es: 'Mañana' },
+        afternoon: { en: 'Afternoon', es: 'Tarde' },
+        evening:   { en: 'Evening',   es: 'Noche' },
+    };
+    const legacy = legacyMap[raw.toLowerCase()];
+    if (legacy) return isEs ? legacy.es : legacy.en;
+
+    const match = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+        const h = parseInt(match[1], 10);
+        const m = match[2];
+        const period = h >= 12 ? 'PM' : 'AM';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${h12}:${m} ${period}`;
+    }
+
+    return raw;
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type BookingStatus =
@@ -411,7 +433,7 @@ export default function TrackBookingPage() {
                     )}
                     <p className="text-xs text-gray-500 mt-1">
                         {booking.date}
-                        {booking.time_window ? ` · ${booking.time_window}` : ''}
+                        {booking.time_window ? ` · ${formatTrackTimeWindow(booking.time_window, isEs)}` : ''}
                     </p>
                 </div>
             </div>

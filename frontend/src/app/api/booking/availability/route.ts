@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
 
         const supabase = createServiceClient();
 
-        // Fetch time windows from admin config
-        let timeWindows: TimeWindow[] = [
+        // Fetch active time windows directly from DB (no self-fetch needed)
+        const DEFAULT_TIME_WINDOWS: TimeWindow[] = [
             { slot: "09:00", label: "9:00 AM", label_es: "9:00 AM" },
             { slot: "10:00", label: "10:00 AM", label_es: "10:00 AM" },
             { slot: "11:00", label: "11:00 AM", label_es: "11:00 AM" },
@@ -54,15 +54,17 @@ export async function POST(req: NextRequest) {
             { slot: "16:00", label: "4:00 PM", label_es: "4:00 PM" },
         ];
 
-        try {
-            const timeWindowResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/time-windows`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            });
+        let timeWindows: TimeWindow[] = DEFAULT_TIME_WINDOWS;
 
-            if (timeWindowResponse.ok) {
-                const timeWindowData = await timeWindowResponse.json();
-                timeWindows = timeWindowData.timeWindows.map((w: { slot: string; label: string; label_es?: string; is_active?: boolean }) => ({
+        try {
+            const { data: twData, error: twError } = await supabase
+                .from('time_windows')
+                .select('slot, label, label_es, is_active')
+                .eq('is_active', true)
+                .order('sort_order');
+
+            if (!twError && twData && twData.length > 0) {
+                timeWindows = twData.map((w) => ({
                     slot: w.slot,
                     label: w.label,
                     label_es: w.label_es || w.label,
@@ -70,8 +72,7 @@ export async function POST(req: NextRequest) {
                 }));
             }
         } catch (timeWindowError) {
-            console.warn('Could not fetch time windows from admin API, using defaults:', timeWindowError);
-            // Keep default time windows
+            console.warn('Could not fetch time windows from DB, using defaults:', timeWindowError);
         }
 
         // Count active approved contractors

@@ -11,11 +11,34 @@ interface Booking {
     id: string;
     service_name: string | null;
     date: string;
+    time_window: string | null;
     status: string;
     total_amount: string | number | null;
     address: string | null;
     confirmation_code: string | null;
     review_rating: number | null;
+}
+
+/** Format raw time_window values for display. */
+function formatTimeWindow(raw: string, isEs: boolean): string {
+    const legacyMap: Record<string, { en: string; es: string }> = {
+        morning:   { en: 'Morning',   es: 'Mañana' },
+        afternoon: { en: 'Afternoon', es: 'Tarde' },
+        evening:   { en: 'Evening',   es: 'Noche' },
+    };
+    const legacy = legacyMap[raw.toLowerCase()];
+    if (legacy) return isEs ? legacy.es : legacy.en;
+
+    const match = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+        const h = parseInt(match[1], 10);
+        const m = match[2];
+        const period = h >= 12 ? 'PM' : 'AM';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${h12}:${m} ${period}`;
+    }
+
+    return raw;
 }
 
 const STATUS_META: Record<string, { bg: string; text: string; dot: string; en: string; es: string }> = {
@@ -51,7 +74,7 @@ export default function MyOrdersPage() {
                 : `customer_email.eq.${user.email}`;
             const { data, error } = await supabase
                 .from("bookings")
-                .select("id, service_name, date, status, total_amount, address, confirmation_code, review_rating")
+                .select("id, service_name, date, time_window, status, total_amount, address, confirmation_code, review_rating")
                 .or(orFilter)
                 .order("date", { ascending: false });
 
@@ -100,6 +123,7 @@ export default function MyOrdersPage() {
                     <span className="flex items-center gap-1 text-[11px] text-[#A5B0D1]">
                         <CalendarDays className="w-3 h-3" />
                         {formatDate(b.date)}
+                        {b.time_window && ` · ${formatTimeWindow(b.time_window, isEs)}`}
                     </span>
                     {b.address && (
                         <span className="flex items-center gap-1 text-[11px] text-[#A5B0D1] truncate max-w-[140px]">

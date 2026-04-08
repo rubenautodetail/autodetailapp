@@ -2,9 +2,8 @@
 
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 
-export default function BookingError({
+export default function AdminError({
   error,
   reset,
 }: {
@@ -12,11 +11,10 @@ export default function BookingError({
   reset: () => void;
 }) {
   const params = useParams();
-  const lang = (params?.lang as string) || "en";
-  const isEs = lang === "es";
+  const isEs = params?.lang === "es";
 
   useEffect(() => {
-    console.error("[Booking Error]", error);
+    console.error("[Admin Error]", error);
   }, [error]);
 
   return (
@@ -28,27 +26,19 @@ export default function BookingError({
           </svg>
         </div>
         <h2 className="text-xl font-bold text-white">
-          {isEs ? "Algo salió mal" : "Something went wrong"}
+          {isEs ? "Error en el panel de administración" : "Admin panel error"}
         </h2>
         <p className="text-text-secondary text-sm">
           {isEs
-            ? "Hubo un error al cargar la reservación. Por favor, inténtalo de nuevo."
-            : "There was an error loading the booking. Please try again."}
+            ? "Hubo un error al cargar el panel de administración. Por favor, inténtalo de nuevo."
+            : "There was an error loading the admin panel. Please try again."}
         </p>
-        <div className="flex gap-3">
-          <button
-            onClick={reset}
-            className="flex-1 btn-primary px-6 py-2.5 rounded-xl font-bold text-sm"
-          >
-            {isEs ? "Intentar de nuevo" : "Try again"}
-          </button>
-          <Link
-            href={`/${lang}`}
-            className="flex-1 glass-card hover:bg-white/10 text-text-secondary px-6 py-2.5 rounded-xl font-bold text-sm transition-colors"
-          >
-            {isEs ? "Ir al inicio" : "Go home"}
-          </Link>
-        </div>
+        <button
+          onClick={reset}
+          className="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm"
+        >
+          {isEs ? "Intentar de nuevo" : "Try again"}
+        </button>
       </div>
     </div>
   );

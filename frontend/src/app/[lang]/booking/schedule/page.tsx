@@ -21,9 +21,6 @@ interface SchedulePageProps {
   }>;
 }
 
-// Time windows will be fetched from API
-let TIME_WINDOWS: Array<{ slot: string; label: string; labelEs: string; range: string; rangeEs: string }> = [];
-
 export default function SchedulePage({ params }: SchedulePageProps) {
   const router = useRouter();
   const { lang } = use(params);
@@ -67,7 +64,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     const fetchTimeWindows = async () => {
       setIsLoadingTimeWindows(true);
       try {
-        const response = await fetch(`/api/admin/time-windows`, {
+        const response = await fetch(`/api/booking/time-windows`, {
           headers: { "Content-Type": "application/json" },
         });
 
@@ -403,6 +400,14 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                     : "Select Time"}
                 </h3>
 
+                {isLoadingTimeWindows ? (
+                  <div className="flex items-center justify-center py-8 gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#D0B078]" />
+                    <span className="text-sm text-[#5E698F]">
+                      {locale === "es" ? "Cargando horarios..." : "Loading time slots..."}
+                    </span>
+                  </div>
+                ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                   {timeWindows.map((window) => {
                     const isSelected = tempSelectedWindow?.slot === window.slot;
@@ -446,6 +451,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                     );
                   })}
                 </div>
+                )}
               </Card>
             )}
 

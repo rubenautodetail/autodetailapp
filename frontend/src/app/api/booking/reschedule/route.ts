@@ -34,12 +34,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  const { bookingId, newDate, newTimeWindow } = await req.json();
+  let bookingId: string | undefined;
+  let newDate: string | undefined;
+  let newTimeWindow: string | undefined;
+  try {
+    const body = await req.json();
+    bookingId = body.bookingId;
+    newDate = body.newDate;
+    newTimeWindow = body.newTimeWindow;
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!bookingId || !newDate) {
     return NextResponse.json({ error: "bookingId and newDate are required" }, { status: 400 });
   }
-  if (newTimeWindow && !["morning", "afternoon", "evening"].includes(newTimeWindow)) {
-    return NextResponse.json({ error: "Invalid time window" }, { status: 400 });
+  if (newTimeWindow) {
+    // Accept both legacy broad windows and specific HH:MM time slots
+    const legacyWindows = ["morning", "afternoon", "evening"];
+    const isHHMM = /^\d{2}:\d{2}$/.test(newTimeWindow);
+    if (!legacyWindows.includes(newTimeWindow) && !isHHMM) {
+      return NextResponse.json({ error: "Invalid time window" }, { status: 400 });
+    }
   }
 
   const supabase = createServiceClient();

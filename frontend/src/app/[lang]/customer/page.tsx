@@ -12,6 +12,26 @@ import { useParams } from 'next/navigation';
 
 const ACTIVE_STATUSES = new Set(['pending_payment', 'pending', 'pending_assignment', 'confirmed', 'en_route', 'working']);
 
+/** Format a time_window value for display with locale support */
+function formatTimeWindow(tw: string, locale: string): string {
+    const isEs = locale === 'es';
+    const legacy: Record<string, { en: string; es: string }> = {
+        morning:   { en: 'Morning',   es: 'Mañana' },
+        afternoon: { en: 'Afternoon', es: 'Tarde' },
+        evening:   { en: 'Evening',   es: 'Noche' },
+    };
+    const key = tw.toLowerCase().trim();
+    if (legacy[key]) return isEs ? legacy[key].es : legacy[key].en;
+    const match = key.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+        const h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const d = new Date(2000, 0, 1, h, m);
+        return d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+    }
+    return tw;
+}
+
 export default function CustomerDashboardPage() {
     const params = useParams();
     const lang = (params?.lang as string) || 'en';
@@ -177,7 +197,7 @@ export default function CustomerDashboardPage() {
                                                         </p>
                                                         <p className="text-xs text-text-muted mt-0.5">
                                                             {new Date(b.date).toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                            {b.time ? ` · ${b.time}` : ''}
+                                                            {b.time ? ` · ${formatTimeWindow(b.time, lang)}` : ''}
                                                         </p>
                                                     </div>
                                                     <span className={`text-sm font-bold shrink-0 ${isCancelled ? 'text-text-muted' : 'text-accent-gold'}`}>
@@ -291,7 +311,7 @@ export default function CustomerDashboardPage() {
                                             className="block w-full p-3 rounded-xl border border-white/10 hover:border-accent-gold/40 hover:bg-accent-gold/5 transition-all group"
                                         >
                                             <p className="text-white text-sm font-semibold group-hover:text-accent-gold transition-colors">{b.serviceName}</p>
-                                            <p className="text-text-secondary text-xs mt-0.5">{b.date} · {b.time}</p>
+                                            <p className="text-text-secondary text-xs mt-0.5">{b.date} · {formatTimeWindow(b.time, lang)}</p>
                                         </Link>
                                     ))}
                                 </div>

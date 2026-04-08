@@ -313,6 +313,7 @@ export interface Database {
                     customer_notes: string | null
                     before_photos: string[] | null
                     completion_photos: string[] | null
+                    selected_add_ons: Json | null
                     checklist_completed: Json | null
                     created_at: string
                     updated_at: string
@@ -346,6 +347,7 @@ export interface Database {
                     payment_intent_id?: string | null
                     status?: string | null
                     time_window?: string | null
+                    selected_add_ons?: Json | null
                     created_at?: string
                     updated_at?: string
                     published_at?: string | null
@@ -378,6 +380,7 @@ export interface Database {
                     time_window?: string | null
                     created_at?: string
                     updated_at?: string
+                    selected_add_ons?: Json | null
                     published_at?: string | null
                 }
             }

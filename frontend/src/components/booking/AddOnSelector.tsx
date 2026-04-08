@@ -68,12 +68,29 @@ export default function AddOnSelector({
                   )}
                 </div>
 
-                <div className="pl-2 border-l border-[var(--divider)] flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                  <ToggleSwitch
-                    checked={selected}
-                    onChange={(checked) => onAddOnToggle(addOn, checked)}
-                    label={`Toggle ${addOn.name}`}
-                  />
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {selected && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddOnToggle(addOn, false);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/15 text-red-400 hover:bg-red-500/30 hover:text-red-300 transition-colors"
+                      aria-label={locale === "es" ? `Quitar ${addOn.name}` : `Remove ${addOn.name}`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                  <div className="pl-2 border-l border-[var(--divider)]" onClick={(e) => e.stopPropagation()}>
+                    <ToggleSwitch
+                      checked={selected}
+                      onChange={(checked) => onAddOnToggle(addOn, checked)}
+                      label={`Toggle ${addOn.name}`}
+                    />
+                  </div>
                 </div>
               </div>
             </Card>

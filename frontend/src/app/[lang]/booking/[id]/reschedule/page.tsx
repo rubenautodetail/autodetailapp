@@ -5,10 +5,23 @@ import { useParams, useRouter } from "next/navigation";
 import { Clock, ChevronLeft, AlertCircle, Info, ChevronDown, XCircle, CalendarClock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-const TIME_WINDOWS = [
-  { slot: "morning", label: "Morning", labelEs: "Mañana", range: "8:00 AM – 12:00 PM", rangeEs: "8:00 AM – 12:00 PM" },
-  { slot: "afternoon", label: "Afternoon", labelEs: "Tarde", range: "12:00 PM – 4:00 PM", rangeEs: "12:00 PM – 4:00 PM" },
-  { slot: "evening", label: "Evening", labelEs: "Noche", range: "4:00 PM – 7:00 PM", rangeEs: "4:00 PM – 7:00 PM" },
+interface TimeWindowConfig {
+  slot: string;
+  label: string;
+  labelEs: string;
+  range: string;
+  rangeEs: string;
+}
+
+const DEFAULT_TIME_SLOTS: TimeWindowConfig[] = [
+  { slot: "09:00", label: "9:00 AM", labelEs: "9:00 AM", range: "9:00 AM", rangeEs: "9:00 AM" },
+  { slot: "10:00", label: "10:00 AM", labelEs: "10:00 AM", range: "10:00 AM", rangeEs: "10:00 AM" },
+  { slot: "11:00", label: "11:00 AM", labelEs: "11:00 AM", range: "11:00 AM", rangeEs: "11:00 AM" },
+  { slot: "12:00", label: "12:00 PM", labelEs: "12:00 PM", range: "12:00 PM", rangeEs: "12:00 PM" },
+  { slot: "13:00", label: "1:00 PM", labelEs: "1:00 PM", range: "1:00 PM", rangeEs: "1:00 PM" },
+  { slot: "14:00", label: "2:00 PM", labelEs: "2:00 PM", range: "2:00 PM", rangeEs: "2:00 PM" },
+  { slot: "15:00", label: "3:00 PM", labelEs: "3:00 PM", range: "3:00 PM", rangeEs: "3:00 PM" },
+  { slot: "16:00", label: "4:00 PM", labelEs: "4:00 PM", range: "4:00 PM", rangeEs: "4:00 PM" },
 ];
 
 export default function ReschedulePage() {
@@ -26,7 +39,10 @@ export default function ReschedulePage() {
   const [error, setError] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showPolicy, setShowPolicy] = useState(false);
+  const [timeSlots, setTimeSlots] = useState<TimeWindowConfig[]>([]);
+  const [isLoadingTimeSlots, setIsLoadingTimeSlots] = useState(true);
 
+  // Fetch booking data
   useEffect(() => {
     const supabase = createClient();
     supabase
@@ -40,6 +56,45 @@ export default function ReschedulePage() {
         setLoading(false);
       });
   }, [id]);
+
+  // Fetch time slots — same logic as the original booking schedule page
+  useEffect(() => {
+    const fetchTimeSlots = async () => {
+      setIsLoadingTimeSlots(true);
+      try {
+        const response = await fetch("/api/admin/time-windows", {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) {
+          setTimeSlots(DEFAULT_TIME_SLOTS);
+        } else {
+          const data = await response.json();
+          if (data.timeWindows && data.timeWindows.length > 0) {
+            // Normalize API response (label_es -> labelEs, range_es -> rangeEs)
+            const normalized: TimeWindowConfig[] = data.timeWindows
+              .filter((tw: { is_active?: boolean }) => tw.is_active !== false)
+              .map((tw: { slot: string; label: string; label_es?: string; labelEs?: string; range: string; range_es?: string; rangeEs?: string }) => ({
+                slot: tw.slot,
+                label: tw.label,
+                labelEs: tw.labelEs || tw.label_es || tw.label,
+                range: tw.range,
+                rangeEs: tw.rangeEs || tw.range_es || tw.range,
+              }));
+            setTimeSlots(normalized.length > 0 ? normalized : DEFAULT_TIME_SLOTS);
+          } else {
+            setTimeSlots(DEFAULT_TIME_SLOTS);
+          }
+        }
+      } catch {
+        setTimeSlots(DEFAULT_TIME_SLOTS);
+      } finally {
+        setIsLoadingTimeSlots(false);
+      }
+    };
+
+    fetchTimeSlots();
+  }, []);
 
   const notFound = !loading && !booking;
   const canReschedule = booking
@@ -58,9 +113,20 @@ export default function ReschedulePage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const isTimeSlotAvailable = (slot: TimeWindowConfig): boolean => {
+    if (!selectedDate) return true;
+    const selectedDateObj = new Date(selectedDate + "T00:00:00");
+    const now = new Date();
+    const isToday = selectedDateObj.toDateString() === now.toDateString();
+    if (!isToday) return true;
+    // Require at least 1 hour lead time (same as original booking flow)
+    const slotHour = parseInt(slot.slot.split(":")[0], 10);
+    return slotHour > now.getHours() + 1;
+  };
+
   const handleSubmit = async () => {
     if (!selectedDate || !selectedWindow) {
-      setError(isEs ? "Selecciona fecha y horario" : "Select a date and time window");
+      setError(isEs ? "Selecciona fecha y horario" : "Select a date and time slot");
       return;
     }
     setSubmitting(true);
@@ -173,7 +239,7 @@ export default function ReschedulePage() {
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
                 className="text-[#A5B0D1] hover:text-white px-2 py-1"
               >
-                ‹
+                &#8249;
               </button>
               <span className="text-white font-semibold">
                 {currentMonth.toLocaleDateString(lang, { month: "long", year: "numeric" })}
@@ -182,7 +248,7 @@ export default function ReschedulePage() {
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
                 className="text-[#A5B0D1] hover:text-white px-2 py-1"
               >
-                ›
+                &#8250;
               </button>
             </div>
 
@@ -205,7 +271,6 @@ export default function ReschedulePage() {
                 const d = String(day).padStart(2, "0");
                 const dateStr = `${y}-${m}-${d}`;
                 const isPast = dateObj < today;
-                // Must be at least 2h from now
                 const hoursAway = (dateObj.getTime() - Date.now()) / (1000 * 60 * 60);
                 const isDisabled = isPast || hoursAway < 2;
                 const isSelected = selectedDate === dateStr;
@@ -214,7 +279,7 @@ export default function ReschedulePage() {
                   <button
                     key={day}
                     disabled={isDisabled}
-                    onClick={() => setSelectedDate(dateStr)}
+                    onClick={() => { setSelectedDate(dateStr); setSelectedWindow(""); }}
                     className={`aspect-square rounded-lg text-sm font-medium transition-all ${
                       isSelected
                         ? "bg-[#D0B078] text-[#131835]"
@@ -230,27 +295,100 @@ export default function ReschedulePage() {
             </div>
           </div>
 
-          {/* Time windows */}
+          {/* Time slots — same granular slots as original booking flow */}
           {selectedDate && (
-            <div className="space-y-2 mb-6">
+            <div className="mb-6">
               <p className="text-[#A5B0D1] text-sm mb-3 flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                {isEs ? "Selecciona un horario" : "Select a time window"}
+                {isEs ? "Selecciona un horario" : "Select a time slot"}
               </p>
-              {TIME_WINDOWS.map((w) => (
-                <button
-                  key={w.slot}
-                  onClick={() => setSelectedWindow(w.slot)}
-                  className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                    selectedWindow === w.slot
-                      ? "border-[#D0B078] bg-[#D0B078]/5"
-                      : "border-[#2C355E] hover:border-[#D0B078]/30"
-                  }`}
-                >
-                  <span className="text-white font-medium">{isEs ? w.labelEs : w.label}</span>
-                  <span className="text-[#A5B0D1] text-sm">{isEs ? w.rangeEs : w.range}</span>
-                </button>
-              ))}
+
+              {isLoadingTimeSlots ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-[#D0B078] border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-2 text-[#A5B0D1] text-sm">
+                    {isEs ? "Cargando horarios..." : "Loading time slots..."}
+                  </span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {timeSlots.map((slot) => {
+                    const isSelected = selectedWindow === slot.slot;
+                    const isAvailable = isTimeSlotAvailable(slot);
+                    const displayLabel = isEs ? slot.labelEs : slot.label;
+
+                    return (
+                      <button
+                        key={slot.slot}
+                        disabled={!isAvailable}
+                        onClick={() => setSelectedWindow(slot.slot)}
+                        className={`
+                          p-4 rounded-xl border transition-all duration-200 relative
+                          ${!isAvailable
+                            ? "border-[#2C355E] bg-transparent opacity-40 cursor-not-allowed"
+                            : isSelected
+                              ? "border-[#D0B078] bg-[#D0B078]/10 ring-1 ring-[#D0B078]"
+                              : "border-[#2C355E] bg-white/5 hover:bg-white/10 hover:border-[#D0B078]/30"
+                          }
+                        `}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5">
+                            <div className="w-4 h-4 bg-[#D0B078] rounded-full flex items-center justify-center">
+                              <svg className="w-2.5 h-2.5 text-[#131835]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                        <p className={`font-bold text-center transition-colors ${isSelected ? "text-[#D0B078]" : "text-white"}`}>
+                          {displayLabel}
+                        </p>
+                        <p className={`text-xs text-center mt-1 ${
+                          !isAvailable
+                            ? "text-[#5E698F]"
+                            : isSelected
+                              ? "text-[#D0B078]/80"
+                              : "text-[#5E698F]"
+                        }`}>
+                          {!isAvailable
+                            ? (isEs ? "Pasado" : "Passed")
+                            : (isEs ? "Disponible" : "Available")}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Selection summary */}
+          {selectedDate && selectedWindow && (
+            <div className="bg-[#D0B078]/5 border border-[#D0B078]/30 rounded-xl p-4 mb-4 flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#D0B078]/20 flex-shrink-0 flex items-center justify-center">
+                <svg className="w-5 h-5 text-[#D0B078]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-white text-sm">
+                  {isEs ? "Nueva Cita" : "New Appointment"}
+                </p>
+                <p className="text-white text-sm">
+                  {new Date(selectedDate + "T00:00:00").toLocaleDateString(lang, {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className="text-[#D0B078] text-sm">
+                  {isEs
+                    ? (timeSlots.find(s => s.slot === selectedWindow)?.labelEs || selectedWindow)
+                    : (timeSlots.find(s => s.slot === selectedWindow)?.label || selectedWindow)}
+                </p>
+              </div>
             </div>
           )}
 

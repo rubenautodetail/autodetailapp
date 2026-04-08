@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, use } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatTimeWindow } from "@/lib/dateUtils";
 
 // Supabase browser client for realtime — uses anon key (safe for client-side)
 const supabaseClient = createClient(
@@ -593,7 +594,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                {job.timeWindow}
+                                                {formatTimeWindow(job.timeWindow, lang)}
                                             </span>
                                             <span className="flex items-center gap-1.5">
                                                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -667,7 +668,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                {job.timeWindow}
+                                                {formatTimeWindow(job.timeWindow, lang)}
                                             </span>
                                             <span className="flex items-center gap-1.5">
                                                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

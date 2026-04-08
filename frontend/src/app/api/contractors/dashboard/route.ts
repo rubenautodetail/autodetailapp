@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
                 .select('approval_status')
                 .eq('id', contractorId)
                 .single();
-            if ((approvalCheck as any)?.approval_status !== 'approved') {
+            if ((approvalCheck as { approval_status?: string } | null)?.approval_status !== 'approved') {
                 return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
             }
         }
