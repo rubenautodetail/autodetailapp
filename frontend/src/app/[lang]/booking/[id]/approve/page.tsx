@@ -45,15 +45,22 @@ function ApproveServiceContent() {
                 const supabase = createClient();
                 const { data, error } = await supabase
                     .from('bookings')
-                    .select('*, profiles:contractor_id(full_name, phone_number)')
+                    .select('*')
                     .eq('id', bookingId)
                     .single();
 
                 if (error || !data) {
                     setError('Booking not found');
                 } else {
-                    setBooking(data as Booking);
-                    // If no code in URL, use the one from the booking row (RLS ensures only owner can read it)
+                    // Fetch contractor name via API (bypasses profile RLS)
+                    let profiles = null;
+                    if (data.contractor_id) {
+                        try {
+                            const res = await fetch(`/api/contractors/public-name?id=${data.contractor_id}`);
+                            if (res.ok) { const j = await res.json(); profiles = { full_name: j.name || null, phone_number: null }; }
+                        } catch { /* optional */ }
+                    }
+                    setBooking({ ...data, profiles } as Booking);
                     if (!confirmationCode && data.confirmation_code) {
                         setResolvedCode(data.confirmation_code);
                     }

@@ -206,16 +206,30 @@ export default function TrackBookingPage() {
         const supabase = createClient();
         const { data, error: fetchError } = await supabase
             .from('bookings')
-            .select('*, profiles:contractor_id(full_name)')
+            .select('*')
             .eq('id', bookingId)
             .single();
 
         if (fetchError || !data) {
             console.error('Track fetch error:', fetchError);
             setError(isEs ? 'Reserva no encontrada.' : 'Booking not found.');
-        } else {
-            setBooking(data as Booking);
+            setLoading(false);
+            return;
         }
+
+        // Fetch contractor name via API (bypasses profile RLS)
+        let profiles: ContractorProfile | null = null;
+        if (data.contractor_id) {
+            try {
+                const res = await fetch(`/api/contractors/public-name?id=${data.contractor_id}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    profiles = { full_name: json.name || null };
+                }
+            } catch { /* contractor name is optional */ }
+        }
+
+        setBooking({ ...data, profiles } as Booking);
         setLoading(false);
     }, [bookingId, isEs]);
 
