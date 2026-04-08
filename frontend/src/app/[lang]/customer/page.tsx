@@ -165,9 +165,10 @@ export default function CustomerDashboardPage() {
                                             const RowIcon = isCompleted ? CheckCircle : isCancelled ? XCircle : Clock;
                                             const iconColor = isCompleted ? 'text-green-500' : isCancelled ? 'text-red-400/60' : 'text-yellow-400';
                                             return (
-                                                <div
+                                                <Link
                                                     key={b.id}
-                                                    className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-white/3 ${isCancelled ? 'opacity-45' : ''}`}
+                                                    href={`/${lang}/customer/bookings/${b.id}`}
+                                                    className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-white/5 cursor-pointer ${isCancelled ? 'opacity-45' : ''}`}
                                                 >
                                                     <RowIcon className={`w-4 h-4 shrink-0 ${iconColor}`} />
                                                     <div className="flex-1 min-w-0">
@@ -183,14 +184,19 @@ export default function CustomerDashboardPage() {
                                                         ${b.price}
                                                     </span>
                                                     {isCompleted && (
-                                                        <Link
-                                                            href={`/${lang}/booking/select?service=${encodeURIComponent(b.serviceName)}`}
-                                                            className="shrink-0 text-xs text-accent-gold hover:text-white font-bold px-2 py-1 rounded-lg bg-accent-gold/10 hover:bg-accent-gold/20 transition-all"
+                                                        <span
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="shrink-0"
                                                         >
-                                                            {isEs ? 'Repetir' : 'Book Again'}
-                                                        </Link>
+                                                            <Link
+                                                                href={`/${lang}/booking/select?service=${encodeURIComponent(b.serviceName)}`}
+                                                                className="text-xs text-accent-gold hover:text-white font-bold px-2 py-1 rounded-lg bg-accent-gold/10 hover:bg-accent-gold/20 transition-all"
+                                                            >
+                                                                {isEs ? 'Repetir' : 'Book Again'}
+                                                            </Link>
+                                                        </span>
                                                     )}
-                                                </div>
+                                                </Link>
                                             );
                                         })}
                                         {/* Footer: See more / See all link */}
