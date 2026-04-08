@@ -162,27 +162,37 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 setVehicles(vehicleData.map(mapDbVehicleToVehicle));
             }
 
-            // Fetch bookings from Supabase (source of truth for transactional data)
+            // Fetch bookings from Supabase (no profile join — RLS blocks cross-user reads)
             const { data: bookingData } = await supabase
                 .from('bookings')
-                .select('*, contractor:contractor_id(full_name, rating)')
+                .select('*')
                 .eq('customer_email', userEmail)
                 .order('created_at', { ascending: false })
                 .limit(20);
 
             if (bookingData) {
+                // Fetch contractor names in bulk via API
+                const contractorIds = [...new Set(bookingData.filter(b => b.contractor_id).map(b => b.contractor_id as string))];
+                const contractorNames: Record<string, string> = {};
+                await Promise.all(contractorIds.map(async (cid) => {
+                    try {
+                        const res = await fetch(`/api/contractors/public-name?id=${cid}`);
+                        if (res.ok) { const j = await res.json(); if (j.name) contractorNames[cid] = j.name; }
+                    } catch { /* optional */ }
+                }));
+
                 setBookings(bookingData.map((b) => ({
                     id: b.id.toString(),
-                    serviceName: (b as any).service_name || 'Auto Detail',
+                    serviceName: (b as Record<string, unknown>).service_name as string || 'Auto Detail',
                     date: b.date,
                     time: b.time_window || 'N/A',
                     status: (b.status as BookingStatus) || 'pending',
                     price: Number(b.total_amount) || 0,
                     customerAddress: b.address || 'N/A',
-                    paymentStatus: (b as any).payment_status,
-                    confirmationCode: (b as any).confirmation_code,
-                    providerName: (b as any).contractor?.full_name || undefined,
-                    providerRating: (b as any).contractor?.rating || undefined,
+                    paymentStatus: (b as Record<string, unknown>).payment_status as string | undefined,
+                    confirmationCode: (b as Record<string, unknown>).confirmation_code as string | undefined,
+                    providerName: b.contractor_id ? contractorNames[b.contractor_id] : undefined,
+                    providerRating: undefined,
                 })));
             }
 
