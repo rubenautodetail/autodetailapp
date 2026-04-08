@@ -133,9 +133,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // This is BLOCKING — if it fails the user exists in auth but has no profile, causing errors everywhere.
     const isContractorFlow = postConfirmRedirect.includes('contractors/apply');
     if (data.user?.id) {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (data.session?.access_token) {
+        headers['Authorization'] = `Bearer ${data.session.access_token}`;
+      }
       const profileRes = await fetch('/api/auth/create-profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userId: data.user.id,
           name,
