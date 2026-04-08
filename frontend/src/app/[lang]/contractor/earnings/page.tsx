@@ -83,7 +83,7 @@ export default function EarningsPage({ params }: EarningsProps) {
 
     const [data, setData] = useState<{
         earnings: { thisWeek: number; total: number };
-        completedJobs: { id: number; service_name: string | null; date: string; total_amount: string | number }[];
+        completedJobs: { id: number; service_name: string | null; date: string; total_amount: string | number; confirmation_code?: string | null }[];
     } | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -214,6 +214,9 @@ export default function EarningsPage({ params }: EarningsProps) {
                                     >
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                             <div className="space-y-0.5">
+                                                {job.confirmation_code && (
+                                                    <p className="font-mono text-sm font-semibold text-[#D0B078]">{job.confirmation_code}</p>
+                                                )}
                                                 <p className="font-medium text-white">
                                                     {job.service_name || "Auto Detail"}
                                                 </p>

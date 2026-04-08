@@ -27,6 +27,7 @@ interface UnpaidSummary {
     contractor_amount: number;
     oldest_job_date: string | null;
     newest_job_date: string | null;
+    booking_codes?: string[];
 }
 
 interface Payout {
@@ -86,7 +87,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
         noUnpaid:        isEs ? "Sin saldo pendiente"            : "No outstanding balance",
         noUnpaidDesc:    isEs ? "Todos los contratistas están al día." : "All contractors are up to date.",
         contractor:      isEs ? "Contratista"                    : "Contractor",
-        jobs:            isEs ? "Trabajos"                       : "Jobs",
+        jobs:            isEs ? "Trabajos / Códigos"              : "Jobs / Codes",
         gross:           isEs ? "Total Cliente"                  : "Client Total",
         fee:             isEs ? "Comisión (30%)"                 : "Platform Fee (30%)",
         net:             isEs ? "A Pagar"                        : "Payout Amount",
@@ -369,7 +370,18 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                                         </p>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-4 text-white font-medium">{u.total_bookings}</td>
+                                                <td className="px-4 py-4">
+                                                    <p className="text-white font-medium">{u.total_bookings}</p>
+                                                    {u.booking_codes && u.booking_codes.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {u.booking_codes.map((code) => (
+                                                                <span key={code} className="font-mono text-[10px] font-semibold text-[#D0B078] bg-[#D0B078]/10 px-1.5 py-0.5 rounded">
+                                                                    {code}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td className="px-4 py-4 text-[#A5B0D1] text-xs">
                                                     {u.oldest_job_date ? fmtDate(u.oldest_job_date, lang) : "—"}
                                                 </td>

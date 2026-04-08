@@ -1,12 +1,16 @@
+"use client";
+
 /**
  * ServiceCard Component
  * Displays a selectable service card with pricing and duration
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Service } from '@/contexts';
 import { Card } from '@/components/ui/Card';
 import { Check } from 'lucide-react';
+
+const DESCRIPTION_TRUNCATE_LENGTH = 110;
 
 interface ServiceCardProps {
     service: Service;
@@ -16,6 +20,14 @@ interface ServiceCardProps {
 }
 
 export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCardProps) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const isEs = locale === 'es';
+    const description = service.description ?? '';
+    const needsTruncation = description.length > DESCRIPTION_TRUNCATE_LENGTH;
+    const displayDescription = needsTruncation && !isExpanded
+        ? description.slice(0, DESCRIPTION_TRUNCATE_LENGTH).trimEnd() + '...'
+        : description;
+
     return (
         <Card
             onClick={() => onSelect(service)}
@@ -55,9 +67,25 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
                 </div>
             </div>
 
-            <p className="text-[var(--text-secondary)] mb-4 text-xs leading-relaxed flex-grow line-clamp-5">
-                {service.description}
-            </p>
+            <div className="mb-4 text-xs leading-relaxed flex-grow min-h-[3rem]">
+                <p className="text-[var(--text-secondary)]">
+                    {displayDescription}
+                </p>
+                {needsTruncation && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsExpanded((prev) => !prev);
+                        }}
+                        className="text-[#D0B078] hover:text-[#D0B078]/80 font-semibold mt-1 text-xs transition-colors"
+                    >
+                        {isExpanded
+                            ? isEs ? 'Ver menos' : 'View less'
+                            : isEs ? 'Ver más' : 'View more'}
+                    </button>
+                )}
+            </div>
 
             <div className="flex items-center justify-between mt-auto pt-3 border-t border-[var(--divider)] gap-2">
                 <div className="flex items-center text-[var(--text-muted)] text-xs shrink-0">

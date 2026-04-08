@@ -12,7 +12,7 @@ export default function ContractorHistory({ params }: Props) {
     const { session } = useAuth();
 
     const [earnings, setEarnings] = useState({ thisWeek: 0, total: 0 });
-    const [jobs, setJobs] = useState<{ id: number; service_name: string | null; date: string; total_amount: number | string; review_rating?: number | null; review_comment?: string | null }[]>([]);
+    const [jobs, setJobs] = useState<{ id: number; service_name: string | null; date: string; total_amount: number | string; review_rating?: number | null; review_comment?: string | null; confirmation_code?: string | null }[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
@@ -102,6 +102,9 @@ export default function ContractorHistory({ params }: Props) {
                         {jobs.length > 0 ? jobs.map((job: any) => (
                             <div key={job.id} className="px-6 py-4 flex items-start justify-between gap-4">
                                 <div className="space-y-1 min-w-0">
+                                    {job.confirmation_code && (
+                                        <p className="font-mono text-sm font-semibold text-[#D0B078]">{job.confirmation_code}</p>
+                                    )}
                                     <p className="font-semibold text-white truncate">{job.service_name || 'Detailing Service'}</p>
                                     <p className="text-sm text-[#A5B0D1]">
                                         {job.date ? new Date(job.date + 'T12:00:00Z').toLocaleDateString(

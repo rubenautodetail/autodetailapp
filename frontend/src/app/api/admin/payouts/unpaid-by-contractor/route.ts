@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         // All completed bookings without a payout_id
         const { data: bookings, error } = await supabase
             .from('bookings')
-            .select('id, contractor_id, total_amount, date')
+            .select('id, contractor_id, total_amount, date, confirmation_code')
             .eq('status', 'completed')
             .is('payout_id', null)
             .not('contractor_id', 'is', null)
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
         const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
 
         // Group bookings by contractor
-        type BookingRow = { id: number; date: string; gross: number };
+        type BookingRow = { id: number; date: string; gross: number; confirmationCode: string | null };
         const byContractor = new Map<string, { bookings: BookingRow[]; gross: number }>();
         for (const b of bookings) {
             const cid = b.contractor_id as string;
@@ -54,10 +54,10 @@ export async function GET(req: NextRequest) {
             const gross = Number(b.total_amount) || 0;
             const existing = byContractor.get(cid);
             if (existing) {
-                existing.bookings.push({ id: b.id, date: b.date, gross });
+                existing.bookings.push({ id: b.id, date: b.date, gross, confirmationCode: b.confirmation_code ?? null });
                 existing.gross += gross;
             } else {
-                byContractor.set(cid, { bookings: [{ id: b.id, date: b.date, gross }], gross });
+                byContractor.set(cid, { bookings: [{ id: b.id, date: b.date, gross, confirmationCode: b.confirmation_code ?? null }], gross });
             }
         }
 
@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
                 contractor_amount: +(gross * CONTRACTOR_SHARE).toFixed(2),
                 oldest_job_date: jobs[jobs.length - 1]?.date ?? null,
                 newest_job_date: jobs[0]?.date ?? null,
+                booking_codes: jobs.map((j) => j.confirmationCode).filter(Boolean) as string[],
             };
         });
 

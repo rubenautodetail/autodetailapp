@@ -12,7 +12,7 @@ interface RequestCardProps {
 }
 
 export default function RequestCard({ request, onAccept, onDecline, showActions = false }: RequestCardProps) {
-    const { id, customerName, vehicleName, serviceName, address, estimatedTotal, status, timestamp } = request;
+    const { id, confirmationCode, customerName, vehicleName, serviceName, address, estimatedTotal, status, timestamp } = request;
 
     const timeAgo = (dateString: string) => {
         const minutes = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 60000);
@@ -29,7 +29,7 @@ export default function RequestCard({ request, onAccept, onDecline, showActions 
             {/* Header: Service & Price */}
             <div className="flex justify-between items-start mb-3">
                 <div>
-                    <span className="text-xs font-mono text-[var(--text-secondary)]">#{id}</span>
+                    <span className="text-xs font-mono font-semibold text-[var(--text-secondary)]">{confirmationCode || `#${id}`}</span>
                     <h3 className="text-lg font-bold text-[var(--text-primary)] mt-1">{serviceName}</h3>
                 </div>
                 <div className="text-right">

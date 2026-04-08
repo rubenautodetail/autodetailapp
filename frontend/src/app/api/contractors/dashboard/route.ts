@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
         // ── Active jobs: assigned to this contractor ──────────────────────────
         let activeJobs: { id: number; documentId: string | null; confirmationCode: string | null; serviceName: string; timeWindow: string; date: string; address: string; totalAmount: number; status: string; }[] = [];
-        let completedJobs: { id: number; service_name: string | null; date: string; total_amount: string | number; created_at: string; }[] = [];
+        let completedJobs: { id: number; service_name: string | null; date: string; total_amount: string | number; created_at: string; confirmation_code?: string | null; }[] = [];
         const earnings = { thisWeek: 0, total: 0 };
 
         if (contractorId) {
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
             // Earnings from completed jobs
             const { data: completed } = await supabase
                 .from('bookings')
-                .select('id, service_name, date, total_amount, created_at, review_rating, review_comment')
+                .select('id, service_name, date, total_amount, created_at, review_rating, review_comment, confirmation_code')
                 .eq('contractor_id', contractorId)
                 .eq('status', 'completed')
                 .order('date', { ascending: false });

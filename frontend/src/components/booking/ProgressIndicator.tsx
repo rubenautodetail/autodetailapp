@@ -14,8 +14,8 @@ export default function ProgressIndicator({ currentStep, locale = "en" }: Progre
   const labels = STEP_LABELS[locale];
 
   return (
-    <div className="mb-8 sm:mb-12">
-      <div className="flex items-center justify-between max-w-3xl mx-auto">
+    <div className="mb-6 sm:mb-8">
+      <div className="flex items-center justify-between max-w-md sm:max-w-lg mx-auto">
         {[1, 2, 3, 4, 5].map((step) => (
           <div key={step} className="flex items-center w-full relative">
             <div
@@ -42,7 +42,7 @@ export default function ProgressIndicator({ currentStep, locale = "en" }: Progre
           </div>
         ))}
       </div>
-      <div className="flex justify-between max-w-3xl mx-auto mt-2 sm:mt-3 text-[10px] sm:text-xs uppercase tracking-wider font-semibold">
+      <div className="flex justify-between max-w-md sm:max-w-lg mx-auto mt-2 sm:mt-3 text-[10px] sm:text-xs uppercase tracking-wider font-semibold">
         {labels.map((label, i) => (
           <span
             key={label}

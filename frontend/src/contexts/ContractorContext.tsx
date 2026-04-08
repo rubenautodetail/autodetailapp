@@ -6,6 +6,7 @@ export type RequestStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed
 
 export interface ServiceRequest {
   id: string;
+  confirmationCode?: string;
   customerId: string;
   customerName: string;
   vehicleId: string;
@@ -50,6 +51,7 @@ function mapBookingToRequest(booking: any): ServiceRequest {
 
   return {
     id: booking.id.toString(),
+    confirmationCode: booking.confirmation_code || undefined,
     customerId: booking.customer_email || 'guest',
     customerName: booking.customer_name || 'Guest Customer',
     vehicleId: 'V-N/A',
