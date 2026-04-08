@@ -42,7 +42,7 @@ export default function ReschedulePage() {
 
   const notFound = !loading && !booking;
   const canReschedule = booking
-    ? (new Date(booking.date).getTime() - Date.now()) / (1000 * 60 * 60) >= 24
+    ? (new Date(booking.date).getTime() - Date.now()) / (1000 * 60 * 60) >= 2
     : false;
 
   const getDaysInMonth = (date: Date) => {
@@ -115,8 +115,8 @@ export default function ReschedulePage() {
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <p className="text-red-300 text-sm">
             {isEs
-              ? "No puedes reprogramar con menos de 24 horas de anticipación."
-              : "You cannot reschedule less than 24 hours before your appointment."}
+              ? "No puedes reprogramar con menos de 2 horas de anticipación."
+              : "You cannot reschedule less than 2 hours before your appointment."}
           </p>
         </div>
       ) : (
@@ -126,8 +126,8 @@ export default function ReschedulePage() {
             <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <p className="text-amber-300 text-xs">
               {isEs
-                ? "Solo puedes reprogramar con 24 horas de anticipación o más."
-                : "Rescheduling is only allowed 24+ hours before your appointment."}
+                ? "Solo puedes reprogramar con 2 horas de anticipación o más."
+                : "Rescheduling is only allowed 2+ hours before your appointment."}
             </p>
           </div>
 
@@ -167,9 +167,9 @@ export default function ReschedulePage() {
                 const d = String(day).padStart(2, "0");
                 const dateStr = `${y}-${m}-${d}`;
                 const isPast = dateObj < today;
-                // Must be at least 24h from now
+                // Must be at least 2h from now
                 const hoursAway = (dateObj.getTime() - Date.now()) / (1000 * 60 * 60);
-                const isDisabled = isPast || hoursAway < 24;
+                const isDisabled = isPast || hoursAway < 2;
                 const isSelected = selectedDate === dateStr;
 
                 return (

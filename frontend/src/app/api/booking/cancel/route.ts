@@ -38,39 +38,53 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Cannot cancel this booking" }, { status: 400 });
   }
 
-  // 24-hour restriction for bookings that are not pending_payment
-  if (booking.status !== "pending_payment" && booking.status !== "pending" && booking.status !== null) {
-    const bookingDate = new Date(booking.date);
-    const now = new Date();
-    const hoursUntilBooking = (bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    if (hoursUntilBooking < 24) {
-      return NextResponse.json(
-        { error: "Cancellations must be made at least 24 hours before the appointment" },
-        { status: 400 }
-      );
-    }
-  }
+  // Determine if cancellation is within 24 hours (50% penalty applies)
+  const bookingDate = new Date(booking.date);
+  const now = new Date();
+  const hoursUntilBooking = (bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const isLateCancellation = hoursUntilBooking < 24 &&
+    booking.status !== "pending_payment" && booking.status !== "pending";
 
   // Cancel Stripe hold if authorized
   if (booking.payment_intent_id && booking.payment_status === "authorized") {
     try {
-      await stripe.paymentIntents.cancel(booking.payment_intent_id);
+      if (isLateCancellation) {
+        // Late cancellation: capture 50% as penalty, cancel remaining hold
+        const pi = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
+        const penaltyAmount = Math.round((pi.amount ?? 0) / 2);
+        await stripe.paymentIntents.capture(booking.payment_intent_id, {
+          amount_to_capture: penaltyAmount,
+        });
+      } else {
+        await stripe.paymentIntents.cancel(booking.payment_intent_id);
+      }
     } catch (e) {
-      console.error("Stripe cancel error:", e);
+      console.error("Stripe cancel/capture error:", e);
       return NextResponse.json(
-        { error: "Failed to cancel payment authorization with Stripe" },
+        { error: "Failed to process cancellation with Stripe" },
         { status: 500 }
       );
     }
   }
 
-  // Refund captured payment if already paid (only allowed 24h+ in advance, enforced above)
+  // Refund captured payment if already paid
   if (booking.payment_intent_id && booking.payment_status === "paid") {
     try {
-      const refund = await stripe.refunds.create({
-        payment_intent: booking.payment_intent_id,
-      });
-      console.log("Stripe refund created:", refund.id, "status:", refund.status);
+      if (isLateCancellation) {
+        // Late cancellation: refund only 50%
+        const pi = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
+        const refundAmount = Math.round((pi.amount_received ?? 0) / 2);
+        const refund = await stripe.refunds.create({
+          payment_intent: booking.payment_intent_id,
+          amount: refundAmount,
+        });
+        console.log("Stripe partial refund (50%):", refund.id, "amount:", refundAmount);
+      } else {
+        const refund = await stripe.refunds.create({
+          payment_intent: booking.payment_intent_id,
+        });
+        console.log("Stripe full refund:", refund.id, "status:", refund.status);
+      }
     } catch (e) {
       console.error("Stripe refund error:", e);
       return NextResponse.json(
@@ -81,17 +95,17 @@ export async function POST(req: NextRequest) {
   }
 
   const newPaymentStatus = booking.payment_intent_id
-    ? booking.payment_status === "paid" ? "refunded" : "cancelled"
+    ? isLateCancellation ? "partially_refunded" : (booking.payment_status === "paid" ? "refunded" : "cancelled")
     : "unpaid";
 
-  const now = new Date().toISOString();
+  const cancelledAt = new Date().toISOString();
   const { error } = await supabase
     .from("bookings")
     .update({
       status: "cancelled",
       payment_status: newPaymentStatus,
-      cancelled_at: now,
-      updated_at: now,
+      cancelled_at: cancelledAt,
+      updated_at: cancelledAt,
     })
     .eq("id", bookingId);
 

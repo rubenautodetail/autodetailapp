@@ -100,6 +100,7 @@ export function BookingCard({
 
     const hoursUntil = hoursFromNow(date);
     const within24h = hoursUntil < 24;
+    const within2h = hoursUntil < 2;
 
     const handleCancel = async () => {
         setCancelling(true);
@@ -120,9 +121,9 @@ export function BookingCard({
 
     // Statuses where cancel/reschedule are available
     const canCancel = ['pending_payment', 'pending', 'pending_assignment', 'confirmed'].includes(status);
-    const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within24h;
-    // pending_payment can cancel anytime (no payment captured)
-    const cancelBlocked = status !== 'pending_payment' && status !== 'pending' && within24h;
+    const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within2h;
+    // Late cancellation (<24h) incurs 50% penalty, but is always allowed
+    const hasLatePenalty = status !== 'pending_payment' && status !== 'pending' && within24h;
 
     return (
         <motion.div
@@ -229,13 +230,13 @@ export function BookingCard({
                     {/* Cancel / Reschedule actions */}
                     {canCancel && !['cancelled', 'completed'].includes(status) && (
                         <div className="space-y-2">
-                            {/* 24-hour notice */}
-                            {within24h && status !== 'pending_payment' && status !== 'pending' && (
+                            {/* Late cancellation penalty warning */}
+                            {hasLatePenalty && (
                                 <div className="flex items-start gap-1.5 text-xs text-amber-400/80">
                                     <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                                     {isEs
-                                        ? 'Solo puedes cancelar o reprogramar con 24h+ de anticipación.'
-                                        : 'Cancel/reschedule only allowed 24+ hours before appointment.'}
+                                        ? 'Cancelar con menos de 24h de anticipación aplica un cargo del 50%.'
+                                        : 'Cancelling less than 24 hours before your appointment incurs a 50% fee.'}
                                 </div>
                             )}
 
@@ -250,20 +251,22 @@ export function BookingCard({
                                             {isEs ? 'Reprogramar' : 'Reschedule'}
                                         </Link>
                                     )}
-                                    {!cancelBlocked && (
-                                        <button
-                                            onClick={() => setConfirmCancel(true)}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition-all"
-                                        >
-                                            <XCircle className="w-3.5 h-3.5" />
-                                            {isEs ? 'Cancelar' : 'Cancel'}
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={() => setConfirmCancel(true)}
+                                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition-all"
+                                    >
+                                        <XCircle className="w-3.5 h-3.5" />
+                                        {isEs ? 'Cancelar' : 'Cancel'}
+                                    </button>
                                 </div>
                             ) : (
                                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 space-y-2">
                                     <p className="text-xs text-red-300 font-medium">
-                                        {isEs ? '¿Seguro que deseas cancelar?' : 'Are you sure you want to cancel?'}
+                                        {hasLatePenalty
+                                            ? (isEs
+                                                ? '¿Seguro? Se aplicará un cargo del 50% por cancelación tardía.'
+                                                : 'Are you sure? A 50% late cancellation fee will apply.')
+                                            : (isEs ? '¿Seguro que deseas cancelar?' : 'Are you sure you want to cancel?')}
                                     </p>
                                     {cancelError && (
                                         <p className="text-xs text-red-400">{cancelError}</p>
