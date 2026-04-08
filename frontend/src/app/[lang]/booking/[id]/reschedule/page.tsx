@@ -242,7 +242,7 @@ export default function ReschedulePage() {
                 &#8249;
               </button>
               <span className="text-white font-semibold">
-                {currentMonth.toLocaleDateString(lang, { month: "long", year: "numeric" })}
+                {currentMonth.toLocaleDateString(lang, { month: "long", year: "numeric", timeZone: "America/New_York" })}
               </span>
               <button
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
@@ -381,6 +381,7 @@ export default function ReschedulePage() {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
+                    timeZone: "America/New_York",
                   })}
                 </p>
                 <p className="text-[#D0B078] text-sm">

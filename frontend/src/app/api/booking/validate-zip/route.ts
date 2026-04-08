@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
             durationMinutes: a.duration_minutes || 30,
         }));
 
-        const nextAvailableDate = new Date();
+        const nextAvailableDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
         nextAvailableDate.setDate(nextAvailableDate.getDate() + 1);
 
         return NextResponse.json({

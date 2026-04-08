@@ -624,6 +624,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
+                          timeZone: "America/New_York",
                         })}
                       </p>
                       <p className="text-sm text-[#D0B078] mt-1 font-medium">

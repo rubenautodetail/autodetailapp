@@ -64,12 +64,9 @@ export async function POST(req: NextRequest) {
     if (!slot || !label) {
       return NextResponse.json({ error: 'Slot and label are required' }, { status: 400 });
     }
-    if (!range || typeof range !== 'string' || !range.trim()) {
-      return NextResponse.json({ error: 'Range is required' }, { status: 400 });
-    }
-    if (!range_es || typeof range_es !== 'string' || !range_es.trim()) {
-      return NextResponse.json({ error: 'Range (Spanish) is required' }, { status: 400 });
-    }
+    // range defaults to label if not provided
+    const finalRange = (range && typeof range === 'string' && range.trim()) ? range.trim() : label;
+    const finalRangeEs = (range_es && typeof range_es === 'string' && range_es.trim()) ? range_es.trim() : (label_es || label);
     if (sort_order == null || typeof sort_order !== 'number') {
       return NextResponse.json({ error: 'sort_order (number) is required' }, { status: 400 });
     }
@@ -82,8 +79,8 @@ export async function POST(req: NextRequest) {
         slot,
         label,
         label_es,
-        range,
-        range_es,
+        range: finalRange,
+        range_es: finalRangeEs,
         is_active: is_active ?? true,
         sort_order
       })

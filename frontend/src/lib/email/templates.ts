@@ -382,7 +382,7 @@ export function jobRejectedAdminTemplate(booking: BookingEmailData): string {
     <p>A contractor has rejected an assigned job. Reassignment may be required.</p>
     <p><strong>Booking Code:</strong> ${booking.confirmationCode}</p>
     <p><strong>Customer:</strong> ${booking.customer.firstName} ${booking.customer.lastName}</p>
-    <p><strong>Scheduled:</strong> ${new Date(booking.scheduledDate).toLocaleDateString()} at ${booking.scheduledTime}</p>
+    <p><strong>Scheduled:</strong> ${new Date(booking.scheduledDate).toLocaleDateString('en-US', { timeZone: 'America/New_York' })} at ${booking.scheduledTime}</p>
     <p style="text-align:center;"><a href="${APP_URL}/en/admin/bookings" class="btn" style="background:#dc2626;color:white;">View Admin Dashboard</a></p>`;
 
   return baseLayout({
@@ -717,7 +717,7 @@ export function payoutConfirmationTemplate(data: PayoutEmailData): string {
   const isEs = data.locale === 'es';
   const fmt = (d: string) =>
     new Date(d + 'T12:00:00Z').toLocaleDateString(isEs ? 'es-US' : 'en-US', {
-      month: 'long', day: 'numeric', year: 'numeric',
+      month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York',
     });
   const methodLabel =
     PAYMENT_METHOD_LABELS[data.paymentMethod]?.[isEs ? 'es' : 'en'] ?? data.paymentMethod;

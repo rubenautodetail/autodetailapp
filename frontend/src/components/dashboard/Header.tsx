@@ -18,7 +18,7 @@ export default function Header({ profileName }: { profileName?: string }) {
     const firstName = profileName?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || (isEs ? 'Invitado' : 'Guest');
 
     const getGreeting = () => {
-        const hour = new Date().getHours();
+        const hour = parseInt(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/New_York" }), 10);
         if (isEs) {
             if (hour < 12) return "Buenos Días";
             if (hour < 18) return "Buenas Tardes";

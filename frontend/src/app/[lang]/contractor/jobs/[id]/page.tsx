@@ -437,6 +437,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
               year: "numeric",
               month: "long",
               day: "numeric",
+              timeZone: "America/New_York",
           })
         : "N/A";
 

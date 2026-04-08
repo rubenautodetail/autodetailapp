@@ -68,7 +68,7 @@ export function formatTimeWindow(tw: string | null | undefined, locale: string =
         const h = parseInt(match[1], 10);
         const m = parseInt(match[2], 10);
         const d = new Date(2000, 0, 1, h, m);
-        return d.toLocaleTimeString(isEs ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" });
+        return d.toLocaleTimeString(isEs ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
     }
     // Already a display string (e.g. "9:00 AM") — return as-is
     return tw;
@@ -81,4 +81,20 @@ export function hoursFromNow(value: string | null | undefined): number {
     const d = safeDate(value ?? null);
     if (!d) return -Infinity;
     return (d.getTime() - Date.now()) / (1000 * 60 * 60);
+}
+
+/**
+ * Returns a Date object representing "now" in America/New_York.
+ * Useful for business-logic comparisons like "is this today?" or "this week/month".
+ */
+export function easternNow(): Date {
+    return new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+}
+
+/**
+ * Returns today's date as YYYY-MM-DD in Eastern time.
+ */
+export function easternToday(): string {
+    const d = easternNow();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }

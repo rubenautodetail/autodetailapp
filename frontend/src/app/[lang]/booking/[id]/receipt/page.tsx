@@ -88,6 +88,7 @@ export default function ReceiptPage() {
               year: 'numeric',
               month: 'long',
               day: 'numeric',
+              timeZone: 'America/New_York',
           })
         : '—';
 

@@ -296,7 +296,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                   { label: locale === "es" ? "Ubicación" : "Location", value: customerLocation.address },
                   {
                     label: locale === "es" ? "Fecha" : "Date",
-                    value: selectedDate.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" }),
+                    value: selectedDate.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }),
                   },
                   {
                     label: locale === "es" ? "Hora" : "Time",

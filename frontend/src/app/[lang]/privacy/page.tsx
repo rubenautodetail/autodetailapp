@@ -128,7 +128,7 @@ export default async function PrivacyPage({
                 <div className="mb-12">
                     <h1 className="text-4xl font-bold mb-3">{t.title}</h1>
                     <p className="text-white/40 text-sm">
-                        {t.updated}: {new Date().toLocaleDateString(es ? 'es-US' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        {t.updated}: {new Date().toLocaleDateString(es ? 'es-US' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })}
                     </p>
                 </div>
 

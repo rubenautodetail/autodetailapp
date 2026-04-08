@@ -134,13 +134,13 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
       const url = isNew ? "/api/admin/time-windows" : `/api/admin/time-windows/${editWindow.id}`;
       const method = isNew ? "POST" : "PATCH";
 
-      // Format data for API
+      // Format data for API — range mirrors label (same value for individual time slots)
       const windowData = {
         slot: editWindow.slot,
         label: editWindow.label,
         label_es: editWindow.labelEs,
-        range: editWindow.range,
-        range_es: editWindow.rangeEs,
+        range: editWindow.range || editWindow.label,
+        range_es: editWindow.rangeEs || editWindow.labelEs,
         is_active: editWindow.is_active,
         sort_order: editWindow.sort_order,
       };

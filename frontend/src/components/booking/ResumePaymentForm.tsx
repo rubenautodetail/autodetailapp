@@ -244,7 +244,7 @@ export default function ResumePaymentForm({ bookingId, locale }: ResumePaymentFo
     ? booking.time_window.charAt(0).toUpperCase() + booking.time_window.slice(1)
     : "N/A";
   const formattedDate = booking.date
-    ? new Date(booking.date + "T12:00:00").toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+    ? new Date(booking.date + "T12:00:00").toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York" })
     : "N/A";
 
   return (

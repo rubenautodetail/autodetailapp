@@ -43,7 +43,8 @@ export async function POST(req: NextRequest) {
         const [year, monthNum] = month.split('-').map(Number);
         const endDate = new Date(year, monthNum, 0); // last day of month
 
-        const today = new Date();
+        // Use Eastern time for "today" boundary
+        const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
         const currentMonth = today.toISOString().slice(0, 7);
 
         const supabase = createServiceClient();

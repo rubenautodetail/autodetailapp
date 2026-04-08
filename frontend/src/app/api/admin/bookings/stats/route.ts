@@ -16,8 +16,10 @@ export async function GET(req: NextRequest) {
         const supabase = createServiceClient();
 
         const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        // Use Eastern time for "today" and "this month" boundaries
+        const eastern = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+        const todayStart = new Date(eastern.getFullYear(), eastern.getMonth(), eastern.getDate()).toISOString();
+        const monthStart = new Date(eastern.getFullYear(), eastern.getMonth(), 1).toISOString();
 
         const [todayRes, pendingRes, pendingPaymentRes, revenueRes, completedMonthRes] = await Promise.all([
             // Bookings created today

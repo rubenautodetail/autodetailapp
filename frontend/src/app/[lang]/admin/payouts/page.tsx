@@ -59,7 +59,7 @@ const PAYMENT_METHODS: { value: PaymentMethod; en: string; es: string; icon: str
 function fmtDate(iso: string, locale: string): string {
     return new Date(iso + "T12:00:00Z").toLocaleDateString(
         locale === "es" ? "es-US" : "en-US",
-        { month: "short", day: "numeric", year: "numeric" }
+        { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }
     );
 }
 
@@ -117,7 +117,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
         noBooksFound:    isEs ? "Sin trabajos sin pagar esta semana." : "No unpaid completed jobs found.",
     };
 
-    const today = new Date();
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
     const [tab, setTab] = useState<Tab>("pay-now");
 
     // Pay-now state

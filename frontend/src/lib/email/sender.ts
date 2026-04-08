@@ -163,7 +163,7 @@ function resolveSubject(payload: EmailPayload): string {
       const pd = payload.data as PayoutEmailData;
       const fmt = (d: string) =>
         new Date(d + 'T12:00:00Z').toLocaleDateString(isEs ? 'es-US' : 'en-US', {
-          month: 'long', day: 'numeric', year: 'numeric',
+          month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York',
         });
       return isEs
         ? `Pago enviado: semana del ${fmt(pd.periodStart)}`

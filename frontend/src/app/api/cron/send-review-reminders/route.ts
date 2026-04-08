@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
           booking: {
             id: booking.id,
             confirmation_code: booking.confirmation_code,
-            scheduled_date: new Date().toISOString().split('T')[0], // Today as fallback
+            scheduled_date: new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" })).toISOString().split('T')[0], // Today in Eastern as fallback
             scheduled_time: 'Service completed',
             service_name: booking.service_name || 'Detailing Service',
             total_amount: 0, // Not needed for reminder email

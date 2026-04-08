@@ -225,7 +225,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                             </td>
                             <td className="px-6 py-3 text-sm text-gray-700">{j.serviceName}</td>
                             <td className="px-6 py-3 text-sm text-gray-500">
-                              {j.scheduledDate ? new Date(j.scheduledDate).toLocaleDateString(locale) : "—"}
+                              {j.scheduledDate ? new Date(j.scheduledDate).toLocaleDateString(locale, { timeZone: "America/New_York" }) : "—"}
                             </td>
                             <td className="px-6 py-3 text-sm text-gray-700 text-right">${j.totalAmount.toFixed(2)}</td>
                             <td className="px-6 py-3 text-sm font-semibold text-green-700 text-right">
@@ -291,7 +291,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-700">{j.serviceName}</td>
                       <td className="px-5 py-4 text-sm text-gray-500">
-                        {j.scheduledDate ? new Date(j.scheduledDate).toLocaleDateString(locale) : "—"}
+                        {j.scheduledDate ? new Date(j.scheduledDate).toLocaleDateString(locale, { timeZone: "America/New_York" }) : "—"}
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-900 text-right">${j.totalAmount.toFixed(2)}</td>
                       <td className="px-5 py-4 text-sm font-semibold text-green-700 text-right">

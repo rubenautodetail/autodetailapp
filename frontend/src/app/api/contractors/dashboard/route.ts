@@ -99,7 +99,8 @@ export async function GET(req: NextRequest) {
                 .eq('status', 'completed')
                 .order('date', { ascending: false });
 
-            const weekAgo = new Date();
+            const nowEastern = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+            const weekAgo = new Date(nowEastern);
             weekAgo.setDate(weekAgo.getDate() - 7);
 
             const CONTRACTOR_SHARE = 0.70;

@@ -262,6 +262,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const monthName = currentMonth.toLocaleDateString(locale, {
     month: "long",
     year: "numeric",
+    timeZone: "America/New_York",
   });
 
   const weekDays =
@@ -474,6 +475,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
+                        timeZone: "America/New_York",
                       })}
                     </p>
                     <p className="text-[#D0B078]">

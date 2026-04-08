@@ -91,7 +91,7 @@ export default function MyOrdersPage() {
     const formatDate = (d: string) => {
         const parsed = new Date(d);
         if (isNaN(parsed.getTime())) return '—';
-        return parsed.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        return parsed.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
     };
 
     const BookingRow = ({ b }: { b: Booking }) => {

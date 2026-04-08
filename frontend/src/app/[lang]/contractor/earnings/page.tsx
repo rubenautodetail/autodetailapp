@@ -203,9 +203,9 @@ export default function EarningsPage({ params }: EarningsProps) {
                             {completed.map((job) => {
                                 const dateStr = job.date
                                     ? new Date(job.date + "T12:00:00Z").toLocaleDateString(
-                                        lang === "es" ? "es-US" : "en-US",
-                                        { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }
-                                    )
+                                          lang === "es" ? "es-US" : "en-US",
+                                          { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }
+                                      )
                                     : "—";
                                 return (
                                     <div

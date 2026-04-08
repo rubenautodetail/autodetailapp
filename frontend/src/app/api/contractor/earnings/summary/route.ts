@@ -50,7 +50,9 @@ export async function GET(req: NextRequest) {
         if (pendingErr) throw pendingErr;
 
         const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        // Use Eastern time for "this month" boundary
+        const eastern = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+        const startOfMonth = new Date(eastern.getFullYear(), eastern.getMonth(), 1);
 
         const totalEarned = (completed ?? []).reduce(
             (s, b) => s + (Number(b.total_amount) || 0) * CONTRACTOR_SHARE,
