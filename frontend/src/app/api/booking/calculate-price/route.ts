@@ -38,19 +38,21 @@ export async function POST(req: NextRequest) {
             .from('services')
             .select('*')
             .eq('id', safeServiceId)
+            .eq('is_active', true)
             .single();
 
         if (serviceError || !service) {
             return NextResponse.json({ error: 'Service not found' }, { status: 404 });
         }
 
-        // Fetch add-ons if any
+        // Fetch add-ons if any (only active ones)
         let addOns: AddOn[] = [];
         if (addOnIds.length > 0) {
             const { data: addOnsData } = await supabase
                 .from('add_ons')
                 .select('*')
-                .in('document_id', addOnIds);
+                .in('document_id', addOnIds)
+                .eq('is_active', true);
             addOns = (addOnsData as AddOn[]) || [];
         }
 
