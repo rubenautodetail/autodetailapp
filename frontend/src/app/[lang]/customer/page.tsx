@@ -231,13 +231,13 @@ export default function CustomerDashboardPage() {
                                                         : (isEs ? `Ver ${sortedHistory.length - HISTORY_PREVIEW} más` : `See ${sortedHistory.length - HISTORY_PREVIEW} more`)}
                                                 </button>
                                             )}
-                                            <Link
-                                                href={`/${lang}/customer`}
+                                            <button
+                                                onClick={() => setShowAllHistory(true)}
                                                 className="ml-auto flex items-center gap-1 text-xs text-accent-gold hover:text-white font-bold transition-colors"
                                             >
                                                 {isEs ? 'Ver todas las reservas' : 'See all bookings'}
                                                 <ChevronRight className="w-3.5 h-3.5" />
-                                            </Link>
+                                            </button>
                                         </div>
                                     </div>
                                 )
