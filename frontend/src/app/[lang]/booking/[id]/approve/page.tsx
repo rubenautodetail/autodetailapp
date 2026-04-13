@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+
 
 interface Booking {
     id: string;
@@ -42,27 +42,14 @@ function ApproveServiceContent() {
     useEffect(() => {
         const fetchBooking = async () => {
             try {
-                const supabase = createClient();
-                const { data, error } = await supabase
-                    .from('bookings')
-                    .select('*')
-                    .eq('id', bookingId)
-                    .single();
-
-                if (error || !data) {
+                const res = await fetch(`/api/booking/get?id=${bookingId}`);
+                if (!res.ok) {
                     setError('Booking not found');
                 } else {
-                    // Fetch contractor name via API (bypasses profile RLS)
-                    let profiles = null;
-                    if (data.contractor_id) {
-                        try {
-                            const res = await fetch(`/api/contractors/public-name?id=${data.contractor_id}`);
-                            if (res.ok) { const j = await res.json(); profiles = { full_name: j.name || null, phone_number: null }; }
-                        } catch { /* optional */ }
-                    }
-                    setBooking({ ...data, profiles } as Booking);
-                    if (!confirmationCode && data.confirmation_code) {
-                        setResolvedCode(data.confirmation_code);
+                    const json = await res.json();
+                    setBooking(json.booking as Booking);
+                    if (!confirmationCode && json.booking.confirmation_code) {
+                        setResolvedCode(json.booking.confirmation_code);
                     }
                 }
             } catch {

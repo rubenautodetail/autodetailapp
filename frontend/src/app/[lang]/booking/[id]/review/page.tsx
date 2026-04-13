@@ -64,17 +64,12 @@ export default function LeaveReviewPage() {
     useEffect(() => {
         const fetchBooking = async () => {
             try {
-                const supabase = createClient();
-                const { data, error: fetchError } = await supabase
-                    .from('bookings')
-                    .select('id, confirmation_code, service_name, date, contractor_id')
-                    .eq('id', bookingId)
-                    .single();
-
-                if (fetchError || !data) {
+                const res = await fetch(`/api/booking/get?id=${bookingId}`);
+                if (!res.ok) {
                     setError(t.notFound);
                 } else {
-                    setBooking(data as unknown as ReviewBooking);
+                    const json = await res.json();
+                    setBooking(json.booking as ReviewBooking);
                 }
             } catch {
                 setError(t.notFound);

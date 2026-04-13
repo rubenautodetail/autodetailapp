@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Clock, ChevronLeft, AlertCircle, Info, ChevronDown, XCircle, CalendarClock } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+
 
 interface TimeWindowConfig {
   slot: string;
@@ -42,19 +42,17 @@ export default function ReschedulePage() {
   const [timeSlots, setTimeSlots] = useState<TimeWindowConfig[]>([]);
   const [isLoadingTimeSlots, setIsLoadingTimeSlots] = useState(true);
 
-  // Fetch booking data
+  // Fetch booking data via API (bypasses RLS)
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("bookings")
-      .select("date, status, service_name")
-      .eq("id", id)
-      .single()
-      .then(({ data, error }) => {
-        if (error) console.error("Failed to load booking:", error.message);
-        setBooking(data);
+    fetch(`/api/booking/get?id=${id}`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((json) => {
+        if (json?.booking) {
+          setBooking({ date: json.booking.date, status: json.booking.status, service_name: json.booking.service_name });
+        }
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, [id]);
 
   // Fetch time slots — same logic as the original booking schedule page

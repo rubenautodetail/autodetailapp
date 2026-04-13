@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+
 import { CheckCircle, Star, ChevronRight } from 'lucide-react';
 
 interface ReceiptBooking {
@@ -37,25 +37,12 @@ export default function ReceiptPage() {
     useEffect(() => {
         const fetchBooking = async () => {
             try {
-                const supabase = createClient();
-                const { data, error: fetchError } = await supabase
-                    .from('bookings')
-                    .select('*')
-                    .eq('id', bookingId)
-                    .single();
-
-                if (fetchError || !data) {
+                const res = await fetch(`/api/booking/get?id=${bookingId}`);
+                if (!res.ok) {
                     setError(isEs ? 'Recibo no encontrado.' : 'Receipt not found.');
                 } else {
-                    // Fetch contractor name via API (bypasses profile RLS)
-                    let profiles = null;
-                    if (data.contractor_id) {
-                        try {
-                            const res = await fetch(`/api/contractors/public-name?id=${data.contractor_id}`);
-                            if (res.ok) { const j = await res.json(); profiles = { full_name: j.name || null }; }
-                        } catch { /* optional */ }
-                    }
-                    setBooking({ ...data, profiles } as ReceiptBooking);
+                    const json = await res.json();
+                    setBooking(json.booking as ReceiptBooking);
                 }
             } catch {
                 setError(isEs ? 'Error al cargar el recibo.' : 'Failed to load receipt.');
