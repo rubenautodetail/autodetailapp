@@ -52,58 +52,61 @@ export async function POST(req: NextRequest) {
   const isLateCancellation = hoursUntilBooking < 24 &&
     booking.status !== "pending_payment" && booking.status !== "pending";
 
-  // Cancel Stripe hold if authorized
+  // Process Stripe cancellation / refund (best-effort — never block the cancellation)
+  let stripeError = false;
+
   if (booking.payment_intent_id && booking.payment_status === "authorized") {
     try {
-      if (isLateCancellation) {
-        // Late cancellation: capture 50% as penalty, cancel remaining hold
-        const pi = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
-        const penaltyAmount = Math.round((pi.amount ?? 0) / 2);
-        await stripe.paymentIntents.capture(booking.payment_intent_id, {
-          amount_to_capture: penaltyAmount,
-        });
+      // Check actual Stripe state — auth may have expired
+      const pi = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
+
+      if (pi.status === "requires_capture") {
+        if (isLateCancellation) {
+          const penaltyAmount = Math.round((pi.amount ?? 0) / 2);
+          await stripe.paymentIntents.capture(booking.payment_intent_id, {
+            amount_to_capture: penaltyAmount,
+          });
+        } else {
+          await stripe.paymentIntents.cancel(booking.payment_intent_id);
+        }
+      } else if (pi.status === "canceled") {
+        // Auth already expired/cancelled — nothing to do
+        console.log("Stripe PI already canceled:", booking.payment_intent_id);
       } else {
-        await stripe.paymentIntents.cancel(booking.payment_intent_id);
+        console.warn("Stripe PI unexpected status:", pi.status, booking.payment_intent_id);
+        stripeError = true;
       }
     } catch (e) {
       console.error("Stripe cancel/capture error:", e);
-      return NextResponse.json(
-        { error: "Failed to process cancellation with Stripe" },
-        { status: 500 }
-      );
+      stripeError = true;
     }
   }
 
-  // Refund captured payment if already paid
   if (booking.payment_intent_id && booking.payment_status === "paid") {
     try {
       if (isLateCancellation) {
-        // Late cancellation: refund only 50%
         const pi = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
         const refundAmount = Math.round((pi.amount_received ?? 0) / 2);
-        const refund = await stripe.refunds.create({
+        await stripe.refunds.create({
           payment_intent: booking.payment_intent_id,
           amount: refundAmount,
         });
-        console.log("Stripe partial refund (50%):", refund.id, "amount:", refundAmount);
       } else {
-        const refund = await stripe.refunds.create({
+        await stripe.refunds.create({
           payment_intent: booking.payment_intent_id,
         });
-        console.log("Stripe full refund:", refund.id, "status:", refund.status);
       }
     } catch (e) {
       console.error("Stripe refund error:", e);
-      return NextResponse.json(
-        { error: "Failed to refund payment. Please contact support." },
-        { status: 500 }
-      );
+      stripeError = true;
     }
   }
 
-  const newPaymentStatus = booking.payment_intent_id
-    ? isLateCancellation ? "partially_refunded" : (booking.payment_status === "paid" ? "refunded" : "cancelled")
-    : "unpaid";
+  const newPaymentStatus = stripeError
+    ? "requires_admin_review"
+    : booking.payment_intent_id
+      ? isLateCancellation ? "partially_refunded" : (booking.payment_status === "paid" ? "refunded" : "cancelled")
+      : "unpaid";
 
   const cancelledAt = new Date().toISOString();
   const { error } = await supabase
@@ -120,7 +123,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to cancel booking" }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    ...(stripeError && { warning: "Booking cancelled but Stripe processing needs admin review." }),
+  });
   } catch (err) {
     console.error('booking/cancel error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

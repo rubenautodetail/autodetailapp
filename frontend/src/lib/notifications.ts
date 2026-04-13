@@ -25,6 +25,7 @@ type NotificationEvent =
     | { type: 'booking.pending_approval'; booking: any }
     | { type: 'booking.approved'; booking: any; contractorEmail: string }
     | { type: 'contractor.job_assigned'; booking: any; contractorEmail: string }
+    | { type: 'contractor.job_cancelled'; booking: any; contractorEmail: string }
     | { type: 'contractor.job_accepted'; booking: any; contractor: any; contractorEmail?: string }
     | { type: 'contractor.job_rejected'; booking: any }
     | { type: 'contractor.en_route'; booking: any }
@@ -196,6 +197,14 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 // Email only — in-app notifications are batch-inserted by the caller
                 // with the correct contractor user_id (booking.contractor_id is null at this stage)
                 await sendNewJobToContractor(mapBookingData(event.booking), event.contractorEmail);
+                break;
+
+            case 'contractor.job_cancelled':
+                // Notify contractor via email that a job was removed from their schedule
+                await sendBookingCancelledEmail({
+                    ...mapBookingData(event.booking),
+                    customer: { ...mapBookingData(event.booking).customer, email: event.contractorEmail },
+                });
                 break;
 
             case 'contractor.job_accepted': {

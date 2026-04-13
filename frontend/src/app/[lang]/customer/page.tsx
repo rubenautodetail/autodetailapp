@@ -187,7 +187,7 @@ export default function CustomerDashboardPage() {
                                             return (
                                                 <Link
                                                     key={b.id}
-                                                    href={`/${lang}/customer/bookings/${b.id}`}
+                                                    href={`/${lang}/booking/${b.id}/track`}
                                                     className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-white/5 cursor-pointer ${isCancelled ? 'opacity-45' : ''}`}
                                                 >
                                                     <RowIcon className={`w-4 h-4 shrink-0 ${iconColor}`} />
