@@ -89,7 +89,7 @@ export default function ReceiptPage() {
 
     return (
         <div className="min-h-screen bg-bg-primary py-12 px-4">
-            <div className="max-w-lg mx-auto">
+            <div className="max-w-2xl mx-auto">
                 {/* Success header */}
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-accent-gold/10 border border-accent-gold/30 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -206,8 +206,16 @@ export default function CustomerDashboardPage() {
                                                     {isCompleted && (
                                                         <span
                                                             onClick={(e) => e.stopPropagation()}
-                                                            className="shrink-0"
+                                                            className="shrink-0 flex gap-2"
                                                         >
+                                                            {!b.reviewRating && (
+                                                                <Link
+                                                                    href={`/${lang}/booking/${b.id}/review`}
+                                                                    className="text-xs text-white hover:text-accent-gold font-bold px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 transition-all"
+                                                                >
+                                                                    {isEs ? 'Reseña' : 'Review'}
+                                                                </Link>
+                                                            )}
                                                             <Link
                                                                 href={`/${lang}/booking/select?service=${encodeURIComponent(b.serviceName)}`}
                                                                 className="text-xs text-accent-gold hover:text-white font-bold px-2 py-1 rounded-lg bg-accent-gold/10 hover:bg-accent-gold/20 transition-all"

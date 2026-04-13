@@ -447,7 +447,7 @@ export default function TrackBookingPage() {
         <div className="min-h-screen bg-gray-950 text-white pb-24">
             {/* ── Header ──────────────────────────────────────────────────── */}
             <div className="bg-gray-900 border-b border-gray-800 px-4 py-5">
-                <div className="max-w-lg mx-auto">
+                <div className="max-w-2xl mx-auto">
                     <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
                         {isEs ? 'Seguimiento de Reserva' : 'Booking Tracking'}
                     </p>
@@ -469,7 +469,7 @@ export default function TrackBookingPage() {
                 </div>
             </div>
 
-            <div className="max-w-lg mx-auto px-4 py-8 space-y-8">
+            <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
                 {/* ── Timeline ────────────────────────────────────────────── */}
                 <div className="relative">
                     <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-800" aria-hidden="true" />
@@ -742,7 +742,7 @@ export default function TrackBookingPage() {
 
             {/* ── Sticky support CTA ──────────────────────────────────────── */}
             <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur border-t border-gray-800 px-4 py-4">
-                <div className="max-w-lg mx-auto">
+                <div className="max-w-2xl mx-auto">
                     {supportPhone ? (
                         <a
                             href={`tel:${supportPhone}`}

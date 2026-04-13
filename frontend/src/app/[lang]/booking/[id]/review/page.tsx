@@ -189,7 +189,7 @@ export default function LeaveReviewPage() {
 
     return (
         <div className="min-h-screen bg-[#131835] py-12 px-4">
-            <div className="max-w-lg mx-auto space-y-6">
+            <div className="max-w-2xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="text-center">
                     <div className="w-16 h-16 bg-[#D0B078]/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-[#D0B078]/20">

@@ -22,6 +22,7 @@ export interface Booking {
     customerAddress: string;
     paymentStatus?: string;
     confirmationCode?: string;
+    reviewRating?: number | null;
 }
 
 export interface ToastMessage {
@@ -179,6 +180,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                         confirmationCode: b.confirmation_code as string | undefined,
                         providerName: b.contractor_id ? contractorNames[b.contractor_id as string] : undefined,
                         providerRating: undefined,
+                        reviewRating: (b.review_rating as number | null) ?? null,
                     })));
                 }
             } catch {
