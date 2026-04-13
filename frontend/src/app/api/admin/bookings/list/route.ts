@@ -86,6 +86,8 @@ export async function GET(req: NextRequest) {
     contractorId: b.contractor_id ?? null,
     contractorName: b.contractor_id ? (nameMap[b.contractor_id] ?? "—") : null,
     paymentIntentId: b.payment_intent_id ?? null,
+    reviewRating: b.review_rating ?? null,
+    reviewComment: b.review_comment ?? null,
   }));
 
   return NextResponse.json({ bookings, total: count ?? 0 });
