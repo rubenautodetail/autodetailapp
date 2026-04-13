@@ -162,38 +162,27 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 setVehicles(vehicleData.map(mapDbVehicleToVehicle));
             }
 
-            // Fetch bookings from Supabase (no profile join — RLS blocks cross-user reads)
-            const { data: bookingData } = await supabase
-                .from('bookings')
-                .select('*')
-                .eq('customer_email', userEmail)
-                .order('created_at', { ascending: false })
-                .limit(20);
-
-            if (bookingData) {
-                // Fetch contractor names in bulk via API
-                const contractorIds = [...new Set(bookingData.filter(b => b.contractor_id).map(b => b.contractor_id as string))];
-                const contractorNames: Record<string, string> = {};
-                await Promise.all(contractorIds.map(async (cid) => {
-                    try {
-                        const res = await fetch(`/api/contractors/public-name?id=${cid}`);
-                        if (res.ok) { const j = await res.json(); if (j.name) contractorNames[cid] = j.name; }
-                    } catch { /* optional */ }
-                }));
-
-                setBookings(bookingData.map((b) => ({
-                    id: b.id.toString(),
-                    serviceName: (b as Record<string, unknown>).service_name as string || 'Auto Detail',
-                    date: b.date,
-                    time: b.time_window || 'N/A',
-                    status: (b.status as BookingStatus) || 'pending',
-                    price: Number(b.total_amount) || 0,
-                    customerAddress: b.address || 'N/A',
-                    paymentStatus: (b as Record<string, unknown>).payment_status as string | undefined,
-                    confirmationCode: (b as Record<string, unknown>).confirmation_code as string | undefined,
-                    providerName: b.contractor_id ? contractorNames[b.contractor_id] : undefined,
-                    providerRating: undefined,
-                })));
+            // Fetch bookings via API route (bypasses RLS issues with client-side queries)
+            try {
+                const bookingsRes = await fetch('/api/booking/list');
+                if (bookingsRes.ok) {
+                    const { bookings: bookingData, contractorNames } = await bookingsRes.json();
+                    setBookings((bookingData ?? []).map((b: Record<string, unknown>) => ({
+                        id: String(b.id),
+                        serviceName: (b.service_name as string) || 'Auto Detail',
+                        date: b.date as string,
+                        time: (b.time_window as string) || 'N/A',
+                        status: (b.status as BookingStatus) || 'pending',
+                        price: Number(b.total_amount) || 0,
+                        customerAddress: (b.address as string) || 'N/A',
+                        paymentStatus: b.payment_status as string | undefined,
+                        confirmationCode: b.confirmation_code as string | undefined,
+                        providerName: b.contractor_id ? contractorNames[b.contractor_id as string] : undefined,
+                        providerRating: undefined,
+                    })));
+                }
+            } catch {
+                console.error('Failed to fetch bookings via API');
             }
 
             setIsLoading(false);
