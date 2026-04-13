@@ -229,9 +229,12 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                         const currentLang = typeof window !== 'undefined'
                             ? (window.location.pathname.split('/')[1] || 'en')
                             : 'en';
+                        const isEs = currentLang === 'es';
                         addNotification({
-                            title: 'Job Complete!',
-                            message: `Order ${confirmationCode ?? bookingId} is done. Leave a review.`,
+                            title: isEs ? '¡Trabajo Completado!' : 'Job Complete!',
+                            message: isEs
+                                ? `Orden ${confirmationCode ?? bookingId} lista. Deja una reseña.`
+                                : `Order ${confirmationCode ?? bookingId} is done. Leave a review.`,
                             type: 'success',
                             link: `/${currentLang}/booking/${bookingId}/review`,
                         });

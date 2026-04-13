@@ -152,7 +152,7 @@ export default function ReschedulePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#131835] px-6 py-8">
+    <div className="min-h-screen bg-[#131835] px-6 py-8 max-w-2xl mx-auto">
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-[#A5B0D1] hover:text-white mb-6 transition-colors"

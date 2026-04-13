@@ -199,6 +199,8 @@ export default function TrackBookingPage() {
     const [catalogTab, setCatalogTab]           = useState<'services' | 'addons'>('addons');
     const [selectedItems, setSelectedItems]     = useState<CatalogItem[]>([]);
     const [addLoading, setAddLoading]           = useState(false);
+    const [approving, setApproving]             = useState(false);
+    const [approveError, setApproveError]       = useState('');
     const [addSuccess, setAddSuccess]           = useState(false);
     const [addError, setAddError]               = useState('');
 
@@ -409,9 +411,6 @@ export default function TrackBookingPage() {
             </div>
         );
     }
-
-    const [approving, setApproving] = useState(false);
-    const [approveError, setApproveError] = useState('');
 
     const handleApprove = async () => {
         if (!booking) return;
@@ -641,6 +640,20 @@ export default function TrackBookingPage() {
                                     </span>
                                 </p>
                             </div>
+                        </div>
+                        <div className="flex gap-3 mt-4">
+                            <a
+                                href={`/${lang}/booking/${bookingId}/review`}
+                                className="flex-1 bg-yellow-400 text-gray-950 font-bold py-3 rounded-xl text-center text-sm hover:bg-yellow-300 transition-colors"
+                            >
+                                {isEs ? 'Dejar una Reseña' : 'Leave a Review'}
+                            </a>
+                            <a
+                                href={`/${lang}/booking/${bookingId}/receipt`}
+                                className="flex-1 bg-gray-800 text-white font-semibold py-3 rounded-xl text-center text-sm hover:bg-gray-700 transition-colors border border-gray-700"
+                            >
+                                {isEs ? 'Ver Recibo' : 'View Receipt'}
+                            </a>
                         </div>
                     </div>
                 )}

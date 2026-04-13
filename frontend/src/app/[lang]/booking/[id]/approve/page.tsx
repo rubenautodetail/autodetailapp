@@ -44,7 +44,7 @@ function ApproveServiceContent() {
             try {
                 const res = await fetch(`/api/booking/get?id=${bookingId}`);
                 if (!res.ok) {
-                    setError('Booking not found');
+                    setError(lang === 'es' ? 'Reserva no encontrada' : 'Booking not found');
                 } else {
                     const json = await res.json();
                     setBooking(json.booking as Booking);
@@ -53,7 +53,7 @@ function ApproveServiceContent() {
                     }
                 }
             } catch {
-                setError('Failed to load booking');
+                setError(lang === 'es' ? 'Error al cargar la reserva' : 'Failed to load booking');
             } finally {
                 setLoading(false);
             }
@@ -64,7 +64,7 @@ function ApproveServiceContent() {
 
     const handleApprove = async () => {
         if (!resolvedCode) {
-            setError('Unable to verify booking. Please try again or use the link from your email.');
+            setError(lang === 'es' ? 'No se pudo verificar la reserva. Intenta de nuevo o usa el enlace de tu correo.' : 'Unable to verify booking. Please try again or use the link from your email.');
             return;
         }
         setSubmitting(true);
@@ -79,10 +79,10 @@ function ApproveServiceContent() {
                 router.push(`/${lang}/booking/${bookingId}/receipt`);
             } else {
                 const data = await res.json();
-                setError(data.error || 'Failed to approve. Please try again.');
+                setError(data.error || (lang === 'es' ? 'Error al aprobar. Intenta de nuevo.' : 'Failed to approve. Please try again.'));
             }
         } catch {
-            setError('An error occurred. Please try again.');
+            setError(lang === 'es' ? 'Ocurrió un error. Intenta de nuevo.' : 'An error occurred. Please try again.');
         } finally {
             setSubmitting(false);
         }
