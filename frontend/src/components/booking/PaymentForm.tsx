@@ -161,8 +161,6 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   const [bookingCreated, setBookingCreated] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  // Track the booking ID so a payment retry (after client-side Stripe error) reuses the same booking
-  const [createdBookingDocId, setCreatedBookingDocId] = useState<string | null>(null);
 
   // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
@@ -233,7 +231,6 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
 
       const data = await res.json();
       setConfirmationCode(data.confirmationCode || "");
-      setCreatedBookingDocId(data.bookingId);
       setClientSecret(data.clientSecret);
       setPaymentIntentId(data.paymentIntentId);
       setBookingCreated(true);

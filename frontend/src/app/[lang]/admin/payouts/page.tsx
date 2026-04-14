@@ -289,26 +289,26 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
     }
 
     return (
-        <div className="min-h-screen bg-[#131835] py-8 px-4">
+        <div className="min-h-screen bg-gray-50 py-8 px-4">
             <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header */}
                 <div>
-                    <Link href={`/${lang}/admin`} className="text-sm text-[#A5B0D1] hover:text-white transition-colors">
+                    <Link href={`/${lang}/admin`} className="text-sm text-blue-600 hover:underline transition-colors">
                         {t.back}
                     </Link>
-                    <h1 className="text-3xl font-bold text-white mt-1">{t.title}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mt-1">{t.title}</h1>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-2 border-b border-[#2C355E] pb-0">
+                <div className="flex gap-2 border-b border-gray-200 pb-0">
                     {(["pay-now", "history"] as Tab[]).map((tabId) => (
                         <button
                             key={tabId}
                             onClick={() => setTab(tabId)}
                             className={`px-5 py-2.5 text-sm font-semibold rounded-t-xl transition-colors ${
                                 tab === tabId
-                                    ? "bg-[#1A2142] text-[#D0B078] border border-b-0 border-[#2C355E]"
-                                    : "text-[#5E698F] hover:text-white"
+                                    ? "bg-white text-blue-600 border border-b-0 border-gray-200"
+                                    : "text-gray-500 hover:text-gray-900"
                             }`}
                         >
                             {tabId === "pay-now" ? (
@@ -316,7 +316,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                     <span className="text-base">💳</span>
                                     {t.tabPayNow}
                                     {unpaid.length > 0 && tabId === "pay-now" && (
-                                        <span className="ml-1 bg-[#D0B078] text-[#131835] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                        <span className="ml-1 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                                             {unpaid.length}
                                         </span>
                                     )}
@@ -333,35 +333,35 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
 
                 {/* ── PAY NOW TAB ────────────────────────────────────── */}
                 {tab === "pay-now" && (
-                    <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                         {unpaidLoading ? (
-                            <div className="py-16 text-center text-[#5E698F]">{t.loading}</div>
+                            <div className="py-16 text-center text-gray-500">{t.loading}</div>
                         ) : unpaid.length === 0 ? (
                             <div className="py-16 text-center">
                                 <div className="text-4xl mb-3">✅</div>
-                                <p className="text-white font-semibold mb-1">{t.noUnpaid}</p>
-                                <p className="text-[#5E698F] text-sm">{t.noUnpaidDesc}</p>
+                                <p className="text-gray-900 font-semibold mb-1">{t.noUnpaid}</p>
+                                <p className="text-gray-500 text-sm">{t.noUnpaidDesc}</p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="border-b border-[#2C355E]">
+                                        <tr className="border-b border-gray-200 bg-gray-50">
                                             {[t.contractor, t.jobs, t.oldest, t.gross, t.fee, t.net, ""].map((h, i) => (
-                                                <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider">
+                                                <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
                                                     {h}
                                                 </th>
                                             ))}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#2C355E]">
+                                    <tbody className="divide-y divide-gray-100">
                                         {unpaid.map((u) => (
-                                            <tr key={u.contractor_id} className="hover:bg-white/[0.02] transition-colors">
+                                            <tr key={u.contractor_id} className="hover:bg-gray-50 transition-colors">
                                                 <td className="px-4 py-4">
-                                                    <p className="font-medium text-white">{u.contractor?.full_name ?? "—"}</p>
-                                                    <p className="text-[#5E698F] text-xs">{u.contractor?.email ?? ""}</p>
+                                                    <p className="font-medium text-gray-900">{u.contractor?.full_name ?? "—"}</p>
+                                                    <p className="text-gray-500 text-xs">{u.contractor?.email ?? ""}</p>
                                                     {u.contractor?.payment_preference && (
-                                                        <p className="text-[#D0B078] text-xs mt-0.5">
+                                                        <p className="text-blue-600 text-xs mt-0.5">
                                                             {methodLabel(u.contractor.payment_preference)}
                                                             {u.contractor.payment_preference === "zelle" && u.contractor.zelle_contact
                                                                 ? ` · ${u.contractor.zelle_contact}` : ""}
@@ -371,24 +371,24 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-4">
-                                                    <p className="text-white font-medium">{u.total_bookings}</p>
+                                                    <p className="text-gray-900 font-medium">{u.total_bookings}</p>
                                                     {u.booking_codes && u.booking_codes.length > 0 && (
                                                         <div className="flex flex-wrap gap-1 mt-1">
                                                             {u.booking_codes.map((code) => (
-                                                                <span key={code} className="font-mono text-[10px] font-semibold text-[#D0B078] bg-[#D0B078]/10 px-1.5 py-0.5 rounded">
+                                                                <span key={code} className="font-mono text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
                                                                     {code}
                                                                 </span>
                                                             ))}
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-4 text-[#A5B0D1] text-xs">
+                                                <td className="px-4 py-4 text-gray-500 text-xs">
                                                     {u.oldest_job_date ? fmtDate(u.oldest_job_date, lang) : "—"}
                                                 </td>
-                                                <td className="px-4 py-4 text-white">${Number(u.gross_amount).toFixed(2)}</td>
-                                                <td className="px-4 py-4 text-red-400">−${Number(u.platform_fee).toFixed(2)}</td>
+                                                <td className="px-4 py-4 text-gray-900">${Number(u.gross_amount).toFixed(2)}</td>
+                                                <td className="px-4 py-4 text-red-600">−${Number(u.platform_fee).toFixed(2)}</td>
                                                 <td className="px-4 py-4">
-                                                    <span className="text-green-400 font-bold text-base">
+                                                    <span className="text-green-700 font-bold text-base">
                                                         ${Number(u.contractor_amount).toFixed(2)}
                                                     </span>
                                                 </td>
@@ -400,7 +400,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                                             setPayReference("");
                                                             setPayNotes("");
                                                         }}
-                                                        className="px-4 py-2 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90 whitespace-nowrap"
+                                                        className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 whitespace-nowrap"
                                                     >
                                                         {t.payNow}
                                                     </button>
@@ -418,13 +418,13 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                 {tab === "history" && (
                     <>
                         {/* Filters */}
-                        <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                        <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-end">
                             <div className="flex-1">
-                                <label className="block text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-2">{t.week}</label>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.week}</label>
                                 <select
                                     value={selectedWeek}
                                     onChange={(e) => setSelectedWeek(e.target.value)}
-                                    className="w-full bg-[#131835] border border-[#2C355E] text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078]"
+                                    className="w-full bg-white border border-gray-200 text-gray-900 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     {weekOptions.map((w) => (
                                         <option key={w} value={w}>
@@ -435,7 +435,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-2">{t.status}</label>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.status}</label>
                                 <div className="flex gap-2">
                                     {(["all", "pending", "paid"] as const).map((s) => (
                                         <button
@@ -443,8 +443,8 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                             onClick={() => setStatusFilter(s)}
                                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                                 statusFilter === s
-                                                    ? "bg-[#D0B078] text-[#131835]"
-                                                    : "bg-[#131835] text-[#A5B0D1] border border-[#2C355E] hover:border-[#D0B078]"
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
                                             }`}
                                         >
                                             {s === "all" ? t.all : s === "pending" ? t.pending : t.paid}
@@ -455,66 +455,66 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                             <button
                                 onClick={handleGenerate}
                                 disabled={generating}
-                                className="px-5 py-2.5 bg-[#2C355E] text-[#A5B0D1] hover:text-white font-semibold rounded-xl hover:bg-[#3A4570] disabled:opacity-50 text-sm whitespace-nowrap border border-[#3A4570]"
+                                className="px-5 py-2.5 bg-gray-100 text-gray-700 hover:text-gray-900 font-semibold rounded-xl hover:bg-gray-200 disabled:opacity-50 text-sm whitespace-nowrap border border-gray-200"
                             >
                                 {generating ? t.generating : t.generate}
                             </button>
                         </div>
 
-                        <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
+                        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                             {histLoading ? (
-                                <div className="py-16 text-center text-[#5E698F]">{t.loading}</div>
+                                <div className="py-16 text-center text-gray-500">{t.loading}</div>
                             ) : payouts.length === 0 ? (
                                 <div className="py-16 text-center">
-                                    <p className="text-white font-medium mb-1">{t.noPayouts}</p>
-                                    <p className="text-[#5E698F] text-sm">{t.noPayoutsDesc}</p>
+                                    <p className="text-gray-900 font-medium mb-1">{t.noPayouts}</p>
+                                    <p className="text-gray-500 text-sm">{t.noPayoutsDesc}</p>
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
-                                            <tr className="border-b border-[#2C355E]">
+                                            <tr className="border-b border-gray-200 bg-gray-50">
                                                 {[t.contractor, t.jobs, t.gross, t.fee, t.net, t.method, t.status, ""].map((h, i) => (
-                                                    <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider">
+                                                    <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
                                                         {h}
                                                     </th>
                                                 ))}
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-[#2C355E]">
+                                        <tbody className="divide-y divide-gray-100">
                                             {payouts.map((p) => (
-                                                <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
+                                                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                                                     <td className="px-4 py-4">
-                                                        <p className="font-medium text-white">{p.contractor?.full_name ?? "—"}</p>
-                                                        <p className="text-[#5E698F] text-xs">{p.contractor?.email ?? ""}</p>
+                                                        <p className="font-medium text-gray-900">{p.contractor?.full_name ?? "—"}</p>
+                                                        <p className="text-gray-500 text-xs">{p.contractor?.email ?? ""}</p>
                                                         {p.contractor?.payment_preference && (
-                                                            <p className="text-[#D0B078] text-xs mt-0.5">
+                                                            <p className="text-blue-600 text-xs mt-0.5">
                                                                 {methodLabel(p.contractor.payment_preference)}
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-4 text-white">{p.total_bookings}</td>
-                                                    <td className="px-4 py-4 text-white">${Number(p.gross_amount).toFixed(2)}</td>
-                                                    <td className="px-4 py-4 text-red-400">−${Number(p.platform_fee).toFixed(2)}</td>
-                                                    <td className="px-4 py-4 text-green-400 font-semibold">${Number(p.contractor_amount).toFixed(2)}</td>
-                                                    <td className="px-4 py-4 text-[#A5B0D1]">
+                                                    <td className="px-4 py-4 text-gray-900">{p.total_bookings}</td>
+                                                    <td className="px-4 py-4 text-gray-900">${Number(p.gross_amount).toFixed(2)}</td>
+                                                    <td className="px-4 py-4 text-red-600">−${Number(p.platform_fee).toFixed(2)}</td>
+                                                    <td className="px-4 py-4 text-green-700 font-semibold">${Number(p.contractor_amount).toFixed(2)}</td>
+                                                    <td className="px-4 py-4 text-gray-600">
                                                         {p.status === "paid" ? methodLabel(p.payment_method) : "—"}
                                                     </td>
                                                     <td className="px-4 py-4">
                                                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
                                                             p.status === "paid"
-                                                                ? "bg-green-500/20 text-green-400"
-                                                                : "bg-yellow-500/20 text-yellow-400"
+                                                                ? "bg-green-100 text-green-700"
+                                                                : "bg-yellow-100 text-yellow-700"
                                                         }`}>
                                                             {p.status === "paid" ? t.paidBadge : t.pendingBadge}
                                                         </span>
                                                         {p.status === "paid" && p.paid_at && (
-                                                            <p className="text-[#5E698F] text-xs mt-0.5">
+                                                            <p className="text-gray-500 text-xs mt-0.5">
                                                                 {fmtDate(p.paid_at.slice(0, 10), lang)}
                                                             </p>
                                                         )}
                                                         {p.notes && (
-                                                            <p className="text-[#5E698F] text-xs mt-0.5 max-w-[120px] truncate" title={p.notes}>
+                                                            <p className="text-gray-500 text-xs mt-0.5 max-w-[120px] truncate" title={p.notes}>
                                                                 {p.notes}
                                                             </p>
                                                         )}
@@ -528,7 +528,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                                                     setMarkReference("");
                                                                     setMarkNotes("");
                                                                 }}
-                                                                className="px-3 py-1.5 bg-[#D0B078] text-[#131835] text-xs font-bold rounded-lg hover:opacity-90 whitespace-nowrap"
+                                                                className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 whitespace-nowrap"
                                                             >
                                                                 {t.markPaid}
                                                             </button>
@@ -624,28 +624,28 @@ function PaymentModal({
     onCancel: () => void;
 }) {
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1A2142] border border-[#2C355E] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
                 {/* Header */}
                 <div className="mb-5">
-                    <h3 className="text-lg font-bold text-white">{t.modalTitle}</h3>
-                    <p className="text-[#A5B0D1] text-sm mt-0.5">{title}</p>
+                    <h3 className="text-lg font-bold text-gray-900">{t.modalTitle}</h3>
+                    <p className="text-gray-500 text-sm mt-0.5">{title}</p>
                 </div>
 
                 {/* Amount summary */}
-                <div className="bg-[#131835] rounded-xl p-4 mb-5 flex items-center justify-between">
+                <div className="bg-gray-50 rounded-xl p-4 mb-5 flex items-center justify-between">
                     <div>
-                        <p className="text-[#5E698F] text-xs font-semibold uppercase tracking-wider">
+                        <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider">
                             {jobs} {isEs ? "trabajos" : "jobs"}{period ? ` · ${period}` : ""}
                         </p>
-                        <p className="text-3xl font-bold text-green-400 mt-1">${amount.toFixed(2)}</p>
+                        <p className="text-3xl font-bold text-green-700 mt-1">${amount.toFixed(2)}</p>
                     </div>
                     <div className="text-4xl">💸</div>
                 </div>
 
                 {/* Payment method */}
                 <div className="mb-4">
-                    <label className="block text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-2">{t.method}</label>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.method}</label>
                     <div className="grid grid-cols-2 gap-2">
                         {PAYMENT_METHODS.map((m) => (
                             <button
@@ -653,8 +653,8 @@ function PaymentModal({
                                 onClick={() => setMethod(m.value)}
                                 className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2 ${
                                     method === m.value
-                                        ? "bg-[#D0B078] text-[#131835] border-[#D0B078]"
-                                        : "bg-[#131835] text-[#A5B0D1] border-[#2C355E] hover:border-[#D0B078]"
+                                        ? "bg-blue-600 text-white border-blue-600"
+                                        : "bg-white text-gray-600 border-gray-200 hover:border-blue-400"
                                 }`}
                             >
                                 <span>{m.icon}</span>
@@ -666,25 +666,25 @@ function PaymentModal({
 
                 {/* Reference # */}
                 <div className="mb-4">
-                    <label className="block text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-2">{t.reference}</label>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.reference}</label>
                     <input
                         type="text"
                         value={reference}
                         onChange={(e) => setReference(e.target.value)}
                         placeholder={t.referencePlh}
-                        className="w-full bg-white text-gray-900 border border-[#2C355E] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078]"
+                        className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
 
                 {/* Notes */}
                 <div className="mb-6">
-                    <label className="block text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-2">{t.notes}</label>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.notes}</label>
                     <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         rows={2}
                         placeholder={isEs ? "Cualquier nota adicional..." : "Any additional notes..."}
-                        className="w-full bg-white text-gray-900 border border-[#2C355E] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] resize-none"
+                        className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     />
                 </div>
 
@@ -692,17 +692,17 @@ function PaymentModal({
                 <div className="flex gap-3">
                     <button
                         onClick={onCancel}
-                        className="flex-1 px-4 py-2.5 bg-white/5 text-white rounded-xl hover:bg-white/10 text-sm font-medium"
+                        className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 text-sm font-medium"
                     >
                         {t.cancel}
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={loading}
-                        className="flex-1 px-4 py-2.5 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                        className="flex-1 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                     >
                         {loading ? (
-                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#131835]" />
+                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                         ) : (
                             <>{t.confirm} ✓</>
                         )}

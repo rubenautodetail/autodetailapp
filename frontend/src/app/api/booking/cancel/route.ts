@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
-  // Verify ownership
-  if (booking.customer_email !== user.email) {
+  // Verify ownership: primary check by user_id, fallback to email
+  if (booking.user_id !== user.id && booking.customer_email !== user.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 

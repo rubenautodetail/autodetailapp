@@ -281,51 +281,18 @@ export default function AdminTimeWindowsPage({ params }: AdminTimeWindowsProps) 
                       <td className="px-6 py-3 text-sm font-medium text-gray-900">
                         {window.slot}
                       </td>
-                      <td className="px-6 py-3">
-                        <input
-                          type="text"
-                          value={window.label ?? ''}
-                          onChange={(e) => {
-                            setEditWindow(prev => prev ? { ...prev, label: e.target.value } : null);
-                            // For new items, we need to handle differently
-                            if (!editWindow || editWindow.id !== window.id) {
-                              const newWindow = { ...window, label: e.target.value };
-                              setEditWindow(newWindow);
-                            }
-                          }}
-                          className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
-                          disabled={!!(showForm && editWindow && editWindow.id !== window.id)}
-                        />
+                      <td className="px-6 py-3 text-sm text-gray-900">
+                        {window.label ?? '—'}
+                      </td>
+                      <td className="px-6 py-3 text-sm text-gray-900">
+                        {window.labelEs ?? '—'}
                       </td>
                       <td className="px-6 py-3">
-                        <input
-                          type="text"
-                          value={window.labelEs ?? ''}
-                          onChange={(e) => {
-                            if (!editWindow || editWindow.id !== window.id) {
-                              const newWindow = { ...window, labelEs: e.target.value };
-                              setEditWindow(newWindow);
-                            }
-                          }}
-                          className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
-                          disabled={!!(showForm && editWindow && editWindow.id !== window.id)}
-                        />
-                      </td>
-                      <td className="px-6 py-3">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={window.is_active ?? true}
-                            onChange={(e) => {
-                              if (!editWindow || editWindow.id !== window.id) {
-                                const newWindow = { ...window, is_active: e.target.checked };
-                                setEditWindow(newWindow);
-                              }
-                            }}
-                            className="w-4 h-4 accent-blue-600"
-                          />
-                          <span className="text-sm text-gray-700">{window.is_active ? t.active : t.inactive}</span>
-                        </label>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          window.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {window.is_active ? t.active : t.inactive}
+                        </span>
                       </td>
                       <td className="px-6 py-3 text-sm text-gray-500">
                         {window.sort_order}

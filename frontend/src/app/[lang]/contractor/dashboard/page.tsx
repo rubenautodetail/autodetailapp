@@ -2,15 +2,12 @@
 
 import { useState, useEffect, useRef, use } from "react";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatTimeWindow } from "@/lib/dateUtils";
+import { createClient } from "@/lib/supabase/client";
 
-// Supabase browser client for realtime — uses anon key (safe for client-side)
-const supabaseClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Supabase browser client for realtime
+const supabaseClient = createClient();
 
 interface DashboardProps {
     params: Promise<{ lang: "en" | "es" }>;

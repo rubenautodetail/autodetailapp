@@ -31,7 +31,7 @@ interface ContractorSummary {
   jobs: CompletedJob[];
 }
 
-const PLATFORM_FEE_RATE = 0.30;
+const PLATFORM_FEE_RATE = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE || 30) / 100;
 
 export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
   const { lang } = use(params);

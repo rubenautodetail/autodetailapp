@@ -40,12 +40,12 @@ export async function GET(req: NextRequest) {
                 .select('id', { count: 'exact', head: true })
                 .eq('status', 'pending_payment'),
 
-            // Total revenue from all completed+paid bookings
+            // Total revenue from completed bookings with valid payment
             supabase
                 .from('bookings')
-                .select('total_amount')
+                .select('total_amount, payment_status')
                 .eq('status', 'completed')
-                .eq('payment_status', 'paid'),
+                .in('payment_status', ['paid', 'captured', 'partially_refunded']),
 
             // Completed this calendar month
             supabase

@@ -104,22 +104,6 @@ export interface AvailabilityResponse {
     } | null;
 }
 
-// Slot Hold Types
-export interface SlotHoldResponse {
-    success: boolean;
-    message?: string;
-    holdToken?: string;
-    expiresAt?: string;
-    contractor?: {
-        id: string;
-        name: string;
-    };
-    slot?: {
-        date: string;
-        timeWindow: string;
-        duration: number;
-    };
-}
 
 class ApiClient {
     private baseUrl: string;
@@ -240,16 +224,6 @@ class ApiClient {
         return response.json();
     }
 
-    async holdSlot(zipCode: string, date: string, timeWindow: string, duration: number): Promise<SlotHoldResponse> {
-        const base = getNextApiBase();
-        const response = await fetch(`${base}/api/booking/hold-slot`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ zipCode, date, timeWindow, duration }),
-        });
-        if (!response.ok) throw new Error(`hold-slot failed: ${response.status}`);
-        return response.json();
-    }
 }
 
 // Singleton instance — baseUrl unused since all methods use Next.js API routes

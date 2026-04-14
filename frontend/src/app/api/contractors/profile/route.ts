@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
             .from('profiles')
             .select('approval_status')
             .eq('id', user.id)
-            .single();
-        if ((approvalCheck as any)?.approval_status !== 'approved') {
+            .single<{ approval_status: string | null }>();
+        if (approvalCheck?.approval_status !== 'approved') {
             return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
         }
 
@@ -90,8 +90,8 @@ export async function PATCH(req: NextRequest) {
             .from('profiles')
             .select('approval_status')
             .eq('id', user.id)
-            .single();
-        if ((approvalCheck as any)?.approval_status !== 'approved') {
+            .single<{ approval_status: string | null }>();
+        if (approvalCheck?.approval_status !== 'approved') {
             return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
         }
 
@@ -159,7 +159,7 @@ export async function PATCH(req: NextRequest) {
 
         const { data: updated, error: dbError } = await supabase
             .from('profiles')
-            .update(updates as any)
+            .update(updates)
             .eq('id', user.id)
             .select()
             .single();

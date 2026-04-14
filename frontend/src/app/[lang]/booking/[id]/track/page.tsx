@@ -170,7 +170,7 @@ function PlusIcon({ className }: { className?: string }) {
 }
 
 function StepIcon({ icon, state }: { icon: Step['icon']; state: 'complete' | 'active' | 'upcoming' }) {
-    const iconClass = `w-5 h-5 ${state === 'upcoming' ? 'text-gray-600' : 'text-gray-950'}`;
+    const iconClass = `w-5 h-5 ${state === 'upcoming' ? 'text-[#A5B0D1]' : 'text-[#0F1629]'}`;
     if (state === 'complete') return <CheckIcon className={iconClass} />;
     switch (icon) {
         case 'truck':  return <TruckIcon className={iconClass} />;
@@ -332,10 +332,10 @@ export default function TrackBookingPage() {
     // ── Loading ──────────────────────────────────────────────────────────────
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+            <div className="min-h-screen bg-[#0F1629] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
-                    <p className="mt-4 text-gray-400 text-sm">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078] mx-auto" />
+                    <p className="mt-4 text-[#A5B0D1] text-sm">
                         {isEs ? 'Cargando seguimiento...' : 'Loading tracking...'}
                     </p>
                 </div>
@@ -346,8 +346,8 @@ export default function TrackBookingPage() {
     // ── Error ────────────────────────────────────────────────────────────────
     if (error || !booking) {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-                <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8 text-center max-w-md w-full">
+            <div className="min-h-screen bg-[#0F1629] flex items-center justify-center px-4">
+                <div className="bg-[#131835] rounded-2xl border border-[#2C355E] p-8 text-center max-w-md w-full">
                     <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -357,10 +357,10 @@ export default function TrackBookingPage() {
                     <h2 className="text-lg font-bold text-white mb-2">
                         {isEs ? 'No Encontrado' : 'Not Found'}
                     </h2>
-                    <p className="text-gray-400 text-sm mb-6">{error}</p>
+                    <p className="text-[#A5B0D1] text-sm mb-6">{error}</p>
                     <button
                         onClick={() => router.push(`/${lang}`)}
-                        className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-500 transition-colors"
+                        className="bg-[#D0B078] text-[#131835] font-semibold py-3 px-6 rounded-xl hover:bg-[#C5A56D] transition-colors"
                     >
                         {isEs ? 'Volver al Inicio' : 'Return to Home'}
                     </button>
@@ -374,8 +374,8 @@ export default function TrackBookingPage() {
     // ── Cancelled — show a clear end-state, no timeline ──────────────────────
     if (status === 'cancelled') {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-                <div className="bg-gray-900 rounded-2xl border border-red-500/20 p-8 text-center max-w-md w-full">
+            <div className="min-h-screen bg-[#0F1629] flex items-center justify-center px-4">
+                <div className="bg-[#131835] rounded-2xl border border-red-500/20 p-8 text-center max-w-md w-full">
                     <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -388,22 +388,22 @@ export default function TrackBookingPage() {
                         {booking.service_name ?? (isEs ? 'Servicio' : 'Service')}
                     </h2>
                     {booking.confirmation_code && (
-                        <p className="text-sm text-gray-500 font-mono mb-6">{booking.confirmation_code}</p>
+                        <p className="text-sm text-[#A5B0D1] font-mono mb-6">{booking.confirmation_code}</p>
                     )}
-                    <p className="text-gray-400 text-sm mb-8">
+                    <p className="text-[#A5B0D1] text-sm mb-8">
                         {isEs
                             ? 'Esta reserva fue cancelada. Puedes hacer una nueva reserva cuando quieras.'
                             : 'This booking was cancelled. You can place a new booking whenever you\'re ready.'}
                     </p>
                     <button
                         onClick={() => router.push(`/${lang}/booking/select`)}
-                        className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-500 transition-colors"
+                        className="w-full bg-[#D0B078] text-[#131835] font-semibold py-3 px-6 rounded-xl hover:bg-[#C5A56D] transition-colors"
                     >
                         {isEs ? 'Reservar de nuevo' : 'Book Again'}
                     </button>
                     <button
                         onClick={() => router.push(`/${lang}/customer`)}
-                        className="mt-3 w-full text-gray-400 text-sm hover:text-white transition-colors py-2"
+                        className="mt-3 w-full text-[#A5B0D1] text-sm hover:text-white transition-colors py-2"
                     >
                         {isEs ? 'Ir al inicio' : 'Go to Dashboard'}
                     </button>
@@ -443,25 +443,25 @@ export default function TrackBookingPage() {
     const selectedTotal = selectedItems.reduce((s, i) => s + i.price, 0);
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white pb-24">
+        <div className="min-h-screen bg-[#0F1629] text-white pb-24">
             {/* ── Header ──────────────────────────────────────────────────── */}
-            <div className="bg-gray-900 border-b border-gray-800 px-4 py-5">
+            <div className="bg-[#131835] border-b border-[#2C355E] px-4 py-5">
                 <div className="max-w-2xl mx-auto">
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
+                    <p className="text-xs text-[#A5B0D1] uppercase tracking-widest mb-1">
                         {isEs ? 'Seguimiento de Reserva' : 'Booking Tracking'}
                     </p>
                     <h1 className="text-xl font-bold text-white truncate">
                         {booking.service_name ?? (isEs ? 'Servicio de Detallado' : 'Detail Service')}
                     </h1>
                     {booking.confirmation_code && (
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-[#A5B0D1] mt-1">
                             {isEs ? 'Codigo: ' : 'Code: '}
                             <span className="font-mono text-yellow-400 font-semibold">
                                 {booking.confirmation_code}
                             </span>
                         </p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-[#A5B0D1] mt-1">
                         {booking.date}
                         {booking.time_window ? ` · ${formatTrackTimeWindow(booking.time_window, isEs)}` : ''}
                     </p>
@@ -471,7 +471,7 @@ export default function TrackBookingPage() {
             <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
                 {/* ── Timeline ────────────────────────────────────────────── */}
                 <div className="relative">
-                    <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-800" aria-hidden="true" />
+                    <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-[#2C355E]" aria-hidden="true" />
                     <ol className="space-y-0">
                         {STEPS.map((step, idx) => {
                             const state = getStepState(idx, activeIdx, status);
@@ -480,17 +480,17 @@ export default function TrackBookingPage() {
                                 <li key={step.key} className={`relative flex items-start gap-4 ${isLast ? '' : 'pb-8'}`}>
                                     <div className="relative z-10 flex-shrink-0">
                                         {state === 'complete' && (
-                                            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center ring-4 ring-gray-950">
+                                            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center ring-4 ring-[#0F1629]">
                                                 <StepIcon icon={step.icon} state="complete" />
                                             </div>
                                         )}
                                         {state === 'active' && (
-                                            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center ring-4 ring-gray-950 shadow-[0_0_12px_rgba(250,204,21,0.5)] animate-pulse">
+                                            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center ring-4 ring-[#0F1629] shadow-[0_0_12px_rgba(250,204,21,0.5)] animate-pulse">
                                                 <StepIcon icon={step.icon} state="active" />
                                             </div>
                                         )}
                                         {state === 'upcoming' && (
-                                            <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center ring-4 ring-gray-950 border border-gray-700">
+                                            <div className="w-10 h-10 rounded-full bg-[#1A2142] flex items-center justify-center ring-4 ring-[#0F1629] border border-[#2C355E]">
                                                 <StepIcon icon={step.icon} state="upcoming" />
                                             </div>
                                         )}
@@ -499,7 +499,7 @@ export default function TrackBookingPage() {
                                         <p className={`text-sm font-semibold leading-tight ${
                                             state === 'complete' ? 'text-yellow-400' :
                                             state === 'active'   ? 'text-white' :
-                                                                   'text-gray-600'
+                                                                   'text-[#A5B0D1]'
                                         }`}>
                                             {isEs ? step.labelEs : step.labelEn}
                                         </p>
@@ -522,7 +522,7 @@ export default function TrackBookingPage() {
 
                 {/* ── Contextual Status Content ───────────────────────────── */}
                 {(status === 'pending_assignment' || status === 'confirmed') && (
-                    <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
+                    <div className="bg-[#131835] rounded-2xl border border-[#2C355E] p-5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
                                 <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -534,7 +534,7 @@ export default function TrackBookingPage() {
                                 <p className="text-sm font-semibold text-white">
                                     {isEs ? 'Tu tecnico esta programado' : 'Your technician is scheduled'}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <p className="text-xs text-[#A5B0D1] mt-0.5">
                                     {contractorName
                                         ? (isEs
                                             ? `${contractorName} llegara en la fecha programada.`
@@ -549,7 +549,7 @@ export default function TrackBookingPage() {
                 )}
 
                 {status === 'en_route' && (
-                    <div className="bg-gray-900 rounded-2xl border border-yellow-500/30 p-5">
+                    <div className="bg-[#131835] rounded-2xl border border-yellow-500/30 p-5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0 animate-pulse">
                                 <TruckIcon className="w-5 h-5 text-yellow-400" />
@@ -569,7 +569,7 @@ export default function TrackBookingPage() {
                 )}
 
                 {status === 'in_progress' && (
-                    <div className="bg-gray-900 rounded-2xl border border-yellow-500/30 p-5">
+                    <div className="bg-[#131835] rounded-2xl border border-yellow-500/30 p-5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
                                 <WrenchIcon className="w-5 h-5 text-yellow-400" />
@@ -578,7 +578,7 @@ export default function TrackBookingPage() {
                                 <p className="text-sm font-semibold text-white">
                                     {isEs ? 'Trabajo en progreso' : 'Work in progress'}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <p className="text-xs text-[#A5B0D1] mt-0.5">
                                     {isEs
                                         ? 'Tu vehiculo esta siendo atendido. Te notificaremos cuando termine.'
                                         : 'Your vehicle is being serviced. We will notify you when it is done.'}
@@ -589,7 +589,7 @@ export default function TrackBookingPage() {
                 )}
 
                 {status === 'pending_approval' && (
-                    <div className="bg-gray-900 rounded-2xl border border-green-500/30 p-5 space-y-4">
+                    <div className="bg-[#131835] rounded-2xl border border-green-500/30 p-5 space-y-4">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-green-500/15 flex items-center justify-center flex-shrink-0">
                                 <CheckIcon className="w-5 h-5 text-green-400" />
@@ -598,7 +598,7 @@ export default function TrackBookingPage() {
                                 <p className="text-sm font-semibold text-white">
                                     {isEs ? 'Trabajo terminado — aprueba tu servicio' : 'Work finished — approve your service'}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <p className="text-xs text-[#A5B0D1] mt-0.5">
                                     {isEs
                                         ? 'Revisa el trabajo y aprueba para completar el pago.'
                                         : 'Review the work and approve to finalize payment.'}
@@ -621,7 +621,7 @@ export default function TrackBookingPage() {
                 )}
 
                 {status === 'completed' && (
-                    <div className="bg-gray-900 rounded-2xl border border-yellow-400/30 p-5">
+                    <div className="bg-[#131835] rounded-2xl border border-yellow-400/30 p-5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
                                 <StarIcon className="w-5 h-5 text-yellow-400" />
@@ -630,7 +630,7 @@ export default function TrackBookingPage() {
                                 <p className="text-sm font-semibold text-white">
                                     {isEs ? 'Servicio completado' : 'Service completed'}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <p className="text-xs text-[#A5B0D1] mt-0.5">
                                     {isEs
                                         ? 'Gracias por tu confianza. Total cobrado:'
                                         : 'Thank you for your business. Total charged:'}
@@ -644,13 +644,13 @@ export default function TrackBookingPage() {
                         <div className="flex gap-3 mt-4">
                             <a
                                 href={`/${lang}/booking/${bookingId}/review`}
-                                className="flex-1 bg-yellow-400 text-gray-950 font-bold py-3 rounded-xl text-center text-sm hover:bg-yellow-300 transition-colors"
+                                className="flex-1 bg-yellow-400 text-[#0F1629] font-bold py-3 rounded-xl text-center text-sm hover:bg-yellow-300 transition-colors"
                             >
                                 {isEs ? 'Dejar una Reseña' : 'Leave a Review'}
                             </a>
                             <a
                                 href={`/${lang}/booking/${bookingId}/receipt`}
-                                className="flex-1 bg-gray-800 text-white font-semibold py-3 rounded-xl text-center text-sm hover:bg-gray-700 transition-colors border border-gray-700"
+                                className="flex-1 bg-[#1A2142] text-white font-semibold py-3 rounded-xl text-center text-sm hover:bg-[#232B52] transition-colors border border-[#2C355E]"
                             >
                                 {isEs ? 'Ver Recibo' : 'View Receipt'}
                             </a>
@@ -660,15 +660,15 @@ export default function TrackBookingPage() {
 
                 {/* ── Contractor card ──────────────────────────────────────── */}
                 {showContractor && (
-                    <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-[#131835] rounded-2xl border border-[#2C355E] p-5 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-[#D0B078]/15 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </div>
                         <div className="min-w-0">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">
+                            <p className="text-xs text-[#A5B0D1] uppercase tracking-wide mb-0.5">
                                 {isEs ? 'Tu Técnico' : 'Your Technician'}
                             </p>
                             <p className="font-semibold text-white truncate">{contractorName}</p>
@@ -678,15 +678,15 @@ export default function TrackBookingPage() {
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                     </svg>
                                 ))}
-                                <span className="text-xs text-gray-500 ml-1">5.0</span>
+                                <span className="text-xs text-[#A5B0D1] ml-1">5.0</span>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {/* ── Booking info ─────────────────────────────────────────── */}
-                <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5 space-y-3">
-                    <h2 className="text-sm font-semibold text-gray-300">
+                <div className="bg-[#131835] rounded-2xl border border-[#2C355E] p-5 space-y-3">
+                    <h2 className="text-sm font-semibold text-[#A5B0D1]">
                         {isEs ? 'Detalles de la Reserva' : 'Booking Details'}
                     </h2>
                     {[
@@ -702,7 +702,7 @@ export default function TrackBookingPage() {
                         },
                     ].map(({ label, value, highlight }) => (
                         <div key={label} className="flex justify-between items-start gap-3 text-sm">
-                            <span className="text-gray-500 flex-shrink-0">{label}</span>
+                            <span className="text-[#A5B0D1] flex-shrink-0">{label}</span>
                             <span className={`text-right font-medium ${highlight ? 'text-green-400' : 'text-white'}`}>
                                 {value}
                             </span>
@@ -712,16 +712,16 @@ export default function TrackBookingPage() {
 
                 {/* ── Add Service / Add-on ─────────────────────────────────── */}
                 {canAddServices && (
-                    <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
+                    <div className="bg-[#131835] rounded-2xl border border-[#2C355E] p-5">
                         <div className="flex items-start gap-3 mb-3">
-                            <div className="w-9 h-9 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <PlusIcon className="w-4 h-4 text-blue-400" />
+                            <div className="w-9 h-9 rounded-full bg-[#D0B078]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <PlusIcon className="w-4 h-4 text-[#D0B078]" />
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-white">
                                     {isEs ? 'Añadir Servicios' : 'Add to Your Service'}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-0.5">
+                                <p className="text-xs text-[#A5B0D1] mt-0.5">
                                     {isEs
                                         ? 'Agrega servicios o complementos mientras trabajamos en tu auto.'
                                         : 'Request extra services or add-ons while we work on your car.'}
@@ -741,7 +741,7 @@ export default function TrackBookingPage() {
                         ) : (
                             <button
                                 onClick={() => setShowAddService(true)}
-                                className="w-full py-2.5 rounded-xl border border-gray-700 text-gray-300 text-sm font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-2.5 rounded-xl border border-[#2C355E] text-[#A5B0D1] text-sm font-medium hover:bg-[#1A2142] transition-colors flex items-center justify-center gap-2"
                             >
                                 <PlusIcon className="w-4 h-4" />
                                 {isEs ? 'Agregar Servicio / Complemento' : 'Add Service / Add-on'}
@@ -754,21 +754,21 @@ export default function TrackBookingPage() {
             </div>
 
             {/* ── Sticky support CTA ──────────────────────────────────────── */}
-            <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur border-t border-gray-800 px-4 py-4">
+            <div className="fixed bottom-0 left-0 right-0 bg-[#0F1629]/95 backdrop-blur border-t border-[#2C355E] px-4 py-4">
                 <div className="max-w-2xl mx-auto">
                     {supportPhone ? (
                         <a
                             href={`tel:${supportPhone}`}
-                            className="flex items-center justify-center gap-2 w-full bg-gray-800 text-white font-semibold py-3.5 rounded-xl hover:bg-gray-700 transition-colors border border-gray-700"
+                            className="flex items-center justify-center gap-2 w-full bg-[#1A2142] text-white font-semibold py-3.5 rounded-xl hover:bg-[#232B52] transition-colors border border-[#2C355E]"
                         >
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-[#A5B0D1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                     d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
                             {isEs ? '¿Necesitas Ayuda? Llama a Soporte' : 'Need Help? Call Support'}
                         </a>
                     ) : (
-                        <p className="text-center text-gray-600 text-sm">
+                        <p className="text-center text-[#A5B0D1] text-sm">
                             {isEs ? 'Soporte disponible durante el servicio.' : 'Support available during service.'}
                         </p>
                     )}
@@ -778,16 +778,16 @@ export default function TrackBookingPage() {
             {/* ── Add Service Modal ────────────────────────────────────────── */}
             {showAddService && catalog && (
                 <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-                    <div className="bg-gray-900 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl border border-gray-800 max-h-[85vh] flex flex-col">
+                    <div className="bg-[#131835] w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl border border-[#2C355E] max-h-[85vh] flex flex-col">
 
                         {/* Modal header */}
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C355E] flex-shrink-0">
                             <h3 className="font-semibold text-white">
                                 {isEs ? 'Agregar a Tu Servicio' : 'Add to Your Service'}
                             </h3>
                             <button
                                 onClick={closeModal}
-                                className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                className="w-8 h-8 rounded-full bg-[#1A2142] flex items-center justify-center text-[#A5B0D1] hover:text-white transition-colors"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -796,15 +796,15 @@ export default function TrackBookingPage() {
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex border-b border-gray-800 px-5 flex-shrink-0">
+                        <div className="flex border-b border-[#2C355E] px-5 flex-shrink-0">
                             {(['addons', 'services'] as const).map((t) => (
                                 <button
                                     key={t}
                                     onClick={() => setCatalogTab(t)}
                                     className={`py-3 text-sm font-medium mr-6 border-b-2 transition-colors ${
                                         catalogTab === t
-                                            ? 'border-blue-500 text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-300'
+                                            ? 'border-[#D0B078] text-[#D0B078]'
+                                            : 'border-transparent text-[#A5B0D1] hover:text-white'
                                     }`}
                                 >
                                     {t === 'services'
@@ -817,7 +817,7 @@ export default function TrackBookingPage() {
                         {/* Items list */}
                         <div className="overflow-y-auto flex-1 p-5 space-y-3">
                             {(catalogTab === 'services' ? catalog.services : catalog.addOns).length === 0 ? (
-                                <p className="text-center text-gray-600 text-sm py-8">
+                                <p className="text-center text-[#A5B0D1] text-sm py-8">
                                     {isEs ? 'No hay opciones disponibles.' : 'No options available.'}
                                 </p>
                             ) : (
@@ -832,15 +832,15 @@ export default function TrackBookingPage() {
                                             onClick={() => toggleItem(item)}
                                             className={`w-full text-left p-4 rounded-xl border transition-all ${
                                                 isSelected
-                                                    ? 'border-blue-500 bg-blue-500/10'
-                                                    : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
+                                                    ? 'border-[#D0B078] bg-[#D0B078]/10'
+                                                    : 'border-[#2C355E] bg-[#1A2142]/50 hover:bg-[#1A2142]'
                                             }`}
                                         >
                                             <div className="flex items-center justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-medium text-white">{displayName}</p>
                                                     {item.duration_minutes && (
-                                                        <p className="text-xs text-gray-500 mt-0.5">
+                                                        <p className="text-xs text-[#A5B0D1] mt-0.5">
                                                             {item.duration_minutes} min
                                                         </p>
                                                     )}
@@ -851,8 +851,8 @@ export default function TrackBookingPage() {
                                                     </span>
                                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                                                         isSelected
-                                                            ? 'border-blue-500 bg-blue-500'
-                                                            : 'border-gray-600'
+                                                            ? 'border-[#D0B078] bg-[#D0B078]'
+                                                            : 'border-[#5E698F]'
                                                     }`}>
                                                         {isSelected && <CheckIcon className="w-3 h-3 text-white" />}
                                                     </div>
@@ -866,12 +866,12 @@ export default function TrackBookingPage() {
 
                         {/* Footer — shown when items are selected */}
                         {selectedItems.length > 0 && (
-                            <div className="border-t border-gray-800 px-5 py-4 flex-shrink-0">
+                            <div className="border-t border-[#2C355E] px-5 py-4 flex-shrink-0">
                                 {addError && (
                                     <p className="text-red-400 text-xs mb-3">{addError}</p>
                                 )}
                                 <div className="flex items-center justify-between mb-3">
-                                    <span className="text-sm text-gray-400">
+                                    <span className="text-sm text-[#A5B0D1]">
                                         {selectedItems.length}{' '}
                                         {isEs ? 'seleccionado(s)' : `item${selectedItems.length > 1 ? 's' : ''} selected`}
                                     </span>
@@ -882,13 +882,13 @@ export default function TrackBookingPage() {
                                 <button
                                     onClick={handleAddService}
                                     disabled={addLoading}
-                                    className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-500 transition-colors disabled:opacity-60"
+                                    className="w-full py-3 bg-[#D0B078] text-[#131835] rounded-xl font-semibold text-sm hover:bg-[#C5A56D] transition-colors disabled:opacity-60"
                                 >
                                     {addLoading
                                         ? (isEs ? 'Procesando...' : 'Processing...')
                                         : (isEs ? 'Confirmar y Agregar' : 'Confirm & Add')}
                                 </button>
-                                <p className="text-xs text-gray-600 text-center mt-2">
+                                <p className="text-xs text-[#A5B0D1] text-center mt-2">
                                     {isEs
                                         ? 'El monto adicional se cobrará al aprobar el servicio.'
                                         : 'Additional amount will be collected when you approve the service.'}

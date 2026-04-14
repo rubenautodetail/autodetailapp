@@ -207,10 +207,10 @@ export default function ReportIssuePage() {
                             <p className="text-sm text-[#5E698F]">
                                 {lang === 'es' ? 'Para asuntos urgentes, llámanos al ' : 'For urgent matters, call us at '}
                                 <a
-                                    href="tel:+13055550000"
+                                    href="tel:+13059884449"
                                     className="text-[#D0B078] hover:underline font-medium"
                                 >
-                                    (305) 000-0000
+                                    (305) 988-4449
                                 </a>
                             </p>
                         </div>

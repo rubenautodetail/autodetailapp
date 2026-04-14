@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
             .select('approval_status')
             .eq('id', user.id)
             .single();
-        if ((approvalCheck as any)?.approval_status !== 'approved') {
+        if ((approvalCheck as { approval_status: string | null } | null)?.approval_status !== 'approved') {
             return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
         }
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
                     .eq('id', user.id)
                     .single();
 
-                let accountId = (profile as any)?.stripe_account_id as string | null;
+                let accountId = (profile as { stripe_account_id: string | null } | null)?.stripe_account_id ?? null;
 
                 if (!accountId) {
                     // Create new Express account
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
                     await supabase
                         .from('profiles')
-                        .update({ stripe_account_id: accountId } as any)
+                        .update({ stripe_account_id: accountId })
                         .eq('id', user.id);
                 } else {
                     // Verify the stored account still exists in Stripe (could be stale from test→live switch)
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
                         accountId = account.id;
                         await supabase
                             .from('profiles')
-                            .update({ stripe_account_id: accountId } as any)
+                            .update({ stripe_account_id: accountId })
                             .eq('id', user.id);
                     }
                 }

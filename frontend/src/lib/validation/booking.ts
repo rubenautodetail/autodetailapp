@@ -8,7 +8,7 @@ export const BookingCreateSchema = z.object({
     const d = new Date(val);
     return !isNaN(d.getTime()) && d > new Date();
   }, 'Scheduled date must be a valid date in the future'),
-  timeWindow: z.enum(['morning', 'afternoon', 'evening']),
+  timeWindow: z.string().regex(/^(\d{2}:\d{2}|morning|afternoon|evening)$/, 'Time window must be HH:MM or morning/afternoon/evening'),
 
   // Location
   address: z.string().min(5, 'Address must be at least 5 characters'),

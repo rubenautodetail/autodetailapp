@@ -108,12 +108,19 @@ export async function GET(): Promise<NextResponse<HealthResponse>> {
   const envFailed = !envResult.valid;
   const status: HealthResponse['status'] = envFailed ? 'error' : allOk ? 'ok' : 'degraded';
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   const response: HealthResponse = {
     status,
     timestamp: new Date().toISOString(),
     latencyMs: Date.now() - overallStart,
     checks,
-    ...(envResult.missing.length > 0 ? { missingEnv: envResult.missing } : {}),
+    // Never expose specific missing env var names in production
+    ...(envResult.missing.length > 0
+      ? isProduction
+        ? {} // omit missingEnv entirely in production
+        : { missingEnv: envResult.missing }
+      : {}),
   };
 
   const httpStatus = status === 'error' ? 503 : 200;

@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
                 message: `New detailing job in ${zipCode}. Tap to view and accept.`,
                 booking_id: updatedBooking.id,
                 is_read: false,
-                link: `/en/contractor/jobs/${updatedBooking.id}`,
+                link: `/contractor/jobs/${updatedBooking.id}`,
             }));
 
             await supabase.from('notifications').insert(notificationRows);

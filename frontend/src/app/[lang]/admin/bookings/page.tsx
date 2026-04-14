@@ -52,6 +52,17 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled:          "bg-red-100 text-red-800",
 };
 
+const STATUS_LABELS: Record<string, { en: string; es: string }> = {
+  pending_payment:    { en: "Pending Payment",    es: "Pago Pendiente" },
+  pending_assignment: { en: "Pending Assignment", es: "Sin Asignar" },
+  confirmed:          { en: "Confirmed",          es: "Confirmada" },
+  en_route:           { en: "En Route",           es: "En Camino" },
+  in_progress:        { en: "In Progress",        es: "En Progreso" },
+  pending_approval:   { en: "Pending Approval",   es: "Aprobación Pendiente" },
+  completed:          { en: "Completed",          es: "Completada" },
+  cancelled:          { en: "Cancelled",          es: "Cancelada" },
+};
+
 const PAGE_SIZE = 25;
 
 export default function AdminBookingsPage({ params }: AdminBookingsProps) {
@@ -158,9 +169,8 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     setActionLoading(bookingId);
     setMessage(null);
     try {
-      const res = await fetch("/api/booking/verify-payment", {
+      const res = await adminFetch("/api/booking/verify-payment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paymentIntentId }),
       });
       const data = await res.json();
@@ -294,13 +304,13 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
               <button
                 key={s}
                 onClick={() => { setStatusFilter(s); setPage(1); }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors capitalize ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                   statusFilter === s
                     ? "bg-gray-700 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {s.replace(/_/g, " ")}
+                {locale === "es" ? STATUS_LABELS[s]?.es : STATUS_LABELS[s]?.en}
               </button>
             ))}
           </div>
@@ -382,8 +392,8 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
                         {b.serviceName || "—"}
                       </td>
                       <td className="px-5 py-4">
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${STATUS_COLORS[b.status] || "bg-gray-100 text-gray-700"}`}>
-                          {b.status.replace(/_/g, " ")}
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[b.status] || "bg-gray-100 text-gray-700"}`}>
+                          {(locale === "es" ? STATUS_LABELS[b.status]?.es : STATUS_LABELS[b.status]?.en) || b.status.replace(/_/g, " ")}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-500">

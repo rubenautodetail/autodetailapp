@@ -4,7 +4,41 @@ import { useState, useEffect } from 'react';
 import { CreditCard, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { fetchOnboardingStatus, initiateOnboarding, OnboardingStatus } from '@/lib/api/contractor';
 
-export default function StripeConnectButton() {
+const labels = {
+    en: {
+        loadingStatus: "Loading payment status...",
+        paymentsConnected: "Payments Connected",
+        paymentsConnectedDesc: "Your Stripe account is active and you are ready to receive payouts.",
+        actionRequired: "Action Required",
+        actionRequiredDesc: "Your Stripe account needs more information before you can receive payouts.",
+        completeVerification: "Complete Verification",
+        getPaid: "Get Paid",
+        getPaidDesc: "Connect your Stripe account to receive automated payouts for completed jobs.",
+        connectStripe: "Connect Stripe",
+        errorLoad: "Failed to load payment status",
+        errorOnboarding: "Failed to start onboarding. Please try again.",
+    },
+    es: {
+        loadingStatus: "Cargando estado de pago...",
+        paymentsConnected: "Pagos Conectados",
+        paymentsConnectedDesc: "Tu cuenta de Stripe está activa y lista para recibir pagos.",
+        actionRequired: "Acción Requerida",
+        actionRequiredDesc: "Tu cuenta de Stripe necesita más información antes de poder recibir pagos.",
+        completeVerification: "Completar Verificación",
+        getPaid: "Recibir Pagos",
+        getPaidDesc: "Conecta tu cuenta de Stripe para recibir pagos automáticos por trabajos completados.",
+        connectStripe: "Conectar Stripe",
+        errorLoad: "Error al cargar estado de pago",
+        errorOnboarding: "Error al iniciar verificación. Inténtalo de nuevo.",
+    },
+};
+
+interface StripeConnectButtonProps {
+    locale?: "en" | "es";
+}
+
+export default function StripeConnectButton({ locale = "en" }: StripeConnectButtonProps) {
+    const t = labels[locale];
     const [status, setStatus] = useState<OnboardingStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,7 +55,7 @@ export default function StripeConnectButton() {
             setStatus(data);
         } catch (err) {
             console.error('Error fetching onboarding status:', err);
-            setError('Failed to load payment status');
+            setError(t.errorLoad);
         } finally {
             setLoading(false);
         }
@@ -39,7 +73,7 @@ export default function StripeConnectButton() {
             }
         } catch (err) {
             console.error('Error initiating onboarding:', err);
-            setError('Failed to start onboarding. Please try again.');
+            setError(t.errorOnboarding);
             setIsProcessing(false);
         }
     };
@@ -48,7 +82,7 @@ export default function StripeConnectButton() {
         return (
             <div className="flex items-center justify-center p-4 bg-[var(--card)]/80 rounded-xl border border-[var(--divider)]">
                 <Loader2 className="w-5 h-5 animate-spin text-accent-gold mr-2" />
-                <span className="text-sm text-[var(--text-secondary)]">Loading payment status...</span>
+                <span className="text-sm text-[var(--text-secondary)]">{t.loadingStatus}</span>
             </div>
         );
     }
@@ -59,9 +93,9 @@ export default function StripeConnectButton() {
             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-start space-x-3">
                 <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
                 <div>
-                    <h4 className="text-green-500 font-bold text-sm">Payments Connected</h4>
+                    <h4 className="text-green-500 font-bold text-sm">{t.paymentsConnected}</h4>
                     <p className="text-xs text-green-500/80 mt-1">
-                        Your Stripe account is active and you are ready to receive payouts.
+                        {t.paymentsConnectedDesc}
                     </p>
                 </div>
             </div>
@@ -75,9 +109,9 @@ export default function StripeConnectButton() {
                 <div className="flex items-start space-x-3">
                     <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
                     <div>
-                        <h4 className="text-[var(--text-primary)] font-bold text-sm">Action Required</h4>
+                        <h4 className="text-[var(--text-primary)] font-bold text-sm">{t.actionRequired}</h4>
                         <p className="text-xs text-[var(--text-secondary)] mt-1">
-                            Your Stripe account needs more information before you can receive payouts.
+                            {t.actionRequiredDesc}
                         </p>
                     </div>
                 </div>
@@ -90,7 +124,7 @@ export default function StripeConnectButton() {
                         <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                         <>
-                            <span>Complete Verification</span>
+                            <span>{t.completeVerification}</span>
                             <ExternalLink className="w-4 h-4" />
                         </>
                     )}
@@ -105,9 +139,9 @@ export default function StripeConnectButton() {
             <div className="flex items-start space-x-3">
                 <CreditCard className="w-5 h-5 text-[var(--text-secondary)] mt-0.5" />
                 <div>
-                    <h4 className="text-[var(--text-primary)] font-bold text-sm">Get Paid</h4>
+                    <h4 className="text-[var(--text-primary)] font-bold text-sm">{t.getPaid}</h4>
                     <p className="text-xs text-[var(--text-secondary)] mt-1">
-                        Connect your Stripe account to receive automated payouts for completed jobs.
+                        {t.getPaidDesc}
                     </p>
                 </div>
             </div>
@@ -125,7 +159,7 @@ export default function StripeConnectButton() {
                     <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                     <>
-                        <span>Connect Stripe</span>
+                        <span>{t.connectStripe}</span>
                         <ExternalLink className="w-4 h-4" />
                     </>
                 )}

@@ -222,9 +222,17 @@ export default function EarningsPage({ params }: EarningsProps) {
                                                 </p>
                                                 <p className="text-sm text-[#5E698F]">{dateStr}</p>
                                             </div>
-                                            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-400">
-                                                {lang === "es" ? "Completado" : "Completed"}
-                                            </span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-right">
+                                                    <p className="text-xs text-[#5E698F]">{lang === "es" ? "Pago" : "Payout"}</p>
+                                                    <p className="text-lg font-bold text-green-400">
+                                                        ${(Number(job.total_amount || 0) * 0.7).toFixed(2)}
+                                                    </p>
+                                                </div>
+                                                <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-400">
+                                                    {lang === "es" ? "Completado" : "Completed"}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 );

@@ -216,7 +216,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
     return ALL_STATUSES.map((s) => s);
   }
 
-  const PLATFORM_FEE = 0.30;
+  const PLATFORM_FEE = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE || 30) / 100;
 
   if (loading) {
     return (

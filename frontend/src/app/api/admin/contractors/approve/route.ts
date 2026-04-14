@@ -57,13 +57,13 @@ export async function POST(req: NextRequest) {
                 });
             }
 
-            // In-app notification for the contractor
+            // In-app notification for the contractor (locale-neutral link — middleware handles redirect)
             await supabase.from('notifications').insert({
                 user_id: userId,
                 title: 'Application Approved',
                 message: 'Congratulations! Your contractor application has been approved. You can now accept jobs.',
                 type: 'success',
-                link: '/en/contractor/dashboard',
+                link: '/contractor/dashboard',
             });
         } catch (emailErr) {
             // Don't fail the approval if email/notification fails

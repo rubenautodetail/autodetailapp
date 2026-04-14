@@ -84,8 +84,21 @@ interface BookingStatusContextType {
 
 const BookingStatusContext = createContext<BookingStatusContextType | undefined>(undefined);
 
+// --- DB row shape for vehicles table ---
+interface DbVehicle {
+    id: string;
+    user_id: string;
+    make: string;
+    model: string;
+    year: number;
+    color: string;
+    license_plate: string;
+    type: string;
+    created_at?: string;
+}
+
 // Mapping Helpers
-function mapDbVehicleToVehicle(dbVehicle: any): Vehicle {
+function mapDbVehicleToVehicle(dbVehicle: DbVehicle): Vehicle {
     return {
         id: dbVehicle.id,
         make: dbVehicle.make,
@@ -93,8 +106,15 @@ function mapDbVehicleToVehicle(dbVehicle: any): Vehicle {
         year: dbVehicle.year.toString(),
         color: dbVehicle.color,
         licensePlate: dbVehicle.license_plate,
-        type: dbVehicle.type as any
+        type: dbVehicle.type as Vehicle['type'],
     };
+}
+
+/** Detect locale from current URL pathname. */
+function detectLocale(): 'en' | 'es' {
+    if (typeof window === 'undefined') return 'en';
+    const seg = window.location.pathname.split('/')[1];
+    return seg === 'es' ? 'es' : 'en';
 }
 
 const INITIAL_SETTINGS: UserSettings = {
@@ -200,12 +220,13 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'vehicles', filter: `user_id=eq.${userId}` },
                 (payload) => {
+                    const record = payload.new as DbVehicle;
                     if (payload.eventType === 'INSERT') {
-                        setVehicles(prev => [...prev, mapDbVehicleToVehicle(payload.new)]);
+                        setVehicles(prev => [...prev, mapDbVehicleToVehicle(record)]);
                     } else if (payload.eventType === 'DELETE') {
-                        setVehicles(prev => prev.filter(v => v.id !== payload.old.id));
+                        setVehicles(prev => prev.filter(v => v.id !== (payload.old as DbVehicle).id));
                     } else if (payload.eventType === 'UPDATE') {
-                        setVehicles(prev => prev.map(v => v.id === payload.new.id ? mapDbVehicleToVehicle(payload.new) : v));
+                        setVehicles(prev => prev.map(v => v.id === record.id ? mapDbVehicleToVehicle(record) : v));
                     }
                 }
             )
@@ -283,14 +304,18 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 });
             }
             localStorage.removeItem('guest_vehicles');
-            addNotification({ 
-                title: 'Garage Synced', 
-                message: `${guestVehicles.length} vehicles from your guest session were added to your account.`, 
-                type: 'success' 
+            const loc = detectLocale();
+            addNotification({
+                title: loc === 'es' ? 'Garaje Sincronizado' : 'Garage Synced',
+                message: loc === 'es'
+                    ? `${guestVehicles.length} vehiculos de tu sesion de invitado fueron agregados a tu cuenta.`
+                    : `${guestVehicles.length} vehicles from your guest session were added to your account.`,
+                type: 'success'
             });
         }
 
         syncVehicles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     // --- Notification Methods ---
@@ -314,10 +339,15 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
     // --- User & Vehicle Methods ---
     const updateProfile = async (data: Partial<UserProfile>) => {
+        const loc = detectLocale();
         if (!user) {
             // Guest mode: update local state only
             setUserProfile(prev => prev ? { ...prev, ...data } : null);
-            addNotification({ title: 'Profile Updated', message: 'Your profile changes have been saved.', type: 'success' });
+            addNotification({
+                title: loc === 'es' ? 'Perfil Actualizado' : 'Profile Updated',
+                message: loc === 'es' ? 'Tus cambios de perfil han sido guardados.' : 'Your profile changes have been saved.',
+                type: 'success',
+            });
             return;
         }
         const supabase = createClient();
@@ -334,15 +364,21 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
         if (error) {
             console.error('Error updating profile:', error);
-            addNotification({ title: 'Update Failed', message: error.message, type: 'error' });
+            addNotification({ title: loc === 'es' ? 'Actualizacion Fallida' : 'Update Failed', message: error.message, type: 'error' });
             return;
         }
 
         setUserProfile(prev => prev ? { ...prev, ...data } : null);
-        addNotification({ title: 'Profile Updated', message: 'Your profile changes have been saved.', type: 'success' });
+        addNotification({
+            title: loc === 'es' ? 'Perfil Actualizado' : 'Profile Updated',
+            message: loc === 'es' ? 'Tus cambios de perfil han sido guardados.' : 'Your profile changes have been saved.',
+            type: 'success',
+        });
     };
 
     const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
+        const loc = detectLocale();
+        const vehicleLabel = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
         if (!user) {
             // Guest mode: persist to localStorage
             const newVehicle: Vehicle = { ...vehicle, id: Math.random().toString(36).substr(2, 9) };
@@ -351,7 +387,11 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 localStorage.setItem('guest_vehicles', JSON.stringify(updated));
                 return updated;
             });
-            addNotification({ title: 'Vehicle Added', message: `${vehicle.year} ${vehicle.make} ${vehicle.model} added to garage.`, type: 'success' });
+            addNotification({
+                title: loc === 'es' ? 'Vehiculo Agregado' : 'Vehicle Added',
+                message: loc === 'es' ? `${vehicleLabel} agregado al garaje.` : `${vehicleLabel} added to garage.`,
+                type: 'success',
+            });
             return;
         }
         const supabase = createClient();
@@ -370,14 +410,19 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
         if (error) {
             console.error('Error adding vehicle:', error);
-            addNotification({ title: 'Action Failed', message: error.message, type: 'error' });
+            addNotification({ title: loc === 'es' ? 'Accion Fallida' : 'Action Failed', message: error.message, type: 'error' });
             return;
         }
 
-        addNotification({ title: 'Vehicle Added', message: `${vehicle.year} ${vehicle.make} ${vehicle.model} added to garage.`, type: 'success' });
+        addNotification({
+            title: loc === 'es' ? 'Vehiculo Agregado' : 'Vehicle Added',
+            message: loc === 'es' ? `${vehicleLabel} agregado al garaje.` : `${vehicleLabel} added to garage.`,
+            type: 'success',
+        });
     };
 
     const removeVehicle = async (id: string) => {
+        const loc = detectLocale();
         if (!user) {
             // Guest mode: remove from localStorage
             setVehicles(prev => {
@@ -385,7 +430,11 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 localStorage.setItem('guest_vehicles', JSON.stringify(updated));
                 return updated;
             });
-            addNotification({ title: 'Vehicle Removed', message: 'Vehicle removed from your garage.', type: 'info' });
+            addNotification({
+                title: loc === 'es' ? 'Vehiculo Eliminado' : 'Vehicle Removed',
+                message: loc === 'es' ? 'Vehiculo eliminado de tu garaje.' : 'Vehicle removed from your garage.',
+                type: 'info',
+            });
             return;
         }
         // Optimistic update — remove immediately so the UI responds even if real-time is slow
@@ -403,16 +452,25 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             // Revert optimistic update on failure
             const { data } = await supabase.from('vehicles').select('*').eq('user_id', user.id);
             if (data) setVehicles(data.map(mapDbVehicleToVehicle));
-            addNotification({ title: 'Action Failed', message: error.message, type: 'error' });
+            addNotification({ title: loc === 'es' ? 'Accion Fallida' : 'Action Failed', message: error.message, type: 'error' });
             return;
         }
 
-        addNotification({ title: 'Vehicle Removed', message: 'Vehicle removed from your garage.', type: 'info' });
+        addNotification({
+            title: loc === 'es' ? 'Vehiculo Eliminado' : 'Vehicle Removed',
+            message: loc === 'es' ? 'Vehiculo eliminado de tu garaje.' : 'Vehicle removed from your garage.',
+            type: 'info',
+        });
     };
 
     const updateSettings = (data: Partial<UserSettings>) => {
+        const loc = detectLocale();
         setSettings(prev => ({ ...prev, ...data }));
-        addNotification({ title: 'Settings Saved', message: 'Your preferences have been updated.', type: 'success' });
+        addNotification({
+            title: loc === 'es' ? 'Configuracion Guardada' : 'Settings Saved',
+            message: loc === 'es' ? 'Tus preferencias han sido actualizadas.' : 'Your preferences have been updated.',
+            type: 'success',
+        });
     };
 
     // simulation helper left as-is for demo richness

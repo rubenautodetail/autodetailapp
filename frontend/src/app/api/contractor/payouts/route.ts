@@ -28,10 +28,15 @@ export async function GET(req: NextRequest) {
             .order('period_start', { ascending: false })
             .limit(52); // last 52 weeks
 
-        if (error) throw error;
+        if (error) {
+            // Table may not exist yet — return empty array gracefully
+            console.warn('[contractor/payouts] query error (table may not exist):', error.message);
+            return NextResponse.json({ data: [] });
+        }
         return NextResponse.json({ data: data ?? [] });
     } catch (err) {
-        console.error('[contractor/payouts]', err);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        // Catch-all for unexpected failures (e.g. missing table)
+        console.warn('[contractor/payouts] unexpected error:', err);
+        return NextResponse.json({ data: [] });
     }
 }

@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
                     message: `Your payment of $${contractorPayout} for the ${serviceName} job has been processed.`,
                     booking_id: bookingId,
                     is_read: false,
-                    link: `/en/contractor/jobs/${safeBookingId}`,
+                    link: `/contractor/jobs/${safeBookingId}`,
                 });
 
             if (notifError) {

@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
             title: 'Customer Added Services',
             message: `Customer added: ${addedNames}. New total: $${newTotal.toFixed(2)}`,
             type: 'info',
-            link: `/en/contractor/jobs/${booking.id}`,
+            link: `/contractor/jobs/${booking.id}`,
         });
     }
 
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
                 title: 'Add-on Requested',
                 message: `Booking #${booking.id}: ${addedNames} (+$${addedAmount.toFixed(2)})`,
                 type: 'info' as const,
-                link: `/en/admin`,
+                link: `/admin`,
             })),
         );
     }

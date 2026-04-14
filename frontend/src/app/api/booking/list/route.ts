@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const supabaseAuth = await createClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
-  if (!user || !user.email) {
+  if (!user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const { data: bookings, error } = await supabase
     .from("bookings")
     .select("*")
-    .eq("customer_email", user.email)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(20);
 

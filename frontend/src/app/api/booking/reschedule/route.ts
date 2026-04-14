@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (booking.customer_email !== user.email) {
+    // Verify ownership: primary check by user_id, fallback to email
+    if (booking.user_id !== user.id && booking.customer_email !== user.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest) {
           message: `Detailing job available in ${zipCode}. Tap to view and accept.`,
           booking_id: booking.id,
           is_read: false,
-          link: `/en/contractor/jobs/${booking.id}`,
+          link: `/contractor/jobs/${booking.id}`,
         }));
 
         await supabase.from("notifications").insert(notificationRows);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -19,8 +19,6 @@ export default function ContractorLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [wrongRole, setWrongRole] = useState<string | null>(null);
-  // Track whether the user just attempted login (vs. arrived already logged in)
-  const justLoggedIn = useRef(false);
 
   // Handle post-login role enforcement + already-logged-in redirect
   useEffect(() => {
@@ -66,8 +64,6 @@ export default function ContractorLoginPage() {
     setLoading(true);
     setError("");
     setWrongRole(null);
-    justLoggedIn.current = true;
-
     try {
       await login(email, password);
       // useEffect handles redirect once profile loads.
@@ -96,7 +92,6 @@ export default function ContractorLoginPage() {
         );
       }
       setLoading(false);
-      justLoggedIn.current = false;
     }
   };
 

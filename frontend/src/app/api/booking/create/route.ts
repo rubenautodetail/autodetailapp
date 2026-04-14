@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
         message: `New detailing job in ${zipCode}. Tap to view and accept.`,
         booking_id: booking.id,
         is_read: false,
-        link: `/en/contractor/jobs/${booking.id}`,
+        link: `/contractor/jobs/${booking.id}`,
       }));
 
       const { error: notifError } = await supabaseAdmin

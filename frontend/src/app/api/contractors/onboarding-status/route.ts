@@ -18,12 +18,19 @@ export async function GET(req: NextRequest) {
             .eq('id', user.id)
             .single();
 
-        if ((profile as any)?.approval_status !== 'approved') {
+        interface OnboardingProfile {
+            stripe_account_id: string | null;
+            onboarding_complete: boolean | null;
+            approval_status: string | null;
+        }
+        const typedProfile = profile as OnboardingProfile | null;
+
+        if (typedProfile?.approval_status !== 'approved') {
             return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
         }
 
-        const stripeAccountId = (profile as any)?.stripe_account_id as string | null;
-        let onboardingComplete = !!(profile as any)?.onboarding_complete;
+        const stripeAccountId = typedProfile?.stripe_account_id ?? null;
+        let onboardingComplete = !!typedProfile?.onboarding_complete;
 
         // If Stripe is configured and the contractor has an account, check real status
         if (
@@ -44,7 +51,7 @@ export async function GET(req: NextRequest) {
                 if (chargesEnabled && payoutsEnabled && !onboardingComplete) {
                     await supabase
                         .from('profiles')
-                        .update({ onboarding_complete: true } as any)
+                        .update({ onboarding_complete: true })
                         .eq('id', user.id);
                     onboardingComplete = true;
                 }

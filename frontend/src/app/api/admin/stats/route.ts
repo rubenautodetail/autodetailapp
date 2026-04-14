@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient();
 
   const [bookingsRes, profilesRes] = await Promise.all([
-    supabase.from("bookings").select("status, total_amount"),
+    supabase.from("bookings").select("status, total_amount, payment_status"),
     supabase.from("profiles").select("role, approval_status"),
   ]);
 
@@ -37,8 +37,9 @@ export async function GET(req: NextRequest) {
     (b) => b.status === "completed"
   ).length;
 
+  const VALID_PAYMENT_STATUSES = ["paid", "captured", "partially_refunded"];
   const totalRevenue = bookingList
-    .filter((b) => b.status === "completed")
+    .filter((b) => b.status === "completed" && VALID_PAYMENT_STATUSES.includes(b.payment_status ?? ""))
     .reduce((sum, b) => {
       const amt =
         typeof b.total_amount === "string"
