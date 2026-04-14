@@ -10,9 +10,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
+    // Require authenticated user
+    const authSupabase = await createClient();
+    const { data: { user } } = await authSupabase.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     let body: { paymentIntentId?: string };
     try {
         body = await req.json();
@@ -54,6 +61,11 @@ export async function POST(req: NextRequest) {
         .eq('payment_intent_id', paymentIntentId)
         .eq('payment_status', 'unpaid')
         .maybeSingle();
+
+    // Verify the booking belongs to the authenticated user
+    if (booking && booking.user_id !== user.id && booking.customer_email !== user.email) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     if (fetchErr) {
         console.error('verify-payment: booking lookup failed:', fetchErr);

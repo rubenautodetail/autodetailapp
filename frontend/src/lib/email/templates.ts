@@ -430,6 +430,10 @@ export function jobPendingApprovalTemplate(booking: BookingEmailData): string {
         <li>${isEs ? 'Haz clic en el botón de abajo para aprobar el trabajo y liberar el pago final.' : 'Click the button below to approve the job and release the final payment.'}</li>
       </ol>
     </div>
+    ${booking.notes ? `<div style="background:#ede9fe;padding:16px 20px;border-radius:8px;margin:20px 0;border:1px solid #c4b5fd;">
+      <h3 style="margin-top:0;color:#5b21b6;font-size:14px;">${isEs ? 'Notas del Detallista:' : "Detailer's Notes:"}</h3>
+      <p style="margin-bottom:0;color:#4c1d95;font-size:14px;white-space:pre-wrap;">${booking.notes}</p>
+    </div>` : ''}
     <div style="text-align:center;">
       <a href="${APP_URL}/${locale}/booking/${booking.id}/approve?code=${booking.confirmationCode}" class="btn" style="background:#8b5cf6;color:white;padding:15px 40px;font-size:16px;font-weight:700;">${isEs ? 'INSPECCIONAR Y APROBAR TRABAJO' : 'INSPECT &amp; APPROVE JOB'}</a>
     </div>`;

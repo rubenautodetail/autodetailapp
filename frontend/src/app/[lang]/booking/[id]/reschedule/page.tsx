@@ -60,7 +60,7 @@ export default function ReschedulePage() {
     const fetchTimeSlots = async () => {
       setIsLoadingTimeSlots(true);
       try {
-        const response = await fetch("/api/admin/time-windows", {
+        const response = await fetch("/api/booking/time-windows", {
           headers: { "Content-Type": "application/json" },
         });
 
@@ -187,13 +187,13 @@ export default function ReschedulePage() {
       ) : (
         <>
           {/* Contextual warning when within 24h */}
-          {booking && (new Date(booking.date).getTime() - Date.now()) / (1000 * 60 * 60) < 24 && (
+          {booking && (new Date(booking.date).getTime() - Date.now()) / (1000 * 60 * 60) < 4 && (
             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex gap-2 mb-4">
               <CalendarClock className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
               <p className="text-green-300 text-xs">
                 {isEs
-                  ? "Tu cita es en menos de 24 horas. Reprogramar es gratis, pero cancelar aplicaría un cargo del 50%."
-                  : "Your appointment is less than 24 hours away. Rescheduling is free, but cancelling would incur a 50% fee."}
+                  ? "Tu cita es en menos de 4 horas. Reprogramar es gratis, pero cancelar aplicaría un cargo del 25%."
+                  : "Your appointment is less than 4 hours away. Rescheduling is free, but cancelling would incur a 25% fee."}
               </p>
             </div>
           )}
@@ -222,8 +222,8 @@ export default function ReschedulePage() {
                   <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                   <p>
                     {isEs
-                      ? "Cancelación gratuita hasta 24 horas antes de la cita. Cancelaciones con menos de 24 horas incurren un cargo del 50% del servicio."
-                      : "Free cancellation up to 24 hours before your appointment. Cancellations within 24 hours incur a 50% service fee."}
+                      ? "Cancelación gratuita hasta 4 horas antes de la cita. Cancelaciones con menos de 4 horas incurren un cargo del 25% del servicio."
+                      : "Free cancellation up to 4 hours before your appointment. Cancellations within 4 hours incur a 25% service fee."}
                   </p>
                 </div>
               </div>
@@ -309,6 +309,16 @@ export default function ReschedulePage() {
                   </span>
                 </div>
               ) : (
+                timeSlots.every((slot) => !isTimeSlotAvailable(slot)) ? (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
+                  <p className="text-yellow-300 text-sm">
+                    {isEs
+                      ? "No hay horarios disponibles para esta fecha. Por favor seleccione otro dia."
+                      : "No available time slots for this date. Please select another day."}
+                  </p>
+                </div>
+              ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                   {timeSlots.map((slot) => {
                     const isSelected = selectedWindow === slot.slot;
@@ -357,6 +367,7 @@ export default function ReschedulePage() {
                     );
                   })}
                 </div>
+              )
               )}
             </div>
           )}

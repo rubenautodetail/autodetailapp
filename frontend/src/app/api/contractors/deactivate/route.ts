@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
             .from('bookings')
             .select('id')
             .eq('contractor_id', user.id)
-            .in('status', ['confirmed', 'in_progress'])
+            .in('status', ['confirmed', 'en_route', 'in_progress', 'pending_approval'])
             .limit(1);
 
         if (activeBookings && activeBookings.length > 0) {

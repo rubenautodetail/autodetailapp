@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createApiClient } from '@/lib/supabase/server';
 
 interface TimeWindow {
   slot: string; // HH:MM format
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
         const currentMonth = today.toISOString().slice(0, 7);
 
-        const supabase = createServiceClient();
+        const supabase = createApiClient();
 
         // Fetch active time windows directly from DB (no self-fetch needed)
         const DEFAULT_TIME_WINDOWS: TimeWindow[] = [

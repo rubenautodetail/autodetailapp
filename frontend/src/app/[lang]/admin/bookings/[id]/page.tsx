@@ -38,6 +38,7 @@ interface BookingDetail {
   reviewRating: number | null;
   reviewComment: string | null;
   reviewedAt: string | null;
+  completionNotes: string | null;
 }
 
 interface ContractorInfo {
@@ -451,6 +452,13 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
             value={fmtDateTime(booking.updatedAt, locale)}
           />
         </Section>
+
+        {/* Completion Notes */}
+        {booking.completionNotes && (
+          <Section title={locale === "es" ? "Notas de Finalización" : "Completion Notes"}>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{booking.completionNotes}</p>
+          </Section>
+        )}
 
         {/* Customer Review */}
         {booking.reviewRating && (

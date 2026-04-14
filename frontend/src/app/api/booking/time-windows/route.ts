@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createApiClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +22,7 @@ const DEFAULT_TIME_WINDOWS = [
 
 export async function GET() {
   try {
-    const supabase = createServiceClient();
+    const supabase = createApiClient();
 
     const { data, error } = await supabase
       .from('time_windows')

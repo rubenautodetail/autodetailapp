@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe/server";
+import { notify } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const { data: booking, error: fetchErr } = await supabase
     .from("bookings")
-    .select("id, date, status, payment_intent_id, payment_status, customer_email")
+    .select("id, date, status, payment_intent_id, payment_status, customer_email, contractor_id, user_id, service_name, customer_name, customer_phone, address, city, state, zip_code, vehicle_make, vehicle_model, vehicle_year, vehicle_color, total_amount, time_window, confirmation_code, locale")
     .eq("id", bookingId)
     .single();
 
@@ -45,11 +46,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Cannot cancel this booking" }, { status: 400 });
   }
 
-  // Determine if cancellation is within 24 hours (50% penalty applies)
+  // Determine if cancellation is within 4 hours (25% penalty applies)
   const bookingDate = new Date(booking.date);
   const now = new Date();
   const hoursUntilBooking = (bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const isLateCancellation = hoursUntilBooking < 24 &&
+  const isLateCancellation = hoursUntilBooking < 4 &&
     booking.status !== "pending_payment" && booking.status !== "pending";
 
   // Process Stripe cancellation / refund (best-effort — never block the cancellation)
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
 
       if (pi.status === "requires_capture") {
         if (isLateCancellation) {
-          const penaltyAmount = Math.round((pi.amount ?? 0) / 2);
+          const penaltyAmount = Math.round((pi.amount ?? 0) / 4);
           await stripe.paymentIntents.capture(booking.payment_intent_id, {
             amount_to_capture: penaltyAmount,
           });
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     try {
       if (isLateCancellation) {
         const pi = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
-        const refundAmount = Math.round((pi.amount_received ?? 0) / 2);
+        const refundAmount = Math.round((pi.amount_received ?? 0) * 0.75);
         await stripe.refunds.create({
           payment_intent: booking.payment_intent_id,
           amount: refundAmount,
@@ -109,6 +110,10 @@ export async function POST(req: NextRequest) {
       : "unpaid";
 
   const cancelledAt = new Date().toISOString();
+  const cancellationReason = isLateCancellation
+    ? "Late cancellation - 25% penalty applied"
+    : "Cancelled by customer";
+
   const { error } = await supabase
     .from("bookings")
     .update({
@@ -116,11 +121,40 @@ export async function POST(req: NextRequest) {
       payment_status: newPaymentStatus,
       cancelled_at: cancelledAt,
       updated_at: cancelledAt,
+      cancellation_reason: cancellationReason,
     })
     .eq("id", bookingId);
 
   if (error) {
     return NextResponse.json({ error: "Failed to cancel booking" }, { status: 500 });
+  }
+
+  // --- Notification dispatch (best-effort, never block response) ---
+  try {
+    // 1. Send cancellation email to customer
+    await notify({
+      type: "booking.failed",
+      booking: { ...booking, status: "cancelled" },
+    });
+
+    // 2. If a contractor was assigned, notify them
+    if (booking.contractor_id) {
+      const { data: contractor } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", booking.contractor_id)
+        .single();
+
+      if (contractor?.email) {
+        await notify({
+          type: "contractor.job_cancelled",
+          booking: { ...booking, status: "cancelled" },
+          contractorEmail: contractor.email,
+        });
+      }
+    }
+  } catch (notifErr) {
+    console.error("Cancel notification error (non-blocking):", notifErr);
   }
 
   return NextResponse.json({

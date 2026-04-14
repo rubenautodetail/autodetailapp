@@ -23,6 +23,7 @@ interface Booking {
         full_name: string;
         phone_number: string;
     };
+    completion_notes?: string | null;
 }
 
 function ApproveServiceContent() {
@@ -269,6 +270,18 @@ function ApproveServiceContent() {
                         ))}
                     </div>
                 </div>
+
+                {/* Detailer's Notes */}
+                {booking.completion_notes && (
+                    <div className="bg-[#1A2142] rounded-2xl border border-[#D0B078]/30 p-6">
+                        <h2 className="font-bold text-[#D0B078] mb-3 text-sm uppercase tracking-wide">
+                            {lang === 'es' ? 'Notas del Detallista' : "Detailer's Notes"}
+                        </h2>
+                        <p className="text-sm text-[#A5B0D1] whitespace-pre-wrap leading-relaxed">
+                            {booking.completion_notes}
+                        </p>
+                    </div>
+                )}
 
                 {/* Error */}
                 {error && (

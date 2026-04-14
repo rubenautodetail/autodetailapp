@@ -21,7 +21,7 @@ function RegisterForm() {
     const lang = (params.lang as string) || "en";
 
     const next = searchParams.get("next");
-    const redirectTo = next || `/${lang}/dashboard`;
+    const redirectTo = next || `/${lang}/customer`;
 
     const isContractorFlow = !!next?.includes("contractors/apply");
     const isEs = lang === "es";

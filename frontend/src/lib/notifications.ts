@@ -91,6 +91,7 @@ function mapBookingData(rawBooking: any, contractor?: any): BookingEmailData {
             color: rawBooking.vehicle_color,
         },
         paymentIntentId: rawBooking.payment_intent_id,
+        notes: rawBooking.completion_notes || undefined,
         locale: rawBooking.locale || 'en',
         contractor: contractor ? {
             firstName: contractor.full_name?.split(' ')[0] || contractor.firstName,

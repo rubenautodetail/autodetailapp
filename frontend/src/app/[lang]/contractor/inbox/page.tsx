@@ -83,7 +83,7 @@ export default function InboxPage({ params }: Props) {
                 },
                 body: JSON.stringify({ bookingId: id }),
             });
-            toast.error(t.declined);
+            toast(t.declined);
         } catch {
             toast.error(t.error);
         } finally {

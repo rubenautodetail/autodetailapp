@@ -40,11 +40,11 @@ export default async function TermsPage({
                   },
                   {
                       heading: '6. Pagos, Tarifas y Devoluciones',
-                      body: 'Los pagos se procesan de forma segura a través de Stripe. La plataforma cobra una comisión del 30% sobre cada transacción. Las cancelaciones realizadas con más de 24 horas de anticipación son elegibles para reembolso completo. Las cancelaciones con menos de 24 horas de anticipación incurrirán un cargo del 50% del costo del servicio. Los cargos fraudulentos deben reportarse dentro de los 7 días.',
+                      body: 'Los pagos se procesan de forma segura a través de Stripe. La plataforma cobra una comisión del 30% sobre cada transacción. Las cancelaciones realizadas con más de 4 horas de anticipación son elegibles para reembolso completo. Las cancelaciones con menos de 4 horas de anticipación incurrirán un cargo del 25% del costo del servicio. Los cargos fraudulentos deben reportarse dentro de los 7 días.',
                   },
                   {
                       heading: '7. Política de Cancelación',
-                      body: 'Puede cancelar una reserva sin costo hasta 24 horas antes de la cita. Las cancelaciones con menos de 24 horas de anticipación incurrirán un cargo del 50%. Puede reprogramar sin costo hasta 2 horas antes de la cita. Los Contratistas también pueden cancelar en circunstancias excepcionales; en tal caso, recibirá un reembolso completo y asistencia para reprogramar.',
+                      body: 'Puede cancelar una reserva sin costo hasta 4 horas antes de la cita. Las cancelaciones con menos de 4 horas de anticipación incurrirán un cargo del 25%. Puede reprogramar sin costo hasta 2 horas antes de la cita. Los Contratistas también pueden cancelar en circunstancias excepcionales; en tal caso, recibirá un reembolso completo y asistencia para reprogramar.',
                   },
                   {
                       heading: '8. Limitación de Responsabilidad',
@@ -86,11 +86,11 @@ export default async function TermsPage({
                   },
                   {
                       heading: '6. Payments, Fees & Refunds',
-                      body: 'Payments are processed securely via Stripe. The platform charges a 30% commission on each transaction. Cancellations made more than 24 hours in advance are eligible for a full refund. Cancellations within 24 hours of the appointment will incur a 50% cancellation fee. Fraudulent charges must be reported within 7 days.',
+                      body: 'Payments are processed securely via Stripe. The platform charges a 30% commission on each transaction. Cancellations made more than 4 hours in advance are eligible for a full refund. Cancellations within 4 hours of the appointment will incur a 25% cancellation fee. Fraudulent charges must be reported within 7 days.',
                   },
                   {
                       heading: '7. Cancellation Policy',
-                      body: 'You may cancel a booking at no cost up to 24 hours before your appointment. Cancellations made less than 24 hours before the appointment will incur a 50% cancellation fee. Rescheduling is available up to 2 hours before the appointment at no charge. Contractors may also cancel under exceptional circumstances; in that case, you will receive a full refund and assistance rescheduling.',
+                      body: 'You may cancel a booking at no cost up to 4 hours before your appointment. Cancellations made less than 4 hours before the appointment will incur a 25% cancellation fee. Rescheduling is available up to 2 hours before the appointment at no charge. Contractors may also cancel under exceptional circumstances; in that case, you will receive a full refund and assistance rescheduling.',
                   },
                   {
                       heading: '8. Limitation of Liability',

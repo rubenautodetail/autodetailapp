@@ -15,6 +15,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing userId or name" }, { status: 400 });
     }
 
+    // Require Bearer token — reject unauthenticated requests
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "").trim();
+    if (!token) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const { user, error: authError } = await createAuthClient(token);
+    if (authError || !user) {
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
+    }
+
+    // The userId in the body must match the authenticated user
+    if (user.id !== userId) {
+      return NextResponse.json({ error: "Cannot create profile for another user" }, { status: 403 });
+    }
+
     const assignedRole = role === "contractor" ? "contractor" : "user";
     const supabase = createServiceClient();
 
@@ -22,16 +39,6 @@ export async function POST(req: NextRequest) {
     const { data: { user: authUser }, error: lookupErr } = await supabase.auth.admin.getUserById(userId);
     if (lookupErr || !authUser) {
       return NextResponse.json({ error: "Invalid user" }, { status: 403 });
-    }
-
-    // If caller sent a Bearer token, verify it matches the userId (extra safety)
-    const authHeader = req.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "").trim();
-    if (token) {
-      const { user, error: authError } = await createAuthClient(token);
-      if (!authError && user && user.id !== userId) {
-        return NextResponse.json({ error: "Cannot create profile for another user" }, { status: 403 });
-      }
     }
 
     // Only insert if profile doesn't exist — the Supabase trigger may have already created it

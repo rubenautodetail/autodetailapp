@@ -1,7 +1,7 @@
 /**
  * GET /api/contractors/dashboard
  * Returns incoming (unassigned) jobs + this contractor's active jobs + earnings.
- * Works with or without auth — unauthenticated gets incoming jobs only.
+ * Requires authentication — only approved contractors can access.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,41 +9,33 @@ import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 
 export async function GET(req: NextRequest) {
     try {
-        const supabase = createServiceClient();
         const authHeader = req.headers.get('Authorization');
         const token = authHeader?.replace('Bearer ', '').trim();
 
-        // Try to identify the contractor — non-fatal if not authenticated
-        let contractorId: string | null = null;
-        let contractorName: string | null = null;
-
-        if (token) {
-            try {
-                const { user } = await createAuthClient(token);
-                contractorId = user?.id ?? null;
-                if (contractorId) {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('full_name')
-                        .eq('id', contractorId)
-                        .single();
-                    contractorName = profile?.full_name?.split(' ')[0] ?? null;
-                }
-            } catch {
-                // Ignore auth errors — fall through as unauthenticated
-            }
+        // Require authentication
+        if (!token) {
+            return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
 
-        // Block unapproved contractors from seeing their personal dashboard data
-        if (contractorId) {
-            const { data: approvalCheck } = await supabase
-                .from('profiles')
-                .select('approval_status')
-                .eq('id', contractorId)
-                .single();
-            if ((approvalCheck as { approval_status?: string } | null)?.approval_status !== 'approved') {
-                return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
-            }
+        const { user, error: authError } = await createAuthClient(token);
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+        }
+
+        const contractorId = user.id;
+        const supabase = createServiceClient();
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, approval_status')
+            .eq('id', contractorId)
+            .single();
+
+        const contractorName = profile?.full_name?.split(' ')[0] ?? null;
+
+        // Block unapproved contractors
+        if (profile?.approval_status !== 'approved') {
+            return NextResponse.json({ error: 'Contractor account pending approval' }, { status: 403 });
         }
 
         // ── Incoming jobs: unassigned, status = pending_assignment ────────────
@@ -71,7 +63,7 @@ export async function GET(req: NextRequest) {
         let completedJobs: { id: number; service_name: string | null; date: string; total_amount: string | number; created_at: string; confirmation_code?: string | null; }[] = [];
         const earnings = { thisWeek: 0, total: 0 };
 
-        if (contractorId) {
+        {
             const { data: activeRaw } = await supabase
                 .from('bookings')
                 .select('id, document_id, service_name, time_window, address, city, zip_code, date, total_amount, status, confirmation_code')
@@ -115,7 +107,7 @@ export async function GET(req: NextRequest) {
                 ...b,
                 total_amount: contractorAmount(Number(b.total_amount) || 0),
             }));
-        }
+        } // end block
 
         return NextResponse.json({
             contractor: contractorId ? { id: contractorId, name: contractorName } : null,

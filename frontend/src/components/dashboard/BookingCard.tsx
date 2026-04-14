@@ -122,7 +122,7 @@ export function BookingCard({
     const safePrice = Number.isFinite(price) ? price : 0;
 
     const hoursUntil = hoursFromNow(date);
-    const within24h = hoursUntil < 24;
+    const within4h = hoursUntil < 4;
     const within2h = hoursUntil < 2;
 
     const displayTime = formatTimeWindow(time, isEs);
@@ -153,8 +153,8 @@ export function BookingCard({
     // Statuses where cancel/reschedule are available
     const canCancel = ['pending_payment', 'pending', 'pending_assignment', 'confirmed'].includes(status);
     const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within2h;
-    // Late cancellation (<24h) incurs 50% penalty, but is always allowed
-    const hasLatePenalty = status !== 'pending_payment' && status !== 'pending' && within24h;
+    // Late cancellation (<4h) incurs 25% penalty, but is always allowed
+    const hasLatePenalty = status !== 'pending_payment' && status !== 'pending' && within4h;
 
     return (
         <motion.div
@@ -271,8 +271,8 @@ export function BookingCard({
                                         </p>
                                         <p className="text-xs text-amber-300/80">
                                             {isEs
-                                                ? `Tu cita es en menos de 24 horas. Cancelar ahora aplicará un cargo del 50% ($${(safePrice * 0.5).toFixed(2)}).`
-                                                : `Your appointment is less than 24 hours away. Cancelling now will incur a 50% fee ($${(safePrice * 0.5).toFixed(2)}).`}
+                                                ? `Tu cita es en menos de 4 horas. Cancelar ahora aplicará un cargo del 25% ($${(safePrice * 0.25).toFixed(2)}).`
+                                                : `Your appointment is less than 4 hours away. Cancelling now will incur a 25% fee ($${(safePrice * 0.25).toFixed(2)}).`}
                                         </p>
                                     </div>
                                 </div>
@@ -293,8 +293,8 @@ export function BookingCard({
                                         <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                                         <p>
                                             {isEs
-                                                ? 'Cancelación gratuita hasta 24 horas antes de la cita. Cancelaciones con menos de 24 horas incurren un cargo del 50% del servicio.'
-                                                : 'Free cancellation up to 24 hours before your appointment. Cancellations within 24 hours incur a 50% service fee.'}
+                                                ? 'Cancelación gratuita hasta 4 horas antes de la cita. Cancelaciones con menos de 4 horas incurren un cargo del 25% del servicio.'
+                                                : 'Free cancellation up to 4 hours before your appointment. Cancellations within 4 hours incur a 25% service fee.'}
                                         </p>
                                     </div>
                                     <div className="flex items-start gap-2">
@@ -334,13 +334,13 @@ export function BookingCard({
                                             <div className="flex items-center gap-1.5">
                                                 <AlertTriangle className="w-4 h-4 text-red-400" />
                                                 <p className="text-xs font-bold text-red-300">
-                                                    {isEs ? 'Penalidad del 50%' : '50% penalty applies'}
+                                                    {isEs ? 'Penalidad del 25%' : '25% penalty applies'}
                                                 </p>
                                             </div>
                                             <p className="text-xs text-red-300/90">
                                                 {isEs
-                                                    ? `Se te cobrará $${(safePrice * 0.5).toFixed(2)} (50% de $${safePrice.toFixed(2)}) por cancelar con menos de 24 horas de anticipación. Solo se reembolsará el 50% restante.`
-                                                    : `You will be charged $${(safePrice * 0.5).toFixed(2)} (50% of $${safePrice.toFixed(2)}) for cancelling less than 24 hours before your appointment. Only the remaining 50% will be refunded.`}
+                                                    ? `Se te cobrará $${(safePrice * 0.25).toFixed(2)} (25% de $${safePrice.toFixed(2)}) por cancelar con menos de 4 horas de anticipación. Se reembolsará el 75% restante.`
+                                                    : `You will be charged $${(safePrice * 0.25).toFixed(2)} (25% of $${safePrice.toFixed(2)}) for cancelling less than 4 hours before your appointment. The remaining 75% will be refunded.`}
                                             </p>
                                         </>
                                     ) : (
@@ -366,8 +366,8 @@ export function BookingCard({
                                             {cancelling
                                                 ? (isEs ? 'Cancelando…' : 'Cancelling…')
                                                 : (isEs
-                                                    ? (hasLatePenalty ? 'Sí, cancelar (50%)' : 'Sí, cancelar')
-                                                    : (hasLatePenalty ? 'Yes, cancel (50%)' : 'Yes, cancel'))}
+                                                    ? (hasLatePenalty ? 'Sí, cancelar (25%)' : 'Sí, cancelar')
+                                                    : (hasLatePenalty ? 'Yes, cancel (25%)' : 'Yes, cancel'))}
                                         </button>
                                     </div>
                                 </div>

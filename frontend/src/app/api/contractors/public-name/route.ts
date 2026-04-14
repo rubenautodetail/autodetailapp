@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createApiClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ name: null });
 
-    const supabase = createServiceClient();
+    const supabase = createApiClient();
     const { data } = await supabase
       .from('profiles')
       .select('full_name')
@@ -18,7 +18,8 @@ export async function GET(req: Request) {
       .eq('role', 'contractor')
       .single();
 
-    return NextResponse.json({ name: data?.full_name || null });
+    const firstName = data?.full_name?.split(' ')[0] || null;
+    return NextResponse.json({ name: firstName });
   } catch {
     return NextResponse.json({ name: null });
   }

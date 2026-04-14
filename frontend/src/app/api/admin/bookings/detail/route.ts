@@ -32,6 +32,7 @@ interface BookingDetail {
   review_rating: number | null;
   review_comment: string | null;
   reviewed_at: string | null;
+  completion_notes: string | null;
 }
 
 interface ContractorProfileRow {
@@ -122,6 +123,7 @@ export async function GET(req: NextRequest) {
     reviewRating: b.review_rating ?? null,
     reviewComment: b.review_comment ?? null,
     reviewedAt: b.reviewed_at ?? null,
+    completionNotes: b.completion_notes ?? null,
   };
 
   return NextResponse.json({ booking, contractor });
