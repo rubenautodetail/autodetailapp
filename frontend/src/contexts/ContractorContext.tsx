@@ -118,7 +118,13 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
     fetchBookings();
 
     // Re-fetch when window regains focus (e.g. returning from job details)
-    const handleFocus = () => { fetchBookings(); };
+    // Throttled: skip if last fetch was < 5 seconds ago
+    let lastFetchTime = Date.now();
+    const handleFocus = () => {
+        if (Date.now() - lastFetchTime < 5000) return;
+        lastFetchTime = Date.now();
+        fetchBookings();
+    };
     window.addEventListener('focus', handleFocus);
 
     // Real-time subscription — filtered to this contractor's bookings only

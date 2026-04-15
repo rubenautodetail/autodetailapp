@@ -222,7 +222,13 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         fetchUserData();
 
         // Re-fetch bookings when the window regains focus (e.g. returning from booking flow)
-        const handleFocus = () => { fetchBookings(); };
+        // Throttled: skip if last fetch was < 5 seconds ago
+        let lastFetchTime = Date.now();
+        const handleFocus = () => {
+            if (Date.now() - lastFetchTime < 5000) return;
+            lastFetchTime = Date.now();
+            fetchBookings();
+        };
         window.addEventListener('focus', handleFocus);
 
 
