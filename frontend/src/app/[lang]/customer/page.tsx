@@ -36,7 +36,7 @@ export default function CustomerDashboardPage() {
     const params = useParams();
     const lang = (params?.lang as string) || 'en';
     const isEs = lang === 'es';
-    const { bookings, notifications, dismissNotification, userProfile, isLoading } = useBookingStatus();
+    const { bookings, notifications, dismissNotification, userProfile, isLoading, updateBookingStatus, addNotification } = useBookingStatus();
     const [tab, setTab] = useState<'active' | 'history'>('active');
     const [showAllHistory, setShowAllHistory] = useState(false);
 
@@ -166,7 +166,21 @@ export default function CustomerDashboardPage() {
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {activeBookings.map((booking, index) => (
-                                            <BookingCard key={booking.id} {...booking} index={index} />
+                                            <BookingCard
+                                                key={booking.id}
+                                                {...booking}
+                                                index={index}
+                                                onRefresh={() => {
+                                                    updateBookingStatus(booking.id, 'cancelled');
+                                                    addNotification({
+                                                        title: isEs ? 'Servicio Cancelado' : 'Service Cancelled',
+                                                        message: isEs
+                                                            ? 'Tu reserva ha sido cancelada. Recibirás un email de confirmación.'
+                                                            : 'Your booking has been cancelled. You will receive a confirmation email.',
+                                                        type: 'info',
+                                                    });
+                                                }}
+                                            />
                                         ))}
                                     </div>
                                 )

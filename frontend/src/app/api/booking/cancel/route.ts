@@ -131,9 +131,9 @@ export async function POST(req: NextRequest) {
 
   // --- Notification dispatch (best-effort, never block response) ---
   try {
-    // 1. Send cancellation email to customer
+    // 1. Send cancellation email to customer + notify admins
     await notify({
-      type: "booking.failed",
+      type: "booking.cancelled",
       booking: { ...booking, status: "cancelled" },
     });
 

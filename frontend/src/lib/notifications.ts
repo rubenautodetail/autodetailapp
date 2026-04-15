@@ -22,6 +22,7 @@ type NotificationEvent =
     | { type: 'booking.created'; booking: any }
     | { type: 'booking.confirmed'; booking: any }
     | { type: 'booking.failed'; booking: any }
+    | { type: 'booking.cancelled'; booking: any }
     | { type: 'booking.pending_approval'; booking: any }
     | { type: 'booking.approved'; booking: any; contractorEmail: string }
     | { type: 'contractor.job_assigned'; booking: any; contractorEmail: string }
@@ -154,6 +155,44 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 break;
             }
 
+            case 'booking.cancelled': {
+                const l = loc(event.booking);
+                // Email to customer
+                await sendBookingCancelledEmail(mapBookingData(event.booking));
+                // In-app notification for customer
+                await createInAppNotification(
+                    event.booking.user_id,
+                    l === 'es' ? 'Reserva Cancelada' : 'Booking Cancelled',
+                    l === 'es'
+                        ? `Tu reserva para ${event.booking.service_name || 'Detallado'} ha sido cancelada. Recibirás un email de confirmación.`
+                        : `Your booking for ${event.booking.service_name || 'Detailing'} has been cancelled. You will receive a confirmation email.`,
+                    'info',
+                    `/${l}/customer`
+                );
+                // Notify all admins
+                try {
+                    const supabase = createServiceClient();
+                    const { data: admins } = await supabase
+                        .from('profiles')
+                        .select('id')
+                        .eq('role', 'admin');
+                    if (admins?.length) {
+                        for (const admin of admins) {
+                            await createInAppNotification(
+                                admin.id,
+                                'Customer Cancellation',
+                                `Booking ${event.booking.confirmation_code || event.booking.id} for ${event.booking.service_name || 'Detailing'} cancelled by customer.`,
+                                'warning',
+                                '/en/admin/bookings'
+                            );
+                        }
+                    }
+                } catch (adminErr) {
+                    console.error('Failed to notify admins about cancellation:', adminErr);
+                }
+                break;
+            }
+
             case 'booking.pending_approval': {
                 const l = loc(event.booking);
                 await sendJobPendingApprovalEmail(mapBookingData(event.booking));
@@ -201,11 +240,21 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 break;
 
             case 'contractor.job_cancelled':
-                // Notify contractor via email that a job was removed from their schedule
+                // Email contractor that a job was removed from their schedule
                 await sendBookingCancelledEmail({
                     ...mapBookingData(event.booking),
                     customer: { ...mapBookingData(event.booking).customer, email: event.contractorEmail },
                 });
+                // In-app notification for contractor
+                if (event.booking.contractor_id) {
+                    await createInAppNotification(
+                        event.booking.contractor_id,
+                        'Job Cancelled',
+                        `Booking ${event.booking.confirmation_code || event.booking.id} for ${event.booking.service_name || 'Detailing'} has been cancelled by the customer.`,
+                        'warning',
+                        '/en/contractor/dashboard'
+                    );
+                }
                 break;
 
             case 'contractor.job_accepted': {

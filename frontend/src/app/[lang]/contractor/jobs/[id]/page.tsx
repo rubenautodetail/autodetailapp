@@ -35,6 +35,8 @@ interface JobData {
     vehicle?: string;
     confirmation_code?: string;
     document_id?: string;
+    selected_add_ons?: Array<{ name?: string; price?: number }>;
+    total_amount?: number;
 }
 
 const translations = {
@@ -205,7 +207,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             const supabase = createClient();
             const { data, error: fetchError } = await supabase
                 .from("bookings")
-                .select("id, status, service_name, time_window, address, city, zip_code, date, contractor_id, customer_name, customer_phone, special_instructions, confirmation_code, document_id, vehicle_make, vehicle_model, vehicle_year, vehicle_color")
+                .select("id, status, service_name, time_window, address, city, zip_code, date, contractor_id, customer_name, customer_phone, special_instructions, confirmation_code, document_id, vehicle_make, vehicle_model, vehicle_year, vehicle_color, selected_add_ons, total_amount")
                 .eq('id', id)
                 .eq("confirmation_code", code)
                 .single();
@@ -219,6 +221,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                     timeWindow: data.time_window,
                     specialInstructions: data.special_instructions,
                     location: { address: data.address, zipCode: data.zip_code },
+                    selected_add_ons: data.selected_add_ons ?? [],
                 });
             }
         } catch {
@@ -578,6 +581,23 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                             </div>
                         )}
                     </div>
+
+                    {/* Add-ons */}
+                    {Array.isArray(job.selected_add_ons) && job.selected_add_ons.length > 0 && (
+                        <div className="mt-5 pt-5 border-t border-[#2A3155]">
+                            <p className="text-[#A5B0D1] text-xs font-medium uppercase tracking-wide mb-2">{t.addOns}</p>
+                            <div className="space-y-1.5">
+                                {job.selected_add_ons.map((addon: { name?: string; price?: number }, idx: number) => (
+                                    <div key={idx} className="flex items-center justify-between text-sm">
+                                        <span className="text-white/80">{addon.name || `Add-on ${idx + 1}`}</span>
+                                        {addon.price != null && (
+                                            <span className="text-[#D0B078] font-medium">${Number(addon.price).toFixed(2)}</span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Special instructions */}
                     {(job.specialInstructions || job.special_instructions) && (

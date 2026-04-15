@@ -113,7 +113,7 @@ export function BookingCard({
     const config = statusConfig[status] || statusConfig.pending;
     const StatusIcon = config.icon;
 
-    const [confirmCancel, setConfirmCancel] = useState(false);
+    const [cancelStep, setCancelStep] = useState<null | 'recommend' | 'confirm'>(null);
     const [cancelling, setCancelling] = useState(false);
     const [cancelError, setCancelError] = useState('');
     const [showPolicy, setShowPolicy] = useState(false);
@@ -140,7 +140,7 @@ export function BookingCard({
             if (!res.ok) {
                 setCancelError(data.error || (isEs ? 'Error al cancelar' : 'Failed to cancel'));
             } else {
-                setConfirmCancel(false);
+                setCancelStep(null);
                 onRefresh?.();
             }
         } catch {
@@ -261,73 +261,102 @@ export function BookingCard({
                     {/* Cancel / Reschedule actions */}
                     {canCancel && !['cancelled', 'completed'].includes(status) && (
                         <div className="space-y-2">
-                            {/* Late cancellation penalty warning */}
-                            {hasLatePenalty && (
-                                <div className="bg-amber-400/5 border border-amber-400/20 rounded-xl p-3 flex items-start gap-2">
-                                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-semibold text-amber-400">
-                                            {isEs ? 'Cancelación tardía' : 'Late cancellation'}
-                                        </p>
-                                        <p className="text-xs text-amber-300/80">
-                                            {isEs
-                                                ? `Tu cita es en menos de 4 horas. Cancelar ahora aplicará un cargo del 25% ($${(safePrice * 0.25).toFixed(2)}).`
-                                                : `Your appointment is less than 4 hours away. Cancelling now will incur a 25% fee ($${(safePrice * 0.25).toFixed(2)}).`}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Policy info toggle */}
-                            <button
-                                onClick={() => setShowPolicy(!showPolicy)}
-                                className="flex items-center gap-1.5 text-xs text-[#A5B0D1]/70 hover:text-[#A5B0D1] transition-colors"
-                            >
-                                <Info className="w-3.5 h-3.5" />
-                                {isEs ? 'Políticas de cancelación y reprogramación' : 'Cancellation & reschedule policy'}
-                                <ChevronDown className={`w-3 h-3 transition-transform ${showPolicy ? 'rotate-180' : ''}`} />
-                            </button>
-                            {showPolicy && (
-                                <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl p-3 space-y-2 text-xs text-[#A5B0D1]/80">
-                                    <div className="flex items-start gap-2">
-                                        <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
-                                        <p>
-                                            {isEs
-                                                ? 'Cancelación gratuita hasta 4 horas antes de la cita. Cancelaciones con menos de 4 horas incurren un cargo del 25% del servicio.'
-                                                : 'Free cancellation up to 4 hours before your appointment. Cancellations within 4 hours incur a 25% service fee.'}
-                                        </p>
+                            {!cancelStep && (
+                                <>
+                                    <button
+                                        onClick={() => setShowPolicy(!showPolicy)}
+                                        className="flex items-center gap-1.5 text-xs text-[#A5B0D1]/70 hover:text-[#A5B0D1] transition-colors"
+                                    >
+                                        <Info className="w-3.5 h-3.5" />
+                                        {isEs ? 'Políticas de cancelación y reprogramación' : 'Cancellation & reschedule policy'}
+                                        <ChevronDown className={`w-3 h-3 transition-transform ${showPolicy ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {showPolicy && (
+                                        <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl p-3 space-y-2 text-xs text-[#A5B0D1]/80">
+                                            <div className="flex items-start gap-2">
+                                                <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                                                <p>
+                                                    {isEs
+                                                        ? 'Cancelación gratuita hasta 4 horas antes de la cita. Cancelaciones con menos de 4 horas incurren un cargo del 25% del servicio.'
+                                                        : 'Free cancellation up to 4 hours before your appointment. Cancellations within 4 hours incur a 25% service fee.'}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <CalendarClock className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                                                <p>
+                                                    {isEs
+                                                        ? 'Reprogramación gratuita hasta 2 horas antes de la cita. No se permite reprogramar con menos de 2 horas de anticipación.'
+                                                        : 'Free rescheduling up to 2 hours before your appointment. Rescheduling is not available less than 2 hours before.'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex gap-2">
+                                        {canReschedule && (
+                                            <Link
+                                                href={`/${lang}/booking/${id}/reschedule`}
+                                                className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#A5B0D1] hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded-lg transition-all"
+                                            >
+                                                <CalendarClock className="w-3.5 h-3.5" />
+                                                {isEs ? 'Reprogramar' : 'Reschedule'}
+                                            </Link>
+                                        )}
+                                        <button
+                                            onClick={() => setCancelStep(canReschedule ? 'recommend' : 'confirm')}
+                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition-all"
+                                        >
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            {isEs ? 'Cancelar Servicio' : 'Cancel Service'}
+                                        </button>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <CalendarClock className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                                        <p>
-                                            {isEs
-                                                ? 'Reprogramación gratuita hasta 2 horas antes de la cita. No se permite reprogramar con menos de 2 horas de anticipación.'
-                                                : 'Free rescheduling up to 2 hours before your appointment. Rescheduling is not available less than 2 hours before.'}
-                                        </p>
-                                    </div>
-                                </div>
+                                </>
                             )}
 
-                            {!confirmCancel ? (
-                                <div className="flex gap-2">
-                                    {canReschedule && (
+                            {/* Step 1: Recommend rescheduling instead */}
+                            {cancelStep === 'recommend' && (
+                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <CalendarClock className="w-5 h-5 text-blue-400" />
+                                        <p className="text-sm font-bold text-blue-300">
+                                            {isEs ? '¿Prefieres reprogramar?' : 'Would you rather reschedule?'}
+                                        </p>
+                                    </div>
+                                    <p className="text-xs text-blue-200/80 leading-relaxed">
+                                        {isEs
+                                            ? hasLatePenalty
+                                                ? `Reprogramar es gratis y no pierdes tu dinero. Cancelar aplicará un cargo del 25% ($${(safePrice * 0.25).toFixed(2)}).`
+                                                : 'Reprogramar es gratis y mantienes tu lugar. Si cancelas, tendrás que reservar de nuevo.'
+                                            : hasLatePenalty
+                                                ? `Rescheduling is free and you keep your money. Cancelling will cost you a 25% fee ($${(safePrice * 0.25).toFixed(2)}).`
+                                                : 'Rescheduling is free and you keep your spot. If you cancel, you\'ll need to book again.'}
+                                    </p>
+                                    <div className="flex gap-2">
                                         <Link
                                             href={`/${lang}/booking/${id}/reschedule`}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#A5B0D1] hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded-lg transition-all"
+                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 py-2.5 px-3 rounded-lg transition-all"
                                         >
                                             <CalendarClock className="w-3.5 h-3.5" />
-                                            {isEs ? 'Reprogramar' : 'Reschedule'}
+                                            {isEs ? 'Sí, reprogramar' : 'Yes, reschedule'}
                                         </Link>
-                                    )}
+                                        <button
+                                            onClick={() => setCancelStep('confirm')}
+                                            className="flex-1 text-xs font-semibold text-red-400 hover:text-red-300 bg-white/5 hover:bg-white/10 py-2.5 px-3 rounded-lg transition-all"
+                                        >
+                                            {isEs ? 'No, quiero cancelar' : 'No, I want to cancel'}
+                                        </button>
+                                    </div>
                                     <button
-                                        onClick={() => setConfirmCancel(true)}
-                                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition-all"
+                                        onClick={() => { setCancelStep(null); setCancelError(''); }}
+                                        className="w-full text-xs text-[#A5B0D1]/60 hover:text-[#A5B0D1] transition-colors"
                                     >
-                                        <XCircle className="w-3.5 h-3.5" />
-                                        {isEs ? 'Cancelar' : 'Cancel'}
+                                        {isEs ? 'Volver' : 'Go back'}
                                     </button>
                                 </div>
-                            ) : (
+                            )}
+
+                            {/* Step 2: Final cancellation confirmation */}
+                            {cancelStep === 'confirm' && (
                                 <div className={`${hasLatePenalty ? 'bg-red-500/15 border-red-500/30' : 'bg-red-500/10 border-red-500/20'} border rounded-xl p-3 space-y-2`}>
                                     {hasLatePenalty ? (
                                         <>
@@ -345,7 +374,9 @@ export function BookingCard({
                                         </>
                                     ) : (
                                         <p className="text-xs text-red-300 font-medium">
-                                            {isEs ? '¿Seguro que deseas cancelar? Recibirás un reembolso completo.' : 'Are you sure you want to cancel? You will receive a full refund.'}
+                                            {isEs
+                                                ? '¿Seguro que deseas cancelar? El horario quedará disponible y recibirás un reembolso completo.'
+                                                : 'Are you sure? The time slot will be released and you will receive a full refund.'}
                                         </p>
                                     )}
                                     {cancelError && (
@@ -353,7 +384,7 @@ export function BookingCard({
                                     )}
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => { setConfirmCancel(false); setCancelError(''); }}
+                                            onClick={() => { setCancelStep(null); setCancelError(''); }}
                                             className="flex-1 text-xs font-semibold text-[#A5B0D1] bg-white/5 hover:bg-white/10 py-2 px-3 rounded-lg transition-all whitespace-nowrap"
                                         >
                                             {isEs ? 'No, volver' : 'No, go back'}

@@ -4,13 +4,13 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const supabase = createApiClient();
+        const supabase = createServiceClient();
 
         const [{ data: services }, { data: addOns }] = await Promise.all([
             supabase
