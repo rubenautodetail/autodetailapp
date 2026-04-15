@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, ReactNode, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { fmtDate } from '@/lib/dateUtils';
 import { useAuth } from './AuthContext';
@@ -78,7 +78,8 @@ interface BookingStatusContextType {
     updateSettings: (data: Partial<UserSettings>) => void;
     isLoading: boolean;
 
-    // Simulation helpers
+    // Refresh helpers
+    refreshBookings: () => Promise<void>;
     simulateProviderUpdate: (bookingId: string) => void;
 }
 
@@ -131,6 +132,11 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [settings, setSettings] = useState<UserSettings>(INITIAL_SETTINGS);
     const [isLoading, setIsLoading] = useState(true);
+    const refreshBookingsRef = useRef<(() => Promise<void>) | null>(null);
+
+    const refreshBookings = useCallback(async () => {
+        if (refreshBookingsRef.current) await refreshBookingsRef.current();
+    }, []);
 
     // Initial Fetch & Subscriptions
     useEffect(() => {
@@ -151,6 +157,32 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
         const userId = user.id;
         const userEmail = user.email;
+
+        async function fetchBookings() {
+            try {
+                const bookingsRes = await fetch('/api/booking/list');
+                if (bookingsRes.ok) {
+                    const { bookings: bookingData, contractorNames } = await bookingsRes.json();
+                    setBookings((bookingData ?? []).map((b: Record<string, unknown>) => ({
+                        id: String(b.id),
+                        serviceName: (b.service_name as string) || 'Auto Detail',
+                        date: b.date as string,
+                        time: (b.time_window as string) || 'N/A',
+                        status: (b.status as BookingStatus) || 'pending',
+                        price: Number(b.total_amount) || 0,
+                        customerAddress: (b.address as string) || 'N/A',
+                        paymentStatus: b.payment_status as string | undefined,
+                        confirmationCode: b.confirmation_code as string | undefined,
+                        providerName: b.contractor_id ? contractorNames[b.contractor_id as string] : undefined,
+                        providerRating: undefined,
+                        reviewRating: (b.review_rating as number | null) ?? null,
+                    })));
+                }
+            } catch {
+                console.error('Failed to fetch bookings via API');
+            }
+        }
+        refreshBookingsRef.current = fetchBookings;
 
         async function fetchUserData() {
             setIsLoading(true);
@@ -183,34 +215,16 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 setVehicles(vehicleData.map(mapDbVehicleToVehicle));
             }
 
-            // Fetch bookings via API route (bypasses RLS issues with client-side queries)
-            try {
-                const bookingsRes = await fetch('/api/booking/list');
-                if (bookingsRes.ok) {
-                    const { bookings: bookingData, contractorNames } = await bookingsRes.json();
-                    setBookings((bookingData ?? []).map((b: Record<string, unknown>) => ({
-                        id: String(b.id),
-                        serviceName: (b.service_name as string) || 'Auto Detail',
-                        date: b.date as string,
-                        time: (b.time_window as string) || 'N/A',
-                        status: (b.status as BookingStatus) || 'pending',
-                        price: Number(b.total_amount) || 0,
-                        customerAddress: (b.address as string) || 'N/A',
-                        paymentStatus: b.payment_status as string | undefined,
-                        confirmationCode: b.confirmation_code as string | undefined,
-                        providerName: b.contractor_id ? contractorNames[b.contractor_id as string] : undefined,
-                        providerRating: undefined,
-                        reviewRating: (b.review_rating as number | null) ?? null,
-                    })));
-                }
-            } catch {
-                console.error('Failed to fetch bookings via API');
-            }
-
+            await fetchBookings();
             setIsLoading(false);
         }
 
         fetchUserData();
+
+        // Re-fetch bookings when the window regains focus (e.g. returning from booking flow)
+        const handleFocus = () => { fetchBookings(); };
+        window.addEventListener('focus', handleFocus);
+
 
         // Real-time for Vehicles + Bookings
         const supabase = createClient();
@@ -234,6 +248,29 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
         const bookingChannel = supabase
             .channel(`user-bookings-${userId}`)
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'bookings', filter: `customer_email=eq.${userEmail}` },
+                (payload) => {
+                    const row = payload.new as Record<string, unknown>;
+                    const newBooking: Booking = {
+                        id: String(row.id),
+                        serviceName: (row.service_name as string) || 'Auto Detail',
+                        date: row.date as string,
+                        time: (row.time_window as string) || 'N/A',
+                        status: (row.status as BookingStatus) || 'pending',
+                        price: Number(row.total_amount) || 0,
+                        customerAddress: (row.address as string) || 'N/A',
+                        paymentStatus: row.payment_status as string | undefined,
+                        confirmationCode: row.confirmation_code as string | undefined,
+                        reviewRating: null,
+                    };
+                    setBookings(prev => {
+                        if (prev.some(b => b.id === newBooking.id)) return prev;
+                        return [newBooking, ...prev];
+                    });
+                }
+            )
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `customer_email=eq.${userEmail}` },
@@ -267,6 +304,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(vehicleChannel);
             supabase.removeChannel(bookingChannel);
+            window.removeEventListener('focus', handleFocus);
         };
     }, [user, user?.id, user?.email]);
 
@@ -495,6 +533,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 settings,
                 updateSettings,
                 isLoading,
+                refreshBookings,
                 simulateProviderUpdate,
             }}
         >

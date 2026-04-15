@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(100);
 
   if (error) {
     return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 });

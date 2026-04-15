@@ -117,6 +117,10 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
 
     fetchBookings();
 
+    // Re-fetch when window regains focus (e.g. returning from job details)
+    const handleFocus = () => { fetchBookings(); };
+    window.addEventListener('focus', handleFocus);
+
     // Real-time subscription — filtered to this contractor's bookings only
     const supabase = createClient();
     const channel = supabase
@@ -143,6 +147,7 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
 
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [contractorId]);
 
