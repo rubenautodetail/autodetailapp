@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
 
     if (type === 'addon') {
         // Create Stripe Product + Price — fail the request if Stripe is unreachable
+        let stripeProductId: string;
         try {
             const product = await stripe.products.create({
                 name: fields.name,
@@ -64,12 +65,12 @@ export async function POST(req: NextRequest) {
                 unit_amount: Math.round(parseFloat(fields.price) * 100),
                 currency: 'usd',
             });
+            stripeProductId = product.id;
         } catch (err) {
             console.error('Stripe product creation failed:', err);
             return NextResponse.json({ error: 'Failed to create Stripe product. Check Stripe credentials.' }, { status: 502 });
         }
 
-        // Note: add_ons table does not have stripe_product_id or updated_at columns
         const { data, error } = await supabase.from('add_ons').insert({
             name: fields.name,
             name_es: fields.name_es || null,
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
             duration_minutes: fields.duration_minutes ? parseInt(fields.duration_minutes) : null,
             is_active: true,
             sort_order: fields.sort_order || 99,
+            stripe_product_id: stripeProductId,
         }).select().single();
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });

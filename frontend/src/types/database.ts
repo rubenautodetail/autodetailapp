@@ -130,6 +130,7 @@ export interface Database {
                     duration_minutes: number | null
                     sort_order: number | null
                     is_active: boolean | null
+                    stripe_product_id: string | null
                     created_at: string
                 }
                 Insert: {
@@ -143,6 +144,7 @@ export interface Database {
                     duration_minutes?: number | null
                     sort_order?: number | null
                     is_active?: boolean | null
+                    stripe_product_id?: string | null
                     created_at?: string
                 }
                 Update: {
@@ -156,6 +158,7 @@ export interface Database {
                     duration_minutes?: number | null
                     sort_order?: number | null
                     is_active?: boolean | null
+                    stripe_product_id?: string | null
                     created_at?: string
                 }
             }

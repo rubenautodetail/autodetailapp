@@ -34,12 +34,9 @@ export async function PATCH(
         const table = isAddon ? 'add_ons' : 'services';
         const priceField = isAddon ? 'price' : 'base_price';
 
-        // Look up existing stripe_product_id from DB (only services have it; add_ons do not)
-        let stripeProductId: string | null = null;
-        if (!isAddon) {
-            const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
-            stripeProductId = existing?.stripe_product_id as string | null;
-        }
+        // Look up existing stripe_product_id from DB
+        const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
+        const stripeProductId = (existing?.stripe_product_id as string) || null;
 
         if (stripeProductId) {
             try {
@@ -99,12 +96,9 @@ export async function DELETE(
         const supabase = createServiceClient();
         const permanent = new URL(req.url).searchParams.get('permanent') === 'true';
 
-        // Look up stripe_product_id before deleting so we can archive it in Stripe (only services have it)
-        let stripeProductId: string | null = null;
-        if (table === 'services') {
-            const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
-            stripeProductId = existing?.stripe_product_id as string | null;
-        }
+        // Look up stripe_product_id before deleting so we can archive it in Stripe
+        const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
+        const stripeProductId = (existing?.stripe_product_id as string) || null;
 
         if (permanent) {
             // Archive Stripe product (deactivate, not delete — Stripe doesn't allow product deletion with prices)

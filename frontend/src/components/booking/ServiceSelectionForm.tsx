@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useBooking, Service, AddOn } from "@/contexts";
-import { AddOnSelector, PricingSummary } from "@/components/booking";
+import { AddOnSelector, PricingSummary, ProgressIndicator } from "@/components/booking";
 import { ServiceCard } from "@/components/booking/ServiceCard";
 import { Button } from "@/components/ui/Button";
 
@@ -73,41 +73,8 @@ export default function ServiceSelectionForm({
         <div className="min-h-screen bg-[#131835] py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Progress Indicator */}
-                <div className="mb-8 sm:mb-12">
-                    <div className="flex items-center justify-between max-w-3xl mx-auto">
-                        {[1, 2, 3, 4, 5].map((step) => (
-                            <div key={step} className="flex items-center w-full relative">
-                                <div
-                                    className={`
-                                        z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center
-                                        font-bold text-xs sm:text-sm transition-all duration-300
-                                        ${currentStep >= step
-                                            ? "bg-[#D0B078] text-[#131835] shadow-[0_0_15px_rgba(208,176,120,0.4)]"
-                                            : "bg-[var(--divider)] text-[var(--text-muted)]"
-                                        }
-                                    `}
-                                >
-                                    {step}
-                                </div>
-                                {step < 5 && (
-                                    <div
-                                        className={`
-                                            absolute left-4 sm:left-5 right-0 top-1/2 -mt-[2px] h-1 transition-colors duration-300
-                                            ${currentStep > step ? "bg-[#D0B078]" : "bg-[var(--divider)]"}
-                                        `}
-                                        style={{ width: 'calc(100% - 1rem)' }}
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex justify-between max-w-3xl mx-auto mt-2 sm:mt-3 text-[10px] sm:text-xs uppercase tracking-wider font-semibold">
-                        <span className="text-center text-[#D0B078]">{locale === "es" ? "Servicio" : "Service"}</span>
-                        <span className="text-center text-[var(--text-muted)]">{locale === "es" ? "Ubicación" : "Location"}</span>
-                        <span className="text-center text-[var(--text-muted)]">{locale === "es" ? "Horario" : "Schedule"}</span>
-                        <span className="text-center text-[var(--text-muted)]">{locale === "es" ? "Revisar" : "Review"}</span>
-                        <span className="text-center text-[var(--text-muted)]">{locale === "es" ? "Pago" : "Payment"}</span>
-                    </div>
+                <div className="mb-8 sm:mb-12 max-w-3xl mx-auto">
+                    <ProgressIndicator currentStep={currentStep} locale={locale} />
                 </div>
 
                 {/* Header */}

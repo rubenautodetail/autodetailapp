@@ -20,7 +20,7 @@ async function gql<T>(query: string, variables?: Record<string, unknown>): Promi
                 Authorization: `Bearer ${TOKEN}`,
             },
             body: JSON.stringify({ query, variables }),
-            next: { revalidate: 3600 },
+            next: { revalidate: 60, tags: ['hygraph'] },
         });
 
         if (!res.ok) return null;
