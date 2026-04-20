@@ -105,8 +105,13 @@ describe('PriceCalculateSchema', () => {
     }
   })
 
-  it('fails when serviceId is not a valid UUID', () => {
-    const result = PriceCalculateSchema.safeParse({ serviceId: 'not-a-uuid' })
+  it('accepts numeric string serviceId (Supabase PK)', () => {
+    const result = PriceCalculateSchema.safeParse({ serviceId: '7' })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails when serviceId is empty', () => {
+    const result = PriceCalculateSchema.safeParse({ serviceId: '' })
     expect(result.success).toBe(false)
   })
 })

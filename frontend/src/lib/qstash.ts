@@ -19,4 +19,4 @@ export function getQStashReceiver(): Receiver {
     });
 }
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dtailwash.com';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.dtailwash.com';

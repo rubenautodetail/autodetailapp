@@ -103,14 +103,60 @@ export async function POST(req: NextRequest) {
         : [{ make: vehicleMake, model: vehicleModel, year: vehicleYear, color: vehicleColor }];
 
     const vehicleCount = vehicles.length;
-    const perVehicleAmount = perVehicleTotal ?? (vehicleCount > 1 ? total / vehicleCount : total);
 
-    const amountCents = Math.round(total * 100);
+    const supabase = createServiceClient();
+
+    // ── Server-side price validation ────────────────────────────────────────
+    // Never trust client-submitted totals. Re-derive from DB prices.
+    const { data: dbService } = await supabase
+        .from('services')
+        .select('base_price')
+        .eq('name', serviceName)
+        .eq('is_active', true)
+        .single();
+
+    if (!dbService) {
+        return NextResponse.json({ error: 'Service not found or inactive' }, { status: 400 });
+    }
+
+    let serverAddOnsTotal = 0;
+    const verifiedAddOns: { name: string; price: number }[] = [];
+    if (selectedAddOnsInput && selectedAddOnsInput.length > 0) {
+        const addOnNames = selectedAddOnsInput.map(a => a.name);
+        const { data: dbAddOns } = await supabase
+            .from('add_ons')
+            .select('name, price')
+            .in('name', addOnNames)
+            .eq('is_active', true);
+
+        if (dbAddOns) {
+            for (const addon of dbAddOns) {
+                serverAddOnsTotal += Number(addon.price);
+                verifiedAddOns.push({ name: addon.name, price: Number(addon.price) });
+            }
+        }
+    }
+
+    const serverPerVehicle = Number(dbService.base_price) + serverAddOnsTotal;
+    const serverTotal = Math.round(serverPerVehicle * vehicleCount * 100) / 100;
+    const perVehicleAmount = serverPerVehicle;
+
+    // Allow a small tolerance ($0.02) for floating-point rounding
+    if (Math.abs(serverTotal - total) > 0.02) {
+        console.warn(
+            `create-with-payment: price mismatch — client sent $${total}, server calculated $${serverTotal} ` +
+            `(service: $${dbService.base_price}, addOns: $${serverAddOnsTotal}, vehicles: ${vehicleCount})`
+        );
+        return NextResponse.json({
+            error: 'Price has changed. Please go back and review your order.',
+            serverTotal,
+        }, { status: 409 });
+    }
+
+    const amountCents = Math.round(serverTotal * 100);
     if (amountCents <= 0) {
         return NextResponse.json({ error: 'Invalid booking total' }, { status: 400 });
     }
-
-    const supabase = createServiceClient();
     const userId = user?.id || null;
 
     // Generate a group ID when booking multiple vehicles in one appointment
@@ -133,11 +179,10 @@ export async function POST(req: NextRequest) {
         special_instructions: specialInstructions || '',
         locale,
         subtotal: perVehicleAmount,
-        // serviceFee from client is already per-vehicle — do NOT divide by vehicleCount
-        service_fee: serviceFee ?? 0,
+        service_fee: 0,
         total_amount: perVehicleAmount,
         service_name: serviceName || null,
-        selected_add_ons: selectedAddOnsInput ?? [],
+        selected_add_ons: verifiedAddOns,
         vehicle_make: v.make || null,
         vehicle_model: v.model || null,
         vehicle_year: v.year || null,

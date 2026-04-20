@@ -35,12 +35,13 @@ export async function PATCH(
         const priceField = isAddon ? 'price' : 'base_price';
 
         // Look up existing stripe_product_id from DB
-        const { data: existing } = await supabase.from(table).select('stripe_product_id').eq('id', id).single();
-        const stripeProductId = (existing?.stripe_product_id as string) || null;
+        const { data: existing } = await supabase.from(table).select('stripe_product_id, name, description, price, base_price').eq('id', id).single();
+        let stripeProductId = (existing?.stripe_product_id as string) || null;
 
-        if (stripeProductId) {
-            try {
-                const updates: Record<string, any> = {};
+        try {
+            if (stripeProductId) {
+                // Update existing Stripe product
+                const updates: Record<string, unknown> = {};
                 if (fields.name) updates.name = fields.name;
                 if (fields.description) updates.description = fields.description;
                 if (typeof fields.is_active === 'boolean') updates.active = fields.is_active;
@@ -56,13 +57,37 @@ export async function PATCH(
                         currency: 'usd',
                     });
                 }
-            } catch (err) {
-                console.error('Stripe sync failed:', err);
-                return NextResponse.json({ error: 'Failed to sync changes to Stripe.' }, { status: 502 });
+            } else {
+                // Backfill: create a Stripe product for legacy items that predate Stripe sync
+                const productName = fields.name || (existing?.name as string) || 'Unnamed';
+                const productDesc = fields.description || (existing?.description as string) || undefined;
+                const currentPrice = fields[priceField] ?? (existing as Record<string, unknown>)?.[priceField];
+
+                const product = await stripe.products.create({
+                    name: productName,
+                    description: productDesc,
+                    active: typeof fields.is_active === 'boolean' ? fields.is_active : true,
+                    metadata: { type: isAddon ? 'addon' : 'service', platform: 'dtailwash' },
+                });
+                if (currentPrice) {
+                    await stripe.prices.create({
+                        product: product.id,
+                        unit_amount: Math.round(parseFloat(String(currentPrice)) * 100),
+                        currency: 'usd',
+                    });
+                }
+                stripeProductId = product.id;
             }
+        } catch (err) {
+            console.error('Stripe sync failed:', err);
+            return NextResponse.json({ error: 'Failed to sync changes to Stripe.' }, { status: 502 });
         }
 
         const updatePayload: Record<string, unknown> = {};
+        // Persist backfilled stripe_product_id if it was just created
+        if (stripeProductId && !existing?.stripe_product_id) {
+            updatePayload.stripe_product_id = stripeProductId;
+        }
         // Only services table has updated_at column; add_ons does not
         if (!isAddon) updatePayload.updated_at = new Date().toISOString();
         const allowedFields = isAddon

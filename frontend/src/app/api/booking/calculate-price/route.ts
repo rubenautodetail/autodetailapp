@@ -51,12 +51,15 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch add-ons if any (only active ones)
+        // addOnIds arrive as stringified numeric PKs (e.g. "7") from the catalog API,
+        // so query by `id` (the actual PK), not `document_id` (a legacy HyGraph field that is null).
         let addOns: AddOn[] = [];
         if (addOnIds.length > 0) {
+            const numericIds = addOnIds.map(Number).filter((n) => !isNaN(n));
             const { data: addOnsData } = await supabase
                 .from('add_ons')
                 .select('*')
-                .in('document_id', addOnIds)
+                .in('id', numericIds)
                 .eq('is_active', true);
             addOns = (addOnsData as AddOn[]) || [];
         }

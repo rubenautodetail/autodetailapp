@@ -49,9 +49,12 @@ export const BookingCreateSchema = z.object({
 
 export type BookingCreateInput = z.infer<typeof BookingCreateSchema>;
 
+// IDs can be numeric strings (from Supabase PKs) or UUIDs (legacy document_id references)
+const flexibleIdSchema = z.string().min(1);
+
 export const PriceCalculateSchema = z.object({
-  serviceId: uuidSchema,
-  addOnIds: z.array(uuidSchema).optional(),
+  serviceId: flexibleIdSchema,
+  addOnIds: z.array(flexibleIdSchema).optional(),
   zipCode: z.string().regex(/^\d{5}$/, 'ZIP code must be exactly 5 digits').optional(),
 });
 
