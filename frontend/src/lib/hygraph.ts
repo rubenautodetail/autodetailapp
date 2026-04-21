@@ -109,9 +109,9 @@ function normalizeImageUrl(url: string | null | undefined): string | null {
  */
 export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingContent> {
     const data = await gql<{
-        landingHeroes: HeroContent[];
+        landingHeroes: (HeroContent & { heroImage?: { url: string } | null })[];
         testimonials: Testimonial[];
-        galleryImages: GalleryImage[];
+        galleryImages: (GalleryImage & { image?: { url: string } | null })[];
         promotionalBanners: PromotionalBanner[];
     }>(`
         query LandingContent($locale: Locale!) {
@@ -121,6 +121,7 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
                 ctaText
                 badgeText
                 heroImageUrl
+                heroImage { url }
             }
             testimonials(first: 6, orderBy: createdAt_DESC) {
                 authorName
@@ -136,6 +137,7 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
             ) {
                 caption
                 imageUrl
+                image { url }
                 section
                 sortOrder
             }
@@ -146,17 +148,20 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
         }
     `, { locale });
 
-    // Prefer the hero entry that has an image; fall back to first entry
-    const heroes = data?.landingHeroes ?? [];
+    // Prefer uploaded Asset over pasted URL string; prefer hero with an image
+    const heroes = (data?.landingHeroes ?? []).map(h => ({
+        ...h,
+        heroImageUrl: h.heroImage?.url ?? normalizeImageUrl(h.heroImageUrl) ?? h.heroImageUrl,
+    }));
     const heroWithImage = heroes.find(h => h.heroImageUrl) ?? heroes[0] ?? null;
-    if (heroWithImage) {
-        heroWithImage.heroImageUrl = normalizeImageUrl(heroWithImage.heroImageUrl) ?? heroWithImage.heroImageUrl;
-    }
 
-    // Normalize gallery image URLs (fix Unsplash page URLs → direct image URLs)
+    // Gallery: prefer uploaded Asset, fall back to URL string field
     const galleryImages = (data?.galleryImages ?? [])
-        .map(img => ({ ...img, imageUrl: normalizeImageUrl(img.imageUrl) ?? img.imageUrl }))
-        .filter(img => img.imageUrl.startsWith('https://'));
+        .map(img => ({
+            ...img,
+            imageUrl: img.image?.url ?? normalizeImageUrl(img.imageUrl) ?? img.imageUrl,
+        }))
+        .filter(img => img.imageUrl?.startsWith('https://'));
 
     return {
         hero: heroWithImage,
@@ -172,14 +177,15 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
  */
 export async function getContractorLandingContent(locale: 'en' | 'es'): Promise<ContractorLandingContent> {
     const data = await gql<{
-        contractorLandingHeroes: ContractorHeroContent[];
-        galleryImages: GalleryImage[];
+        contractorLandingHeroes: (ContractorHeroContent & { heroImage?: { url: string } | null })[];
+        galleryImages: (GalleryImage & { image?: { url: string } | null })[];
     }>(`
         query ContractorLandingContent($locale: Locale!) {
             contractorLandingHeroes(first: 1, locales: [$locale, en]) {
                 heading
                 subheading
                 heroImageUrl
+                heroImage { url }
             }
             galleryImages(
                 where: { section_in: ["contractor-hero", "contractor-gallery"] }
@@ -188,20 +194,25 @@ export async function getContractorLandingContent(locale: 'en' | 'es'): Promise<
             ) {
                 caption
                 imageUrl
+                image { url }
                 section
                 sortOrder
             }
         }
     `, { locale });
 
-    const contractorHero = data?.contractorLandingHeroes?.[0] ?? null;
-    if (contractorHero) {
-        contractorHero.heroImageUrl = normalizeImageUrl(contractorHero.heroImageUrl) ?? contractorHero.heroImageUrl;
-    }
+    const rawHero = data?.contractorLandingHeroes?.[0] ?? null;
+    const contractorHero = rawHero ? {
+        ...rawHero,
+        heroImageUrl: rawHero.heroImage?.url ?? normalizeImageUrl(rawHero.heroImageUrl) ?? rawHero.heroImageUrl,
+    } : null;
 
     const contractorGallery = (data?.galleryImages ?? [])
-        .map(img => ({ ...img, imageUrl: normalizeImageUrl(img.imageUrl) ?? img.imageUrl }))
-        .filter(img => img.imageUrl.startsWith('https://'));
+        .map(img => ({
+            ...img,
+            imageUrl: img.image?.url ?? normalizeImageUrl(img.imageUrl) ?? img.imageUrl,
+        }))
+        .filter(img => img.imageUrl?.startsWith('https://'));
 
     return {
         hero: contractorHero,
