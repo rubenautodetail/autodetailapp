@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * POST /api/revalidate?secret=<REVALIDATION_SECRET>
  *
  * Configure in HyGraph → Settings → Webhooks:
- *   URL: https://rubensautodetail.com/api/revalidate?secret=<secret>
+ *   URL: https://www.dtailwash.com/api/revalidate?secret=<secret>
  *   Triggers: Publish, Unpublish
  */
 export async function POST(req: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        revalidateTag('hygraph');
+        revalidateTag('hygraph', 'default');
         return NextResponse.json({ revalidated: true, now: Date.now() });
     } catch {
         return NextResponse.json({ message: 'Revalidation failed' }, { status: 500 });

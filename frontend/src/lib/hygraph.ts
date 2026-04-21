@@ -86,6 +86,21 @@ export interface ContractorLandingContent {
     galleryImages: GalleryImage[];
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Validates an image URL is a direct renderable link (not an HTML page).
+ * Filters out Unsplash page URLs (unsplash.com/photos/...) which Next.js <Image> can't render.
+ */
+function normalizeImageUrl(url: string | null | undefined): string | null {
+    if (!url) return null;
+    // Reject Unsplash page URLs — these are HTML pages, not images
+    if (url.includes('unsplash.com/photos/')) return null;
+    // Accept any HTTPS image URL (Unsplash CDN, HyGraph assets, etc.)
+    if (url.startsWith('https://')) return url;
+    return null;
+}
+
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 /**
@@ -100,7 +115,7 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
         promotionalBanners: PromotionalBanner[];
     }>(`
         query LandingContent($locale: Locale!) {
-            landingHeroes(first: 1, locales: [$locale, en]) {
+            landingHeroes(first: 5, locales: [$locale, en]) {
                 heading
                 subheading
                 ctaText
@@ -131,10 +146,22 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
         }
     `, { locale });
 
+    // Prefer the hero entry that has an image; fall back to first entry
+    const heroes = data?.landingHeroes ?? [];
+    const heroWithImage = heroes.find(h => h.heroImageUrl) ?? heroes[0] ?? null;
+    if (heroWithImage) {
+        heroWithImage.heroImageUrl = normalizeImageUrl(heroWithImage.heroImageUrl) ?? heroWithImage.heroImageUrl;
+    }
+
+    // Normalize gallery image URLs (fix Unsplash page URLs → direct image URLs)
+    const galleryImages = (data?.galleryImages ?? [])
+        .map(img => ({ ...img, imageUrl: normalizeImageUrl(img.imageUrl) ?? img.imageUrl }))
+        .filter(img => img.imageUrl.startsWith('https://'));
+
     return {
-        hero: data?.landingHeroes?.[0] ?? null,
+        hero: heroWithImage,
         testimonials: data?.testimonials ?? [],
-        galleryImages: data?.galleryImages ?? [],
+        galleryImages,
         promotionalBanner: data?.promotionalBanners?.[0] ?? null,
     };
 }
@@ -167,9 +194,18 @@ export async function getContractorLandingContent(locale: 'en' | 'es'): Promise<
         }
     `, { locale });
 
+    const contractorHero = data?.contractorLandingHeroes?.[0] ?? null;
+    if (contractorHero) {
+        contractorHero.heroImageUrl = normalizeImageUrl(contractorHero.heroImageUrl) ?? contractorHero.heroImageUrl;
+    }
+
+    const contractorGallery = (data?.galleryImages ?? [])
+        .map(img => ({ ...img, imageUrl: normalizeImageUrl(img.imageUrl) ?? img.imageUrl }))
+        .filter(img => img.imageUrl.startsWith('https://'));
+
     return {
-        hero: data?.contractorLandingHeroes?.[0] ?? null,
-        galleryImages: data?.galleryImages ?? [],
+        hero: contractorHero,
+        galleryImages: contractorGallery,
     };
 }
 
