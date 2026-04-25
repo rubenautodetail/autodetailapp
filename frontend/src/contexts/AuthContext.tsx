@@ -129,6 +129,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) throw error;
 
+    // Supabase returns a fake user with identities=[] when the email is already registered
+    // (to prevent email enumeration). Detect this and show a clear error.
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      throw new Error(
+        lang === 'es'
+          ? 'Ya existe una cuenta con este correo. Inicia sesión en su lugar.'
+          : 'An account with this email already exists. Please sign in instead.'
+      );
+    }
+
     // Create profile row via service-role API route (anon key can't write with RLS enabled).
     // This is BLOCKING — if it fails the user exists in auth but has no profile, causing errors everywhere.
     const isContractorFlow = postConfirmRedirect.includes('contractors/apply');
