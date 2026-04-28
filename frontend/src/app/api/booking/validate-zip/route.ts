@@ -3,7 +3,7 @@
  * Validates a ZIP code against the configured service area and returns available services + add-ons.
  *
  * Configure service area via environment variable:
- *   SERVICE_ZIP_CODES=33186,33155,33143,33165,33175,33185,33184,33183,33126,33145
+ *   SERVICE_ZIP_CODES=33186,33155,33143,33165,33175,33185,33184,33183,33126,33145,32856
  *
  * If SERVICE_ZIP_CODES is not set, all valid 5-digit ZIPs are accepted (development mode).
  */
