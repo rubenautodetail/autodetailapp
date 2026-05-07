@@ -118,13 +118,13 @@ export default async function TermsPage({
                 <div className="max-w-3xl mx-auto flex items-center justify-between">
                     <Link
                         href={`/${lang}`}
-                        className="text-sm text-white/40 hover:text-white/70 transition-colors"
+                        className="text-sm text-white/65 hover:text-white/90 transition-colors"
                     >
                         ← {es ? 'Volver al inicio' : 'Back to home'}
                     </Link>
                     <Link
                         href={`/${lang}/privacy`}
-                        className="text-sm text-white/40 hover:text-white/70 transition-colors"
+                        className="text-sm text-white/65 hover:text-white/90 transition-colors"
                     >
                         {es ? 'Política de Privacidad' : 'Privacy Policy'} →
                     </Link>
@@ -135,7 +135,7 @@ export default async function TermsPage({
                 {/* Title */}
                 <div className="mb-12">
                     <h1 className="text-4xl font-bold mb-3">{t.title}</h1>
-                    <p className="text-white/40 text-sm">
+                    <p className="text-white/60 text-sm">
                         {t.updated}: {new Date().toLocaleDateString(es ? 'es-US' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })}
                     </p>
                 </div>
@@ -145,14 +145,14 @@ export default async function TermsPage({
                     {t.sections.map((section, i) => (
                         <div key={i} className="border-b border-white/5 pb-10 last:border-0">
                             <h2 className="text-lg font-semibold text-[#D0B078] mb-3">{section.heading}</h2>
-                            <p className="text-white/60 leading-relaxed">{section.body}</p>
+                            <p className="text-white/75 leading-relaxed">{section.body}</p>
                         </div>
                     ))}
                 </div>
 
                 {/* Contact */}
                 <div className="mt-12 p-6 rounded-xl border border-white/10 bg-white/5">
-                    <p className="text-white/50 text-sm">
+                    <p className="text-white/65 text-sm">
                         {es
                             ? '¿Preguntas sobre estos términos? Contáctenos en '
                             : 'Questions about these terms? Contact us at '}
@@ -167,9 +167,9 @@ export default async function TermsPage({
 
                 {/* OAC Digital Innovations credit */}
                 <div className="mt-16 pt-8 border-t border-white/5 text-center">
-                    <p className="text-white/20 text-xs">
+                    <p className="text-white/50 text-xs">
                         {es ? 'Diseñado por' : 'Designed by'}{' '}
-                        <span className="text-white/35 font-medium">OAC Digital Innovations</span>
+                        <span className="text-white/65 font-medium">OAC Digital Innovations</span>
                     </p>
                 </div>
             </div>

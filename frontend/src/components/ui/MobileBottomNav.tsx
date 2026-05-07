@@ -66,13 +66,13 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
                                     className={`w-[22px] h-[22px] transition-all duration-300 ${
                                         active
                                             ? "text-accent-gold drop-shadow-[0_0_8px_rgba(208,176,120,0.4)]"
-                                            : "text-white/30 group-hover:text-white/50"
+                                            : "text-white/55 group-hover:text-white/70"
                                     }`}
                                     strokeWidth={active ? 2.2 : 1.5}
                                 />
                                 <span
                                     className={`text-[10px] font-medium tracking-wide transition-all duration-300 ${
-                                        active ? "text-accent-gold" : "text-white/30 group-hover:text-white/50"
+                                        active ? "text-accent-gold" : "text-white/55 group-hover:text-white/70"
                                     }`}
                                 >
                                     {label}

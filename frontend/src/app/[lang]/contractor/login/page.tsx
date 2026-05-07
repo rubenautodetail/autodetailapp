@@ -224,7 +224,7 @@ export default function ContractorLoginPage() {
 
         {/* Footer links */}
         <div className="mt-6 text-center space-y-3">
-          <p className="text-white/30 text-sm">
+          <p className="text-white/60 text-sm">
             {isEs ? "¿Nuevo técnico?" : "New technician?"}{" "}
             <Link
               href={`/${lang}/register?next=/${lang}/contractors/apply`}
@@ -233,7 +233,7 @@ export default function ContractorLoginPage() {
               {isEs ? "Aplica aquí" : "Apply here"}
             </Link>
           </p>
-          <p className="text-white/30 text-sm">
+          <p className="text-white/60 text-sm">
             {isEs ? "¿Cliente?" : "Customer?"}{" "}
             <Link
               href={`/${lang}/login`}
@@ -244,7 +244,7 @@ export default function ContractorLoginPage() {
           </p>
           <Link
             href={`/${lang}`}
-            className="block text-white/20 text-xs hover:text-white/40 transition-colors"
+            className="block text-white/50 text-xs hover:text-white/70 transition-colors"
           >
             ← {isEs ? "Volver al inicio" : "Back to home"}
           </Link>

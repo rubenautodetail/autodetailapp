@@ -20,6 +20,7 @@ export interface Dictionary {
         services: {
             title: string;
             subtitle: string;
+            express: { title: string; desc: string; price: string };
             interior: { title: string; desc: string; price: string };
             exterior: { title: string; desc: string; price: string };
             full: { title: string; desc: string; price: string };

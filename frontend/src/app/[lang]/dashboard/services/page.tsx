@@ -61,7 +61,7 @@ export default function ServicesPage() {
                 <h1 className="text-2xl font-bold text-white">
                     {isEs ? "Servicios" : "Services"}
                 </h1>
-                <p className="text-white/50 text-sm mt-1">
+                <p className="text-white/65 text-sm mt-1">
                     {isEs ? "Elige el servicio perfecto para tu auto" : "Choose the perfect service for your car"}
                 </p>
             </div>
@@ -86,7 +86,7 @@ export default function ServicesPage() {
                                     <span className="text-[#D0B078] font-bold text-lg">
                                         ${service.base_price}
                                     </span>
-                                    <p className="text-white/30 text-[10px]">{isEs ? "desde" : "from"}</p>
+                                    <p className="text-white/55 text-[10px]">{isEs ? "desde" : "from"}</p>
                                 </div>
 
                                 {/* Divider */}
@@ -95,18 +95,18 @@ export default function ServicesPage() {
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <p className="text-white font-semibold text-sm truncate">{name}</p>
-                                    <p className="text-white/40 text-xs mt-0.5 line-clamp-2">{desc}</p>
+                                    <p className="text-white/65 text-xs mt-0.5 line-clamp-2">{desc}</p>
                                     {service.duration_minutes && (
                                         <div className="flex items-center gap-1 mt-1.5">
-                                            <Clock className="w-3 h-3 text-white/30" />
-                                            <span className="text-white/30 text-[10px]">
+                                            <Clock className="w-3 h-3 text-white/55" />
+                                            <span className="text-white/55 text-[10px]">
                                                 {service.duration_minutes} {isEs ? "min" : "min"}
                                             </span>
                                         </div>
                                     )}
                                 </div>
 
-                                <ChevronRight className="w-4 h-4 text-white/20 shrink-0" />
+                                <ChevronRight className="w-4 h-4 text-white/45 shrink-0" />
                             </button>
                         );
                     })

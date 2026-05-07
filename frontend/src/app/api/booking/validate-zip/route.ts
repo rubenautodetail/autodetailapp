@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 // Parse configured service ZIP codes from env
 function getServiceZipCodes(): Set<string> | null {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        const supabase = createApiClient();
+        const supabase = createServiceClient();
 
         // Fetch active services from Supabase
         const { data: servicesData } = await supabase

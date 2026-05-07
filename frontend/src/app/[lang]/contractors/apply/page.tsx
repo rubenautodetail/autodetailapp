@@ -173,7 +173,7 @@ export default function ContractorApplyPage() {
                 <Link href={`/${lang}/contractors`} className="text-white/40 hover:text-white text-sm transition-colors">
                     ← {isEs ? "Volver" : "Back"}
                 </Link>
-                <span className="text-xs text-white/30">
+                <span className="text-xs text-white/60">
                     {isEs ? "Solicitud de contratista" : "Contractor application"}
                 </span>
             </div>
@@ -312,7 +312,7 @@ export default function ContractorApplyPage() {
                             : (isEs ? "Enviar solicitud" : "Submit application")}
                     </button>
 
-                    <p className="text-center text-white/25 text-xs pb-8">
+                    <p className="text-center text-white/55 text-xs pb-8">
                         {isEs
                             ? "Al enviar, aceptas nuestros términos de servicio."
                             : "By submitting, you agree to our terms of service."}

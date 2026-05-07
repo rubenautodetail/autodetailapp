@@ -16,20 +16,25 @@
     "services": {
       "title": "Premium Services",
       "subtitle": "Choose the perfect package for your vehicle",
+      "express": {
+        "title": "Express Detail",
+        "desc": "Interior vacuum, glass & surface cleaning + exterior hand wash, tire dressing, and spray wax.",
+        "price": "From $100"
+      },
       "interior": {
         "title": "Interior Detail",
-        "desc": "Deep cleaning for carpets, upholstery, and leather.",
-        "price": "From $150"
+        "desc": "Full vacuum, complete wipe-down with APC, carpet & mat cleaning, seat conditioning, and headliner care.",
+        "price": "From $160"
       },
       "exterior": {
         "title": "Exterior Detail",
-        "desc": "Hand wash, clay bar, and premium wax protection.",
-        "price": "From $120"
+        "desc": "Pre-wash foam, clay bar decontamination, hand wash, door jambs, and premium wax sealant.",
+        "price": "From $160"
       },
       "full": {
         "title": "Full Detail",
-        "desc": "The complete makeover. Interior deep clean + Exterior protection.",
-        "price": "From $250"
+        "desc": "The complete makeover. Interior deep clean + exterior decontamination, clay bar, and wax protection.",
+        "price": "From $300"
       }
     },
     "howItWorks": {

@@ -83,7 +83,11 @@ export async function POST(req: NextRequest) {
             stripe_product_id: stripeProductId,
         }).select().single();
 
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (error) {
+            console.error('add_ons insert failed:', error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        console.log('Add-on created successfully:', data?.id, data?.name, 'is_active:', data?.is_active);
         return NextResponse.json({ data });
     }
 

@@ -66,9 +66,10 @@ export default async function LandingPage({
     const stepImages = allGalleryImages.filter((img) => img.section === 'how-it-works').sort((a,b) => a.sortOrder - b.sortOrder);
 
     const services = [
-        { ...dict.home.services.interior, icon: '🪞', image: serviceImages[0]?.imageUrl },
-        { ...dict.home.services.exterior, icon: '✨', image: serviceImages[1]?.imageUrl },
-        { ...dict.home.services.full, icon: '🏆', image: serviceImages[2]?.imageUrl },
+        { ...dict.home.services.express, icon: '⚡', image: serviceImages[0]?.imageUrl },
+        { ...dict.home.services.interior, icon: '🪞', image: serviceImages[1]?.imageUrl },
+        { ...dict.home.services.exterior, icon: '✨', image: serviceImages[2]?.imageUrl },
+        { ...dict.home.services.full, icon: '🏆', image: undefined },
     ];
 
     const steps = [
@@ -157,7 +158,7 @@ export default async function LandingPage({
                     </h1>
 
                     {/* Subtitle */}
-                    <p className="text-lg text-white/50 font-light max-w-md mx-auto leading-relaxed">
+                    <p className="text-lg text-white/75 font-light max-w-md mx-auto leading-relaxed">
                         {hero.subheading}
                     </p>
 
@@ -168,7 +169,7 @@ export default async function LandingPage({
 
                     {/* Auth links */}
                     <div className="flex items-center justify-center gap-4 pt-2">
-                        <span className="text-white/30 text-sm">{locale === 'es' ? '¿Ya tienes cuenta?' : 'Already a member?'}</span>
+                        <span className="text-white/60 text-sm">{locale === 'es' ? '¿Ya tienes cuenta?' : 'Already a member?'}</span>
                         <Link
                             href={`/${locale}/login`}
                             className="text-sm text-white/60 hover:text-white transition-colors underline underline-offset-4"
@@ -195,7 +196,7 @@ export default async function LandingPage({
                     ].map((stat) => (
                         <div key={stat.label} className="space-y-1">
                             <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gold-gradient">{stat.value}</div>
-                            <div className="text-xs text-white/40 tracking-wide">{stat.label}</div>
+                            <div className="text-xs text-white/55 tracking-wide">{stat.label}</div>
                         </div>
                     ))}
                 </div>
@@ -235,7 +236,7 @@ export default async function LandingPage({
                                     <h3 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
                                         {step.title}
                                     </h3>
-                                    <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
+                                    <p className="text-white/70 text-sm leading-relaxed">{step.desc}</p>
                                 </div>
                             </div>
                         ))}
@@ -245,7 +246,7 @@ export default async function LandingPage({
 
             {/* ─── Services ───────────────────────────────────────────────────── */}
             <section className="py-14 sm:py-24 px-6 bg-white/[0.015]">
-                <div className="max-w-5xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-10 sm:mb-16 space-y-3">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
                             {locale === 'es' ? 'Nuestros servicios' : 'Our services'}
@@ -253,49 +254,46 @@ export default async function LandingPage({
                         <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                             {dict.home.services.title}
                         </h2>
-                        <p className="text-white/40 text-sm">{dict.home.services.subtitle}</p>
+                        <p className="text-white/60 text-sm">{dict.home.services.subtitle}</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                         {services.map((service, i) => (
                             <div
                                 key={service.title}
-                                className={`glass-card rounded-2xl flex flex-col overflow-hidden ${i === 2 ? 'ring-1 ring-[#D0B078]/30 shadow-[0_0_30px_rgba(208,176,120,0.1)]' : ''}`}
+                                className={`glass-card rounded-2xl flex flex-col overflow-hidden ${
+                                    i === 3 ? 'ring-1 ring-[#D0B078]/30 shadow-[0_0_30px_rgba(208,176,120,0.1)]' : ''
+                                }`}
                             >
                                 {service.image && (
-                                    <div className="relative h-48 w-full shrink-0 group-hover:scale-105 transition-transform duration-500">
+                                    <div className="relative h-44 w-full shrink-0">
                                         <Image src={service.image} alt={service.title} fill className="object-cover" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#131835] via-[#131835]/40 to-transparent opacity-90" />
-                                        {i === 2 && (
-                                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#D0B078] text-black text-[10px] font-bold tracking-widest uppercase shadow-lg z-10">
-                                                {locale === 'es' ? 'Más popular' : 'Most popular'}
-                                            </div>
-                                        )}
-                                        <div className="absolute bottom-4 left-6 text-4xl drop-shadow-xl z-10">{service.icon}</div>
+                                        <div className="absolute bottom-4 left-5 text-3xl drop-shadow-xl z-10">{service.icon}</div>
                                     </div>
                                 )}
-                                <div className={`p-8 space-y-5 flex-1 flex flex-col ${service.image ? 'pt-6 relative z-10' : ''}`}>
+                                <div className={`p-6 space-y-4 flex-1 flex flex-col ${service.image ? 'pt-5 relative z-10' : ''}`}>
                                     {!service.image && (
                                         <>
-                                            {i === 2 && (
-                                                <div className="inline-flex self-start px-2.5 py-0.5 rounded-full bg-[#D0B078]/10 text-[#D0B078] text-xs font-medium tracking-wide">
+                                            {i === 3 && (
+                                                <div className="inline-flex self-start px-2.5 py-0.5 rounded-full bg-[#D0B078]/10 text-[#D0B078] text-xs font-semibold tracking-wide">
                                                     {locale === 'es' ? 'Más popular' : 'Most popular'}
                                                 </div>
                                             )}
-                                            <span className="text-4xl">{service.icon}</span>
+                                            <span className="text-3xl">{service.icon}</span>
                                         </>
                                     )}
-                                    <div className="space-y-2 flex-1">
-                                        <h3 className="text-xl font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
+                                    <div className="space-y-1.5 flex-1">
+                                        <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
                                             {service.title}
                                         </h3>
-                                        <p className="text-white/50 text-sm leading-relaxed">{service.desc}</p>
+                                        <p className="text-white/68 text-xs leading-relaxed">{service.desc}</p>
                                     </div>
-                                    <div className="pt-4 flex items-center justify-between border-t border-white/5 mt-auto">
-                                        <span className="text-[#D0B078] font-semibold text-lg">{service.price}</span>
+                                    <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
+                                        <span className="text-[#D0B078] font-bold text-base">{service.price}</span>
                                         <Link
                                             href={`/${locale}/booking/select`}
-                                            className="text-xs text-white/50 hover:text-white transition-colors uppercase tracking-widest font-semibold flex items-center gap-1"
+                                            className="text-[11px] text-white/55 hover:text-white transition-colors uppercase tracking-widest font-semibold flex items-center gap-1"
                                         >
                                             {dict.common.bookNow} <span className="text-[#D0B078]">→</span>
                                         </Link>
@@ -355,10 +353,10 @@ export default async function LandingPage({
                                         <span key={i} className="text-[#D0B078] text-sm">★</span>
                                     ))}
                                 </div>
-                                <p className="text-white/70 text-sm leading-relaxed italic">&ldquo;{t.text}&rdquo;</p>
+                                <p className="text-white/75 text-sm leading-relaxed italic">&ldquo;{t.text}&rdquo;</p>
                                 <div className="pt-2 border-t border-white/5 space-y-0.5">
                                     <p className="font-semibold text-sm">{t.authorName}</p>
-                                    <p className="text-white/30 text-xs">{t.vehicleType} · {t.location}</p>
+                                    <p className="text-white/50 text-xs">{t.vehicleType} · {t.location}</p>
                                 </div>
                             </div>
                         ))}
@@ -456,7 +454,7 @@ export default async function LandingPage({
 
             {/* ─── Footer ──────────────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 py-8 px-6">
-                <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
+                <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
                     <div className="flex flex-col items-center sm:items-start gap-3">
                         <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={365} height={97} className="w-auto h-16 sm:h-20 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>

@@ -108,7 +108,7 @@ export default function DashboardPage() {
                         <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-[#2563eb]/20 rounded-full blur-3xl pointer-events-none" />
 
                         <div className="relative z-10">
-                            <p className="text-[#A5B0D1] text-sm mb-1">
+                            <p className="text-[#C5D0E8] text-sm mb-1">
                                 {isEs ? `¡Hola de nuevo, ${firstName}!` : `Welcome back, ${firstName}!`}
                             </p>
                             <h2 className="text-white text-2xl font-bold leading-tight mb-4">
@@ -121,7 +121,7 @@ export default function DashboardPage() {
                                     <p className="text-2xl font-bold text-[#D0B078]">
                                         {bookingCount === null ? '–' : bookingCount}
                                     </p>
-                                    <p className="text-[10px] text-[#A5B0D1] uppercase tracking-wider">
+                                    <p className="text-[11px] text-[#C5D0E8] uppercase tracking-wider">
                                         {isEs ? 'Servicios' : 'Services'}
                                     </p>
                                 </div>
@@ -183,7 +183,7 @@ export default function DashboardPage() {
                             <h3 className="text-2xl font-bold mb-1">
                                 {isEs ? '20% de Descuento en Cerámico' : 'Get 20% Off Ceramic'}
                             </h3>
-                            <p className="text-white/90 mb-4 text-sm max-w-[80%]">
+                            <p className="text-white/95 mb-4 text-sm max-w-[80%]">
                                 {isEs ? 'Protege tu auto para la temporada de lluvias.' : 'Protect your car for the rainy season.'}
                             </p>
                             <Link
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                                 <h3 className="text-sm font-bold text-white">
                                     {isEs ? 'Servicio Móvil' : 'Mobile Service'}
                                 </h3>
-                                <p className="text-xs text-[#A5B0D1]">
+                                <p className="text-xs text-[#B8C3DC]">
                                     {isEs ? 'Vamos a donde estés en Miami' : 'We come to you anywhere in Miami'}
                                 </p>
                             </div>

@@ -120,7 +120,7 @@ export default async function ContractorsPage({
                                 ? <>Gana dinero haciendo<br /><span className="text-gold-gradient">lo que ya sabes hacer.</span></>
                                 : <>Get paid to do<br /><span className="text-gold-gradient">what you already do.</span></>}
                     </h1>
-                    <p className="text-lg text-white/50 max-w-xl mx-auto leading-relaxed">
+                    <p className="text-lg text-white/70 max-w-xl mx-auto leading-relaxed">
                         {cmsSubheading
                             ? cmsSubheading
                             : isEs
@@ -189,7 +189,7 @@ export default async function ContractorsPage({
                                 <div key={perk.icon} className="glass-card rounded-2xl p-7 space-y-3">
                                     <span className="text-3xl">{perk.icon}</span>
                                     <h3 className="font-semibold text-base">{content.title}</h3>
-                                    <p className="text-white/50 text-sm leading-relaxed">{content.desc}</p>
+                                    <p className="text-white/65 text-sm leading-relaxed">{content.desc}</p>
                                 </div>
                             );
                         })}
@@ -234,7 +234,7 @@ export default async function ContractorsPage({
                                     </span>
                                     <div>
                                         <h3 className="font-semibold text-base mb-1">{c.t}</h3>
-                                        <p className="text-white/50 text-sm leading-relaxed">{c.d}</p>
+                                        <p className="text-white/65 text-sm leading-relaxed">{c.d}</p>
                                     </div>
                                 </div>
                             );
@@ -271,7 +271,7 @@ export default async function ContractorsPage({
                     <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                         {isEs ? '¿Listo para empezar?' : 'Ready to get started?'}
                     </h2>
-                    <p className="text-white/50 text-sm">
+                    <p className="text-white/65 text-sm">
                         {isEs
                             ? 'Crea tu cuenta, envía tu solicitud y empieza a ganar.'
                             : 'Create your account, submit your application, and start earning.'}
@@ -290,7 +290,7 @@ export default async function ContractorsPage({
                             {isEs ? 'Ya tengo cuenta' : 'I have an account'}
                         </Link>
                     </div>
-                    <p className="text-white/20 text-xs">
+                    <p className="text-white/50 text-xs">
                         {isEs ? 'Aplicación gratuita · Sin compromisos' : 'Free to apply · No commitment'}
                     </p>
                 </div>
@@ -298,7 +298,7 @@ export default async function ContractorsPage({
 
             {/* ─── Footer ────────────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 py-8 px-6">
-                <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
+                <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
                     <div className="flex flex-col items-center sm:items-start gap-3">
                         <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={365} height={97} className="w-auto h-16 sm:h-20 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>

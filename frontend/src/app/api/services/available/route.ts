@@ -25,6 +25,7 @@ export async function GET() {
                 .order('sort_order', { ascending: true }),
         ]);
 
+        console.log(`/api/services/available — services: ${services?.length ?? 0}, addOns: ${addOns?.length ?? 0}`);
         return NextResponse.json({ services: services ?? [], addOns: addOns ?? [] });
     } catch (error) {
         console.error('Services available error:', error);

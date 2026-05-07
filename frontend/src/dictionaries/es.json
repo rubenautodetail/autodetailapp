@@ -16,20 +16,25 @@
         "services": {
             "title": "Servicios Premium",
             "subtitle": "Elige el paquete perfecto para tu vehículo",
+            "express": {
+                "title": "Detalle Exprés",
+                "desc": "Aspirado interior, limpieza de cristales y superficies + lavado a mano exterior, brillo de llantas y cera spray.",
+                "price": "Desde $100"
+            },
             "interior": {
                 "title": "Detalle Interior",
-                "desc": "Limpieza profunda para alfombras, tapicería y cuero.",
-                "price": "Desde $150"
+                "desc": "Aspirado completo, limpieza de superficies con APC, alfombras y tapetes, acondicionamiento de asientos y tapicería.",
+                "price": "Desde $160"
             },
             "exterior": {
                 "title": "Detalle Exterior",
-                "desc": "Lavado a mano, descontaminación y cera premium.",
-                "price": "Desde $120"
+                "desc": "Pre-lavado con espuma, descontaminación con arcilla, lavado a mano, bordes de puerta y sealant de cera premium.",
+                "price": "Desde $160"
             },
             "full": {
                 "title": "Detalle Completo",
-                "desc": "La transformación total. Interior profundo + Protección exterior.",
-                "price": "Desde $250"
+                "desc": "La transformación total. Limpieza interior profunda + descontaminación exterior, arcilla y protección con cera.",
+                "price": "Desde $300"
             }
         },
         "howItWorks": {

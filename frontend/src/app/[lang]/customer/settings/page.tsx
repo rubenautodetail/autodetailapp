@@ -204,7 +204,7 @@ export default function SettingsPage() {
                             <div className="space-y-4 text-sm text-text-secondary">
                                 <div className="flex items-center justify-between py-3 border-b border-white/5">
                                     <span>{params.lang === 'es' ? 'Versión de la aplicación' : 'App Version'}</span>
-                                    <span className="text-white/40">1.0.0</span>
+                                    <span className="text-white/65">1.0.0</span>
                                 </div>
                                 <div className="flex items-center justify-between py-3 border-b border-white/5">
                                     <Link
@@ -213,7 +213,7 @@ export default function SettingsPage() {
                                     >
                                         {params.lang === 'es' ? 'Términos de Servicio' : 'Terms of Service'}
                                     </Link>
-                                    <span className="text-white/20">→</span>
+                                    <span className="text-white/50">→</span>
                                 </div>
                                 <div className="flex items-center justify-between py-3 border-b border-white/5">
                                     <Link
@@ -222,12 +222,12 @@ export default function SettingsPage() {
                                     >
                                         {params.lang === 'es' ? 'Política de Privacidad' : 'Privacy Policy'}
                                     </Link>
-                                    <span className="text-white/20">→</span>
+                                    <span className="text-white/50">→</span>
                                 </div>
                                 <div className="pt-4 text-center">
-                                    <p className="text-white/25 text-xs">
+                                    <p className="text-white/55 text-xs">
                                         {params.lang === 'es' ? 'Diseñado por' : 'Designed by'}{' '}
-                                        <span className="text-white/40 font-medium">OAC Digital Innovations</span>
+                                        <span className="text-white/70 font-medium">OAC Digital Innovations</span>
                                     </p>
                                 </div>
                             </div>
