@@ -112,7 +112,7 @@ export default async function LandingPage({
                 />
 
                 {/* Promotional Banner */}
-                {hygraph.promotionalBanner?.isFalse && (
+                {hygraph.promotionalBanner?.isActive && (
                     <div className="absolute top-0 left-0 right-0 z-50 text-[#131835] py-2.5 px-6 text-center shadow-lg font-medium text-sm sm:text-base tracking-wide flex items-center justify-center gap-2 overflow-hidden"
                          style={{ background: 'linear-gradient(90deg, #c4a068 0%, #E6C88D 50%, #c4a068 100%)', backgroundSize: '200% auto', animation: 'shimmer 3s linear infinite' }}>
                         <style>{`
