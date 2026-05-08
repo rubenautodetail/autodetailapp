@@ -55,7 +55,7 @@ export default async function LandingPage({
     const hero = {
         heading: hygraph.hero?.heading ?? dict.home.hero.title,
         subheading: hygraph.hero?.subheading ?? dict.home.hero.subtitle,
-        badgeText: locale === 'es' ? 'Ahora disponible en Miami' : 'Now available  Miami',
+        badgeText: locale === 'es' ? 'Ahora disponible en Miami' : 'Now available in Miami',
     };
 
     const testimonials = hygraph.testimonials.length ? hygraph.testimonials : FALLBACK_TESTIMONIALS;
