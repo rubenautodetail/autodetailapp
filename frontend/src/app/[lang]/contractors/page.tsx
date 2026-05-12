@@ -121,11 +121,9 @@ export default async function ContractorsPage({
                                 : <>Get paid to do<br /><span className="text-gold-gradient">what you already do.</span></>}
                     </h1>
                     <p className="text-lg text-white/70 max-w-xl mx-auto leading-relaxed">
-                        {cmsSubheading
-                            ? cmsSubheading
-                            : isEs
-                                ? 'Conviértete en detallador certificado en la plataforma DTailWash. Tú traes el talento, nosotros traemos los clientes.'
-                                : 'Become a certified detailer on the DTailWash platform. You bring the skill, we bring the customers.'}
+                        {isEs
+                            ? 'Conviértete en un detallador certificado en la plataforma DTailWash. Tú traes el talento, nosotros traemos los clientes.'
+                            : 'Become a certified detailer on the DTailWash platform. You bring the skill, we bring the customers.'}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                         <Link

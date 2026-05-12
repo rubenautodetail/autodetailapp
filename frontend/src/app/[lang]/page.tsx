@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
 }
@@ -65,12 +67,41 @@ export default async function LandingPage({
     const serviceImages = allGalleryImages.filter((img) => img.section === 'home-services').sort((a,b) => a.sortOrder - b.sortOrder);
     const stepImages = allGalleryImages.filter((img) => img.section === 'how-it-works').sort((a,b) => a.sortOrder - b.sortOrder);
 
-    const services = [
-        { ...dict.home.services.express, icon: '⚡', image: serviceImages[0]?.imageUrl },
-        { ...dict.home.services.interior, icon: '🪞', image: serviceImages[1]?.imageUrl },
-        { ...dict.home.services.exterior, icon: '✨', image: serviceImages[2]?.imageUrl },
-        { ...dict.home.services.full, icon: '🏆', image: undefined },
-    ];
+    // ── Services: live from Supabase so admin edits reflect here immediately ──
+    let dbServices: { id: number; name: string; name_es: string | null; description: string | null; description_es: string | null; base_price: number; sort_order: number | null }[] = [];
+    try {
+        const supabase = await createClient();
+        const { data } = await supabase
+            .from('services')
+            .select('id, name, name_es, description, description_es, base_price, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true })
+            .limit(6);
+        dbServices = data ?? [];
+    } catch { /* fall back to dictionary below */ }
+
+    const SERVICE_ICONS: Record<string, string> = {
+        express: '⚡', interior: '🪡', exterior: '✨', full: '🏆',
+        'Express Detail': '⚡', 'Interior Detail': '🪡',
+        'Exterior Detail': '✨', 'Full Detail': '🏆',
+        'Detalle Expres': '⚡', 'Detalle Interior': '🪡',
+        'Detalle Exterior': '✨', 'Detalle Completo': '🏆',
+    };
+
+    const services = dbServices.length > 0
+        ? dbServices.map((s, i) => ({
+            title: locale === 'es' ? (s.name_es ?? s.name) : s.name,
+            desc: locale === 'es' ? (s.description_es ?? s.description ?? '') : (s.description ?? ''),
+            price: `From $${Math.round(s.base_price)}`,
+            icon: SERVICE_ICONS[s.name] ?? SERVICE_ICONS[Object.keys(SERVICE_ICONS).find(k => s.name.toLowerCase().includes(k.toLowerCase())) ?? ''] ?? ['\u26a1','\ud83e\udea1','\u2728','\ud83c\udfc6'][i] ?? '\u2728',
+            image: serviceImages[i]?.imageUrl,
+          }))
+        : [
+            { ...dict.home.services.express, icon: '\u26a1', image: serviceImages[0]?.imageUrl },
+            { ...dict.home.services.interior, icon: '\ud83e\udea1', image: serviceImages[1]?.imageUrl },
+            { ...dict.home.services.exterior, icon: '\u2728', image: serviceImages[2]?.imageUrl },
+            { ...dict.home.services.full, icon: '\ud83c\udfc6', image: undefined },
+          ];
 
     const steps = [
         { number: '01', ...dict.home.howItWorks.step1, icon: '📍', image: stepImages[0]?.imageUrl },
