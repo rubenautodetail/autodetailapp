@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
 import { getLandingContent, type Testimonial } from '@/lib/hygraph';
-import { createClient } from '@/lib/supabase/server';
+import { createApiClient } from '@/lib/supabase/server';
 import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 
@@ -70,15 +70,16 @@ export default async function LandingPage({
     // ── Services: live from Supabase so admin edits reflect here immediately ──
     let dbServices: { id: number; name: string; name_es: string | null; description: string | null; description_es: string | null; base_price: number; sort_order: number | null }[] = [];
     try {
-        const supabase = await createClient();
-        const { data } = await supabase
+        const supabase = createApiClient();
+        const { data, error } = await supabase
             .from('services')
             .select('id, name, name_es, description, description_es, base_price, sort_order')
             .eq('is_active', true)
             .order('sort_order', { ascending: true })
             .limit(6);
+        if (error) console.error('[LandingPage] services query error:', error.message);
         dbServices = data ?? [];
-    } catch { /* fall back to dictionary below */ }
+    } catch (e) { console.error('[LandingPage] services fetch failed:', e); }
 
     const SERVICE_ICONS: Record<string, string> = {
         express: '⚡', interior: '🪡', exterior: '✨', full: '🏆',
