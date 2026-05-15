@@ -33,9 +33,15 @@ interface Contractor {
     bank_account_number: string | null;
     bank_routing_number: string | null;
     bank_account_type: string | null;
+    // Skills
+    service_type_ids: number[] | null;
+    verified_service_type_ids: number[] | null;
+    skills_pending_review: boolean | null;
 }
 
 type FilterStatus = "all" | "pending" | "active" | "rejected";
+
+interface CatalogSvc { id: number; name: string; }
 
 function displayStatus(c: Contractor): string {
     if (c.approval_status === "pending") return "pending";
@@ -92,6 +98,11 @@ function AdminContractorsContent({ locale }: { locale: string }) {
     const [terminateModal, setTerminateModal] = useState<{ id: string; name: string } | null>(null);
     const [detailModal, setDetailModal]       = useState<Contractor | null>(null);
 
+    // Skills verification state
+    const [catalogServices, setCatalogServices] = useState<CatalogSvc[]>([]);
+    const [skillVerifyIds, setSkillVerifyIds]   = useState<number[]>([]);
+    const [savingSkills, setSavingSkills]       = useState(false);
+
     const isEs = locale === "es";
 
     const t = {
@@ -140,6 +151,14 @@ function AdminContractorsContent({ locale }: { locale: string }) {
         jobsCompleted:     isEs ? "Trabajos completados"         : "Jobs Completed",
         ratingLabel:       isEs ? "Calificación"                 : "Rating",
         registeredOn:      isEs ? "Registrado el"                : "Registered On",
+        // Skills verification
+        skillsTitle:       isEs ? "Servicios y Habilidades"      : "Services & Skills",
+        skillsRequested:   isEs ? "Solicitado por contratista"   : "Requested by contractor",
+        skillsVerifyBtn:   isEs ? "Verificar Seleccionados"       : "Verify Selected",
+        skillsClearBtn:    isEs ? "Revocar Todo"                  : "Revoke All",
+        skillsPending:     isEs ? "Revisión pendiente"           : "Pending review",
+        skillsVerified:    isEs ? "Verificado"                    : "Verified",
+        skillsNoRequest:   isEs ? "Sin solicitud"                 : "No skills requested",
     };
 
     const STATUS_FILTERS: { key: FilterStatus; label: string }[] = [
@@ -167,6 +186,21 @@ function AdminContractorsContent({ locale }: { locale: string }) {
     }, [statusFilter]);
 
     useEffect(() => { fetchContractors(); }, [fetchContractors]);
+
+    // Load catalog services once (for skill name display)
+    useEffect(() => {
+        fetch("/api/services/available")
+            .then((r) => r.json())
+            .then((d) => setCatalogServices((d.services ?? []).map((s: { id: number; name: string }) => ({ id: s.id, name: s.name }))))
+            .catch(() => {});
+    }, []);
+
+    // When detail modal opens, pre-populate skillVerifyIds with currently verified skills
+    useEffect(() => {
+        if (detailModal) {
+            setSkillVerifyIds(detailModal.verified_service_type_ids ?? []);
+        }
+    }, [detailModal]);
 
     const handleApprove = async (id: string) => {
         setActionLoading(id);
@@ -218,6 +252,26 @@ function AdminContractorsContent({ locale }: { locale: string }) {
             }
         } finally {
             setActionLoading(null);
+        }
+    };
+
+    const handleVerifySkills = async (contractorId: string, verifiedIds: number[]) => {
+        setSavingSkills(true);
+        try {
+            const res = await adminFetch(`/api/admin/contractors/${contractorId}/verify-skills`, {
+                method: "PATCH",
+                body: JSON.stringify({ verified_service_type_ids: verifiedIds }),
+            });
+            if (res.ok) {
+                // Optimistically update the detail modal
+                setDetailModal((prev) =>
+                    prev ? { ...prev, verified_service_type_ids: verifiedIds, skills_pending_review: false } : prev
+                );
+                // Refresh list so badge in table updates
+                await fetchContractors();
+            }
+        } finally {
+            setSavingSkills(false);
         }
     };
 
@@ -284,6 +338,9 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             {isEs ? "Pago" : "Payment"}
                                         </th>
+                                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            {isEs ? "Habilidades" : "Skills"}
+                                        </th>
                                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.joined}</th>
                                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{t.actions}</th>
                                     </tr>
@@ -321,6 +378,26 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                     <span className="text-sm text-gray-700">
                                                         {paymentLabel(c.payment_preference, isEs)}
                                                     </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {c.service_type_ids && c.service_type_ids.length > 0 ? (
+                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                                            c.skills_pending_review
+                                                                ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                                                                : (c.verified_service_type_ids && c.verified_service_type_ids.length > 0)
+                                                                    ? "bg-green-50 text-green-700 border border-green-200"
+                                                                    : "bg-gray-100 text-gray-500"
+                                                        }`}>
+                                                            {c.skills_pending_review
+                                                                ? `⚡ ${isEs ? "Revisar" : "Review"}`
+                                                                : (c.verified_service_type_ids && c.verified_service_type_ids.length > 0)
+                                                                    ? `✓ ${c.verified_service_type_ids.length}`
+                                                                    : `${c.service_type_ids.length} ${isEs ? "sin verificar" : "unverified"}`
+                                                            }
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400">—</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
                                                     {fmtDate(c.created_at, locale)}
@@ -463,7 +540,78 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                 label={t.registeredOn}
                                 value={fmtDate(detailModal.created_at, locale, { year: "numeric", month: "long", day: "numeric" })}
                             />
+
+                            {/* ── Skills Verification Panel ─────────────────────────────────────── */}
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.skillsTitle}</span>
+                                    {detailModal.skills_pending_review && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                            ⚡ {t.skillsPending}
+                                        </span>
+                                    )}
+                                    {!detailModal.skills_pending_review && detailModal.verified_service_type_ids && detailModal.verified_service_type_ids.length > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                            ✓ {t.skillsVerified}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {(!detailModal.service_type_ids || detailModal.service_type_ids.length === 0) ? (
+                                    <p className="text-sm text-gray-400 italic">{t.skillsNoRequest}</p>
+                                ) : (
+                                    <>
+                                        <p className="text-xs text-gray-400 mb-2">{t.skillsRequested}</p>
+                                        <div className="space-y-1.5">
+                                            {(detailModal.service_type_ids ?? []).map((svcId) => {
+                                                const svcName = catalogServices.find((s) => s.id === svcId)?.name ?? `Service #${svcId}`;
+                                                const isChecked = skillVerifyIds.includes(svcId);
+                                                return (
+                                                    <label key={svcId} className="flex items-center gap-2 cursor-pointer group">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isChecked}
+                                                            onChange={() =>
+                                                                setSkillVerifyIds((prev) =>
+                                                                    prev.includes(svcId)
+                                                                        ? prev.filter((x) => x !== svcId)
+                                                                        : [...prev, svcId]
+                                                                )
+                                                            }
+                                                            className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                                        />
+                                                        <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                                                            {svcName}
+                                                        </span>
+                                                        {(detailModal.verified_service_type_ids ?? []).includes(svcId) && !detailModal.skills_pending_review && (
+                                                            <span className="text-xs text-green-600 font-medium">✓ verified</span>
+                                                        )}
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="flex gap-2 mt-3">
+                                            <button
+                                                onClick={() => handleVerifySkills(detailModal.id, skillVerifyIds)}
+                                                disabled={savingSkills}
+                                                className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                            >
+                                                {savingSkills ? "..." : t.skillsVerifyBtn}
+                                            </button>
+                                            <button
+                                                onClick={() => handleVerifySkills(detailModal.id, [])}
+                                                disabled={savingSkills}
+                                                className="px-3 py-2 border border-red-200 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors"
+                                            >
+                                                {t.skillsClearBtn}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
+
 
                         {/* Modal footer — action buttons */}
                         <div className="border-t border-gray-200 px-6 py-4 flex flex-wrap gap-2 justify-end">

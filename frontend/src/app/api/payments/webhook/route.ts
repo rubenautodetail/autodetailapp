@@ -123,18 +123,29 @@ export async function POST(req: NextRequest) {
                         (err) => console.error('webhook: customer confirmation email failed:', err)
                     );
 
-                    // Broadcast to ALL approved+available contractors — first to accept wins.
-                    // NOTE: Service-area ZIP filtering is dormant — re-enable for geo-routing when needed.
+                    // Broadcast to eligible contractors — first to accept wins.
+                    // Skill-filtering: NULL verified_service_type_ids = not yet reviewed (include),
+                    // empty array = cleared (skip), otherwise match booking service.
+                    const bookingServiceIdWh: number | null =
+                        updatedBooking.service_id ? Number(updatedBooking.service_id) : null;
                     const { data: contractors } = await supabase
                         .from('profiles')
-                        .select('id, email')
+                        .select('id, email, verified_service_type_ids')
                         .eq('role', 'contractor')
                         .eq('approval_status', 'approved')
                         .eq('is_available', true);
 
-                    if (contractors && contractors.length > 0) {
+                    const eligibleWh = (contractors ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
+                        const v = c.verified_service_type_ids;
+                        if (v === null || v === undefined) return true;
+                        if (v.length === 0) return false;
+                        if (bookingServiceIdWh && !v.includes(bookingServiceIdWh)) return false;
+                        return true;
+                    });
+
+                    if (eligibleWh.length > 0) {
                         await Promise.all(
-                            contractors.map((c: { id: string; email: string }) =>
+                            eligibleWh.map((c: { id: string; email: string; verified_service_type_ids: number[] | null }) =>
                                 notify({
                                     type: 'contractor.job_assigned',
                                     booking: bookingWithService,
@@ -144,7 +155,7 @@ export async function POST(req: NextRequest) {
                         );
 
                         const bookingLocale = updatedBooking.locale || 'en';
-                        const notificationRows = contractors.map((c: { id: string; email: string }) => ({
+                        const notificationRows = eligibleWh.map((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => ({
                             user_id: c.id,
                             type: 'info' as const,
                             title: 'New Job Available',
@@ -157,7 +168,7 @@ export async function POST(req: NextRequest) {
                         const { error: notifError } = await supabase.from('notifications').insert(notificationRows);
                         if (notifError) console.error('webhook: contractor notification insert failed:', notifError);
                     } else {
-                        console.warn(`webhook: no available contractors for booking ${bookingId}`);
+                        console.warn(`webhook: no eligible contractors (after skill filter) for booking ${bookingId}`);
                     }
                 }
             }
@@ -207,16 +218,28 @@ export async function POST(req: NextRequest) {
                     (err) => console.error('webhook: customer confirmation email (auto-capture) failed:', err)
                 );
 
+                const bookingServiceIdAc: number | null =
+                    (updatedBooking2 as BookingRow & { service_id?: number }).service_id
+                        ? Number((updatedBooking2 as BookingRow & { service_id?: number }).service_id)
+                        : null;
                 const { data: contractors2 } = await supabase
                     .from('profiles')
-                    .select('id, email')
+                    .select('id, email, verified_service_type_ids')
                     .eq('role', 'contractor')
                     .eq('approval_status', 'approved')
                     .eq('is_available', true);
 
-                if (contractors2 && contractors2.length > 0) {
+                const eligibleAc = (contractors2 ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
+                    const v = c.verified_service_type_ids;
+                    if (v === null || v === undefined) return true;
+                    if (v.length === 0) return false;
+                    if (bookingServiceIdAc && !v.includes(bookingServiceIdAc)) return false;
+                    return true;
+                });
+
+                if (eligibleAc.length > 0) {
                     await Promise.all(
-                        contractors2.map((c: { id: string; email: string }) =>
+                        eligibleAc.map((c: { id: string; email: string; verified_service_type_ids: number[] | null }) =>
                             notify2({
                                 type: 'contractor.job_assigned',
                                 booking: bookingWithService2,
@@ -226,7 +249,7 @@ export async function POST(req: NextRequest) {
                     );
 
                     const bookingLocale2 = updatedBooking2.locale || 'en';
-                    const notificationRows2 = contractors2.map((c: { id: string; email: string }) => ({
+                    const notificationRows2 = eligibleAc.map((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => ({
                         user_id: c.id,
                         type: 'info' as const,
                         title: 'New Job Available',
@@ -239,7 +262,7 @@ export async function POST(req: NextRequest) {
                     const { error: notifErr2 } = await supabase.from('notifications').insert(notificationRows2);
                     if (notifErr2) console.error('webhook: contractor notification insert (auto-capture) failed:', notifErr2);
                 } else {
-                    console.warn(`webhook (auto-capture): no available contractors for booking ${bookingId}`);
+                    console.warn(`webhook (auto-capture): no eligible contractors (after skill filter) for booking ${bookingId}`);
                 }
             }
             break;

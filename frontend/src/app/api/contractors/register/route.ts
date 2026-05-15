@@ -62,11 +62,32 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid bank account type.' }, { status: 400 });
         }
 
-        // Mark this user's profile as a pending contractor application.
-        // Use upsert so the row is created if it doesn't exist yet (e.g. if create-profile
-        // failed silently during registration). ignoreDuplicates:false ensures role/status
-        // are always written even when the row already exists.
+        // ── Service type IDs (skills) — validate as array of positive integers ──
+        const rawServiceTypeIds = Array.isArray(body.serviceTypeIds) ? body.serviceTypeIds : [];
+        const serviceTypeIds: number[] = rawServiceTypeIds
+            .map((v) => parseInt(String(v), 10))
+            .filter((n) => Number.isInteger(n) && n > 0);
+
+        if (serviceTypeIds.length === 0) {
+            return NextResponse.json({ error: 'Please select at least one service you offer.' }, { status: 400 });
+        }
+
+        // Resolve service names from DB for the admin email (non-fatal)
         const supabase = createServiceClient();
+        let serviceNames: string[] = [];
+        try {
+            const { data: svcRows } = await supabase
+                .from('services')
+                .select('id, name')
+                .in('id', serviceTypeIds);
+            if (svcRows) {
+                serviceNames = svcRows.map((s: { name: string }) => s.name);
+            }
+        } catch {
+            // non-fatal
+        }
+
+        // Upsert profile as pending contractor with skills
         const { error: updateError } = await supabase
             .from('profiles')
             .upsert(
@@ -85,6 +106,11 @@ export async function POST(req: NextRequest) {
                     bank_account_number: bankAccountNumber || null,
                     bank_routing_number: bankRoutingNumber || null,
                     bank_account_type: bankAccountType || null,
+                    // ── Skills columns ──────────────────────────────────────────
+                    service_type_ids:          serviceTypeIds,   // contractor's self-selected services
+                    verified_service_type_ids: null,             // admin hasn't reviewed yet → fallback ON
+                    skills_pending_review:     true,             // shows ⚡ badge in admin panel
+                    // ────────────────────────────────────────────────────────────
                     updated_at: new Date().toISOString(),
                 },
                 { onConflict: 'id', ignoreDuplicates: false }
@@ -95,11 +121,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Failed to save application. Please try again.' }, { status: 500 });
         }
 
-        // Send emails — non-fatal: registration succeeds even if email delivery fails
-        const emailData = { fullName, email, phone, address, businessName, serviceZipCodes, documentsCount: 0 };
+        // Send emails — non-fatal
+        const emailData = {
+            fullName,
+            email,
+            phone,
+            address,
+            businessName,
+            serviceZipCodes,
+            serviceTypeNames: serviceNames,   // admin email shows which services they claim
+            documentsCount: 0,
+        };
         await Promise.allSettled([
-            sendContractorApplication(emailData),          // admin notification
-            sendContractorApplicationReceived(emailData),  // applicant confirmation
+            sendContractorApplication(emailData),
+            sendContractorApplicationReceived(emailData),
         ]);
 
         return NextResponse.json({ success: true, message: "Application submitted successfully." });

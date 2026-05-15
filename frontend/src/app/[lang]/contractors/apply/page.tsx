@@ -15,6 +15,12 @@ interface Field {
     required?: boolean;
 }
 
+interface Service {
+    id: number;
+    name: string;
+    name_es?: string;
+}
+
 const FIELDS: Field[] = [
     { label: "Full Name", labelEs: "Nombre completo", name: "fullName", type: "text", placeholder: "John Doe", placeholderEs: "Juan Pérez", required: true },
     { label: "Email", labelEs: "Correo electrónico", name: "email", type: "email", placeholder: "you@example.com", placeholderEs: "tu@ejemplo.com", required: true },
@@ -39,14 +45,28 @@ export default function ContractorApplyPage() {
     const { user, profile, isLoading, refreshProfile } = useAuth();
 
     const [values, setValues] = useState<Record<string, string>>({});
+    const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
+    const [services, setServices] = useState<Service[]>([]);
+    const [loadingServices, setLoadingServices] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Fetch the live service catalog
+    useEffect(() => {
+        fetch("/api/services/available")
+            .then((r) => r.json())
+            .then((data) => {
+                const list: Service[] = Array.isArray(data) ? data : (data?.services ?? []);
+                setServices(list);
+            })
+            .catch(() => setServices([]))
+            .finally(() => setLoadingServices(false));
+    }, []);
+
     useEffect(() => {
         if (isLoading) return;
         if (!user) {
-            // Send to register with contractor flow — they need an account first
             router.replace(`/${lang}/register?next=/${lang}/contractors/apply`);
         } else if (profile?.role === "contractor" && profile?.approval_status === "approved") {
             router.replace(`/${lang}/contractor/dashboard`);
@@ -55,9 +75,24 @@ export default function ContractorApplyPage() {
         }
     }, [isLoading, user, profile, lang, router]);
 
+    function toggleService(id: number) {
+        setSelectedServiceIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    }
+
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError(null);
+
+        // At least one service must be selected
+        if (selectedServiceIds.length === 0) {
+            setError(isEs
+                ? "Por favor selecciona al menos un servicio que ofreces."
+                : "Please select at least one service you offer.");
+            return;
+        }
+
         setSubmitting(true);
 
         try {
@@ -70,6 +105,7 @@ export default function ContractorApplyPage() {
                 body: JSON.stringify({
                     ...values,
                     serviceZipCodes,
+                    serviceTypeIds:      selectedServiceIds,          // ← new
                     paymentPreference:   values.paymentPreference   || "",
                     zelleContact:        values.zelleContact         || "",
                     bankName:            values.bankName             || "",
@@ -91,7 +127,6 @@ export default function ContractorApplyPage() {
 
             if (!res.ok) throw new Error((json?.error as string) || "Submission failed");
 
-            // Refresh profile so AuthContext knows role changed to contractor
             await refreshProfile();
             setSubmitted(true);
         } catch (err) {
@@ -101,7 +136,6 @@ export default function ContractorApplyPage() {
         }
     }
 
-    // Show nothing while auth is loading or a redirect is pending
     const redirectPending = !isLoading && (
         !user ||
         (profile?.role === "contractor" && profile?.approval_status === "approved") ||
@@ -131,8 +165,8 @@ export default function ContractorApplyPage() {
                             <li className="flex items-start gap-2">
                                 <span className="text-[#D0B078] mt-0.5 shrink-0">✓</span>
                                 {isEs
-                                    ? "No necesitas hacer nada más por ahora"
-                                    : "You don't need to do anything else right now"}
+                                    ? "Nuestro equipo revisa tus servicios y los verifica"
+                                    : "Our team reviews and verifies your selected services"}
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-[#D0B078] mt-0.5 shrink-0">✓</span>
@@ -191,6 +225,7 @@ export default function ContractorApplyPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Standard text fields */}
                     {FIELDS.map((field) => (
                         <div key={field.name} className="space-y-1.5">
                             <label className="block text-xs font-medium text-white/60 uppercase tracking-widest">
@@ -207,6 +242,73 @@ export default function ContractorApplyPage() {
                             />
                         </div>
                     ))}
+
+                    {/* ── Services You Offer ────────────────────────────────────────── */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-medium text-white/60 uppercase tracking-widest">
+                                {isEs ? "Servicios que ofreces" : "Services You Offer"}
+                                <span className="text-[#D0B078] ml-1">*</span>
+                            </label>
+                            {selectedServiceIds.length > 0 && (
+                                <span className="text-xs text-[#D0B078] font-semibold">
+                                    {selectedServiceIds.length} {isEs ? "seleccionado(s)" : "selected"}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                            {loadingServices ? (
+                                <p className="text-white/30 text-sm text-center py-4">
+                                    {isEs ? "Cargando servicios..." : "Loading services..."}
+                                </p>
+                            ) : services.length === 0 ? (
+                                <p className="text-white/30 text-sm text-center py-4">
+                                    {isEs ? "No hay servicios disponibles." : "No services available."}
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    {services.map((svc) => {
+                                        const isChecked = selectedServiceIds.includes(svc.id);
+                                        const displayName = isEs && svc.name_es ? svc.name_es : svc.name;
+                                        return (
+                                            <button
+                                                key={svc.id}
+                                                type="button"
+                                                onClick={() => toggleService(svc.id)}
+                                                className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-left text-sm transition-all duration-150 ${
+                                                    isChecked
+                                                        ? "border-[#D0B078]/60 bg-[#D0B078]/10 text-white"
+                                                        : "border-white/10 bg-white/3 text-white/50 hover:border-white/25 hover:text-white/70"
+                                                }`}
+                                            >
+                                                <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+                                                    isChecked
+                                                        ? "border-[#D0B078] bg-[#D0B078]"
+                                                        : "border-white/20"
+                                                }`}>
+                                                    {isChecked && (
+                                                        <svg className="w-3 h-3 text-[#131835]" viewBox="0 0 12 12" fill="none">
+                                                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        </svg>
+                                                    )}
+                                                </span>
+                                                <span className="font-medium">{displayName}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {!loadingServices && services.length > 0 && (
+                                <p className="text-white/25 text-xs mt-3 pt-3 border-t border-white/5">
+                                    {isEs
+                                        ? "El administrador verificará tus habilidades antes de asignarte trabajos de ese tipo."
+                                        : "Admin will verify your skills before assigning you jobs of that type."}
+                                </p>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Payment preference */}
                     <div className="space-y-1.5">
@@ -256,9 +358,9 @@ export default function ContractorApplyPage() {
                                 {isEs ? "Información bancaria" : "Bank Account Details"}
                             </p>
                             {[
-                                { name: "bankName",          label: "Bank Name",           labelEs: "Nombre del banco",         placeholder: "Chase, Bank of America...", required: true  },
-                                { name: "bankAccountNumber", label: "Account Number",       labelEs: "Número de cuenta",         placeholder: "••••••••••••",             required: true  },
-                                { name: "bankRoutingNumber", label: "Routing Number",       labelEs: "Número de ruta",           placeholder: "9 digits",                 required: true  },
+                                { name: "bankName",          label: "Bank Name",     labelEs: "Nombre del banco",   placeholder: "Chase, Bank of America...", required: true  },
+                                { name: "bankAccountNumber", label: "Account Number", labelEs: "Número de cuenta",  placeholder: "••••••••••••",             required: true  },
+                                { name: "bankRoutingNumber", label: "Routing Number", labelEs: "Número de ruta",    placeholder: "9 digits",                 required: true  },
                             ].map((f) => (
                                 <div key={f.name} className="space-y-1.5">
                                     <label className="block text-xs font-medium text-white/60 uppercase tracking-widest">
@@ -286,9 +388,7 @@ export default function ContractorApplyPage() {
                                     onChange={(e) => setValues((v) => ({ ...v, bankAccountType: e.target.value }))}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D0B078]/50 focus:ring-1 focus:ring-[#D0B078]/20 transition appearance-none"
                                 >
-                                    <option value="" disabled className="bg-gray-900">
-                                        {isEs ? "Selecciona..." : "Select..."}
-                                    </option>
+                                    <option value="" disabled className="bg-gray-900">{isEs ? "Selecciona..." : "Select..."}</option>
                                     <option value="checking" className="bg-gray-900">{isEs ? "Cuenta corriente" : "Checking"}</option>
                                     <option value="savings"  className="bg-gray-900">{isEs ? "Cuenta de ahorros" : "Savings"}</option>
                                 </select>

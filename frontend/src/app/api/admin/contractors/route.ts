@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         const status = new URL(req.url).searchParams.get('status') || 'all';
         const supabase = createServiceClient();
 
-        const cols = 'id,full_name,email,phone,role,approval_status,stripe_account_id,onboarding_complete,rating,total_jobs_completed,created_at,address,business_name,service_area_zips,payment_preference,zelle_contact,bank_name,bank_account_number,bank_routing_number,bank_account_type,availability,is_available';
+        const cols = 'id,full_name,email,phone,role,approval_status,stripe_account_id,onboarding_complete,rating,total_jobs_completed,created_at,address,business_name,service_area_zips,payment_preference,zelle_contact,bank_name,bank_account_number,bank_routing_number,bank_account_type,availability,is_available,service_type_ids,verified_service_type_ids,skills_pending_review';
 
         let query = supabase.from('profiles').select(cols).order('created_at', { ascending: false });
 

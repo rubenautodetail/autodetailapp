@@ -131,6 +131,7 @@ export interface ContractorApplicationData {
   address: string;
   businessName: string;
   serviceZipCodes: string[];
+  serviceTypeNames?: string[];   // human-readable names of selected services
   documentsCount: number;
 }
 
@@ -246,8 +247,14 @@ export function paymentReceiptTemplate(booking: BookingEmailData): string {
 }
 
 export function contractorApplicationAdminTemplate(data: ContractorApplicationData): string {
+  const servicesHtml = data.serviceTypeNames && data.serviceTypeNames.length > 0
+    ? data.serviceTypeNames
+        .map((s) => `<span style="display:inline-block;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;padding:3px 10px;border-radius:999px;font-size:13px;margin:2px;">${s}</span>`)
+        .join('')
+    : '<span style="color:#9ca3af;font-size:13px;">No services selected</span>';
+
   const body = `
-    <p>A new contractor has applied to join the network.</p>
+    <p>A new contractor has applied to join the network. <strong>Review their skills in the admin panel.</strong></p>
     <div style="background:#f3f4f6;border:1px solid #d1d5db;padding:20px;margin:20px 0;border-radius:8px;">
       <div style="margin:10px 0;"><span style="font-weight:600;color:#4b5563;">Name:</span> ${data.fullName}</div>
       <div style="margin:10px 0;"><span style="font-weight:600;color:#4b5563;">Email:</span> ${data.email}</div>
@@ -256,11 +263,19 @@ export function contractorApplicationAdminTemplate(data: ContractorApplicationDa
       <div style="margin:10px 0;"><span style="font-weight:600;color:#4b5563;">Business Name:</span> ${data.businessName || 'N/A'}</div>
       <div style="margin:10px 0;"><span style="font-weight:600;color:#4b5563;">Service ZIP Codes:</span> ${data.serviceZipCodes.join(', ')}</div>
       <div style="margin:10px 0;"><span style="font-weight:600;color:#4b5563;">Attached Documents:</span> ${data.documentsCount} uploaded</div>
-    </div>`;
+    </div>
+    <div style="background:#faf5ff;border:2px solid #8b5cf6;padding:20px;margin:20px 0;border-radius:8px;">
+      <p style="margin:0 0 10px 0;font-weight:700;color:#5b21b6;font-size:15px;">⚡ Skills Pending Verification</p>
+      <p style="margin:0 0 12px 0;font-size:13px;color:#6b7280;">This contractor selected the following services. Log into the admin panel to verify them before they get job assignments.</p>
+      <div style="line-height:2;">${servicesHtml}</div>
+    </div>
+    <p style="text-align:center;">
+      <a href="${APP_URL}/en/admin/contractors" class="btn" style="background:#4f46e5;color:white;">Review in Admin Panel →</a>
+    </p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#4f46e5 0%,#4338ca 100%)',
-    headerText: 'New Contractor Application',
+    headerText: 'New Contractor Application 🔔',
     body,
   });
 }

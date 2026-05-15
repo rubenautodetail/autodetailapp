@@ -88,6 +88,14 @@ const t = {
         saved: "Saved successfully",
         errorLoad: "Failed to load profile",
         errorSave: "Failed to save changes",
+        // Section B — My Skills
+        skillsTitle: "My Services & Skills",
+        skillsDesc: "Select the services you are experienced with. Admin will verify your selections before you receive matching job notifications.",
+        skillsPending: "Pending Review",
+        skillsVerified: "Verified",
+        skillsNone: "No services available",
+        saveSkills: "Save Skills",
+        skillsSaved: "Skills saved — pending admin review",
     },
     es: {
         title: "Configuración",
@@ -168,6 +176,14 @@ const t = {
         saved: "Guardado exitosamente",
         errorLoad: "Error al cargar el perfil",
         errorSave: "Error al guardar los cambios",
+        // Section B — My Skills
+        skillsTitle: "Mis Servicios y Habilidades",
+        skillsDesc: "Selecciona los servicios en los que tienes experiencia. El administrador verificará tus selecciones antes de que recibas notificaciones de trabajos correspondientes.",
+        skillsPending: "En revisión",
+        skillsVerified: "Verificado",
+        skillsNone: "No hay servicios disponibles",
+        saveSkills: "Guardar Habilidades",
+        skillsSaved: "Habilidades guardadas — pendiente de revisión",
     },
 } as const;
 
@@ -331,6 +347,15 @@ interface ProfileData {
     bank_account_number: string | null;
     bank_routing_number: string | null;
     bank_account_type: string | null;
+    // Skills
+    service_type_ids: number[] | null;
+    verified_service_type_ids: number[] | null;
+    skills_pending_review: boolean | null;
+}
+
+interface CatalogServiceBasic {
+    id: number;
+    name: string;
 }
 
 export default function ContractorSettingsPage({ params }: SettingsPageProps) {
@@ -349,7 +374,14 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const [bio, setBio] = useState("");
     const [savingProfile, setSavingProfile] = useState(false);
 
-    // ── Section B — Service Area ──────────────────────────────────────────────
+    // ── Section B — My Skills ─────────────────────────────────────────────────
+    const [catalogServices, setCatalogServices] = useState<CatalogServiceBasic[]>([]);
+    const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
+    const [savingSkills, setSavingSkills] = useState(false);
+    const [skillsPendingReview, setSkillsPendingReview] = useState<boolean>(false);
+    const [verifiedServiceIds, setVerifiedServiceIds] = useState<number[]>([]);
+
+    // ── Section C — Service Area (dormant — geo-routing not active) ───────────
     const [serviceAreaInput, setServiceAreaInput] = useState("");
     const [savingArea, setSavingArea] = useState(false);
 
@@ -410,6 +442,11 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
             setServiceAreaInput((p.service_area_zips ?? []).join(", "));
             setIsAvailable(p.is_available ?? true);
 
+            // Skills
+            setSelectedServiceIds(p.service_type_ids ?? []);
+            setVerifiedServiceIds(p.verified_service_type_ids ?? []);
+            setSkillsPendingReview(p.skills_pending_review ?? false);
+
             if (p.availability) {
                 setSelectedDays(p.availability.days ?? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
                 setStartHour(p.availability.start_hour ?? 8);
@@ -429,6 +466,19 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
             setLoading(false);
         }
     };
+
+    // ── Load catalog services for skill checkboxes ────────────────────────────
+    useEffect(() => {
+        fetch("/api/services/available")
+            .then((r) => r.json())
+            .then((d) => {
+                const svcs: CatalogServiceBasic[] = (d.services ?? []).map(
+                    (s: { id: number; name: string }) => ({ id: s.id, name: s.name })
+                );
+                setCatalogServices(svcs);
+            })
+            .catch(() => {/* non-fatal */});
+    }, []);
 
     // ── Generic PATCH ─────────────────────────────────────────────────────────
     const patchProfile = async (payload: Record<string, unknown>) => {
@@ -460,24 +510,27 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
         }
     };
 
-    // ── Section B handler ─────────────────────────────────────────────────────
-    const handleSaveServiceArea = async () => {
-        setSavingArea(true);
+    // ── Section B handler — skills ─────────────────────────────────────────────
+    const handleSaveSkills = async () => {
+        setSavingSkills(true);
         try {
-            const zips = serviceAreaInput
-                .split(",")
-                .map((z) => z.trim())
-                .filter(Boolean);
-            await patchProfile({ service_area_zips: zips });
-            toast.success(labels.saved);
+            await patchProfile({ service_type_ids: selectedServiceIds });
+            setSkillsPendingReview(true);
+            toast.success(labels.skillsSaved);
         } catch {
             toast.error(labels.errorSave);
         } finally {
-            setSavingArea(false);
+            setSavingSkills(false);
         }
     };
 
-    // ── Section C handler — availability toggle ───────────────────────────────
+    const toggleServiceId = (id: number) => {
+        setSelectedServiceIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    };
+
+    // ── Section C handler ─────────────────────────────────────────────────────
     const handleToggleAvailability = async (next: boolean) => {
         setIsAvailable(next); // optimistic
         setTogglingAvailability(true);
@@ -663,19 +716,72 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                     />
                 </SectionCard>
 
-                {/* ── Section B: Service Area ─────────────────────────────── */}
-                {/* DORMANT: geo-routing by ZIP disabled — all contractors serve full coverage area */}
-                {/* Re-enable this block when multi-zone routing is needed
+                {/* ── Section B: My Skills ────────────────────────────────── */}
                 <SectionCard>
-                    <SectionTitle>{labels.serviceAreaTitle}</SectionTitle>
-                    <div>
-                        <FieldLabel>{labels.serviceAreaLabel}</FieldLabel>
-                        <TextInput value={serviceAreaInput} onChange={setServiceAreaInput} placeholder={labels.serviceAreaPlaceholder} />
-                        <p className="mt-2 text-xs text-[#5E698F]">{labels.serviceAreaHelp}</p>
-                    </div>
-                    <SaveBtn onClick={handleSaveServiceArea} loading={savingArea} label={labels.saveServiceArea} loadingLabel={labels.saving} />
+                    <SectionTitle>
+                        <span className="flex items-center gap-3">
+                            {labels.skillsTitle}
+                            {skillsPendingReview && (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-yellow-400/15 text-yellow-400 border border-yellow-400/30">
+                                    {labels.skillsPending}
+                                </span>
+                            )}
+                            {!skillsPendingReview && verifiedServiceIds.length > 0 && (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/30">
+                                    ✓ {labels.skillsVerified}
+                                </span>
+                            )}
+                        </span>
+                    </SectionTitle>
+
+                    <p className="text-xs text-[#5E698F] -mt-2">{labels.skillsDesc}</p>
+
+                    {catalogServices.length === 0 ? (
+                        <p className="text-xs text-[#5E698F]">{labels.skillsNone}</p>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {catalogServices.map((svc) => {
+                                const isSelected = selectedServiceIds.includes(svc.id);
+                                const isVerified = verifiedServiceIds.includes(svc.id);
+                                return (
+                                    <button
+                                        key={svc.id}
+                                        type="button"
+                                        onClick={() => toggleServiceId(svc.id)}
+                                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
+                                            isSelected
+                                                ? "bg-[#D0B078]/10 border-[#D0B078]/50 text-[#D0B078]"
+                                                : "bg-transparent border-[#2C355E] text-[#5E698F] hover:border-white/20 hover:text-white/60"
+                                        }`}
+                                    >
+                                        <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 transition-all ${
+                                            isSelected
+                                                ? "bg-[#D0B078] border-[#D0B078]"
+                                                : "bg-transparent border-[#4A5578]"
+                                        }`}>
+                                            {isSelected && (
+                                                <svg className="w-2.5 h-2.5 text-[#131835]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </span>
+                                        <span className="text-sm font-medium flex-1">{svc.name}</span>
+                                        {isVerified && !skillsPendingReview && (
+                                            <span className="text-[9px] font-bold uppercase text-green-400 border border-green-400/30 rounded-full px-1.5 py-0.5">✓</span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    <SaveBtn
+                        onClick={handleSaveSkills}
+                        loading={savingSkills}
+                        label={labels.saveSkills}
+                        loadingLabel={labels.saving}
+                    />
                 </SectionCard>
-                */}
 
                 {/* ── Section C: Availability Toggle ──────────────────────── */}
                 <SectionCard>

@@ -119,13 +119,19 @@ export async function POST(req: NextRequest) {
     // 1. Confirm email to customer
     await notify({ type: 'booking.created', booking: bookingWithService });
 
-    // 2. Alert ALL approved contractors about the new booking.
-    // NOTE: Service-area ZIP filtering is dormant — will be re-enabled when
-    // multi-contractor geo-routing is needed. For now every contractor gets notified.
+    // 2. Notify eligible contractors.
+    // Matching logic:
+    //   - If contractor.verified_service_type_ids is NULL → not yet reviewed,
+    //     still include them (fallback: they may be new or admin hasn't reviewed yet).
+    //   - If verified_service_type_ids is an empty array → admin cleared all; skip.
+    //   - If verified_service_type_ids has entries, only include if the booking's
+    //     service_id is in that array.
     const supabaseAdmin = createServiceClient();
+    const bookingServiceId: number | null = parsed.data.serviceId ? Number(parsed.data.serviceId) : null;
+
     const { data: contractors, error: contractorsError } = await supabaseAdmin
       .from('profiles')
-      .select('id, email')
+      .select('id, email, verified_service_type_ids')
       .eq('role', 'contractor')
       .eq('approval_status', 'approved')
       .eq('is_available', true);
@@ -134,36 +140,53 @@ export async function POST(req: NextRequest) {
       // Non-fatal: booking is confirmed, admin can manually notify contractor
       console.error('[booking/create] contractor notification failed', { bookingId: booking.id, error: contractorsError });
     } else if (contractors && contractors.length > 0) {
-      // Send emails to all available contractors
-      await Promise.all(
-        contractors.map((c) =>
-          notify({
-            type: 'contractor.job_assigned',
-            booking: bookingWithService,
-            contractorEmail: c.email,
-          })
-        )
-      );
+      // Filter by verified skills
+      const eligibleContractors = contractors.filter((c) => {
+        const v = c.verified_service_type_ids as number[] | null;
+        // NULL = not yet reviewed → include (fallback)
+        if (v === null || v === undefined) return true;
+        // Empty array = admin cleared → skip
+        if (v.length === 0) return false;
+        // Has verified skills → only notify if booking service matches
+        if (bookingServiceId && !v.includes(bookingServiceId)) return false;
+        return true;
+      });
 
-      // Batch insert in-app notifications for all eligible contractors
-      const notificationRows = contractors.map((c) => ({
-        user_id: c.id,
-        type: 'info' as const,
-        title: 'New Job Available',
-        message: `New detailing job in ${zipCode}. Tap to view and accept.`,
-        booking_id: booking.id,
-        is_read: false,
-        link: `/contractor/jobs/${booking.id}`,
-      }));
+      if (eligibleContractors.length > 0) {
+        // Send emails to eligible contractors
+        await Promise.all(
+          eligibleContractors.map((c) =>
+            notify({
+              type: 'contractor.job_assigned',
+              booking: bookingWithService,
+              contractorEmail: c.email,
+            })
+          )
+        );
 
-      const { error: notifError } = await supabaseAdmin
-        .from('notifications')
-        .insert(notificationRows);
+        // Batch insert in-app notifications for eligible contractors
+        const notificationRows = eligibleContractors.map((c) => ({
+          user_id: c.id,
+          type: 'info' as const,
+          title: 'New Job Available',
+          message: `New detailing job in ${zipCode}. Tap to view and accept.`,
+          booking_id: booking.id,
+          is_read: false,
+          link: `/contractor/jobs/${booking.id}`,
+        }));
 
-      if (notifError) {
-        console.error('Failed to insert contractor notifications:', notifError);
+        const { error: notifError } = await supabaseAdmin
+          .from('notifications')
+          .insert(notificationRows);
+
+        if (notifError) {
+          console.error('Failed to insert contractor notifications:', notifError);
+        }
+      } else {
+        console.warn(`[booking/create] no eligible contractors after skill filter for booking ${booking.id} (serviceId=${bookingServiceId})`);
       }
     }
+
 
     return NextResponse.json({
       data: {

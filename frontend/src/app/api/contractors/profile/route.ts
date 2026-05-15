@@ -23,6 +23,8 @@ interface ProfilePatchBody {
     bank_account_number?: string;
     bank_routing_number?: string;
     bank_account_type?: string;
+    // Skills / service-type selection
+    service_type_ids?: number[];
 }
 
 // ── Helper ───────────────────────────────────────────────────────────────────
@@ -59,7 +61,7 @@ export async function GET(req: NextRequest) {
         const { data: profile, error: dbError } = await supabase
             .from('profiles')
             .select(
-                'id, full_name, email, phone, bio, profile_photo_url, service_area_zips, availability, is_available, languages, rating, total_ratings, total_jobs_completed, stripe_account_id, onboarding_complete, role, created_at, payment_preference, zelle_contact, bank_name, bank_account_number, bank_routing_number, bank_account_type'
+                'id, full_name, email, phone, bio, profile_photo_url, service_area_zips, availability, is_available, languages, rating, total_ratings, total_jobs_completed, stripe_account_id, onboarding_complete, role, created_at, payment_preference, zelle_contact, bank_name, bank_account_number, bank_routing_number, bank_account_type, service_type_ids, verified_service_type_ids, skills_pending_review'
             )
             .eq('id', user.id)
             .single();
@@ -151,6 +153,16 @@ export async function PATCH(req: NextRequest) {
         }
         if (body.bank_account_type !== undefined) {
             updates.bank_account_type = body.bank_account_type.trim() || null;
+        }
+        // Skills: contractor updates their service type selections
+        // Sets skills_pending_review=true so admin knows to review.
+        // verified_service_type_ids is NOT touched here — only admin can set that.
+        if (body.service_type_ids !== undefined) {
+            if (!Array.isArray(body.service_type_ids) || body.service_type_ids.some((v) => typeof v !== 'number')) {
+                return NextResponse.json({ error: 'service_type_ids must be an array of numbers' }, { status: 400 });
+            }
+            updates.service_type_ids = body.service_type_ids;
+            updates.skills_pending_review = true;
         }
 
         if (Object.keys(updates).length === 0) {
