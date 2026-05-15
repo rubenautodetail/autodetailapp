@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
@@ -35,7 +35,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const supabase = useMemo(() => createClient(), []);
 
-  const fetchProfile = async (userId: string) => {
+  // Use a ref to track the current user ID so the onAuthStateChange callback
+  // always sees the latest value (avoids stale closure over `user`).
+  const userIdRef = useRef<string | null>(null);
+
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -49,15 +53,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error fetching profile:", error);
       setProfile(null);
     }
-  };
+  }, [supabase]);
 
   // Check auth state on mount and listen for changes
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
+        userIdRef.current = session?.user?.id ?? null;
         if (session?.user) {
           await fetchProfile(session.user.id);
         }
@@ -67,15 +74,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      const { data } = supabase.auth.onAuthStateChange(
         async (_event, session) => {
-          const prevUser = user;
+          const prevUserId = userIdRef.current;
           setSession(session);
           setUser(session?.user ?? null);
+          userIdRef.current = session?.user?.id ?? null;
           if (session?.user) {
             // If the user changed (e.g. another tab signed in as different account),
             // clear stale profile immediately to prevent cross-role contamination
-            if (prevUser && prevUser.id !== session.user.id) {
+            if (prevUserId && prevUserId !== session.user.id) {
               setProfile(null);
             }
             setIsLoading(true);
@@ -86,22 +94,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsLoading(false);
         }
       );
-
-      return () => subscription.unsubscribe();
+      subscription = data.subscription;
     };
 
     initializeAuth();
-  }, [supabase]);
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [supabase, fetchProfile]);
 
   // Action: Login with Supabase
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) throw error;
-  };
+  }, [supabase]);
 
   // Action: Register with Supabase
   const register = async (name: string, email: string, password: string, lang = 'en', next?: string): Promise<{ needsEmailConfirmation: boolean }> => {
@@ -179,19 +190,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Action: Logout
-  const logout = async () => {
+  const logout = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setUser(null);
     setSession(null);
     setProfile(null);
+    userIdRef.current = null;
     // Clear any sensitive booking data left in session storage
     try {
       sessionStorage.removeItem('dtailwash_booking_state');
     } catch {
       // Private browsing may block sessionStorage — non-fatal
     }
-  };
+  }, [supabase]);
 
   const value: AuthContextType = {
     user,
@@ -202,7 +214,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     register,
     logout,
-    refreshProfile: () => user ? fetchProfile(user.id) : Promise.resolve(),
+    refreshProfile: userIdRef.current ? () => fetchProfile(userIdRef.current!) : () => Promise.resolve(),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

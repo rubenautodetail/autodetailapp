@@ -64,6 +64,14 @@ function AdminLoginForm() {
     router.replace(safeNext ? next : `/${lang}/admin`);
   }, [user, profile, isLoading, router, lang, searchParams, logout]);
 
+  // Reset local loading state when AuthContext finishes processing
+  // (prevents button from staying disabled if profile fetch completes without redirect)
+  useEffect(() => {
+    if (!isLoading && loading) {
+      dispatch({ type: 'loading', value: false });
+    }
+  }, [isLoading, loading]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch({ type: 'loading', value: true });
