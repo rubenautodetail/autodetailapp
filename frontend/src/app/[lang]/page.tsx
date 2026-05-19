@@ -319,7 +319,7 @@ export default async function LandingPage({
                                         <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
                                             {service.title}
                                         </h3>
-                                        <p className="text-white/75 text-sm leading-relaxed">{service.desc}</p>
+                                        <p className="text-white/75 text-base leading-relaxed">{service.desc}</p>
                                     </div>
                                     <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
                                         <span className="text-[#D0B078] font-bold text-base">{service.price}</span>
