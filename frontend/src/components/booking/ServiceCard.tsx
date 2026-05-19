@@ -67,7 +67,7 @@ export function ServiceCard({ service, isSelected, onSelect, locale }: ServiceCa
                 </div>
             </div>
 
-            <div className="mb-4 text-xs leading-relaxed flex-grow min-h-[3rem]">
+            <div className="mb-4 text-base leading-relaxed flex-grow min-h-[3rem]">
                 <p className="text-[var(--text-secondary)]">
                     {displayDescription}
                 </p>
