@@ -41,7 +41,7 @@ interface Contractor {
 
 type FilterStatus = "all" | "pending" | "active" | "rejected";
 
-interface CatalogSvc { id: number; name: string; }
+interface CatalogSvc { id: number; name: string; name_es: string | null; }
 
 function displayStatus(c: Contractor): string {
     if (c.approval_status === "pending") return "pending";
@@ -191,8 +191,8 @@ function AdminContractorsContent({ locale }: { locale: string }) {
     useEffect(() => {
         fetch("/api/services/available")
             .then((r) => r.json())
-            .then((d) => setCatalogServices((d.services ?? []).map((s: { id: number; name: string }) => ({ id: s.id, name: s.name }))))
-            .catch(() => {});
+            .then((d) => setCatalogServices((d.services ?? []).map((s: { id: number; name: string; name_es: string | null }) => ({ id: s.id, name: s.name, name_es: s.name_es }))))
+            .catch((err) => console.error("Failed to load catalog services:", err));
     }, []);
 
     // When detail modal opens, pre-populate skillVerifyIds with currently verified skills
@@ -381,20 +381,24 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {c.service_type_ids && c.service_type_ids.length > 0 ? (
-                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                            c.skills_pending_review
-                                                                ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                                                                : (c.verified_service_type_ids && c.verified_service_type_ids.length > 0)
-                                                                    ? "bg-green-50 text-green-700 border border-green-200"
-                                                                    : "bg-gray-100 text-gray-500"
-                                                        }`}>
-                                                            {c.skills_pending_review
-                                                                ? `⚡ ${isEs ? "Revisar" : "Review"}`
-                                                                : (c.verified_service_type_ids && c.verified_service_type_ids.length > 0)
-                                                                    ? `✓ ${c.verified_service_type_ids.length}`
-                                                                    : `${c.service_type_ids.length} ${isEs ? "sin verificar" : "unverified"}`
-                                                            }
-                                                        </span>
+                                                        <div className="flex flex-col gap-1">
+                                                            {c.service_type_ids.map((svcId) => {
+                                                                const svc = catalogServices.find((s) => s.id === svcId);
+                                                                const name = svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${svcId}`;
+                                                                const isVerified = (c.verified_service_type_ids ?? []).includes(svcId);
+                                                                return (
+                                                                    <span key={svcId} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold w-fit ${
+                                                                        c.skills_pending_review
+                                                                            ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                                                                            : isVerified
+                                                                                ? "bg-green-50 text-green-700 border border-green-200"
+                                                                                : "bg-gray-100 text-gray-500"
+                                                                    }`}>
+                                                                        {isVerified && !c.skills_pending_review ? "✓ " : c.skills_pending_review ? "⚡ " : ""}{name}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     ) : (
                                                         <span className="text-xs text-gray-400">—</span>
                                                     )}
@@ -564,7 +568,8 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                         <p className="text-xs text-gray-400 mb-2">{t.skillsRequested}</p>
                                         <div className="space-y-1.5">
                                             {(detailModal.service_type_ids ?? []).map((svcId) => {
-                                                const svcName = catalogServices.find((s) => s.id === svcId)?.name ?? `Service #${svcId}`;
+                                                const svc = catalogServices.find((s) => s.id === svcId);
+                                                const svcName = svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${svcId}`;
                                                 const isChecked = skillVerifyIds.includes(svcId);
                                                 return (
                                                     <label key={svcId} className="flex items-center gap-2 cursor-pointer group">
