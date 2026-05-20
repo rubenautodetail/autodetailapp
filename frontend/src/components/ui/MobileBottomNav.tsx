@@ -14,8 +14,8 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
     // Hide on landing page — it's a storefront, not the app
     if (pathname === `/${lang}` || pathname === `/${lang}/`) return null;
 
-    // Hide on contractor and admin sections — they have their own navs
-    if (pathname?.includes("/contractor") || pathname?.includes("/contractors") || pathname?.includes("/admin")) {
+    // Hide on contractor, admin, and customer sections — they have their own navs
+    if (pathname?.includes("/contractor") || pathname?.includes("/contractors") || pathname?.includes("/admin") || pathname?.includes("/customer")) {
         return null;
     }
 

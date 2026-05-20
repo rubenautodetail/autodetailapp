@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useBookingStatus } from '@/contexts/BookingStatusContext';
+import { hoursFromNow } from '@/lib/dateUtils';
 import { BookingCard, BookingCardSkeleton } from '@/components/dashboard/BookingCard';
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
@@ -54,7 +55,7 @@ export default function CustomerDashboardPage() {
     const RESCHEDULE_ELIGIBLE = new Set(['pending', 'pending_assignment', 'confirmed']);
     const reschedulable = activeBookings.filter(b =>
         RESCHEDULE_ELIGIBLE.has(b.status) &&
-        (new Date(b.date).getTime() - Date.now()) / (1000 * 60 * 60) >= 2
+        hoursFromNow(b.date, b.time) >= 2
     );
 
     if (isLoading) {

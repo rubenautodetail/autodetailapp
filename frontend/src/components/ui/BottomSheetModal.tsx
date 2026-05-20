@@ -46,7 +46,7 @@ export default function BottomSheetModal({
             />
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-lg bg-[#1A2142] rounded-t-3xl sm:rounded-3xl shadow-2xl transform transition-transform duration-300 ease-out max-h-[90vh] flex flex-col">
+            <div className="relative w-full max-w-lg bg-[#1A2142] rounded-t-3xl sm:rounded-3xl shadow-2xl transform transition-transform duration-300 ease-out max-h-[90vh] flex flex-col" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
                 {/* Drag Handle (Mobile only visually) */}
                 <div className="w-full h-6 flex items-center justify-center sm:hidden">
                     <div className="w-12 h-1.5 rounded-full bg-[#2C355E]" />

@@ -73,7 +73,9 @@ export async function updateSession(request: NextRequest) {
     const isAuthPage =
         !path.startsWith('/api/') && (
             path.includes('/login') ||
-            path.includes('/register')
+            path.includes('/register') ||
+            path.includes('/forgot-password') ||
+            path.includes('/reset-password')
         )
 
     const isLandingPage =
@@ -134,7 +136,9 @@ export async function updateSession(request: NextRequest) {
 
     // ─── Redirect authenticated users away from auth pages ─────────────────────
     // For contractor flow: send them straight to /contractors/apply (skip register)
-    if (user && isAuthPage && !anyLoginPage) {
+    // Allow password reset pages even when authenticated (recovery session needs access)
+    const isPasswordResetPage = path.includes('/forgot-password') || path.includes('/reset-password')
+    if (user && isAuthPage && !anyLoginPage && !isPasswordResetPage) {
         const next = request.nextUrl.searchParams.get('next')
         const dest = request.nextUrl.clone()
         dest.search = ''

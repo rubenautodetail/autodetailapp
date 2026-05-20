@@ -47,9 +47,20 @@ export async function POST(req: NextRequest) {
   }
 
   // Determine if cancellation is within 4 hours (25% penalty applies)
-  const bookingDate = new Date(booking.date);
+  // Combine date + time_window for accurate comparison in Eastern time
   const now = new Date();
-  const hoursUntilBooking = (bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const nowET = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  let appointmentET: Date;
+  if (booking.date && booking.date.length === 10) {
+    const [y, mo, d] = booking.date.split("-").map(Number);
+    const twMatch = booking.time_window?.match(/^(\d{1,2}):(\d{2})$/);
+    const h = twMatch ? parseInt(twMatch[1], 10) : 12;
+    const m = twMatch ? parseInt(twMatch[2], 10) : 0;
+    appointmentET = new Date(y, mo - 1, d, h, m, 0);
+  } else {
+    appointmentET = new Date(new Date(booking.date).toLocaleString("en-US", { timeZone: "America/New_York" }));
+  }
+  const hoursUntilBooking = (appointmentET.getTime() - nowET.getTime()) / (1000 * 60 * 60);
   const isLateCancellation = hoursUntilBooking < 4 &&
     booking.status !== "pending_payment" && booking.status !== "pending";
 

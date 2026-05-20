@@ -59,6 +59,16 @@ export async function GET(request: NextRequest) {
     let resolvedNext = next
 
     if (tokenHash && type) {
+        // For password recovery, skip server-side token verification.
+        // Pass token_hash + type to the reset-password page so the browser client
+        // can verify the OTP and own the session (avoids cookie-forwarding issues).
+        if (type === 'recovery' && resolvedNext.includes('/reset-password')) {
+            const resetUrl = new URL(resolvedNext, origin)
+            resetUrl.searchParams.set('token_hash', tokenHash)
+            resetUrl.searchParams.set('type', type)
+            return NextResponse.redirect(resetUrl)
+        }
+
         const result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
         error = result.error
 
@@ -73,6 +83,17 @@ export async function GET(request: NextRequest) {
     } else if (code) {
         const result = await supabase.auth.exchangeCodeForSession(code)
         error = result.error
+
+        // For PKCE recovery flow, redirect to reset-password with session cookies
+        // (the code exchange already established the session)
+        if (!error && resolvedNext.includes('/reset-password')) {
+            const resetUrl = new URL(resolvedNext, origin)
+            const successRedirect = NextResponse.redirect(resetUrl)
+            supabaseResponse.cookies.getAll().forEach((c) => {
+                successRedirect.cookies.set(c.name, c.value, c)
+            })
+            return successRedirect
+        }
 
         if (!error && (resolvedNext === '/en' || resolvedNext === '/es')) {
             const { data: { user } } = await supabase.auth.getUser()

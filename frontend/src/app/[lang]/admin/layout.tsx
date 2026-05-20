@@ -130,7 +130,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div className="flex overflow-x-auto gap-1 h-16 px-1">
+        <div className="flex overflow-x-auto gap-0.5 h-16 px-1 scrollbar-hide">
           {NAV.map((item) => {
             const active = isActive(item.segment, item.exact);
             return (

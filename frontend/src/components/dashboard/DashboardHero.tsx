@@ -15,7 +15,7 @@ export function DashboardHero({ userName }: DashboardHeroProps) {
     const displayName = userName || (isEs ? 'Cliente' : 'Valued Customer');
 
     return (
-        <div className="relative overflow-hidden rounded-3xl glass-card p-10 mb-10">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl glass-card p-5 sm:p-8 md:p-10 mb-6 sm:mb-10">
             {/* Background Decorative Elements */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-accent-gold opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
 
@@ -30,11 +30,11 @@ export function DashboardHero({ userName }: DashboardHeroProps) {
                         <span className="text-accent-gold font-medium uppercase tracking-wider text-xs">{isEs ? 'Miembro Premium' : 'Premium Member'}</span>
                     </div>
 
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                    <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-3 sm:mb-4">
                         {isEs ? 'Bienvenido de vuelta, ' : 'Welcome back, '}<span className="text-gold-gradient">{displayName}</span>
                     </h1>
 
-                    <p className="text-text-secondary text-lg max-w-2xl">
+                    <p className="text-text-secondary text-sm sm:text-base md:text-lg max-w-2xl">
                         {isEs
                             ? 'Tu vehículo merece lo mejor. Rastrea tus servicios, administra tu garaje y reserva tu próximo detallado premium.'
                             : 'Your vehicle deserves the best. Track your services, manage your garage, and book your next premium detail.'}

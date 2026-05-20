@@ -1,13 +1,24 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
+/**
+ * Canonical site URL for Supabase redirects.
+ * Must match exactly what's whitelisted in Supabase Dashboard → Auth → URL Configuration.
+ * Using NEXT_PUBLIC_APP_URL avoids www/non-www mismatches from window.location.origin.
+ */
+function getSiteUrl(): string {
+    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+    if (typeof window !== "undefined") return window.location.origin;
+    return "http://localhost:3000";
+}
+
 function ForgotPasswordForm() {
-    const supabase = createClient();
+    const supabase = useRef(createClient()).current;
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
@@ -30,6 +41,7 @@ function ForgotPasswordForm() {
             email: "Email",
             submit: "Send Reset Link",
             success: "Check your email for the reset link!",
+            errorGeneric: "Something went wrong. Please try again.",
             backToLogin: "Back to Login",
         },
         es: {
@@ -38,6 +50,7 @@ function ForgotPasswordForm() {
             email: "Correo electrónico",
             submit: "Enviar enlace",
             success: "¡Revisa tu correo para el enlace de restablecimiento!",
+            errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
             backToLogin: "Regresar al inicio de sesión",
         }
     };
@@ -50,24 +63,39 @@ function ForgotPasswordForm() {
         setMessage("");
 
         try {
+            const siteUrl = getSiteUrl();
             const nextPath = isContractorFlow
                 ? `/${lang}/reset-password?from=contractor`
                 : isAdminFlow
                     ? `/${lang}/reset-password?from=admin`
                     : `/${lang}/reset-password`;
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`,
+                redirectTo: `${siteUrl}/api/auth/callback?next=${encodeURIComponent(nextPath)}`,
             });
             if (error) {
+                console.error("resetPasswordForEmail error:", error.message, error);
                 setStatus("error");
-                setMessage(error.message);
+                // Show a user-friendly message instead of raw Supabase errors
+                // (e.g. "Email rate limit exceeded" or provider errors)
+                if (error.message.toLowerCase().includes("rate") || error.message.toLowerCase().includes("limit")) {
+                    setMessage(lang === "es"
+                        ? "Demasiados intentos. Espera unos minutos antes de intentar de nuevo."
+                        : "Too many attempts. Please wait a few minutes and try again.");
+                } else if (error.message.toLowerCase().includes("not allowed") || error.message.toLowerCase().includes("redirect")) {
+                    setMessage(lang === "es"
+                        ? "Error de configuración. Contacta soporte."
+                        : "Configuration error. Please contact support.");
+                } else {
+                    setMessage(error.message || t.errorGeneric);
+                }
             } else {
                 setStatus("success");
                 setMessage(t.success);
             }
         } catch (err: unknown) {
+            console.error("resetPasswordForEmail exception:", err);
             setStatus("error");
-            setMessage(err instanceof Error ? err.message : "An error occurred");
+            setMessage(err instanceof Error ? err.message : t.errorGeneric);
         }
     };
 

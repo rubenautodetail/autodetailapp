@@ -169,7 +169,7 @@ function ResetPasswordForm() {
                             : "This link is no longer valid. Please request a new password reset link."}
                     </p>
                     <Link
-                        href={`/${lang}/forgot-password`}
+                        href={`/${lang}/forgot-password${fromParam ? `?from=${fromParam}` : ""}`}
                         className="inline-block w-full py-3.5 rounded-xl bg-[var(--accent)] text-white font-medium text-center hover:opacity-90 transition-all"
                     >
                         {lang === "es" ? "Solicitar nuevo enlace" : "Request new link"}

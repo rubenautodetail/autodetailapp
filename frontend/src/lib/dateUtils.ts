@@ -75,12 +75,36 @@ export function formatTimeWindow(tw: string | null | undefined, locale: string =
 }
 
 /**
- * Returns hours between a date string and now. Negative = in the past.
+ * Returns hours between an appointment and now. Negative = in the past.
+ * When a time_window (HH:MM) is provided, it is combined with the date
+ * to give an accurate appointment-time comparison in Eastern time.
+ * Without it, noon Eastern is assumed (matching fmtDate's T12:00:00Z trick).
  */
-export function hoursFromNow(value: string | null | undefined): number {
-    const d = safeDate(value ?? null);
-    if (!d) return -Infinity;
-    return (d.getTime() - Date.now()) / (1000 * 60 * 60);
+export function hoursFromNow(
+    value: string | null | undefined,
+    timeWindow?: string | null
+): number {
+    if (!value) return -Infinity;
+
+    // Both sides compared in Eastern time to avoid DST/offset issues
+    const nowET = easternNow();
+
+    if (value.length === 10) {
+        // YYYY-MM-DD — parse parts directly to avoid timezone shifting
+        const [y, mo, d] = value.split("-").map(Number);
+        const tw = timeWindow?.match(/^(\d{1,2}):(\d{2})$/);
+        const h = tw ? parseInt(tw[1], 10) : 12;
+        const m = tw ? parseInt(tw[2], 10) : 0;
+        // Build appointment as Eastern time by constructing from parts
+        // (easternNow uses the same toLocaleString trick, so the two are comparable)
+        const apptET = new Date(y, mo - 1, d, h, m, 0);
+        return (apptET.getTime() - nowET.getTime()) / (1000 * 60 * 60);
+    }
+
+    // Full ISO string — compare directly
+    const dt = safeDate(value);
+    if (!dt) return -Infinity;
+    return (dt.getTime() - Date.now()) / (1000 * 60 * 60);
 }
 
 /**

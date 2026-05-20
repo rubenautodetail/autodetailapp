@@ -121,9 +121,10 @@ export function BookingCard({
     // Safe price: guard against NaN/undefined so .toFixed() never crashes
     const safePrice = Number.isFinite(price) ? price : 0;
 
-    const hoursUntil = hoursFromNow(date);
+    const hoursUntil = hoursFromNow(date, time);
     const within4h = hoursUntil < 4;
     const within2h = hoursUntil < 2;
+    const isPast = hoursUntil < 0;
 
     const displayTime = formatTimeWindow(time, isEs);
 
@@ -151,10 +152,10 @@ export function BookingCard({
     }, [id, isEs, onRefresh]);
 
     // Statuses where cancel/reschedule are available
-    const canCancel = ['pending_payment', 'pending', 'pending_assignment', 'confirmed'].includes(status);
-    const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within2h;
+    const canCancel = ['pending_payment', 'pending', 'pending_assignment', 'confirmed'].includes(status) && !isPast;
+    const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within2h && !isPast;
     // Late cancellation (<4h) incurs 25% penalty, but is always allowed
-    const hasLatePenalty = status !== 'pending_payment' && status !== 'pending' && within4h;
+    const hasLatePenalty = status !== 'pending_payment' && status !== 'pending' && within4h && !isPast;
 
     return (
         <motion.div
@@ -163,6 +164,14 @@ export function BookingCard({
             transition={{ delay: index * 0.1, duration: 0.5 }}
             className="glass-card rounded-2xl overflow-hidden group hover:border-accent-gold/30 transition-all duration-300"
         >
+            {isPast && !['completed', 'cancelled'].includes(status) && (
+                <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-2 flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-xs font-bold text-red-400 uppercase tracking-wider">
+                        {isEs ? 'Fecha pasada' : 'Past Due'}
+                    </span>
+                </div>
+            )}
             {status === 'completed' && (
                 <div className="bg-accent-gold/10 border-b border-accent-gold/20 px-6 py-2 flex items-center gap-2">
                     <Star className="w-3.5 h-3.5 text-accent-gold fill-current" />
@@ -171,23 +180,23 @@ export function BookingCard({
                     </span>
                 </div>
             )}
-            <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${config.bg}`}>
+            <div className="p-4 sm:p-6">
+                <div className="flex justify-between items-start gap-3 mb-4">
+                    <div className="flex items-center space-x-3 min-w-0">
+                        <div className={`p-2 rounded-lg shrink-0 ${config.bg}`}>
                             <StatusIcon className={`w-5 h-5 ${config.color}`} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <span className={`text-xs font-medium uppercase tracking-wider ${config.color}`}>
                                 {isEs ? config.es : config.en}
                             </span>
-                            <h3 className="text-xl font-bold text-white mt-1 group-hover:text-accent-gold transition-colors">
+                            <h3 className="text-base sm:text-xl font-bold text-white mt-1 group-hover:text-accent-gold transition-colors truncate">
                                 {serviceName || (isEs ? 'Servicio de Detallado' : 'Auto Detail')}
                             </h3>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <span className="text-2xl font-bold text-accent-gold">${safePrice.toFixed(2)}</span>
+                    <div className="text-right shrink-0">
+                        <span className="text-lg sm:text-2xl font-bold text-accent-gold">${safePrice.toFixed(2)}</span>
                     </div>
                 </div>
 
@@ -296,7 +305,7 @@ export function BookingCard({
                                         {canReschedule && (
                                             <Link
                                                 href={`/${lang}/booking/${id}/reschedule`}
-                                                className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#A5B0D1] hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded-lg transition-all"
+                                                className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#A5B0D1] hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2.5 min-h-[44px] rounded-lg transition-all"
                                             >
                                                 <CalendarClock className="w-3.5 h-3.5" />
                                                 {isEs ? 'Reprogramar' : 'Reschedule'}
@@ -304,7 +313,7 @@ export function BookingCard({
                                         )}
                                         <button
                                             onClick={() => setCancelStep(canReschedule ? 'recommend' : 'confirm')}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition-all"
+                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 px-3 py-2.5 min-h-[44px] rounded-lg transition-all"
                                         >
                                             <XCircle className="w-3.5 h-3.5" />
                                             {isEs ? 'Cancelar Servicio' : 'Cancel Service'}
@@ -331,17 +340,17 @@ export function BookingCard({
                                                 ? `Rescheduling is free and you keep your money. Cancelling will cost you a 25% fee ($${(safePrice * 0.25).toFixed(2)}).`
                                                 : 'Rescheduling is free and you keep your spot. If you cancel, you\'ll need to book again.'}
                                     </p>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <Link
                                             href={`/${lang}/booking/${id}/reschedule`}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 py-2.5 px-3 rounded-lg transition-all"
+                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 py-2.5 px-3 min-h-[44px] rounded-lg transition-all"
                                         >
                                             <CalendarClock className="w-3.5 h-3.5" />
                                             {isEs ? 'Sí, reprogramar' : 'Yes, reschedule'}
                                         </Link>
                                         <button
                                             onClick={() => setCancelStep('confirm')}
-                                            className="flex-1 text-xs font-semibold text-red-400 hover:text-red-300 bg-white/5 hover:bg-white/10 py-2.5 px-3 rounded-lg transition-all"
+                                            className="flex-1 text-xs font-semibold text-red-400 hover:text-red-300 bg-white/5 hover:bg-white/10 py-2.5 px-3 min-h-[44px] rounded-lg transition-all"
                                         >
                                             {isEs ? 'No, quiero cancelar' : 'No, I want to cancel'}
                                         </button>
@@ -385,14 +394,14 @@ export function BookingCard({
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => { setCancelStep(null); setCancelError(''); }}
-                                            className="flex-1 text-xs font-semibold text-[#A5B0D1] bg-white/5 hover:bg-white/10 py-2 px-3 rounded-lg transition-all whitespace-nowrap"
+                                            className="flex-1 text-xs font-semibold text-[#A5B0D1] bg-white/5 hover:bg-white/10 py-2.5 px-3 min-h-[44px] rounded-lg transition-all whitespace-nowrap"
                                         >
                                             {isEs ? 'No, volver' : 'No, go back'}
                                         </button>
                                         <button
                                             onClick={handleCancel}
                                             disabled={cancelling}
-                                            className="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 py-2 px-3 rounded-lg transition-all whitespace-nowrap min-w-0"
+                                            className="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 py-2.5 px-3 min-h-[44px] rounded-lg transition-all whitespace-nowrap min-w-0"
                                         >
                                             {cancelling
                                                 ? (isEs ? 'Cancelando…' : 'Cancelling…')
