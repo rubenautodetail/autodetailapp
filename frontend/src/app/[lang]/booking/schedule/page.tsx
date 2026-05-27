@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { useBooking } from "@/contexts";
 import { PricingSummary, ProgressIndicator } from "@/components/booking";
 import { Button } from "@/components/ui/Button";
@@ -48,6 +49,8 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
   const [timeWindows, setTimeWindows] = useState<TimeWindowConfig[]>([]);
   const [isLoadingTimeWindows, setIsLoadingTimeWindows] = useState(true);
+  const [windowDays, setWindowDays] = useState(14);
+  const [minLeadHours, setMinLeadHours] = useState(1);
 
   // Redirect if prerequisites not met
   useEffect(() => {
@@ -144,27 +147,20 @@ export default function SchedulePage({ params }: SchedulePageProps) {
         }
 
         setAvailableDates(dateSet);
+        if (typeof data.windowDays === "number") setWindowDays(data.windowDays);
+        if (typeof data.minLeadTimeHours === "number") setMinLeadHours(data.minLeadTimeHours);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
         console.error("Error fetching availability:", error);
-        // On error, allow all future dates (fallback behavior)
-        const dateSet = new Set<string>();
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        for (let day = 1; day <= daysInMonth; day++) {
-          const date = new Date(year, month, day);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-
-          if (date >= today) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-            dateSet.add(dateStr);
-          }
-        }
-
-        setAvailableDates(dateSet);
+        // Surface the failure instead of silently opening every future date —
+        // a silent fallback masks real outages and lets customers pick days
+        // no contractor can actually work.
+        setAvailableDates(new Set());
+        toast.error(
+          locale === "es"
+            ? "No se pudo cargar la disponibilidad. Intenta otra vez."
+            : "Couldn't load availability. Please try again."
+        );
       } finally {
         setIsLoadingAvailability(false);
       }
@@ -172,7 +168,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
     fetchAvailability();
     return () => controller.abort();
-  }, [currentMonth, customerLocation, selectedService]);
+  }, [currentMonth, customerLocation, selectedService, locale]);
 
   // Generate calendar days
   const getDaysInMonth = (date: Date) => {
@@ -204,25 +200,16 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Create max date (14 days from today)
+    // Window cutoff is admin-controlled (platform_schedule_settings.booking_window_days).
     const maxDate = new Date(today);
-    maxDate.setDate(maxDate.getDate() + 14);
+    maxDate.setDate(maxDate.getDate() + windowDays);
 
-    // Can't book past dates or beyond 14 days
     if (date < today || date > maxDate) return false;
 
-    // Optional: check real contractor availability from API
-    // If we only enforce the 14 days, we can skip API check if it's missing,
-    // but the API also handles holiday/busy schedules.
-    // For now, if it's within 14 days, it's considered available locally unless the API strictly overrides.
+    // Authoritative check: the API already enforces admin blocks, weekday
+    // defaults, contractor availability JSON, and skill matching. Trust it.
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
-    // If availableDates is populated from API, use it. Otherwise rely on local 14-days logic.
-    if (availableDates.size > 0 && !availableDates.has(dateStr)) {
-      return false;
-    }
-
-    return true;
+    return availableDates.has(dateStr);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -236,9 +223,8 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     const today = new Date();
     const isToday = tempSelectedDate.toDateString() === today.toDateString();
     if (!isToday) return true;
-    // Require at least 1 hour lead time
     const slotHour = parseInt(window.slot.split(":")[0], 10);
-    return slotHour > today.getHours() + 1;
+    return slotHour > today.getHours() + minLeadHours;
   };
 
   const handleWindowSelect = (window: TimeWindowConfig) => {

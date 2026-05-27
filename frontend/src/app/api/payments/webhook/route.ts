@@ -25,6 +25,7 @@ interface BookingRow {
     user_id: string | null;
     contractor_id: string | null;
     service_name: string | null;
+    service_id: number | null;
     zip_code: string | null;
     status: string | null;
     payment_status: string | null;
@@ -124,24 +125,30 @@ export async function POST(req: NextRequest) {
                     );
 
                     // Broadcast to eligible contractors — first to accept wins.
-                    // Skill-filtering: NULL verified_service_type_ids = not yet reviewed (include),
-                    // empty array = cleared (skip), otherwise match booking service.
+                    // Fail closed: if the booking has no service_id we cannot match
+                    // contractors safely, so we skip the fan-out entirely.
                     const bookingServiceIdWh: number | null =
-                        updatedBooking.service_id ? Number(updatedBooking.service_id) : null;
-                    const { data: contractors } = await supabase
-                        .from('profiles')
-                        .select('id, email, verified_service_type_ids')
-                        .eq('role', 'contractor')
-                        .eq('approval_status', 'approved')
-                        .eq('is_available', true);
+                        booking.service_id ?? null;
 
-                    const eligibleWh = (contractors ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
-                        const v = c.verified_service_type_ids;
-                        if (v === null || v === undefined) return true;
-                        if (v.length === 0) return false;
-                        if (bookingServiceIdWh && !v.includes(bookingServiceIdWh)) return false;
-                        return true;
-                    });
+                    let eligibleWh: { id: string; email: string; verified_service_type_ids: number[] | null }[] = [];
+                    if (bookingServiceIdWh === null) {
+                        console.error(`webhook: booking ${booking.id} has NULL service_id — skipping contractor notification`);
+                    } else {
+                        const { data: contractors } = await supabase
+                            .from('profiles')
+                            .select('id, email, verified_service_type_ids')
+                            .eq('role', 'contractor')
+                            .eq('approval_status', 'approved')
+                            .eq('is_available', true);
+
+                        // Skill match: only notify contractors whose verified_service_type_ids
+                        // contains this booking's service_id. NULL or empty arrays are skipped.
+                        eligibleWh = (contractors ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
+                            const v = c.verified_service_type_ids;
+                            if (!v || v.length === 0) return false;
+                            return v.includes(bookingServiceIdWh);
+                        });
+                    }
 
                     if (eligibleWh.length > 0) {
                         await Promise.all(
@@ -218,24 +225,27 @@ export async function POST(req: NextRequest) {
                     (err) => console.error('webhook: customer confirmation email (auto-capture) failed:', err)
                 );
 
-                const bookingServiceIdAc: number | null =
-                    (updatedBooking2 as BookingRow & { service_id?: number }).service_id
-                        ? Number((updatedBooking2 as BookingRow & { service_id?: number }).service_id)
-                        : null;
-                const { data: contractors2 } = await supabase
-                    .from('profiles')
-                    .select('id, email, verified_service_type_ids')
-                    .eq('role', 'contractor')
-                    .eq('approval_status', 'approved')
-                    .eq('is_available', true);
+                // Fail closed: if the booking has no service_id we cannot match
+                // contractors safely, so we skip the fan-out entirely.
+                const bookingServiceIdAc: number | null = booking2.service_id ?? null;
 
-                const eligibleAc = (contractors2 ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
-                    const v = c.verified_service_type_ids;
-                    if (v === null || v === undefined) return true;
-                    if (v.length === 0) return false;
-                    if (bookingServiceIdAc && !v.includes(bookingServiceIdAc)) return false;
-                    return true;
-                });
+                let eligibleAc: { id: string; email: string; verified_service_type_ids: number[] | null }[] = [];
+                if (bookingServiceIdAc === null) {
+                    console.error(`webhook (auto-capture): booking ${booking2.id} has NULL service_id — skipping contractor notification`);
+                } else {
+                    const { data: contractors2 } = await supabase
+                        .from('profiles')
+                        .select('id, email, verified_service_type_ids')
+                        .eq('role', 'contractor')
+                        .eq('approval_status', 'approved')
+                        .eq('is_available', true);
+
+                    eligibleAc = (contractors2 ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
+                        const v = c.verified_service_type_ids;
+                        if (!v || v.length === 0) return false;
+                        return v.includes(bookingServiceIdAc);
+                    });
+                }
 
                 if (eligibleAc.length > 0) {
                     await Promise.all(

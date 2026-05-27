@@ -28,11 +28,23 @@ export async function POST(req: NextRequest) {
 
     try {
         const supabase = createServiceClient();
+
+        // Auto-verify declared skills on approval so new contractors start receiving
+        // skill-filtered notifications immediately. Admin can narrow the set later
+        // via /api/admin/contractors/[id]/verify-skills.
+        const { data: current } = await supabase
+            .from('profiles')
+            .select('service_type_ids')
+            .eq('id', userId)
+            .single();
+
         const { error } = await supabase
             .from('profiles')
             .update({
                 role: 'contractor',
                 approval_status: 'approved',
+                verified_service_type_ids: current?.service_type_ids ?? [],
+                skills_pending_review: false,
                 updated_at: new Date().toISOString(),
             })
             .eq('id', userId);

@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
     // Never trust client-submitted totals. Re-derive from DB prices.
     const { data: dbService } = await supabase
         .from('services')
-        .select('base_price')
+        .select('id, base_price')
         .eq('name', serviceName)
         .eq('is_active', true)
         .single();
@@ -182,6 +182,7 @@ export async function POST(req: NextRequest) {
         service_fee: 0,
         total_amount: perVehicleAmount,
         service_name: serviceName || null,
+        service_id: dbService.id,
         selected_add_ons: verifiedAddOns,
         vehicle_make: v.make || null,
         vehicle_model: v.model || null,

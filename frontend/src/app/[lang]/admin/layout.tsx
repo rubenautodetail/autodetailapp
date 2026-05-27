@@ -14,6 +14,7 @@ const NAV = [
   { segment: "admin/users", label: "Users", labelEs: "Usuarios", icon: "👥", exact: false },
   { segment: "admin/payments", label: "Payments", labelEs: "Pagos", icon: "💳", exact: false },
   { segment: "admin/schedule", label: "Schedule", labelEs: "Horarios", icon: "🗓️", exact: false },
+  { segment: "admin/availability", label: "Availability", labelEs: "Disponibilidad", icon: "📆", exact: false },
   { segment: "admin/payouts", label: "Payouts", labelEs: "Pagos Técnicos", icon: "💰", exact: false },
   { segment: "admin/time-windows", label: "Time Slots", labelEs: "Franjas", icon: "⏰", exact: false },
 ];

@@ -77,6 +77,19 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceClient();
 
+    // Server-side authoritative service_id lookup — the client may send `serviceId`
+    // but we always resolve from the active services table.
+    let resolvedServiceId: number | null = null;
+    if (serviceName) {
+      const { data: svc } = await supabase
+        .from('services')
+        .select('id')
+        .eq('name', serviceName)
+        .eq('is_active', true)
+        .single();
+      resolvedServiceId = svc?.id ?? null;
+    }
+
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .insert({
@@ -98,6 +111,7 @@ export async function POST(req: NextRequest) {
         service_fee: serviceFee || 0,
         total_amount: total || 0,
         service_name: serviceName || null,
+        service_id: resolvedServiceId,
         vehicle_make: vehicleMake || null,
         vehicle_model: vehicleModel || null,
         vehicle_year: vehicleYear || null,
@@ -127,7 +141,7 @@ export async function POST(req: NextRequest) {
     //   - If verified_service_type_ids has entries, only include if the booking's
     //     service_id is in that array.
     const supabaseAdmin = createServiceClient();
-    const bookingServiceId: number | null = parsed.data.serviceId ? Number(parsed.data.serviceId) : null;
+    const bookingServiceId: number | null = resolvedServiceId;
 
     const { data: contractors, error: contractorsError } = await supabaseAdmin
       .from('profiles')
