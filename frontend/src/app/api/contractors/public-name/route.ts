@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ name: null });
 
-    const supabase = createApiClient();
+    const supabase = createServiceClient();
     const { data } = await supabase
       .from('profiles')
       .select('full_name')

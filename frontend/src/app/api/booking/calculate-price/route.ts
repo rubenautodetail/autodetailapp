@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { PriceCalculateSchema } from '@/lib/validation/booking';
 
 type AddOn = {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         const { serviceId, addOnIds = [], zipCode } = parsed.data;
         const safeServiceId = serviceId;
 
-        const supabase = createApiClient();
+        const supabase = createServiceClient();
 
         // Fetch the service
         const { data: service, error: serviceError } = await supabase

@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import {
     matchesSlot,
     weekdaySettingsKeyFor,
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
         const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
         const currentMonth = today.toISOString().slice(0, 7);
 
-        const supabase = createApiClient();
+        const supabase = createServiceClient();
 
         // ── Parallel fetch: settings, blocked dates, time windows, contractors, bookings
         const monthStart = `${year}-${String(monthNum).padStart(2, '0')}-01`;
