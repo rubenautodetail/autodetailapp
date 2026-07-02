@@ -71,7 +71,7 @@ export default function LocationPage({ params }: LocationPageProps) {
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
-    supabase.from("profiles").select("saved_addresses").eq("id", user.id).single().then(({ data }) => {
+    supabase.from("profiles").select("saved_addresses").eq("id", user.id).single().then(({ data }: any) => {
       if (data?.saved_addresses) setSavedAddresses(data.saved_addresses as SavedAddress[]);
     });
   }, [user]);

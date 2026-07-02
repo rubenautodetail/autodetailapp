@@ -244,7 +244,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'vehicles', filter: `user_id=eq.${userId}` },
-                (payload) => {
+                (payload: any) => {
                     const record = payload.new as DbVehicle;
                     if (payload.eventType === 'INSERT') {
                         setVehicles(prev => [...prev, mapDbVehicleToVehicle(record)]);
@@ -262,7 +262,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'bookings', filter: `customer_email=eq.${userEmail}` },
-                (payload) => {
+                (payload: any) => {
                     const row = payload.new as Record<string, unknown>;
                     const newBooking: Booking = {
                         id: String(row.id),
@@ -285,7 +285,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `customer_email=eq.${userEmail}` },
-                (payload) => {
+                (payload: any) => {
                     const updated = payload.new as Record<string, unknown>;
                     setBookings(prev => prev.map(b =>
                         b.id === String(updated.id)

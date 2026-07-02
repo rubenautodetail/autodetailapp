@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const { data } = supabase.auth.onAuthStateChange(
-        async (_event, session) => {
+        async (_event: any, session: any) => {
           const prevUserId = userIdRef.current;
           setSession(session);
           setUser(session?.user ?? null);

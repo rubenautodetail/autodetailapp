@@ -134,7 +134,7 @@ export function ContractorProvider({ children }: { children: ReactNode }) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bookings', filter: `contractor_id=eq.${contractorId}` },
-        (payload) => {
+        (payload: any) => {
           if (payload.eventType === 'INSERT') {
             const newRequest = mapBookingToRequest(payload.new as BookingRow);
             setRequests(prev => [newRequest, ...prev]);

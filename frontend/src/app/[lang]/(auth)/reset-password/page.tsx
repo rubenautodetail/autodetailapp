@@ -36,7 +36,7 @@ function ResetPasswordForm() {
 
         if (tokenHash && type) {
             // token_hash flow: verify client-side so the browser client owns the session
-            supabase.auth.verifyOtp({ token_hash: tokenHash, type }).then(({ data, error }) => {
+            supabase.auth.verifyOtp({ token_hash: tokenHash, type }).then(({ data, error }: { data: any; error: any }) => {
                 if (!error && data.session) {
                     setSessionReady(true);
                 } else {
@@ -47,13 +47,14 @@ function ResetPasswordForm() {
         }
 
         // Fallback: check existing session (page refresh) or catch hash-fragment flow
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
             if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
                 setSessionReady(true);
             }
         });
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(({ data }: any) => {
+            const session = data?.session;
             if (session) {
                 setSessionReady(true);
             } else {

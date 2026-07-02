@@ -38,7 +38,7 @@ export default function DashboardPage() {
                     .select("*")
                     .eq("user_id", profile!.id);
                 if (error) throw error;
-                setVehicles((data || []).map(v => ({
+                setVehicles((data || []).map((v: any) => ({
                     id: v.id,
                     make: v.make,
                     model: v.model,

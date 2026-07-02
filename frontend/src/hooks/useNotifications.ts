@@ -67,7 +67,7 @@ export function useNotifications() {
                     schema: 'public',
                     table: 'notifications',
                 },
-                (payload) => {
+                (payload: any) => {
                     const incoming = payload.new as AppNotification;
 
                     // Guard: only process if this notification is for the current user.
