@@ -186,37 +186,42 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
 
         async function fetchUserData() {
             setIsLoading(true);
-            const supabase = createClient();
+            try {
+                const supabase = createClient();
 
-            // Fetch Profile
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
+                // Fetch Profile
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
 
-            if (profileData) {
-                setUserProfile({
-                    name: profileData.full_name?.split(' ')[0] || 'there',
-                    email: userEmail,
-                    phone: profileData.phone || '',
-                    memberSince: fmtDate(profileData.created_at, 'en-US', { month: 'long', year: 'numeric' }),
-                    path: profileData.avatar_url || '/avatars/default.png'
-                });
+                if (profileData) {
+                    setUserProfile({
+                        name: profileData.full_name?.split(' ')[0] || 'there',
+                        email: userEmail,
+                        phone: profileData.phone || '',
+                        memberSince: fmtDate(profileData.created_at, 'en-US', { month: 'long', year: 'numeric' }),
+                        path: profileData.avatar_url || '/avatars/default.png'
+                    });
+                }
+
+                // Fetch Vehicles
+                const { data: vehicleData } = await supabase
+                    .from('vehicles')
+                    .select('*')
+                    .eq('user_id', userId);
+
+                if (vehicleData) {
+                    setVehicles(vehicleData.map(mapDbVehicleToVehicle));
+                }
+
+                await fetchBookings();
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            } finally {
+                setIsLoading(false);
             }
-
-            // Fetch Vehicles
-            const { data: vehicleData } = await supabase
-                .from('vehicles')
-                .select('*')
-                .eq('user_id', userId);
-
-            if (vehicleData) {
-                setVehicles(vehicleData.map(mapDbVehicleToVehicle));
-            }
-
-            await fetchBookings();
-            setIsLoading(false);
         }
 
         fetchUserData();

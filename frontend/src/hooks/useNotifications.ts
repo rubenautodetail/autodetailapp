@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ToastMessage } from '@/components/dashboard/NotificationToast';
 
@@ -34,7 +34,7 @@ function playNotificationSound(): void {
 
 export function useNotifications() {
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     useEffect(() => {
         let currentUserId: string | null = null;
