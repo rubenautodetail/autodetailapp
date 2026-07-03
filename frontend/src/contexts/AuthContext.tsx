@@ -74,24 +74,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
 
+      // IMPORTANT: this callback must stay synchronous and must NOT await any
+      // supabase call. supabase-js holds its internal auth lock while the
+      // callback runs; awaiting a query here (which needs the same lock)
+      // deadlocks and leaves isLoading stuck at true — every layout gated on
+      // it then spins forever, especially on tab refocus / back navigation
+      // when TOKEN_REFRESHED / SIGNED_IN re-fire.
       const { data } = supabase.auth.onAuthStateChange(
-        async (_event: any, session: any) => {
+        (_event: any, session: any) => {
           const prevUserId = userIdRef.current;
           setSession(session);
           setUser(session?.user ?? null);
           userIdRef.current = session?.user?.id ?? null;
-          if (session?.user) {
-            // If the user changed (e.g. another tab signed in as different account),
-            // clear stale profile immediately to prevent cross-role contamination
-            if (prevUserId && prevUserId !== session.user.id) {
-              setProfile(null);
-            }
-            setIsLoading(true);
-            await fetchProfile(session.user.id);
-          } else {
+
+          if (!session?.user) {
             setProfile(null);
+            setIsLoading(false);
+            return;
           }
-          setIsLoading(false);
+
+          // Same user (token refresh, focus re-emit): session state is already
+          // updated above; the profile is unchanged — no refetch, no loading flash.
+          if (prevUserId === session.user.id) {
+            return;
+          }
+
+          // User changed (fresh sign-in, or another tab signed in as a
+          // different account): clear stale profile to prevent cross-role
+          // contamination, then fetch the new one outside the auth callback.
+          setProfile(null);
+          setIsLoading(true);
+          const userId = session.user.id;
+          setTimeout(() => {
+            fetchProfile(userId).finally(() => setIsLoading(false));
+          }, 0);
         }
       );
       subscription = data.subscription;

@@ -134,6 +134,13 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const labels = t[lang];
     const { session, isAuthenticated, isLoading: authLoading } = useAuth();
 
+    // Keep the latest session in a ref so realtime callbacks (subscribed once
+    // with a first-render closure) never send a stale/expired token.
+    const sessionRef = useRef(session);
+    useEffect(() => {
+        sessionRef.current = session;
+    }, [session]);
+
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -303,8 +310,9 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const loadDashboard = async () => {
         setLoading(true);
         try {
+            const token = sessionRef.current?.access_token;
             const res = await fetch('/api/contractors/dashboard', {
-                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             if (!res.ok) throw new Error('Failed to load');
             const data = await res.json();
