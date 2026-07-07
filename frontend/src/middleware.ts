@@ -28,6 +28,8 @@ export default async function proxy(request: NextRequest) {
 export const config = {
     matcher: [
         // Do NOT exclude /api/! We must run middleware on /api/ to refresh Supabase cookies
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        // Metadata routes (robots.txt, sitemap.xml, llms.txt, opengraph-image, etc.) live at
+        // the root, not under /en or /es — the locale redirect above would otherwise 404 them.
+        '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms.txt|opengraph-image|twitter-image|icon\\.png|apple-icon\\.png|manifest.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }

@@ -4,6 +4,8 @@ import '../globals.css';
 import type { Metadata } from 'next';
 import MobileBottomNav from '@/components/ui/MobileBottomNav';
 import DevRoleSwitcher from '@/components/dev/DevRoleSwitcher';
+import JsonLd from '@/components/seo/JsonLd';
+import { getOrganizationSchema, getWebsiteSchema } from '@/lib/seo/schema';
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
@@ -59,9 +61,13 @@ export default async function LocaleLayout({
     params: Promise<{ lang: string }>;
 }) {
     const { lang } = await params;
+    const validLang = i18n.locales.includes(lang as 'en' | 'es') ? (lang as 'en' | 'es') : 'en';
+    const dict = await getDictionary(validLang);
+    const siteName = dict.common.siteName;
 
     return (
         <>
+            <JsonLd data={[getOrganizationSchema(siteName), getWebsiteSchema(siteName)]} />
             {/* Pad bottom on mobile so content doesn't hide behind the nav */}
             <div className="pb-20 md:pb-0">
                 {children}

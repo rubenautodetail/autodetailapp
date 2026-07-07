@@ -6,6 +6,8 @@ import { getLandingContent, type Testimonial } from '@/lib/hygraph';
 import { createServiceClient } from '@/lib/supabase/server';
 import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
+import JsonLd from '@/components/seo/JsonLd';
+import { getLocalBusinessSchema, getServiceCatalogSchema } from '@/lib/seo/schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,6 +114,15 @@ export default async function LandingPage({
 
     return (
         <div className="min-h-screen bg-[#131835] text-white overflow-x-hidden">
+            <JsonLd
+                data={[
+                    getLocalBusinessSchema(dict.common.siteName, dict.common.tagline, locale),
+                    getServiceCatalogSchema(
+                        services.map((s) => ({ name: s.title, description: s.desc })),
+                        locale
+                    ),
+                ]}
+            />
             {/* ─── Hero ──────────────────────────────────────────────────────── */}
             <section className="relative min-h-screen flex flex-col items-center px-6 pt-32 pb-12 overflow-hidden">
                 {/* Hero background image from Hygraph */}
