@@ -56,3 +56,7 @@ mcp-servers/
 *.jpeg
 _design_inspiration/
 fix_email.js
+
+# Cache & Local config
+node-compile-cache/
+.claude/

@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { getAllLandingParams } from '@/lib/seo/landing';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 const LOCALES = ['en', 'es'] as const;
@@ -28,5 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
         // Legal
         ...urls('/privacy', 'yearly', 0.3),
         ...urls('/terms', 'yearly', 0.3),
+        // Programmatic [service]/[city] landing pages
+        ...getAllLandingParams().map((p) => ({
+            url: `${APP_URL}/${p.lang}/${p.service}/${p.city}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as ChangeFreq,
+            priority: 0.7,
+        })),
     ];
 }

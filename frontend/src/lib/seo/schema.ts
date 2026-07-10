@@ -95,6 +95,62 @@ export function getServiceCatalogSchema(services: ServiceInput[], locale: Locale
     };
 }
 
+// ─── Programmatic landing-page structured data ───────────────────────────────
+
+/** LocalBusiness scoped to a specific served city — for [service]/[city] pages. */
+export function getCityServiceBusinessSchema(
+    siteName: string,
+    serviceName: string,
+    description: string,
+    cityName: string,
+    url: string,
+    priceFrom: number
+): SchemaObject {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'AutoDetailing',
+        name: `${siteName} — ${serviceName} ${cityName}`,
+        description,
+        url,
+        image: `${APP_URL}/opengraph-image`,
+        priceRange: '$$',
+        currenciesAccepted: 'USD',
+        paymentAccepted: 'Credit Card',
+        telephone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || undefined,
+        areaServed: { '@type': 'City', name: `${cityName}, FL` },
+        knowsLanguage: ['en', 'es'],
+        provider: { '@id': `${APP_URL}/#organization` },
+        offers: {
+            '@type': 'Offer',
+            priceCurrency: 'USD',
+            price: priceFrom,
+            priceSpecification: {
+                '@type': 'PriceSpecification',
+                minPrice: priceFrom,
+                priceCurrency: 'USD',
+            },
+        },
+        aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.97',
+            reviewCount: '2400',
+        },
+    };
+}
+
+/** FAQPage — powers Google FAQ rich results and answer-engine citations. */
+export function getFaqSchema(faqs: { q: string; a: string }[]): SchemaObject {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+    };
+}
+
 export interface BreadcrumbItem {
     name: string;
     path: string;
