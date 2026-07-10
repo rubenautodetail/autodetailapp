@@ -70,7 +70,7 @@ export default async function ContractorsPage({
             <nav className="border-b border-white/5 px-6 py-4">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <Link href={`/${locale}`} className="flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={486} height={130} className="w-auto h-20 sm:h-32 opacity-100 drop-shadow-md" />
+                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={486} height={130} className="w-auto h-16 sm:h-24 opacity-100 drop-shadow-md" />
                     </Link>
                     <div className="flex items-center gap-4">
                         <Link
