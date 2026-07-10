@@ -169,7 +169,7 @@ export default async function LandingPage({
                 )}
 
                 {/* Nav bar */}
-                <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-10 sm:top-[44px]' : 'top-0'}`}>
+                <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-20 sm:top-[44px]' : 'top-0'}`}>
                     <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={486} height={130} className="w-auto h-16 sm:h-24 opacity-100 drop-shadow-md" />
                     <Link
                         href={`/${locale}/login`}
