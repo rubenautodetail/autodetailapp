@@ -37,9 +37,9 @@ export default function Sidebar({ lang }: { lang: string }) {
                 <Image
                     src="/dtailwash_logo_final.png"
                     alt="DetailWash"
-                    width={405}
-                    height={97}
-                    className="w-auto h-20 sm:h-24 opacity-100"
+                    width={1942}
+                    height={809}
+                    className="w-auto h-10 opacity-100"
                 />
             </div>
 

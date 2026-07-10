@@ -116,7 +116,7 @@ export default async function ServiceCityPage({
             <header className="sticky top-0 z-30 border-b border-white/5 bg-[#131835]/80 backdrop-blur-md">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
                     <Link href={`/${locale}`} className="flex items-center gap-2">
-                        <Image src="/dtailwash_logo_final.png" alt="DTailWash" width={140} height={32} className="h-8 w-auto" style={{ width: 'auto' }} priority />
+                        <Image src="/dtailwash_logo_final.png" alt="DTailWash" width={1942} height={809} className="h-8 w-auto" style={{ width: 'auto' }} priority />
                     </Link>
                     <div className="flex items-center gap-3">
                         <Link href={`/${es ? 'en' : 'es'}/${service.slug[es ? 'en' : 'es']}/${neighborhood.slug}`}
