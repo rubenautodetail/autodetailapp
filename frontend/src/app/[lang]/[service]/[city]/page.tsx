@@ -182,6 +182,7 @@ export default async function ServiceCityPage({
 
                     <div className="dtw-rise" style={{ animationDelay: '120ms' }}>
                         <ImagePlaceholder
+                            src={content.imageUrl}
                             alt={es ? `${service.name.es} en ${neighborhood.name}` : `${service.name.en} in ${neighborhood.name}`}
                             prompt={`Premium cinematic photo of a professional mobile car detailer working on a luxury car in ${neighborhood.name}, Miami. Deep navy and champagne-gold color grade, golden-hour light, glossy wet paint reflections, DTailWash branded van softly blurred in background. Editorial, high-end, shallow depth of field.`}
                             aspect="aspect-[4/5]"

@@ -39,6 +39,8 @@ export interface DetailService {
     priority: number;
     /** icon glyph used in cards (matches home-page style) */
     icon: string;
+    /** path to local image asset */
+    imageUrl: string;
 }
 
 export const SERVICES: DetailService[] = [
@@ -64,6 +66,7 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'mobile car detailing', es: 'detallado de autos a domicilio' },
         priority: 1.0,
         icon: '🚐',
+        imageUrl: '/images/services/mobile-car-detailing.png',
     },
     {
         id: 'interior-detailing',
@@ -87,6 +90,7 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'interior car detailing', es: 'limpieza de interiores de autos' },
         priority: 0.9,
         icon: '🪑',
+        imageUrl: '/images/services/interior-car-detailing.png',
     },
     {
         id: 'exterior-detailing',
@@ -110,6 +114,7 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'exterior car detailing', es: 'lavado de autos a domicilio' },
         priority: 0.9,
         icon: '✨',
+        imageUrl: '/images/services/exterior-car-detailing.png',
     },
     {
         id: 'ceramic-coating',
@@ -133,6 +138,7 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'ceramic coating miami', es: 'recubrimiento cerámico miami' },
         priority: 0.8,
         icon: '🛡️',
+        imageUrl: '/images/services/ceramic-coating.png',
     },
 ];
 

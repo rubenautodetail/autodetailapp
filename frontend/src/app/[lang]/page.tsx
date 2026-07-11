@@ -100,10 +100,10 @@ export default async function LandingPage({
             image: serviceImages[i]?.imageUrl,
           }))
         : [
-            { ...dict.home.services.express, icon: '\u26a1', image: serviceImages[0]?.imageUrl },
-            { ...dict.home.services.interior, icon: '\ud83e\udea1', image: serviceImages[1]?.imageUrl },
-            { ...dict.home.services.exterior, icon: '\u2728', image: serviceImages[2]?.imageUrl },
-            { ...dict.home.services.full, icon: '\ud83c\udfc6', image: undefined },
+            { ...dict.home.services.express, icon: '\u26a1', image: serviceImages[0]?.imageUrl || '/images/services/mobile-car-detailing.png' },
+            { ...dict.home.services.interior, icon: '\ud83e\udea1', image: serviceImages[1]?.imageUrl || '/images/services/interior-car-detailing.png' },
+            { ...dict.home.services.exterior, icon: '\u2728', image: serviceImages[2]?.imageUrl || '/images/services/exterior-car-detailing.png' },
+            { ...dict.home.services.full, icon: '\ud83c\udfc6', image: serviceImages[3]?.imageUrl || '/images/services/ceramic-coating.png' },
           ];
 
     const steps = [
@@ -125,10 +125,10 @@ export default async function LandingPage({
             />
             {/* ─── Hero ──────────────────────────────────────────────────────── */}
             <section className="relative min-h-screen flex flex-col items-center px-6 pt-32 pb-12 overflow-hidden">
-                {/* Hero background image from Hygraph */}
-                {heroImage && (
+                {/* Hero background image from Hygraph or local fallback */}
+                {(heroImage || '/images/hero-home.png') && (
                     <Image
-                        src={heroImage}
+                        src={heroImage || '/images/hero-home.png'}
                         alt="Auto detail hero"
                         fill
                         priority

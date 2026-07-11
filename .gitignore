@@ -54,6 +54,7 @@ mcp-servers/
 *.png
 *.jpg
 *.jpeg
+!frontend/public/images/**
 _design_inspiration/
 fix_email.js
 
