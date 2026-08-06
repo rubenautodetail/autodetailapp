@@ -16,6 +16,13 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
+export const metadata = {
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/favicon.png',
+  },
+};
+
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const GSC_VERIFICATION = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
 const BING_VERIFICATION = process.env.NEXT_PUBLIC_BING_VERIFICATION;
