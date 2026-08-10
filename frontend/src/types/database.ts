@@ -132,6 +132,7 @@ export interface Database {
                     is_active: boolean | null
                     stripe_product_id: string | null
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: number
@@ -146,6 +147,7 @@ export interface Database {
                     is_active?: boolean | null
                     stripe_product_id?: string | null
                     created_at?: string
+                    updated_at?: string
                 }
                 Update: {
                     id?: number
@@ -160,6 +162,7 @@ export interface Database {
                     is_active?: boolean | null
                     stripe_product_id?: string | null
                     created_at?: string
+                    updated_at?: string
                 }
             }
             services: {
@@ -219,6 +222,38 @@ export interface Database {
                     updated_at?: string
                     published_at?: string | null
                     locale?: string | null
+                }
+            }
+            service_body_style_prices: {
+                Row: {
+                    id: number
+                    service_id: number
+                    body_style: 'sedan' | 'coupe' | 'suv' | 'large_suv' | 'pickup' | 'minivan' | 'van' | 'other'
+                    price_cents: number
+                    currency: string
+                    stripe_price_id: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: number
+                    service_id: number
+                    body_style: 'sedan' | 'coupe' | 'suv' | 'large_suv' | 'pickup' | 'minivan' | 'van' | 'other'
+                    price_cents: number
+                    currency?: string
+                    stripe_price_id?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: number
+                    service_id?: number
+                    body_style?: 'sedan' | 'coupe' | 'suv' | 'large_suv' | 'pickup' | 'minivan' | 'van' | 'other'
+                    price_cents?: number
+                    currency?: string
+                    stripe_price_id?: string | null
+                    created_at?: string
+                    updated_at?: string
                 }
             }
             payouts: {
@@ -287,7 +322,9 @@ export interface Database {
                     customer_email: string | null
                     customer_phone: string | null
                     service_name: string | null
+                    service_id: number | null
                     vehicle_type: string | null
+                    vehicle_body_style: 'sedan' | 'coupe' | 'suv' | 'large_suv' | 'pickup' | 'minivan' | 'van' | 'other' | null
                     vehicle_color: string | null
                     vehicle_make: string | null
                     vehicle_model: string | null
@@ -296,6 +333,10 @@ export interface Database {
                     subtotal: string | number | null
                     service_fee: string | number | null
                     total_amount: string | number
+                    service_price_cents: number | null
+                    add_ons_price_cents: number | null
+                    total_price_cents: number | null
+                    pricing_revision: string | null
                     platform_commission: string | number | null
                     contractor_earnings: string | number | null
                     payment_status: string | null
@@ -337,7 +378,9 @@ export interface Database {
                     customer_email?: string | null
                     customer_phone?: string | null
                     service_name?: string | null
+                    service_id?: number | null
                     vehicle_type?: string | null
+                    vehicle_body_style?: 'sedan' | 'coupe' | 'suv' | 'large_suv' | 'pickup' | 'minivan' | 'van' | 'other' | null
                     vehicle_color?: string | null
                     vehicle_make?: string | null
                     vehicle_model?: string | null
@@ -346,6 +389,10 @@ export interface Database {
                     subtotal?: string | number | null
                     service_fee?: string | number | null
                     total_amount?: string | number
+                    service_price_cents?: number | null
+                    add_ons_price_cents?: number | null
+                    total_price_cents?: number | null
+                    pricing_revision?: string | null
                     payment_status?: string | null
                     payment_intent_id?: string | null
                     status?: string | null
@@ -368,7 +415,9 @@ export interface Database {
                     customer_email?: string | null
                     customer_phone?: string | null
                     service_name?: string | null
+                    service_id?: number | null
                     vehicle_type?: string | null
+                    vehicle_body_style?: 'sedan' | 'coupe' | 'suv' | 'large_suv' | 'pickup' | 'minivan' | 'van' | 'other' | null
                     vehicle_color?: string | null
                     vehicle_make?: string | null
                     vehicle_model?: string | null
@@ -377,6 +426,10 @@ export interface Database {
                     subtotal?: string | number | null
                     service_fee?: string | number | null
                     total_amount?: string | number
+                    service_price_cents?: number | null
+                    add_ons_price_cents?: number | null
+                    total_price_cents?: number | null
+                    pricing_revision?: string | null
                     payment_status?: string | null
                     payment_intent_id?: string | null
                     status?: string | null

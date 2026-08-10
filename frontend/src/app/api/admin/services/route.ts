@@ -60,11 +60,12 @@ export async function POST(req: NextRequest) {
                 description: fields.description || undefined,
                 metadata: { type: 'addon', platform: 'dtailwash' },
             });
-            await stripe.prices.create({
+            const price = await stripe.prices.create({
                 product: product.id,
                 unit_amount: Math.round(parseFloat(fields.price) * 100),
                 currency: 'usd',
             });
+            await stripe.products.update(product.id, { default_price: price.id });
             stripeProductId = product.id;
         } catch (err) {
             console.error('Stripe product creation failed:', err);
@@ -107,11 +108,12 @@ export async function POST(req: NextRequest) {
             description: fields.description || undefined,
             metadata: { type: 'service', platform: 'dtailwash' },
         });
-        await stripe.prices.create({
+        const price = await stripe.prices.create({
             product: product.id,
             unit_amount: Math.round(parseFloat(fields.base_price) * 100),
             currency: 'usd',
         });
+        await stripe.products.update(product.id, { default_price: price.id });
         stripeProductId = product.id;
     } catch (err) {
         console.error('Stripe product creation failed:', err);

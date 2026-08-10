@@ -1,90 +1,90 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useBookingStatus, Vehicle } from '@/contexts/BookingStatusContext';
-import { VehicleCard } from '@/components/dashboard/VehicleCard';
-import { NotificationToast } from '@/components/dashboard/NotificationToast';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ChevronLeft, Car, X, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { Car, ChevronLeft, Loader2, Plus, X } from 'lucide-react';
+import {
+    useBookingStatus,
+    type Vehicle,
+} from '@/contexts/BookingStatusContext';
+import { NotificationToast } from '@/components/dashboard/NotificationToast';
+import { VehicleCard } from '@/components/dashboard/VehicleCard';
+import { VehicleForm } from '@/components/vehicles/VehicleForm';
 
 export default function VehiclesPage() {
     const params = useParams();
-    const lang = (params?.lang as string) || 'en';
-    const isEs = lang === 'es';
-    const { vehicles, addVehicle, removeVehicle, notifications, dismissNotification, isLoading } = useBookingStatus();
+    const locale = params?.lang === 'es' ? 'es' : 'en';
+    const isEs = locale === 'es';
+    const prefersReducedMotion = useReducedMotion();
+    const {
+        vehicles,
+        addVehicle,
+        removeVehicle,
+        notifications,
+        dismissNotification,
+        isLoading,
+    } = useBookingStatus();
     const [isAdding, setIsAdding] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // New Vehicle Form State
-    const [newVehicle, setNewVehicle] = useState<Omit<Vehicle, 'id'>>({
-        make: '',
-        model: '',
-        year: new Date().getFullYear().toString(),
-        color: '',
-        licensePlate: '',
-        type: 'sedan'
-    });
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        try {
-            await addVehicle(newVehicle);
-            setIsAdding(false);
-            // Reset form
-            setNewVehicle({
-                make: '',
-                model: '',
-                year: new Date().getFullYear().toString(),
-                color: '',
-                licensePlate: '',
-                type: 'sedan'
-            });
-        } finally {
-            setIsSubmitting(false);
-        }
+    const handleAddVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
+        await addVehicle(vehicle);
+        setIsAdding(false);
     };
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-accent-gold animate-spin" />
+            <div className="flex min-h-screen items-center justify-center bg-bg-primary">
+                <Loader2
+                    className="h-8 w-8 animate-spin text-accent-gold motion-reduce:animate-none"
+                    aria-label={isEs ? 'Cargando vehículos' : 'Loading vehicles'}
+                />
             </div>
         );
     }
 
     return (
         <div className="min-h-screen bg-bg-primary pb-20">
-            {/* Header */}
-            <div className="glass-card border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link href={`/${lang}/customer`} className="text-text-secondary hover:text-white flex items-center text-sm font-medium transition-colors">
-                        <ChevronLeft className="w-5 h-5 mr-1" />
-                        {isEs ? 'Volver al Panel' : 'Back to Dashboard'}
+            <div className="glass-card sticky top-0 z-40 border-b border-white/5 backdrop-blur-md">
+                <div className="container mx-auto flex h-16 items-center justify-between px-4">
+                    <Link
+                        href={`/${locale}/customer`}
+                        className="flex min-h-11 items-center text-sm font-medium text-text-secondary transition-colors hover:text-white motion-reduce:transition-none"
+                    >
+                        <ChevronLeft className="mr-1 h-5 w-5" aria-hidden="true" />
+                        {isEs ? 'Volver al panel' : 'Back to dashboard'}
                     </Link>
-                    <h1 className="text-white font-bold hidden md:block">{isEs ? 'Garaje' : 'Garage'}</h1>
-                    <div className="w-20"></div> {/* Spacer for centering */}
+                    <h1 className="hidden font-bold text-white md:block">
+                        {isEs ? 'Garaje' : 'Garage'}
+                    </h1>
+                    <div className="w-20" aria-hidden="true" />
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
+            <main className="container mx-auto px-4 py-8">
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">{isEs ? 'Mi Garaje' : 'My Garage'}</h1>
-                        <p className="text-text-secondary text-sm sm:text-base">{isEs ? 'Administra los vehículos de tu flota.' : 'Manage the vehicles in your premium fleet.'}</p>
+                        <h2 className="mb-1 text-2xl font-bold text-white sm:mb-2 sm:text-3xl">
+                            {isEs ? 'Mi garaje' : 'My garage'}
+                        </h2>
+                        <p className="text-sm text-text-secondary sm:text-base">
+                            {isEs
+                                ? 'Administra los vehículos de tu flota.'
+                                : 'Manage the vehicles in your premium fleet.'}
+                        </p>
                     </div>
                     <button
+                        type="button"
                         onClick={() => setIsAdding(true)}
-                        className="btn-primary py-2.5 px-4 rounded-lg font-bold flex items-center shadow-glow self-start sm:self-auto"
+                        className="btn-primary flex min-h-11 items-center self-start rounded-lg px-4 py-2.5 font-bold shadow-glow sm:self-auto"
                     >
-                        <Plus className="w-5 h-5 mr-2" />
-                        {isEs ? 'Agregar Vehículo' : 'Add Vehicle'}
+                        <Plus className="mr-2 h-5 w-5" aria-hidden="true" />
+                        {isEs ? 'Agregar vehículo' : 'Add vehicle'}
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <AnimatePresence>
                         {vehicles.map((vehicle) => (
                             <VehicleCard
@@ -96,117 +96,46 @@ export default function VehiclesPage() {
                     </AnimatePresence>
 
                     {vehicles.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-text-muted border border-dashed border-white/10 rounded-2xl">
-                            <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>{isEs ? 'Aún no tienes vehículos en tu garaje.' : 'No vehicles in your garage yet.'}</p>
+                        <div className="col-span-full rounded-2xl border border-dashed border-white/10 py-12 text-center text-text-muted">
+                            <Car className="mx-auto mb-4 h-12 w-12 opacity-50" aria-hidden="true" />
+                            <p>
+                                {isEs
+                                    ? 'Aún no tienes vehículos en tu garaje.'
+                                    : 'No vehicles in your garage yet.'}
+                            </p>
                         </div>
                     )}
                 </div>
-            </div>
+            </main>
 
-            {/* Add Vehicle Modal */}
             <AnimatePresence>
                 {isAdding && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={isEs ? 'Agregar nuevo vehículo' : 'Add a new vehicle'}
+                            initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.97 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative"
+                            exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.97 }}
+                            className="relative max-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-y-auto rounded-2xl border border-white/10 bg-[#111] p-5 shadow-2xl sm:p-7"
                         >
                             <button
+                                type="button"
                                 onClick={() => setIsAdding(false)}
-                                className="absolute top-4 right-4 text-text-muted hover:text-white"
-                                disabled={isSubmitting}
+                                className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-white/10 hover:text-white motion-reduce:transition-none"
+                                aria-label={isEs ? 'Cerrar formulario' : 'Close form'}
                             >
-                                <X className="w-6 h-6" />
+                                <X className="h-6 w-6" aria-hidden="true" />
                             </button>
-
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                                <Plus className="w-6 h-6 text-accent-gold mr-2" />
-                                {isEs ? 'Agregar Nuevo Vehículo' : 'Add New Vehicle'}
-                            </h2>
-
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Marca' : 'Make'}</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            disabled={isSubmitting}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                            placeholder={isEs ? 'Ej. Toyota' : 'e.g. Tesla'}
-                                            value={newVehicle.make}
-                                            onChange={e => setNewVehicle({ ...newVehicle, make: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Modelo' : 'Model'}</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            disabled={isSubmitting}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                            placeholder={isEs ? 'Ej. Corolla' : 'e.g. Model Y'}
-                                            value={newVehicle.model}
-                                            onChange={e => setNewVehicle({ ...newVehicle, model: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Año' : 'Year'}</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            disabled={isSubmitting}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                            placeholder="YYYY"
-                                            value={newVehicle.year}
-                                            onChange={e => setNewVehicle({ ...newVehicle, year: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs uppercase text-text-muted font-bold mb-1">Color</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            disabled={isSubmitting}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                            placeholder={isEs ? 'Ej. Negro' : 'e.g. Black'}
-                                            value={newVehicle.color}
-                                            onChange={e => setNewVehicle({ ...newVehicle, color: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs uppercase text-text-muted font-bold mb-1">{isEs ? 'Placa' : 'License Plate'} <span className="text-text-muted/50 normal-case font-normal">({isEs ? 'opcional' : 'optional'})</span></label>
-                                    <input
-                                        type="text"
-                                        disabled={isSubmitting}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors disabled:opacity-50"
-                                        placeholder="ABC-1234"
-                                        value={newVehicle.licensePlate}
-                                        onChange={e => setNewVehicle({ ...newVehicle, licensePlate: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="w-full btn-primary py-3 rounded-xl font-bold text-white shadow-glow disabled:opacity-50 flex items-center justify-center"
-                                    >
-                                        {isSubmitting ? (
-                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                        ) : null}
-                                        {isSubmitting ? (isEs ? 'Guardando...' : 'Saving...') : (isEs ? 'Guardar Vehículo' : 'Save Vehicle')}
-                                    </button>
-                                </div>
-                            </form>
+                            <div className="pr-10">
+                                <VehicleForm
+                                    locale={locale}
+                                    appearance="dark"
+                                    onSubmit={handleAddVehicle}
+                                    onCancel={() => setIsAdding(false)}
+                                />
+                            </div>
                         </motion.div>
                     </div>
                 )}

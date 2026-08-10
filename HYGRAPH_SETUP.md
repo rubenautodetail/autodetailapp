@@ -47,6 +47,22 @@ After creating the model, add one entry for each locale.
 
 Add 3–6 testimonials.
 
+### Model: `VehicleBrand` (list)
+
+This model controls the logo carousel between the homepage stats and “How It Works.”
+
+| Field       | Type    | Required | Configuration |
+|-------------|---------|----------|---------------|
+| name        | String  | ✅       | Set as title field |
+| slug        | String  | ✅       | Unique; lowercase (for example `toyota`) |
+| logo        | Asset   | ✅       | Upload a transparent SVG, PNG, or WebP |
+| sortOrder   | Int     | ✅       | Lower numbers appear first |
+| isActive    | Boolean | ✅       | Default `true`; turn off to hide without deleting |
+
+Add, publish, reorder, or deactivate entries in HyGraph to control the carousel. If the
+model is not available, six local starter logos are shown. Once the model exists, an
+empty active list intentionally hides the entire section.
+
 ---
 
 ## 4. Publish content
@@ -57,7 +73,7 @@ All entries must be **Published** (not Draft) to appear on the landing page.
 
 ## How it works in the app
 
-`frontend/src/lib/hygraph.ts` queries HyGraph at build time (ISR, revalidates every hour).
+`frontend/src/lib/hygraph.ts` queries HyGraph with a 60-second cache tag.
 If HyGraph returns no data or an error, the landing page **falls back** to the dictionary
 content in `frontend/src/dictionaries/en.json` and hardcoded testimonials — so the page
 always renders correctly even before content is added.
@@ -70,5 +86,8 @@ query LandingContent($locale: Locale!) {
 }
 ```
 
-Once you publish content in HyGraph, it will appear on the landing page within 1 hour
+Vehicle logos are intentionally isolated in `getVehicleBrands()`. A missing or invalid
+`VehicleBrand` model therefore cannot break the hero, testimonials, or gallery queries.
+
+Once you publish content in HyGraph, it will appear on the landing page within 60 seconds
 (or immediately on next deploy / `next build`).

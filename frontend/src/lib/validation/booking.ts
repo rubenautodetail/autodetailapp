@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BODY_STYLES } from '@/lib/pricing/types';
 
 const uuidSchema = z.string().uuid();
 
@@ -50,12 +51,22 @@ export const BookingCreateSchema = z.object({
 export type BookingCreateInput = z.infer<typeof BookingCreateSchema>;
 
 // IDs can be numeric strings (from Supabase PKs) or UUIDs (legacy document_id references)
-const flexibleIdSchema = z.string().min(1);
+const flexibleIdSchema = z.union([z.string().min(1), z.number().int().positive()]);
+const bodyStyleSchema = z.enum([...BODY_STYLES, 'truck'] as const);
 
 export const PriceCalculateSchema = z.object({
-  serviceId: flexibleIdSchema,
+  serviceId: flexibleIdSchema.optional(),
+  serviceName: z.string().trim().min(1).max(200).optional(),
   addOnIds: z.array(flexibleIdSchema).optional(),
   zipCode: z.string().regex(/^\d{5}$/, 'ZIP code must be exactly 5 digits').optional(),
+  bodyStyle: bodyStyleSchema.optional(),
+  vehicles: z.array(z.object({
+    vehicleId: z.string().min(1).optional(),
+    bodyStyle: bodyStyleSchema,
+  })).min(1).max(10).optional(),
+}).refine((value) => value.serviceId !== undefined || value.serviceName !== undefined, {
+  message: 'Service ID or service name is required',
+  path: ['serviceId'],
 });
 
 export type PriceCalculateInput = z.infer<typeof PriceCalculateSchema>;

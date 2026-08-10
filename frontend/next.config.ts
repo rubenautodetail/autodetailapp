@@ -16,7 +16,7 @@ const cspDirectives = [
     "https://api.mapbox.com https://events.mapbox.com",
     "https://api-us-west-2.hygraph.com",
   ].join(" "),
-  "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com https://images.unsplash.com https://images.hygraph.com https://media.graphassets.com",
+  "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com https://images.unsplash.com https://images.hygraph.com https://*.graphassets.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",

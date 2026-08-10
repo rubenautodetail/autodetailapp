@@ -5,16 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
 import { PriceCalculateSchema } from '@/lib/validation/booking';
-
-type AddOn = {
-  id: number;
-  document_id: string | null;
-  name: string;
-  price: number;
-  duration_minutes: number | null;
-};
+import {
+    centsToDollars,
+    PricingInputError,
+    resolveBookingPrice,
+} from '@/lib/pricing';
 
 export async function POST(req: NextRequest) {
     try {
@@ -33,58 +29,42 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { serviceId, addOnIds = [], zipCode } = parsed.data;
-        const safeServiceId = serviceId;
+        const { serviceId, serviceName, addOnIds = [], zipCode, bodyStyle, vehicles } = parsed.data;
+        const quote = await resolveBookingPrice({
+            serviceId,
+            serviceName,
+            addOnIds,
+            vehicles: vehicles ?? [{ bodyStyle: bodyStyle ?? 'other' }],
+        });
 
-        const supabase = createServiceClient();
-
-        // Fetch the service
-        const { data: service, error: serviceError } = await supabase
-            .from('services')
-            .select('*')
-            .eq('id', safeServiceId)
-            .eq('is_active', true)
-            .single();
-
-        if (serviceError || !service) {
-            return NextResponse.json({ error: 'Service not found' }, { status: 404 });
-        }
-
-        // Fetch add-ons if any (only active ones)
-        // addOnIds arrive as stringified numeric PKs (e.g. "7") from the catalog API,
-        // so query by `id` (the actual PK), not `document_id` (a legacy HyGraph field that is null).
-        let addOns: AddOn[] = [];
-        if (addOnIds.length > 0) {
-            const numericIds = addOnIds.map(Number).filter((n) => !isNaN(n));
-            const { data: addOnsData } = await supabase
-                .from('add_ons')
-                .select('*')
-                .in('id', numericIds)
-                .eq('is_active', true);
-            addOns = (addOnsData as AddOn[]) || [];
-        }
-
-        const basePrice = Number(service.base_price);
-        const addOnsTotal = addOns.reduce((sum, a) => sum + Number(a.price), 0);
-        const subtotal = basePrice + addOnsTotal;
-        const serviceFee = 0; // Service fee removed
-        const total = Math.round(subtotal * 100) / 100;
-
-        const totalDuration =
-            (service.duration_minutes || 60) +
-            addOns.reduce((sum, a) => sum + (a.duration_minutes || 0), 0);
+        const basePrice = centsToDollars(quote.service.basePriceCents);
+        const addOnsTotal = centsToDollars(
+            quote.addOns.reduce((sum, addOn) => sum + addOn.priceCents, 0)
+        );
+        const subtotal = centsToDollars(quote.subtotalCents);
+        const total = centsToDollars(quote.totalCents);
 
         return NextResponse.json({
             service: {
-                id: service.document_id || String(service.id),
-                name: service.name,
+                id: quote.service.id,
+                documentId: quote.service.documentId,
+                name: quote.service.name,
                 basePrice,
-                adjustedPrice: basePrice,
+                basePriceCents: quote.service.basePriceCents,
+                adjustedPrice: centsToDollars(quote.vehicles[0].servicePriceCents),
             },
-            addOns: addOns.map((a) => ({
-                id: a.document_id || String(a.id),
-                name: a.name,
-                price: Number(a.price),
+            addOns: quote.addOns.map((addOn) => ({
+                id: addOn.id,
+                documentId: addOn.documentId,
+                name: addOn.name,
+                price: centsToDollars(addOn.priceCents),
+                priceCents: addOn.priceCents,
+            })),
+            vehicles: quote.vehicles.map((vehicle) => ({
+                ...vehicle,
+                servicePrice: centsToDollars(vehicle.servicePriceCents),
+                addOnsPrice: centsToDollars(vehicle.addOnsPriceCents),
+                total: centsToDollars(vehicle.totalCents),
             })),
             zone: {
                 zipCode: zipCode || '',
@@ -94,12 +74,24 @@ export async function POST(req: NextRequest) {
                 basePrice,
                 addOnsTotal,
                 subtotal,
-                serviceFee,
+                subtotalCents: quote.subtotalCents,
+                serviceFee: 0,
+                serviceFeeCents: 0,
                 total,
+                totalCents: quote.totalCents,
             },
-            totalDuration,
+            subtotal,
+            serviceFee: 0,
+            total,
+            currency: quote.currency,
+            pricingRevision: quote.pricingRevision,
+            totalDuration: quote.totalDurationMinutes,
         });
     } catch (error) {
+        if (error instanceof PricingInputError) {
+            const status = error.code === 'SERVICE_NOT_FOUND' ? 404 : 400;
+            return NextResponse.json({ error: error.message }, { status });
+        }
         console.error('Error in calculate-price:', error);
         return NextResponse.json(
             { error: 'An error occurred while calculating price' },

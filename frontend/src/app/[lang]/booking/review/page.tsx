@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
-import { useBooking, useBookingStatus, CustomerInfo, type VehicleInfo } from "@/contexts";
+import { useBooking, useBookingStatus, type VehicleInfo } from "@/contexts";
 import { useAuth } from "@/contexts/AuthContext";
 import { PricingSummary, ProgressIndicator } from "@/components/booking";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { X, Plus, Car, Warehouse } from "lucide-react";
+import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle, type VehicleBodyStyle } from "@/types/vehicle";
+import { VehicleBodyStyleSelector } from "@/components/vehicles/VehicleBodyStyleSelector";
 
 interface ReviewPageProps {
   params: Promise<{
@@ -31,13 +33,17 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     addBookingVehicle,
     removeBookingVehicle,
     setCustomerInfo,
-    setVehicleInfo,
     subtotal,
     serviceFee,
     total,
     currentStep,
     nextStep,
     previousStep,
+    priceQuote,
+    quoteStatus,
+    quoteError,
+    refreshPriceQuote,
+    selectedBodyStyle,
   } = useBooking();
 
   const { vehicles: garageVehicles, addVehicle } = useBookingStatus();
@@ -62,25 +68,30 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
   const [vehicleColor, setVehicleColor] = useState("");
-  const [vehicleType, setVehicleType] = useState<VehicleInfo["type"]>("sedan");
+  const [vehicleType, setVehicleType] = useState<VehicleBodyStyle>(selectedBodyStyle ?? "sedan");
   const [saveToGarage, setSaveToGarage] = useState(true);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (selectedBodyStyle) setVehicleType(selectedBodyStyle);
+  }, [selectedBodyStyle]);
+
   // Auto-add first garage vehicle if user has vehicles and none selected (runs once)
   const autoAddedRef = useRef(false);
   useEffect(() => {
-    if (!autoAddedRef.current && garageVehicles.length > 0 && bookingVehicles.length === 0) {
+    if (!autoAddedRef.current && !selectedBodyStyle && garageVehicles.length > 0 && bookingVehicles.length === 0) {
       autoAddedRef.current = true;
       addBookingVehicle({
+        id: garageVehicles[0].id,
         make: garageVehicles[0].make,
         model: garageVehicles[0].model,
         year: garageVehicles[0].year,
         color: garageVehicles[0].color,
-        type: garageVehicles[0].type as VehicleInfo["type"],
+        type: normalizeVehicleBodyStyle(garageVehicles[0].type),
       });
     }
-  }, [garageVehicles, bookingVehicles.length, addBookingVehicle]);
+  }, [garageVehicles, bookingVehicles.length, addBookingVehicle, selectedBodyStyle]);
 
   // Redirect if prerequisites not met
   useEffect(() => {
@@ -130,12 +141,12 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   const isGarageVehicleSelected = (gv: { make: string; model: string; year: string; color: string }) =>
     bookingVehicles.some(bv => bv.make === gv.make && bv.model === gv.model && bv.year === gv.year && bv.color === gv.color);
 
-  const toggleGarageVehicle = (gv: { make: string; model: string; year: string; color: string; type: string }) => {
+  const toggleGarageVehicle = (gv: { id?: string; make: string; model: string; year: string; color: string; type: string }) => {
     const idx = bookingVehicles.findIndex(bv => bv.make === gv.make && bv.model === gv.model && bv.year === gv.year && bv.color === gv.color);
     if (idx >= 0) {
       removeBookingVehicle(idx);
     } else {
-      addBookingVehicle({ make: gv.make, model: gv.model, year: gv.year, color: gv.color, type: gv.type as VehicleInfo["type"] });
+      addBookingVehicle({ id: gv.id, make: gv.make, model: gv.model, year: gv.year, color: gv.color, type: normalizeVehicleBodyStyle(gv.type) });
     }
   };
 
@@ -151,13 +162,27 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     addBookingVehicle(newVehicle);
 
     if (saveToGarage) {
-      try { await addVehicle({ ...newVehicle, type: newVehicle.type || 'sedan', licensePlate: '' }); } catch { /* ignore */ }
+      try {
+        await addVehicle({
+          ...newVehicle,
+          type: normalizeVehicleBodyStyle(newVehicle.type || 'sedan'),
+          licensePlate: '',
+        });
+      } catch { /* ignore */ }
     }
 
     // Reset form
     setVehicleMake(""); setVehicleModel(""); setVehicleYear(""); setVehicleColor(""); setVehicleType("sedan");
     setShowNewForm(false);
-    setErrors(prev => { const { vehicleMake: _a, vehicleModel: _b, vehicleYear: _c, vehicleColor: _d, vehicles: _e, ...rest } = prev; return rest; });
+    setErrors((previous) => {
+      const next = { ...previous };
+      delete next.vehicleMake;
+      delete next.vehicleModel;
+      delete next.vehicleYear;
+      delete next.vehicleColor;
+      delete next.vehicles;
+      return next;
+    });
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -180,9 +205,15 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     // Save contact info
     setCustomerInfo({ name, email, phone, specialNotes });
 
-    // Keep vehicleInfo synced with first selected vehicle
-    if (bookingVehicles.length > 0) {
-      setVehicleInfo(bookingVehicles[0]);
+    const quote = await refreshPriceQuote();
+    if (!quote) {
+      setErrors((current) => ({
+        ...current,
+        pricing: locale === "es"
+          ? "No pudimos confirmar el precio. Intenta de nuevo."
+          : "We couldn't confirm pricing. Please try again.",
+      }));
+      return;
     }
 
     nextStep();
@@ -391,7 +422,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                       <div className="flex items-center gap-3">
                         <Car className="w-4 h-4 text-[#D0B078]" />
                         <span className="text-white font-medium text-sm">{v.year} {v.make} {v.model}</span>
-                        <span className="text-[#5E698F] text-xs capitalize">({v.color})</span>
+                        <span className="text-[#5E698F] text-xs">({v.color} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(v.type), locale)})</span>
                       </div>
                       <button
                         type="button"
@@ -497,17 +528,14 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                       {errors.vehicleColor && <p className="mt-1 text-xs text-red-400">{errors.vehicleColor}</p>}
                     </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-medium text-[#A5B0D1] mb-2">{locale === "es" ? "Tipo" : "Type"}</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {([['sedan', 'Sedan', 'Sedán'], ['suv', 'SUV', 'SUV'], ['truck', 'Truck', 'Camioneta'], ['coupe', 'Coupe', 'Coupé'], ['van', 'Van', 'Van'], ['other', 'Other', 'Otro']] as const).map(([id, en, es]) => (
-                        <button key={id} type="button" onClick={() => setVehicleType(id)}
-                          className={`px-3 py-2 rounded-lg border text-xs font-medium transition-all ${vehicleType === id ? "bg-[#D0B078] text-[#131835] border-[#D0B078]" : "text-[#A5B0D1] border-[#2C355E] hover:border-[#D0B078]/50"}`}>
-                          {locale === "es" ? es : en}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <VehicleBodyStyleSelector
+                    locale={locale}
+                    appearance="dark"
+                    value={vehicleType}
+                    onChange={setVehicleType}
+                    name="booking-vehicle-body-style"
+                    required
+                  />
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={saveToGarage} onChange={e => setSaveToGarage(e.target.checked)}
                       className="w-4 h-4 rounded border-[#D0B078]/50 bg-[#131835] text-[#D0B078] focus:ring-[#D0B078]" style={{ accentColor: "#D0B078" }} />
@@ -522,17 +550,31 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 </div>
               )}
 
-              {/* Multi-vehicle pricing hint */}
-              {bookingVehicles.length > 1 && (
-                <div className="mt-4 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl p-3 flex items-start gap-2">
+              {/* Authoritative per-vehicle pricing */}
+              {bookingVehicles.length > 0 && (
+                <div className="mt-4 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl p-3" aria-live="polite">
+                  <div className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-[#D0B078] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-xs text-[#D0B078]">
-                    {locale === "es"
-                      ? `${bookingVehicles.length} vehículos × $${(Number(total) || 0).toFixed(2)} = $${((Number(total) || 0) * bookingVehicles.length).toFixed(2)} total`
-                      : `${bookingVehicles.length} vehicles × $${(Number(total) || 0).toFixed(2)} = $${((Number(total) || 0) * bookingVehicles.length).toFixed(2)} total`}
-                  </p>
+                    <p className="text-xs font-semibold text-[#D0B078]">
+                      {locale === "es" ? "Desglose por vehículo" : "Per-vehicle breakdown"}
+                    </p>
+                  </div>
+                  <div className="mt-2 space-y-1.5 pl-6">
+                    {bookingVehicles.map((vehicle, index) => (
+                      <div key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`} className="flex justify-between gap-3 text-xs">
+                        <span className="text-[#A5B0D1]">
+                          {vehicle.year} {vehicle.make} {vehicle.model} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
+                        </span>
+                        <span className="font-semibold text-white">
+                          {priceQuote?.vehicles[index] ? `$${priceQuote.vehicles[index].total.toFixed(2)}` : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {quoteStatus === "loading" && <p className="mt-2 pl-6 text-xs text-[#A5B0D1]">{locale === "es" ? "Actualizando precio…" : "Updating price…"}</p>}
+                  {quoteError && <p role="alert" className="mt-2 pl-6 text-xs text-red-400">{locale === "es" ? "No pudimos actualizar el precio." : "We couldn't refresh pricing."}</p>}
                 </div>
               )}
             </Card>
@@ -641,13 +683,13 @@ export default function ReviewPage({ params }: ReviewPageProps) {
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-4">
               <PricingSummary
-                service={selectedService}
+                service={{ ...selectedService, basePrice: priceQuote?.vehicles[0]?.servicePrice ?? selectedService.basePrice }}
                 addOns={selectedAddOns}
                 subtotal={subtotal}
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
-                vehicleCount={Math.max(bookingVehicles.length, 1)}
+                vehicleCount={1}
               />
 
               {/* Action buttons */}
@@ -656,6 +698,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   fullWidth
                   variant="primary"
                   onClick={handleContinue}
+                  disabled={quoteStatus === "loading"}
                 >
                   {locale === "es" ? "Continuar al Pago" : "Continue to Payment"}
                   <svg
@@ -672,6 +715,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     />
                   </svg>
                 </Button>
+                {errors.pricing && <p role="alert" className="text-sm text-red-400">{errors.pricing}</p>}
 
                 <Button
                   fullWidth

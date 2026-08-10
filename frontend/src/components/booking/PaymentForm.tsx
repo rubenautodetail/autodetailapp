@@ -13,9 +13,47 @@ import StripeProvider from "@/components/payment/StripeProvider";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import type { BookingPriceQuote, VehiclePriceLine } from "@/contexts/BookingContext";
+import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle } from "@/types/vehicle";
 
 interface PaymentFormProps {
   locale: "en" | "es";
+}
+
+interface StalePriceChange {
+  previousTotal: number;
+  refreshedTotal: number;
+  accepted: boolean;
+}
+
+interface PriceChangedResponse {
+  code: 'PRICE_CHANGED';
+  previousTotalCents: number;
+  quote: {
+    service: BookingPriceQuote['service'];
+    vehicles: VehiclePriceLine[];
+    subtotalCents: number;
+    serviceFeeCents: number;
+    totalCents: number;
+    currency: 'usd';
+    pricingRevision: string;
+  };
+}
+
+function normalizeChangedQuote(response: PriceChangedResponse): BookingPriceQuote {
+  const quote = response.quote;
+  return {
+    ...quote,
+    vehicles: quote.vehicles.map((vehicle) => ({
+      ...vehicle,
+      servicePrice: vehicle.servicePrice ?? vehicle.servicePriceCents / 100,
+      addOnsPrice: vehicle.addOnsPrice ?? vehicle.addOnsPriceCents / 100,
+      total: vehicle.total ?? vehicle.totalCents / 100,
+    })),
+    subtotal: quote.subtotalCents / 100,
+    serviceFee: quote.serviceFeeCents / 100,
+    total: quote.totalCents / 100,
+  };
 }
 
 /** Inner Stripe checkout form */
@@ -150,10 +188,14 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     previousStep,
     setPaymentStatus,
     setPaymentIntentId,
+    priceQuote,
+    pricingRevision,
+    refreshPriceQuote,
+    applyPriceQuote,
   } = useBooking();
 
   const vehicleCount = Math.max(bookingVehicles.length, 1);
-  const groupTotal = total * vehicleCount;
+  const groupTotal = priceQuote?.total ?? total;
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -161,6 +203,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   const [bookingCreated, setBookingCreated] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [stalePriceChange, setStalePriceChange] = useState<StalePriceChange | null>(null);
 
   // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
@@ -173,6 +216,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
 
   const handleCreateBooking = async () => {
     if (isProcessing || bookingCreated) return;
+    if (stalePriceChange && !stalePriceChange.accepted) return;
     if (!customerInfo || !customerLocation || !selectedDate || !selectedTimeWindow || !selectedService) {
       setError(locale === "es" ? "Faltan datos de reserva" : "Missing booking data");
       return;
@@ -182,13 +226,31 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     setError(null);
 
     try {
+      const activeQuote = priceQuote ?? await refreshPriceQuote();
+      if (!activeQuote) {
+        throw new Error(locale === "es" ? "No pudimos confirmar el precio." : "We couldn't confirm pricing.");
+      }
       const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
 
       // Build vehicles array — use bookingVehicles if multi, else single vehicleInfo
       const vehicles = bookingVehicles.length > 0
-        ? bookingVehicles.map(v => ({ make: v.make, model: v.model, year: v.year, color: v.color }))
+        ? bookingVehicles.map(v => ({
+            make: v.make,
+            model: v.model,
+            year: v.year,
+            color: v.color,
+            vehicleId: v.id,
+            bodyStyle: normalizeVehicleBodyStyle(v.type),
+          }))
         : vehicleInfo
-          ? [{ make: vehicleInfo.make, model: vehicleInfo.model, year: vehicleInfo.year, color: vehicleInfo.color }]
+          ? [{
+              make: vehicleInfo.make,
+              model: vehicleInfo.model,
+              year: vehicleInfo.year,
+              color: vehicleInfo.color,
+              vehicleId: vehicleInfo.id,
+              bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type),
+            }]
           : [];
 
       // Single atomic call: creates booking(s) + Stripe PaymentIntent together.
@@ -207,12 +269,17 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           customerEmail: customerInfo.email,
           customerPhone: customerInfo.phone,
           specialInstructions: customerInfo.specialNotes || undefined,
-          subtotal,
-          serviceFee,
-          total: groupTotal,
-          perVehicleTotal: total,
+          subtotal: activeQuote.subtotal,
+          serviceFee: activeQuote.serviceFee,
+          total: activeQuote.total,
+          perVehicleTotal: activeQuote.vehicles[0]?.total,
+          serviceId: activeQuote.service.id,
           serviceName: selectedService.name,
+          addOnIds: selectedAddOns
+            .map((addOn) => addOn.catalogId ?? (typeof addOn.id === 'number' ? addOn.id : undefined))
+            .filter((id): id is number => id !== undefined),
           selectedAddOns: selectedAddOns.map(a => ({ name: a.name, price: a.price })),
+          pricingRevision: activeQuote.pricingRevision,
           vehicles,
           // Backwards compat — first vehicle
           vehicleMake: vehicles[0]?.make,
@@ -225,7 +292,22 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err: { error?: string; code?: string; previousTotalCents?: number; quote?: PriceChangedResponse['quote'] } = await res.json();
+        if (res.status === 409 && err.code === 'PRICE_CHANGED' && err.quote && typeof err.previousTotalCents === 'number') {
+          const changedResponse: PriceChangedResponse = {
+            code: 'PRICE_CHANGED',
+            previousTotalCents: err.previousTotalCents,
+            quote: err.quote,
+          };
+          const refreshedQuote = normalizeChangedQuote(changedResponse);
+          applyPriceQuote(refreshedQuote);
+          setStalePriceChange({
+            previousTotal: changedResponse.previousTotalCents / 100,
+            refreshedTotal: refreshedQuote.total,
+            accepted: false,
+          });
+          return;
+        }
         throw new Error(err.error || "Failed to set up booking");
       }
 
@@ -343,14 +425,42 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
 
                 <Button
                   onClick={handleCreateBooking}
-                  disabled={isProcessing || !acceptedTerms}
+                  disabled={isProcessing || !acceptedTerms || Boolean(stalePriceChange && !stalePriceChange.accepted)}
                   fullWidth
-                  className={`py-4 text-lg ${(!acceptedTerms || isProcessing) ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`py-4 text-lg ${(!acceptedTerms || isProcessing || (stalePriceChange && !stalePriceChange.accepted)) ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isProcessing
                     ? (locale === "es" ? "Procesando..." : "Processing...")
                     : (locale === "es" ? "Continuar al Pago" : "Continue to Payment")}
                 </Button>
+
+                {stalePriceChange && (
+                  <div className="rounded-xl border border-amber-400/50 bg-amber-400/10 p-4" role="alert" aria-live="assertive">
+                    <p className="font-semibold text-amber-200">
+                      {locale === "es" ? "El precio cambió" : "Price updated"}
+                    </p>
+                    <p className="mt-1 text-sm text-amber-100/80">
+                      {locale === "es"
+                        ? `Total anterior: $${stalePriceChange.previousTotal.toFixed(2)} · Nuevo total: $${stalePriceChange.refreshedTotal.toFixed(2)}. Tus selecciones se conservaron.`
+                        : `Previous total: $${stalePriceChange.previousTotal.toFixed(2)} · New total: $${stalePriceChange.refreshedTotal.toFixed(2)}. Your selections were preserved.`}
+                    </p>
+                    {!stalePriceChange.accepted ? (
+                      <Button
+                        type="button"
+                        onClick={() => setStalePriceChange((current) => current ? { ...current, accepted: true } : current)}
+                        className="mt-3"
+                      >
+                        {locale === "es"
+                          ? `Aceptar $${stalePriceChange.refreshedTotal.toFixed(2)}`
+                          : `Accept $${stalePriceChange.refreshedTotal.toFixed(2)}`}
+                      </Button>
+                    ) : (
+                      <p className="mt-2 text-sm font-semibold text-amber-200">
+                        {locale === "es" ? "Precio aceptado. Continúa al pago." : "Price accepted. Continue to payment."}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <Button
                   variant="secondary"
@@ -380,14 +490,33 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           <div className="lg:col-span-1">
             <div className="sticky top-8">
               <PricingSummary
-                service={selectedService}
+                service={{ ...selectedService, basePrice: priceQuote?.vehicles[0]?.servicePrice ?? selectedService.basePrice }}
                 addOns={selectedAddOns}
                 subtotal={subtotal}
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
-                vehicleCount={vehicleCount}
+                vehicleCount={1}
               />
+              {priceQuote && (
+                <div className="mt-4 rounded-xl border border-[#2C355E] bg-[#1A2142] p-4" aria-live="polite">
+                  <p className="text-sm font-semibold text-white">{locale === "es" ? "Por vehículo" : "Per vehicle"}</p>
+                  <div className="mt-2 space-y-2">
+                    {priceQuote.vehicles.map((line, index) => {
+                      const vehicle = bookingVehicles[index] ?? (index === 0 ? vehicleInfo : null);
+                      return (
+                        <div key={vehicle?.id ?? index} className="flex justify-between gap-3 text-xs">
+                          <span className="text-[#A5B0D1]">
+                            {vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model} · ` : ''}{getVehicleBodyStyleLabel(line.bodyStyle, locale)}
+                          </span>
+                          <span className="font-semibold text-white">${line.total.toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="sr-only">{locale === "es" ? `Revisión de precio ${pricingRevision ?? ''}` : `Pricing revision ${pricingRevision ?? ''}`}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

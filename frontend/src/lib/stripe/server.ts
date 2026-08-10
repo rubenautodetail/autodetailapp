@@ -36,18 +36,25 @@ export async function createPaymentIntent({
     bookingId,
     customerId = 'guest',
     currency = 'usd',
+    metadata,
 }: {
     amount: number;
     bookingId: string;
     customerId?: string;
     currency?: string;
+    metadata?: {
+        serviceId: string;
+        bodyStyleSummary: string;
+        vehicleCount: string;
+        pricingRevision: string;
+    };
 }) {
     const createParams: Stripe.PaymentIntentCreateParams = {
         amount,
         currency,
         capture_method: 'manual', // Hold funds; capture after service completion (7-day window)
         automatic_payment_methods: { enabled: true },
-        metadata: { bookingId, customerId },
+        metadata: { bookingId, customerId, ...metadata },
     };
 
     // Idempotency key: scoped to bookingId so retries don't double-charge.

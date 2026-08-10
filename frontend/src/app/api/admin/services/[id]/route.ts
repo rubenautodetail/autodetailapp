@@ -49,13 +49,29 @@ export async function PATCH(
                 if (Object.keys(updates).length > 0) {
                     await stripe.products.update(stripeProductId, updates);
                 }
-                // Create a new Price if price changed (Stripe prices are immutable)
-                if (fields[priceField]) {
-                    await stripe.prices.create({
+                // Create a new immutable Price only when the effective value changed.
+                const previousValue = (existing as Record<string, unknown>)?.[priceField];
+                const priceChanged = fields[priceField] !== undefined
+                    && Number(fields[priceField]) !== Number(previousValue);
+                if (priceChanged) {
+                    const product = await stripe.products.retrieve(stripeProductId);
+                    const previousDefault = 'default_price' in product ? product.default_price : null;
+                    const previousDefaultId = typeof previousDefault === 'string'
+                        ? previousDefault
+                        : previousDefault?.id ?? null;
+                    const newPrice = await stripe.prices.create({
                         product: stripeProductId,
                         unit_amount: Math.round(parseFloat(fields[priceField]) * 100),
                         currency: 'usd',
                     });
+                    await stripe.products.update(stripeProductId, { default_price: newPrice.id });
+                    if (previousDefaultId && previousDefaultId !== newPrice.id) {
+                        try {
+                            await stripe.prices.update(previousDefaultId, { active: false });
+                        } catch (archiveError) {
+                            console.error('Previous Stripe default Price could not be archived:', archiveError);
+                        }
+                    }
                 }
             } else {
                 // Backfill: create a Stripe product for legacy items that predate Stripe sync
@@ -70,11 +86,12 @@ export async function PATCH(
                     metadata: { type: isAddon ? 'addon' : 'service', platform: 'dtailwash' },
                 });
                 if (currentPrice) {
-                    await stripe.prices.create({
+                    const price = await stripe.prices.create({
                         product: product.id,
                         unit_amount: Math.round(parseFloat(String(currentPrice)) * 100),
                         currency: 'usd',
                     });
+                    await stripe.products.update(product.id, { default_price: price.id });
                 }
                 stripeProductId = product.id;
             }

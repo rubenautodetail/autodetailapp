@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { adminFetch } from "@/lib/adminFetch";
+import { BodyStylePricingModal } from "@/components/admin/BodyStylePricingModal";
 
 interface AdminServicesProps {
     params: Promise<{ lang: "en" | "es" }>;
@@ -64,6 +65,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
     const [success, setSuccess] = useState<string | null>(null);
     const [editItem, setEditItem] = useState<EditItem | null>(null);
     const [showForm, setShowForm] = useState(false);
+    const [pricingService, setPricingService] = useState<Service | null>(null);
 
     const t = {
         title: isEs ? "Servicios y Complementos" : "Services & Add-ons",
@@ -90,6 +92,7 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
         descEn: isEs ? "Descripción (EN)" : "Description (EN)",
         descEs: isEs ? "Descripción (ES)" : "Description (ES)",
         sortOrder: isEs ? "Orden" : "Sort Order",
+        bodyPricing: isEs ? "Precios por tamaño" : "Body pricing",
     };
 
     const fetchData = useCallback(async () => {
@@ -298,6 +301,14 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex gap-2 justify-end">
+                                                    {tab === 'services' && (
+                                                        <button
+                                                            onClick={() => setPricingService(item as Service)}
+                                                            className="cursor-pointer rounded-lg border border-purple-200 px-3 py-1.5 text-xs font-medium text-purple-700 transition-colors hover:bg-purple-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
+                                                        >
+                                                            {t.bodyPricing}
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => openEdit(item as Service, tab === 'services' ? 'service' : 'addon')}
                                                         className="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
@@ -330,6 +341,14 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
                     </div>
                 )}
             </div>
+
+            {pricingService && (
+                <BodyStylePricingModal
+                    service={pricingService}
+                    locale={locale}
+                    onClose={() => setPricingService(null)}
+                />
+            )}
 
             {/* Edit / Create Modal */}
             {showForm && editItem && (

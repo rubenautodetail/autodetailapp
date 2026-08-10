@@ -45,9 +45,18 @@
   --font-display: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+  /* Motion */
+  --animate-brand-marquee: brand-marquee 28s linear infinite;
+
   /* Utilities */
   --shadow-card-light: 0 4px 20px rgba(19, 24, 53, 0.05), 0 1px 3px rgba(19, 24, 53, 0.1);
   --shadow-card-dark: 0 4px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+@keyframes brand-marquee {
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 /* Glass + Glow CSS Variables (used in @utility glass-card and btn-primary) */

@@ -1,6 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useState, useRef, ReactNode, useEffect } from "react";
+import {
+  normalizeVehicleBodyStyle,
+  type VehicleBodyStyle,
+} from "@/types/vehicle";
 
 // ── sessionStorage helpers (SSR-safe) ────────────────────────────────────────
 const SS_KEY = 'dtailwash_booking_state';
@@ -27,6 +31,10 @@ function ssSave(updates: Record<string, unknown>) {
 function ssClear() {
   if (typeof window === 'undefined') return;
   try { sessionStorage.removeItem(SS_KEY); } catch { /* ignore */ }
+}
+
+function getStableCatalogId(item: { id: string | number; catalogId?: number }): string | number | undefined {
+  return item.catalogId ?? (typeof item.id === 'number' ? item.id : undefined);
 }
 
 // Types adapted from Uber clone but for auto detailing
@@ -76,11 +84,43 @@ export interface CustomerInfo {
 }
 
 export interface VehicleInfo {
+  id?: string;
   make: string;
   model: string;
   year: string;
   color: string;
-  type?: 'sedan' | 'suv' | 'truck' | 'coupe' | 'van' | 'other';
+  type?: VehicleBodyStyle;
+}
+
+export interface VehiclePriceLine {
+  index: number;
+  vehicleId?: string;
+  bodyStyle: VehicleBodyStyle;
+  priceSource: 'override' | 'base';
+  servicePriceCents: number;
+  addOnsPriceCents: number;
+  totalCents: number;
+  servicePrice: number;
+  addOnsPrice: number;
+  total: number;
+}
+
+export interface BookingPriceQuote {
+  service: {
+    id: string | number;
+    documentId: string | null;
+    name: string;
+    basePriceCents: number;
+  };
+  vehicles: VehiclePriceLine[];
+  subtotalCents: number;
+  serviceFeeCents: number;
+  totalCents: number;
+  subtotal: number;
+  serviceFee: number;
+  total: number;
+  currency: 'usd';
+  pricingRevision: string;
 }
 
 interface BookingContextType {
@@ -105,11 +145,19 @@ interface BookingContextType {
   bookingVehicles: VehicleInfo[];
   addBookingVehicle: (vehicle: VehicleInfo) => void;
   removeBookingVehicle: (index: number) => void;
+  selectedBodyStyle: VehicleBodyStyle | null;
+  setSelectedBodyStyle: (style: VehicleBodyStyle) => void;
 
   // Pricing (per vehicle — multiply by vehicleCount for group total)
   subtotal: number;
   serviceFee: number;
   total: number;
+  priceQuote: BookingPriceQuote | null;
+  pricingRevision: string | null;
+  quoteStatus: 'idle' | 'loading' | 'ready' | 'error';
+  quoteError: string | null;
+  refreshPriceQuote: () => Promise<BookingPriceQuote | null>;
+  applyPriceQuote: (quote: BookingPriceQuote) => void;
 
   // Booking step tracking
   currentStep: number;
@@ -152,6 +200,10 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const [subtotal, setSubtotal] = useState(0);
   const [serviceFee, setServiceFee] = useState(0);
   const [total, setTotal] = useState(0);
+  const [priceQuote, setPriceQuote] = useState<BookingPriceQuote | null>(null);
+  const [quoteStatus, setQuoteStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const quoteRequestId = useRef(0);
 
   // Customer contact info
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
@@ -161,6 +213,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Multi-vehicle booking
   const [bookingVehicles, setBookingVehicles] = useState<VehicleInfo[]>([]);
+  const [selectedBodyStyle, setSelectedBodyStyleState] = useState<VehicleBodyStyle | null>(null);
 
   // Payment state
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'paid' | 'failed' | 'refunded'>('pending');
@@ -180,6 +233,8 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const vi = ssGet<VehicleInfo>('vehicleInfo');
     const bv = ssGet<VehicleInfo[]>('bookingVehicles');
     const step = ssGet<number>('currentStep');
+    const storedQuote = ssGet<BookingPriceQuote>('priceQuote');
+    const storedBodyStyle = ssGet<unknown>('selectedBodyStyle');
 
     if (svc) setSelectedService(svc);
     if (addOns) setSelectedAddOns(addOns);
@@ -187,24 +242,47 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     if (dateStr) setSelectedDate(new Date(dateStr));
     if (tw) setSelectedTimeWindow(tw);
     if (ci) setCustomerInfo(ci);
-    if (vi) setVehicleInfo(vi);
-    if (bv && bv.length > 0) setBookingVehicles(bv);
+    const normalizedVehicle = vi
+      ? { ...vi, type: normalizeVehicleBodyStyle(vi.type) }
+      : null;
+    const normalizedBookingVehicles = bv?.map((vehicle) => ({
+      ...vehicle,
+      type: normalizeVehicleBodyStyle(vehicle.type),
+    })) ?? [];
+    if (normalizedVehicle) setVehicleInfo(normalizedVehicle);
+    if (normalizedBookingVehicles.length > 0) {
+      setBookingVehicles(normalizedBookingVehicles);
+      if (!normalizedVehicle) setVehicleInfo(normalizedBookingVehicles[0]);
+    }
     if (step) setCurrentStep(step);
+    if (storedBodyStyle) {
+      setSelectedBodyStyleState(normalizeVehicleBodyStyle(storedBodyStyle));
+    } else if (normalizedBookingVehicles[0]) {
+      setSelectedBodyStyleState(normalizedBookingVehicles[0].type);
+    } else if (normalizedVehicle) {
+      setSelectedBodyStyleState(normalizedVehicle.type);
+    }
+    if (storedQuote) {
+      setPriceQuote(storedQuote);
+      setSubtotal(storedQuote.subtotal);
+      setServiceFee(storedQuote.serviceFee);
+      setTotal(storedQuote.total);
+    }
 
     // Recalculate pricing from restored state
-    if (svc) {
+    if (svc && !storedQuote) {
       calculateTotalWithService(svc, addOns ?? []);
     }
 
     setIsHydrated(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Action: Set service (adapted from Uber clone's driver selection)
   const setService = (service: Service) => {
     setSelectedService(service);
-    ssSave({ selectedService: service });
-    calculateTotalWithService(service, selectedAddOns);
+    setPriceQuote(null);
+    ssSave({ selectedService: service, priceQuote: null });
+    calculateTotalWithService(service, selectedAddOns, bookingVehicles.length);
   };
 
   // Action: Add add-on
@@ -212,7 +290,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const newAddOns = [...selectedAddOns, addOn];
     setSelectedAddOns(newAddOns);
     ssSave({ selectedAddOns: newAddOns });
-    calculateTotalWithService(selectedService, newAddOns);
+    setPriceQuote(null);
+    ssSave({ priceQuote: null });
+    calculateTotalWithService(selectedService, newAddOns, bookingVehicles.length);
   };
 
   // Action: Remove add-on
@@ -220,7 +300,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const newAddOns = selectedAddOns.filter((a) => a.id !== addOnId);
     setSelectedAddOns(newAddOns);
     ssSave({ selectedAddOns: newAddOns });
-    calculateTotalWithService(selectedService, newAddOns);
+    setPriceQuote(null);
+    ssSave({ priceQuote: null });
+    calculateTotalWithService(selectedService, newAddOns, bookingVehicles.length);
   };
 
   // Action: Set location (adapted from Uber clone's setUserLocation)
@@ -239,7 +321,8 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   // Helper function for calculating total
   const calculateTotalWithService = (
     service: Service | null,
-    addOns: AddOn[]
+    addOns: AddOn[],
+    vehicleCount = 1,
   ) => {
     if (!service) {
       setSubtotal(0);
@@ -250,7 +333,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
     const servicePrice = service.basePrice;
     const addOnsTotal = addOns.reduce((sum, addon) => sum + addon.price, 0);
-    const newSubtotal = servicePrice + addOnsTotal;
+    const newSubtotal = (servicePrice + addOnsTotal) * Math.max(vehicleCount, 1);
 
     // Service fee removed - included in base price
     const newServiceFee = 0;
@@ -263,8 +346,114 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Action: Calculate total (public interface)
   const calculateTotal = () => {
-    calculateTotalWithService(selectedService, selectedAddOns);
+    calculateTotalWithService(selectedService, selectedAddOns, bookingVehicles.length);
   };
+
+  const applyPriceQuote = useCallback((quote: BookingPriceQuote) => {
+    setPriceQuote(quote);
+    setSubtotal(quote.subtotal);
+    setServiceFee(quote.serviceFee);
+    setTotal(quote.total);
+    setQuoteStatus('ready');
+    setQuoteError(null);
+    ssSave({ priceQuote: quote });
+  }, []);
+
+  const refreshPriceQuote = useCallback(async (): Promise<BookingPriceQuote | null> => {
+    const requestId = ++quoteRequestId.current;
+    if (!selectedService) return null;
+
+    const vehicles = bookingVehicles.length > 0
+      ? bookingVehicles.map((vehicle) => ({
+          vehicleId: vehicle.id,
+          bodyStyle: normalizeVehicleBodyStyle(vehicle.type),
+        }))
+      : vehicleInfo
+        ? [{
+            vehicleId: vehicleInfo.id,
+            bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type),
+          }]
+        : selectedBodyStyle
+          ? [{ bodyStyle: selectedBodyStyle }]
+          : [];
+
+    if (vehicles.length === 0) {
+      setPriceQuote(null);
+      setQuoteStatus('idle');
+      setQuoteError(null);
+      calculateTotalWithService(selectedService, selectedAddOns, 1);
+      ssSave({ priceQuote: null });
+      return null;
+    }
+
+    setQuoteStatus('loading');
+    setQuoteError(null);
+
+    try {
+      const response = await fetch('/api/booking/calculate-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: getStableCatalogId(selectedService),
+          serviceName: selectedService.name,
+          addOnIds: selectedAddOns
+            .map(getStableCatalogId)
+            .filter((id): id is string | number => id !== undefined),
+          zipCode: customerLocation?.zipCode,
+          vehicles,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload: { error?: string | Record<string, string[]> } = await response.json();
+        const message = typeof payload.error === 'string'
+          ? payload.error
+          : 'Unable to refresh pricing';
+        throw new Error(message);
+      }
+
+      const payload: {
+        service: BookingPriceQuote['service'];
+        vehicles: VehiclePriceLine[];
+        breakdown: {
+          subtotalCents: number;
+          serviceFeeCents: number;
+          totalCents: number;
+        };
+        subtotal: number;
+        serviceFee: number;
+        total: number;
+        currency: 'usd';
+        pricingRevision: string;
+      } = await response.json();
+
+      const quote: BookingPriceQuote = {
+        service: payload.service,
+        vehicles: payload.vehicles,
+        subtotalCents: payload.breakdown.subtotalCents,
+        serviceFeeCents: payload.breakdown.serviceFeeCents,
+        totalCents: payload.breakdown.totalCents,
+        subtotal: payload.subtotal,
+        serviceFee: payload.serviceFee,
+        total: payload.total,
+        currency: payload.currency,
+        pricingRevision: payload.pricingRevision,
+      };
+      if (requestId !== quoteRequestId.current) return null;
+      applyPriceQuote(quote);
+      return quote;
+    } catch (error) {
+      if (requestId !== quoteRequestId.current) return null;
+      setQuoteStatus('error');
+      setQuoteError(error instanceof Error ? error.message : 'Unable to refresh pricing');
+      return null;
+    }
+  }, [applyPriceQuote, bookingVehicles, customerLocation?.zipCode, selectedAddOns, selectedBodyStyle, selectedService, vehicleInfo]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    void refreshPriceQuote();
+  }, [isHydrated, refreshPriceQuote]);
 
   // Wrap the raw setters so they also persist to sessionStorage
   const setCustomerInfoPersisted = (info: CustomerInfo) => {
@@ -273,18 +462,31 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setVehicleInfoPersisted = (info: VehicleInfo) => {
-    setVehicleInfo(info);
-    ssSave({ vehicleInfo: info });
+    const normalized = { ...info, type: normalizeVehicleBodyStyle(info.type) };
+    setVehicleInfo(normalized);
+    setSelectedBodyStyleState(normalized.type);
+    setPriceQuote(null);
+    ssSave({ vehicleInfo: normalized, selectedBodyStyle: normalized.type, priceQuote: null });
+  };
+
+  const setSelectedBodyStyle = (style: VehicleBodyStyle) => {
+    setSelectedBodyStyleState(style);
+    setPriceQuote(null);
+    ssSave({ selectedBodyStyle: style, priceQuote: null });
   };
 
   const addBookingVehicle = (vehicle: VehicleInfo) => {
     setBookingVehicles(prev => {
-      const next = [...prev, vehicle];
-      ssSave({ bookingVehicles: next });
+      const normalized = { ...vehicle, type: normalizeVehicleBodyStyle(vehicle.type) };
+      const next = [...prev, normalized];
+      setPriceQuote(null);
+      calculateTotalWithService(selectedService, selectedAddOns, next.length);
+      ssSave({ bookingVehicles: next, priceQuote: null });
       // Keep vehicleInfo in sync with first vehicle
       if (next.length === 1) {
-        setVehicleInfo(vehicle);
-        ssSave({ vehicleInfo: vehicle });
+        setVehicleInfo(normalized);
+        setSelectedBodyStyleState(normalized.type);
+        ssSave({ vehicleInfo: normalized, selectedBodyStyle: normalized.type });
       }
       return next;
     });
@@ -293,14 +495,18 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const removeBookingVehicle = (index: number) => {
     setBookingVehicles(prev => {
       const next = prev.filter((_, i) => i !== index);
-      ssSave({ bookingVehicles: next });
+      setPriceQuote(null);
+      calculateTotalWithService(selectedService, selectedAddOns, next.length);
+      ssSave({ bookingVehicles: next, priceQuote: null });
       // Keep vehicleInfo in sync
       if (next.length > 0) {
         setVehicleInfo(next[0]);
-        ssSave({ vehicleInfo: next[0] });
+        setSelectedBodyStyleState(normalizeVehicleBodyStyle(next[0].type));
+        ssSave({ vehicleInfo: next[0], selectedBodyStyle: normalizeVehicleBodyStyle(next[0].type) });
       } else {
         setVehicleInfo(null);
-        ssSave({ vehicleInfo: null });
+        setSelectedBodyStyleState(null);
+        ssSave({ vehicleInfo: null, selectedBodyStyle: null });
       }
       return next;
     });
@@ -334,9 +540,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     setSubtotal(0);
     setServiceFee(0);
     setTotal(0);
+    setPriceQuote(null);
+    setQuoteStatus('idle');
+    setQuoteError(null);
     setCustomerInfo(null);
     setVehicleInfo(null);
     setBookingVehicles([]);
+    setSelectedBodyStyleState(null);
     setPaymentStatus('pending');
     setPaymentIntentId(null);
     ssClear(); // wipe persisted state so next booking starts fresh
@@ -353,9 +563,17 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     bookingVehicles,
     addBookingVehicle,
     removeBookingVehicle,
+    selectedBodyStyle,
+    setSelectedBodyStyle,
     subtotal,
     serviceFee,
     total,
+    priceQuote,
+    pricingRevision: priceQuote?.pricingRevision ?? null,
+    quoteStatus,
+    quoteError,
+    refreshPriceQuote,
+    applyPriceQuote,
     currentStep,
     isHydrated,
     paymentStatus,

@@ -74,6 +74,13 @@ export interface PromotionalBanner {
     isActive: boolean;
 }
 
+export interface VehicleBrand {
+    name: string;
+    slug: string;
+    logoUrl: string;
+    sortOrder: number;
+}
+
 export interface LandingContent {
     hero: HeroContent | null;
     testimonials: Testimonial[];
@@ -169,6 +176,46 @@ export async function getLandingContent(locale: 'en' | 'es'): Promise<LandingCon
         galleryImages,
         promotionalBanner: data?.promotionalBanners?.[0] ?? null,
     };
+}
+
+/**
+ * Fetches active homepage vehicle brands without coupling this optional model
+ * to the rest of the landing-page query. `null` means the model/query is not
+ * available; an empty array means the editor intentionally has no active logos.
+ */
+export async function getVehicleBrands(): Promise<VehicleBrand[] | null> {
+    const data = await gql<{
+        vehicleBrands: {
+            name: string;
+            slug: string;
+            sortOrder: number;
+            logo?: { url: string } | null;
+        }[];
+    }>(`
+        query VehicleBrands {
+            vehicleBrands(
+                first: 20
+                where: { isActive: true }
+                orderBy: sortOrder_ASC
+            ) {
+                name
+                slug
+                sortOrder
+                logo { url }
+            }
+        }
+    `);
+
+    if (!data) return null;
+
+    return data.vehicleBrands
+        .map((brand) => ({
+            name: brand.name,
+            slug: brand.slug,
+            sortOrder: brand.sortOrder,
+            logoUrl: brand.logo?.url ?? '',
+        }))
+        .filter((brand) => brand.logoUrl.startsWith('https://'));
 }
 
 /**

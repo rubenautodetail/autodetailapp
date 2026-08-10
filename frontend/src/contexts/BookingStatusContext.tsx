@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useCallback, useRef, ReactNode, us
 import { createClient } from '@/lib/supabase/client';
 import { fmtDate } from '@/lib/dateUtils';
 import { useAuth } from './AuthContext';
+import { normalizeVehicleBodyStyle, type VehicleBodyStyle } from '@/types/vehicle';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // --- Types ---
 
@@ -40,7 +42,7 @@ export interface Vehicle {
     year: string;
     color: string;
     licensePlate: string;
-    type: 'sedan' | 'suv' | 'truck' | 'coupe' | 'van' | 'other';
+    type: VehicleBodyStyle;
 }
 
 export interface UserProfile {
@@ -107,8 +109,36 @@ function mapDbVehicleToVehicle(dbVehicle: DbVehicle): Vehicle {
         year: dbVehicle.year.toString(),
         color: dbVehicle.color,
         licensePlate: dbVehicle.license_plate,
-        type: dbVehicle.type as Vehicle['type'],
+        type: normalizeVehicleBodyStyle(dbVehicle.type),
     };
+}
+
+function parseStoredVehicles(stored: string | null): Vehicle[] {
+    if (!stored) return [];
+
+    try {
+        const parsed: unknown = JSON.parse(stored);
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed.flatMap((entry): Vehicle[] => {
+            if (!entry || typeof entry !== 'object') return [];
+
+            const record = entry as Record<string, unknown>;
+            if (typeof record.id !== 'string') return [];
+
+            return [{
+                id: record.id,
+                make: typeof record.make === 'string' ? record.make : '',
+                model: typeof record.model === 'string' ? record.model : '',
+                year: typeof record.year === 'string' ? record.year : String(record.year ?? ''),
+                color: typeof record.color === 'string' ? record.color : '',
+                licensePlate: typeof record.licensePlate === 'string' ? record.licensePlate : '',
+                type: normalizeVehicleBodyStyle(record.type),
+            }];
+        });
+    } catch {
+        return [];
+    }
 }
 
 /** Detect locale from current URL pathname. */
@@ -143,7 +173,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         if (!user || !user.id || !user.email) {
             // Guest / no-auth mode: load vehicles from localStorage, set a placeholder profile
             const stored = typeof window !== 'undefined' ? localStorage.getItem('guest_vehicles') : null;
-            setVehicles(stored ? JSON.parse(stored) : []);
+            setVehicles(parseStoredVehicles(stored));
             setUserProfile({
                 name: 'Test User',
                 email: 'test@example.com',
@@ -244,7 +274,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'vehicles', filter: `user_id=eq.${userId}` },
-                (payload: any) => {
+                (payload: RealtimePostgresChangesPayload<DbVehicle>) => {
                     const record = payload.new as DbVehicle;
                     if (payload.eventType === 'INSERT') {
                         setVehicles(prev => [...prev, mapDbVehicleToVehicle(record)]);
@@ -262,7 +292,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'bookings', filter: `customer_email=eq.${userEmail}` },
-                (payload: any) => {
+                (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
                     const row = payload.new as Record<string, unknown>;
                     const newBooking: Booking = {
                         id: String(row.id),
@@ -285,7 +315,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `customer_email=eq.${userEmail}` },
-                (payload: any) => {
+                (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
                     const updated = payload.new as Record<string, unknown>;
                     setBookings(prev => prev.map(b =>
                         b.id === String(updated.id)
@@ -364,7 +394,6 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         }
 
         syncVehicles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     // --- Notification Methods ---
@@ -428,9 +457,14 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
     const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
         const loc = detectLocale();
         const vehicleLabel = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+        const bodyStyle = normalizeVehicleBodyStyle(vehicle.type);
         if (!user) {
             // Guest mode: persist to localStorage
-            const newVehicle: Vehicle = { ...vehicle, id: Math.random().toString(36).substr(2, 9) };
+            const newVehicle: Vehicle = {
+                ...vehicle,
+                id: Math.random().toString(36).substr(2, 9),
+                type: bodyStyle,
+            };
             setVehicles(prev => {
                 const updated = [...prev, newVehicle];
                 localStorage.setItem('guest_vehicles', JSON.stringify(updated));
@@ -454,7 +488,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 year: parseInt(vehicle.year),
                 color: vehicle.color,
                 license_plate: vehicle.licensePlate,
-                type: vehicle.type
+                type: bodyStyle
             });
 
         if (error) {

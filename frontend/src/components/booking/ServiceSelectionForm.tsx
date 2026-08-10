@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useBooking, Service, AddOn } from "@/contexts";
+import { useBooking, useBookingStatus, Service, AddOn } from "@/contexts";
 import { AddOnSelector, PricingSummary, ProgressIndicator } from "@/components/booking";
 import { ServiceCard } from "@/components/booking/ServiceCard";
 import { Button } from "@/components/ui/Button";
+import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle } from "@/types/vehicle";
+import { VehicleBodyStyleSelector } from "@/components/vehicles/VehicleBodyStyleSelector";
 
 interface ServiceSelectionFormProps {
     services: Service[];
@@ -23,6 +25,7 @@ export default function ServiceSelectionForm({
     preselectedServiceName,
 }: ServiceSelectionFormProps) {
     const router = useRouter();
+    const { vehicles: garageVehicles } = useBookingStatus();
 
     const {
         selectedService,
@@ -35,7 +38,35 @@ export default function ServiceSelectionForm({
         total,
         currentStep,
         nextStep,
+        vehicleInfo,
+        bookingVehicles,
+        priceQuote,
+        quoteStatus,
+        quoteError,
+        addBookingVehicle,
+        isHydrated,
+        selectedBodyStyle,
+        setSelectedBodyStyle,
     } = useBooking();
+
+    const activeVehicles = bookingVehicles.length > 0
+        ? bookingVehicles
+        : vehicleInfo
+            ? [vehicleInfo]
+            : [];
+
+    useEffect(() => {
+        if (!isHydrated || selectedBodyStyle || bookingVehicles.length > 0 || garageVehicles.length === 0) return;
+        const vehicle = garageVehicles[0];
+        addBookingVehicle({
+            id: vehicle.id,
+            make: vehicle.make,
+            model: vehicle.model,
+            year: vehicle.year,
+            color: vehicle.color,
+            type: normalizeVehicleBodyStyle(vehicle.type),
+        });
+    }, [addBookingVehicle, bookingVehicles.length, garageVehicles, isHydrated, selectedBodyStyle]);
 
     // Auto-select service when arriving via "Book Again" link
     useEffect(() => {
@@ -60,7 +91,7 @@ export default function ServiceSelectionForm({
     };
 
     const handleContinue = () => {
-        if (!selectedService) return;
+        if (!selectedService || (activeVehicles.length === 0 && !selectedBodyStyle)) return;
         nextStep();
         router.push(`/${locale}/booking/location`);
     };
@@ -99,8 +130,40 @@ export default function ServiceSelectionForm({
                 <div className="grid lg:grid-cols-3 gap-10">
                     {/* Left column: Services and Add-ons */}
                     <div className="lg:col-span-2 space-y-10">
+                        <div className="rounded-[20px] border border-[var(--divider)] bg-[var(--card)] p-5 sm:p-6">
+                            {activeVehicles.length > 0 ? (
+                                <div>
+                                    <p className="text-sm font-semibold text-[#D0B078]">
+                                        {locale === "es" ? "Vehículo para esta reserva" : "Vehicle for this booking"}
+                                    </p>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {activeVehicles.map((vehicle, index) => (
+                                            <span key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`} className="rounded-full border border-[#D0B078]/30 bg-[#D0B078]/10 px-3 py-2 text-sm text-white">
+                                                {vehicle.year} {vehicle.make} {vehicle.model} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <p className="mt-2 text-xs text-[var(--text-secondary)]">
+                                        {locale === "es" ? "Puedes confirmar o editar los vehículos en la revisión." : "You can confirm or edit vehicles at review."}
+                                    </p>
+                                </div>
+                            ) : (
+                                <VehicleBodyStyleSelector
+                                    locale={locale}
+                                    appearance="dark"
+                                    value={selectedBodyStyle}
+                                    onChange={setSelectedBodyStyle}
+                                    name="service-pricing-body-style"
+                                    required
+                                />
+                            )}
+                        </div>
+
                         {/* Services */}
                         <div>
+                            <h2 className="mb-4 text-xl font-bold text-white">
+                                {locale === "es" ? "Elige un servicio" : "Choose a service"}
+                            </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {services.map((service) => (
                                     <ServiceCard
@@ -171,7 +234,10 @@ export default function ServiceSelectionForm({
                             {selectedService ? (
                                 <div className="animate-fade-in-up">
                                     <PricingSummary
-                                        service={selectedService}
+                                        service={{
+                                            ...selectedService,
+                                            basePrice: priceQuote?.vehicles[0]?.servicePrice ?? selectedService.basePrice,
+                                        }}
                                         addOns={selectedAddOns}
                                         subtotal={subtotal}
                                         serviceFee={serviceFee}
@@ -180,11 +246,65 @@ export default function ServiceSelectionForm({
                                         onRemoveAddOn={removeAddOn}
                                     />
 
+                                    <div
+                                        className="mt-4 rounded-2xl border border-[#2C355E] bg-[#1A2142] p-4"
+                                        aria-live="polite"
+                                    >
+                                        <p className="text-sm font-semibold text-white">
+                                            {locale === "es" ? "Precio por vehículo" : "Per-vehicle pricing"}
+                                        </p>
+                                        {activeVehicles.length === 0 && !selectedBodyStyle ? (
+                                            <p className="mt-2 text-sm text-[#A5B0D1]">
+                                                {locale === "es"
+                                                    ? "Selecciona un tipo de vehículo arriba para ver el precio correcto."
+                                                    : "Choose a body style above to see the correct price."}
+                                            </p>
+                                        ) : activeVehicles.length === 0 && selectedBodyStyle ? (
+                                            <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+                                                <span className="text-[#A5B0D1]">{getVehicleBodyStyleLabel(selectedBodyStyle, locale)}</span>
+                                                <span className="font-semibold text-[#D0B078]">{priceQuote?.vehicles[0] ? `$${priceQuote.vehicles[0].total.toFixed(2)}` : "—"}</span>
+                                            </div>
+                                        ) : (
+                                            <div className="mt-3 space-y-2">
+                                                {activeVehicles.map((vehicle, index) => {
+                                                    const line = priceQuote?.vehicles[index];
+                                                    const style = normalizeVehicleBodyStyle(vehicle.type);
+                                                    return (
+                                                        <div key={vehicle.id ?? `${vehicle.year}-${vehicle.make}-${vehicle.model}-${index}`} className="flex items-start justify-between gap-3 text-sm">
+                                                            <div>
+                                                                <p className="font-medium text-white">
+                                                                    {vehicle.year} {vehicle.make} {vehicle.model}
+                                                                </p>
+                                                                <p className="text-xs text-[#A5B0D1]">
+                                                                    {getVehicleBodyStyleLabel(style, locale)}
+                                                                </p>
+                                                            </div>
+                                                            <span className="font-semibold text-[#D0B078]">
+                                                                {line ? `$${line.total.toFixed(2)}` : "—"}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                        {quoteStatus === "loading" && (
+                                            <p className="mt-3 text-xs text-[#A5B0D1]">
+                                                {locale === "es" ? "Actualizando precio…" : "Updating price…"}
+                                            </p>
+                                        )}
+                                        {quoteError && (
+                                            <p role="alert" className="mt-3 text-xs text-red-400">
+                                                {locale === "es" ? "No pudimos actualizar el precio. Intenta de nuevo." : "We couldn't refresh pricing. Please try again."}
+                                            </p>
+                                        )}
+                                    </div>
+
                                     <div className="mt-6 space-y-3">
                                         <Button
                                             fullWidth
                                             variant="primary"
                                             onClick={handleContinue}
+                                            disabled={activeVehicles.length === 0 && !selectedBodyStyle}
                                         >
                                             {locale === "es" ? "Continuar a Ubicación" : "Continue to Location"}
                                             <svg
@@ -260,6 +380,7 @@ export default function ServiceSelectionForm({
                         <Button
                             variant="primary"
                             onClick={handleContinue}
+                            disabled={activeVehicles.length === 0 && !selectedBodyStyle}
                             className="w-full md:w-auto whitespace-nowrap"
                         >
                             {locale === "es" ? "Continuar" : "Continue"}

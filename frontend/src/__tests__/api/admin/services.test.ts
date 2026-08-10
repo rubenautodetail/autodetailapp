@@ -31,6 +31,7 @@ jest.mock('@/lib/stripe/server', () => ({
   stripe: {
     products: {
       create: jest.fn().mockResolvedValue({ id: 'prod_test123' }),
+      update: jest.fn().mockResolvedValue({ id: 'prod_test123' }),
     },
     prices: {
       create: jest.fn().mockResolvedValue({ id: 'price_test123' }),

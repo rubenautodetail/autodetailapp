@@ -1,12 +1,12 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
-import { getLandingContent, type Testimonial } from '@/lib/hygraph';
+import { getLandingContent, getVehicleBrands, type Testimonial } from '@/lib/hygraph';
 import { createServiceClient } from '@/lib/supabase/server';
 import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
+import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
 import { getLocalBusinessSchema, getServiceCatalogSchema } from '@/lib/seo/schema';
 
 export const dynamic = 'force-dynamic';
@@ -50,9 +50,10 @@ export default async function LandingPage({
 
     // No auto-redirect — authenticated users can still view the landing page
 
-    const [dict, hygraph] = await Promise.all([
+    const [dict, hygraph, hygraphVehicleBrands] = await Promise.all([
         getDictionary(locale),
         getLandingContent(locale),
+        getVehicleBrands(),
     ]);
 
     // Merge HyGraph content with dictionary fallbacks
@@ -63,6 +64,7 @@ export default async function LandingPage({
     };
 
     const testimonials = hygraph.testimonials.length ? hygraph.testimonials : FALLBACK_TESTIMONIALS;
+    const vehicleBrands = hygraphVehicleBrands ?? FALLBACK_VEHICLE_BRANDS;
     const heroImage = hygraph.hero?.heroImageUrl ?? null;
     const allGalleryImages = hygraph.galleryImages ?? [];
     const workImages = allGalleryImages.filter((img) => img.section === 'home-hero' || img.section === 'home-gallery');
@@ -244,6 +246,9 @@ export default async function LandingPage({
                     ))}
                 </div>
             </section>
+
+            {/* ─── Vehicle Brands ─────────────────────────────────────────────── */}
+            <BrandCarousel brands={vehicleBrands} locale={locale} />
 
             {/* ─── How It Works ───────────────────────────────────────────────── */}
             <section className="py-14 sm:py-24 px-6">

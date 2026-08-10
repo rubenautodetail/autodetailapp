@@ -32,6 +32,11 @@ jest.mock('@/lib/stripe/server', () => ({
   createPaymentIntent: jest.fn(),
 }))
 
+jest.mock('@/lib/pricing', () => {
+  const actual = jest.requireActual('@/lib/pricing')
+  return { ...actual, resolveBookingPrice: jest.fn() }
+})
+
 jest.mock('@/lib/qstash', () => ({
   getQStashClient: jest.fn(() => ({ publishJSON: jest.fn().mockResolvedValue({}) })),
   SITE_URL: 'http://localhost:3000',
@@ -51,6 +56,7 @@ jest.mock('@upstash/redis', () => ({}))
 import { POST } from '@/app/api/booking/create-with-payment/route'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createPaymentIntent } from '@/lib/stripe/server'
+import { resolveBookingPrice } from '@/lib/pricing'
 
 const VALID_BODY = {
   date: '2026-05-01',
@@ -58,6 +64,9 @@ const VALID_BODY = {
   address: '123 Main Street',
   customerName: 'John Doe',
   customerEmail: 'john@example.com',
+  serviceId: 7,
+  serviceName: 'Complete Detail',
+  bodyStyle: 'sedan',
   total: 150,
   vehicleMake: 'Toyota',
   vehicleModel: 'Camry',
@@ -100,6 +109,30 @@ function mockServiceClient(bookingRows: Record<string, unknown>[] | null = null)
 describe('POST /api/booking/create-with-payment', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(resolveBookingPrice as jest.Mock).mockResolvedValue({
+      service: {
+        id: 7,
+        documentId: null,
+        name: 'Complete Detail',
+        basePriceCents: 15000,
+        durationMinutes: 90,
+      },
+      addOns: [],
+      vehicles: [{
+        index: 0,
+        bodyStyle: 'sedan',
+        priceSource: 'base',
+        servicePriceCents: 15000,
+        addOnsPriceCents: 0,
+        totalCents: 15000,
+      }],
+      subtotalCents: 15000,
+      serviceFeeCents: 0,
+      totalCents: 15000,
+      totalDurationMinutes: 90,
+      currency: 'usd',
+      pricingRevision: `v1_${'a'.repeat(64)}`,
+    })
   })
 
   it('rejects string total with 400', async () => {
@@ -108,7 +141,7 @@ describe('POST /api/booking/create-with-payment', () => {
 
     const res = await POST(makeRequest({ ...VALID_BODY, total: 'abc' }))
     expect(res.status).toBe(400)
-    expect((res.body as unknown as Record<string, string>).error).toMatch(/invalid booking total/i)
+    expect((res.body as unknown as Record<string, string>).error).toMatch(/validation failed/i)
   })
 
   it('rejects total <= 0 with 400', async () => {
@@ -117,7 +150,7 @@ describe('POST /api/booking/create-with-payment', () => {
 
     const res = await POST(makeRequest({ ...VALID_BODY, total: -5 }))
     expect(res.status).toBe(400)
-    expect((res.body as unknown as Record<string, string>).error).toMatch(/invalid booking total/i)
+    expect((res.body as unknown as Record<string, string>).error).toMatch(/validation failed/i)
   })
 
   it('creates booking for valid request', async () => {
@@ -135,5 +168,15 @@ describe('POST /api/booking/create-with-payment', () => {
     expect((res.body as unknown as Record<string, unknown>).confirmationCode).toBe('ABC123')
     expect((res.body as unknown as Record<string, unknown>).clientSecret).toBe('pi_secret_456')
     expect(createPaymentIntent).toHaveBeenCalledTimes(1)
+    expect(createPaymentIntent).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 15000,
+      customerId: 'user-1',
+      metadata: {
+        serviceId: '7',
+        bodyStyleSummary: 'sedan:1',
+        vehicleCount: '1',
+        pricingRevision: `v1_${'a'.repeat(64)}`,
+      },
+    }))
   })
 })
