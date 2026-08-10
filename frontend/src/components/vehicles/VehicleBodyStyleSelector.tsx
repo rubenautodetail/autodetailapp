@@ -80,7 +80,7 @@ export function VehicleBodyStyleSelector({
                             />
                             <label
                                 htmlFor={optionId}
-                                className={`relative flex min-h-[9rem] min-w-0 cursor-pointer flex-col rounded-xl border-2 p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 sm:min-h-[9.5rem] sm:p-3 motion-reduce:transition-none ${cardClass}`}
+                                className={`group relative flex min-h-[10.5rem] min-w-0 cursor-pointer flex-col rounded-xl border-2 p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 sm:min-h-[11rem] sm:p-3 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`}
                             >
                                 {selected && (
                                     <span
@@ -90,12 +90,18 @@ export function VehicleBodyStyleSelector({
                                         ✓
                                     </span>
                                 )}
-                                <VehicleSilhouette
-                                    style={style}
-                                    locale={locale}
-                                    className={`h-12 w-full min-w-0 shrink-0 sm:h-14 ${primaryTextClass}`}
-                                />
-                                <span className={`mt-1 pr-7 text-sm font-bold ${primaryTextClass}`}>
+                                <div className={`mb-1 flex h-16 w-full shrink-0 items-center justify-center overflow-hidden rounded-lg border sm:h-[4.5rem] ${
+                                    isDark
+                                        ? 'border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]'
+                                        : 'border-black/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.2),rgba(255,255,255,0.45)_72%)]'
+                                }`}>
+                                    <VehicleSilhouette
+                                        style={style}
+                                        locale={locale}
+                                        className="h-[4.25rem] w-full min-w-0 shrink-0 transition-transform duration-200 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:h-[4.75rem]"
+                                    />
+                                </div>
+                                <span className={`mt-0.5 pr-7 text-sm font-bold ${primaryTextClass}`}>
                                     {getVehicleBodyStyleLabel(style, locale)}
                                 </span>
                                 <span
