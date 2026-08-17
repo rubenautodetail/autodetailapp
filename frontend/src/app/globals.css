@@ -175,3 +175,23 @@ h6 {
     transform: translateY(-1px);
   }
 }
+
+/* Price feedback: replays whenever the amount changes (the element is re-keyed),
+   so the customer sees the number react to the vehicle they picked. */
+@keyframes price-changed {
+  0%   { transform: scale(1);     filter: brightness(1); }
+  22%  { transform: scale(1.085); filter: brightness(1.6); }
+  100% { transform: scale(1);     filter: brightness(1); }
+}
+
+.price-changed {
+  display: inline-block;
+  animation: price-changed 620ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .price-changed {
+    animation: none;
+  }
+}

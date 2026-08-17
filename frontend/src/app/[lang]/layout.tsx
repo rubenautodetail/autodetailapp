@@ -6,6 +6,8 @@ import MobileBottomNav from '@/components/ui/MobileBottomNav';
 import DevRoleSwitcher from '@/components/dev/DevRoleSwitcher';
 import JsonLd from '@/components/seo/JsonLd';
 import { getOrganizationSchema, getWebsiteSchema } from '@/lib/seo/schema';
+import { getVehicleBodyStyleImages } from '@/lib/hygraph';
+import { VehicleBodyStyleImagesProvider } from '@/contexts/VehicleBodyStyleImagesContext';
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
@@ -62,11 +64,14 @@ export default async function LocaleLayout({
 }) {
     const { lang } = await params;
     const validLang = i18n.locales.includes(lang as 'en' | 'es') ? (lang as 'en' | 'es') : 'en';
-    const dict = await getDictionary(validLang);
+    const [dict, vehicleBodyStyleImages] = await Promise.all([
+        getDictionary(validLang),
+        getVehicleBodyStyleImages(validLang),
+    ]);
     const siteName = dict.common.siteName;
 
     return (
-        <>
+        <VehicleBodyStyleImagesProvider images={vehicleBodyStyleImages}>
             <JsonLd data={[getOrganizationSchema(siteName), getWebsiteSchema(siteName)]} />
             {/* Pad bottom on mobile so content doesn't hide behind the nav */}
             <div className="pb-20 md:pb-0">
@@ -74,6 +79,6 @@ export default async function LocaleLayout({
             </div>
             <MobileBottomNav lang={lang} />
             {process.env.NODE_ENV !== 'production' && <DevRoleSwitcher />}
-        </>
+        </VehicleBodyStyleImagesProvider>
     );
 }

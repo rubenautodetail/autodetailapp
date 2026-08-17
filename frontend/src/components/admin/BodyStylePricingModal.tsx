@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Loader2, RotateCcw, X } from 'lucide-react';
 import { adminFetch } from '@/lib/adminFetch';
-import { VehicleSilhouette } from '@/components/vehicles/VehicleSilhouette';
+import { VehicleBodyStyleArtwork } from '@/components/vehicles/VehicleBodyStyleArtwork';
 import {
     BODY_STYLES,
     getVehicleBodyStyleLabel,
@@ -218,6 +218,11 @@ export function BodyStylePricingModal({
                             {isEs ? 'Vacío significa que usa el precio base de ' : 'A blank field inherits the base price of '}
                             <strong className="text-slate-900">{currency.format(basePriceCents / 100)}</strong>.
                         </p>
+                        <p className="mt-1 text-xs font-medium text-slate-500">
+                            {isEs
+                                ? `Estos precios solo se aplican a ${service.name}. Configura cada servicio por separado.`
+                                : `These prices apply only to ${service.name}. Configure each service separately.`}
+                        </p>
                     </div>
                     <button
                         type="button"
@@ -254,7 +259,7 @@ export function BodyStylePricingModal({
                                     <article key={style} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200">
-                                                <VehicleSilhouette style={style} locale={locale} className="h-11 w-16" />
+                                                <VehicleBodyStyleArtwork style={style} locale={locale} className="h-11 w-16" />
                                             </div>
                                             <div className="min-w-0">
                                                 <label htmlFor={inputId} className="block font-semibold text-slate-950">

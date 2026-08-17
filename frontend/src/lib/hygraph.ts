@@ -6,6 +6,12 @@
  * Page components always fall back to dictionary content.
  */
 
+import {
+    isVehicleBodyStyle,
+    type VehicleBodyStyle,
+    type VehicleLocale,
+} from '@/types/vehicle';
+
 const ENDPOINT = process.env.NEXT_PUBLIC_HYGRAPH_ENDPOINT ?? process.env.HYGRAPH_ENDPOINT ?? '';
 const TOKEN = process.env.HYGRAPH_TOKEN ?? '';
 
@@ -80,6 +86,13 @@ export interface VehicleBrand {
     logoUrl: string;
     sortOrder: number;
 }
+
+export interface VehicleBodyStyleImage {
+    imageUrl: string;
+    altText: string;
+}
+
+export type VehicleBodyStyleImageMap = Partial<Record<VehicleBodyStyle, VehicleBodyStyleImage>>;
 
 export interface LandingContent {
     hero: HeroContent | null;
@@ -216,6 +229,50 @@ export async function getVehicleBrands(): Promise<VehicleBrand[] | null> {
             logoUrl: brand.logo?.url ?? '',
         }))
         .filter((brand) => brand.logoUrl.startsWith('https://'));
+}
+
+/**
+ * Fetches optional CMS artwork for the shared vehicle body-style selector.
+ * Missing, inactive, unpublished, or invalid entries intentionally fall back
+ * to the built-in vehicle illustrations in the UI.
+ */
+export async function getVehicleBodyStyleImages(
+    locale: VehicleLocale = 'en',
+): Promise<VehicleBodyStyleImageMap> {
+    const data = await gql<{
+        vehicleBodyStyleArtworks: {
+            bodyStyle: string;
+            altText?: string | null;
+            image?: { url: string } | null;
+        }[];
+    }>(`
+        query VehicleBodyStyleImages($locale: Locale!) {
+            vehicleBodyStyleArtworks(
+                first: 8
+                where: { isActive: true }
+                orderBy: sortOrder_ASC
+                locales: [$locale, en]
+            ) {
+                bodyStyle
+                altText
+                image { url }
+            }
+        }
+    `, { locale });
+
+    const images: VehicleBodyStyleImageMap = {};
+
+    for (const entry of data?.vehicleBodyStyleArtworks ?? []) {
+        const imageUrl = normalizeImageUrl(entry.image?.url);
+        if (!isVehicleBodyStyle(entry.bodyStyle) || !imageUrl) continue;
+
+        images[entry.bodyStyle] = {
+            imageUrl,
+            altText: entry.altText?.trim() ?? '',
+        };
+    }
+
+    return images;
 }
 
 /**

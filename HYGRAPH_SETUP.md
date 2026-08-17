@@ -63,6 +63,24 @@ Add, publish, reorder, or deactivate entries in HyGraph to control the carousel.
 model is not available, six local starter logos are shown. Once the model exists, an
 empty active list intentionally hides the entire section.
 
+### Model: `VehicleBodyStyleArtwork` (list)
+
+This model controls the images inside every vehicle body-style selector while preserving
+the existing fixed-size image frame.
+
+| Field       | Type    | Required | Configuration |
+|-------------|---------|----------|---------------|
+| name        | String  | ✅       | Read-only title seeded for each body style |
+| bodyStyle   | String  | ✅       | Unique, read-only application key |
+| image       | Asset   |          | Upload a transparent SVG, PNG, or WebP |
+| altText     | String  |          | Localized accessible description |
+| sortOrder   | Int     | ✅       | Seeded display order |
+| isActive    | Boolean | ✅       | Turn off to use the built-in illustration |
+
+Run `npm run hygraph:migrate:vehicle-artwork` from `frontend/` to create the model.
+Eight published placeholder entries are seeded separately with no uploaded images, so
+the built-in artwork remains visible until an editor uploads and publishes a replacement.
+
 ---
 
 ## 4. Publish content

@@ -10,7 +10,9 @@
     "test": "jest --forceExit",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "hygraph:migrate:vehicle-artwork": "node --env-file=.env.local scripts/hygraph/migrate-vehicle-body-style-artwork.mjs",
+    "hygraph:seed:vehicle-artwork": "node --env-file=.env.local scripts/hygraph/seed-vehicle-body-style-artwork.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
@@ -37,6 +39,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@hygraph/management-sdk": "^1.6.0",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/google.maps": "^3.58.1",

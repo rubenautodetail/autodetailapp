@@ -8,7 +8,7 @@ import {
     type VehicleBodyStyle,
     type VehicleLocale,
 } from '@/types/vehicle';
-import { VehicleSilhouette } from './VehicleSilhouette';
+import { VehicleBodyStyleArtwork } from './VehicleBodyStyleArtwork';
 
 interface VehicleBodyStyleSelectorProps {
     locale?: VehicleLocale;
@@ -19,6 +19,10 @@ interface VehicleBodyStyleSelectorProps {
     required?: boolean;
     disabled?: boolean;
     error?: string;
+    /** Overrides the default question, e.g. when the selector is nested in a larger vehicle picker. */
+    legend?: string;
+    /** Overrides the default helper line under the legend. */
+    description?: string;
 }
 
 export function VehicleBodyStyleSelector({
@@ -30,6 +34,8 @@ export function VehicleBodyStyleSelector({
     required = false,
     disabled = false,
     error,
+    legend,
+    description,
 }: VehicleBodyStyleSelectorProps) {
     const generatedId = useId();
     const groupName = name ?? `vehicle-body-style-${generatedId}`;
@@ -50,16 +56,16 @@ export function VehicleBodyStyleSelector({
             aria-describedby={`${hintId}${error ? ` ${errorId}` : ''}`}
         >
             <legend className={`text-base font-bold ${primaryTextClass}`}>
-                {isEs ? '¿Qué estilo de vehículo tienes?' : 'What body style is your vehicle?'}
+                {legend ?? (isEs ? '¿Qué estilo de vehículo tienes?' : 'What body style is your vehicle?')}
                 {required && <span aria-hidden="true"> *</span>}
             </legend>
             <p className={`mt-1 text-sm ${secondaryTextClass}`}>
-                {isEs
+                {description ?? (isEs
                     ? 'Selecciona la opción que mejor coincida. Esto nos ayuda a mostrar el precio correcto.'
-                    : 'Choose the closest match. This helps us show the correct price.'}
+                    : 'Choose the closest match. This helps us show the correct price.')}
             </p>
 
-            <div className="mt-4 grid min-w-0 grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+            <div className="mt-4 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
                 {BODY_STYLES.map((style) => {
                     const optionId = `${generatedId}-${style}`;
                     const descriptionId = `${optionId}-description`;
@@ -80,7 +86,7 @@ export function VehicleBodyStyleSelector({
                             />
                             <label
                                 htmlFor={optionId}
-                                className={`group relative flex min-h-[10.5rem] min-w-0 cursor-pointer flex-col rounded-xl border-2 p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 sm:min-h-[11rem] sm:p-3 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`}
+                                className={`group relative flex min-h-[4.5rem] min-w-0 cursor-pointer flex-row items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 sm:min-h-[11rem] sm:flex-col sm:items-stretch sm:gap-0 sm:p-3 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`}
                             >
                                 {selected && (
                                     <span
@@ -90,25 +96,27 @@ export function VehicleBodyStyleSelector({
                                         ✓
                                     </span>
                                 )}
-                                <div className={`mb-1 flex h-16 w-full shrink-0 items-center justify-center overflow-hidden rounded-lg border sm:h-[4.5rem] ${
+                                <div className={`flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border sm:mb-1 sm:h-[4.5rem] sm:w-full ${
                                     isDark
                                         ? 'border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]'
                                         : 'border-black/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.2),rgba(255,255,255,0.45)_72%)]'
                                 }`}>
-                                    <VehicleSilhouette
+                                    <VehicleBodyStyleArtwork
                                         style={style}
                                         locale={locale}
-                                        className="h-[4.25rem] w-full min-w-0 shrink-0 transition-transform duration-200 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:h-[4.75rem]"
+                                        className="h-[2.75rem] w-full min-w-0 shrink-0 transition-transform duration-200 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:h-[4.75rem]"
                                     />
                                 </div>
-                                <span className={`mt-0.5 pr-7 text-sm font-bold ${primaryTextClass}`}>
-                                    {getVehicleBodyStyleLabel(style, locale)}
-                                </span>
-                                <span
-                                    id={descriptionId}
-                                    className={`mt-1 text-xs leading-4 ${secondaryTextClass}`}
-                                >
-                                    {VEHICLE_BODY_STYLE_DESCRIPTIONS[style][locale]}
+                                <span className="flex min-w-0 flex-col sm:contents">
+                                    <span className={`pr-7 text-sm font-bold sm:mt-0.5 ${primaryTextClass}`}>
+                                        {getVehicleBodyStyleLabel(style, locale)}
+                                    </span>
+                                    <span
+                                        id={descriptionId}
+                                        className={`mt-0.5 pr-7 text-xs leading-4 sm:mt-1 sm:pr-0 ${secondaryTextClass}`}
+                                    >
+                                        {VEHICLE_BODY_STYLE_DESCRIPTIONS[style][locale]}
+                                    </span>
                                 </span>
                             </label>
                         </div>

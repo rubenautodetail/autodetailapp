@@ -61,3 +61,4 @@ fix_email.js
 # Cache & Local config
 node-compile-cache/
 .claude/
+.codex/

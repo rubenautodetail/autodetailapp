@@ -145,6 +145,7 @@ interface BookingContextType {
   bookingVehicles: VehicleInfo[];
   addBookingVehicle: (vehicle: VehicleInfo) => void;
   removeBookingVehicle: (index: number) => void;
+  replaceBookingVehicles: (vehicles: VehicleInfo[]) => void;
   selectedBodyStyle: VehicleBodyStyle | null;
   setSelectedBodyStyle: (style: VehicleBodyStyle) => void;
 
@@ -512,6 +513,31 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  /** Replaces the whole booking-vehicle list in one commit (used by the vehicle picker). */
+  const replaceBookingVehicles = (vehicles: VehicleInfo[]) => {
+    const normalized = vehicles.map(vehicle => ({
+      ...vehicle,
+      type: normalizeVehicleBodyStyle(vehicle.type),
+    }));
+    setBookingVehicles(normalized);
+    setPriceQuote(null);
+    calculateTotalWithService(selectedService, selectedAddOns, normalized.length);
+
+    if (normalized.length > 0) {
+      setVehicleInfo(normalized[0]);
+      setSelectedBodyStyleState(normalized[0].type);
+      ssSave({
+        bookingVehicles: normalized,
+        vehicleInfo: normalized[0],
+        selectedBodyStyle: normalized[0].type,
+        priceQuote: null,
+      });
+    } else {
+      setVehicleInfo(null);
+      ssSave({ bookingVehicles: normalized, vehicleInfo: null, priceQuote: null });
+    }
+  };
+
   // Navigation actions
   const nextStep = () => {
     setCurrentStep((prev) => {
@@ -563,6 +589,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     bookingVehicles,
     addBookingVehicle,
     removeBookingVehicle,
+    replaceBookingVehicles,
     selectedBodyStyle,
     setSelectedBodyStyle,
     subtotal,
