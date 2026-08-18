@@ -54,6 +54,8 @@ export default function ServiceSelectionForm({
         priceQuote,
         quoteStatus,
         quoteError,
+        addBookingVehicle,
+        removeBookingVehicle,
         replaceBookingVehicles,
         isHydrated,
         selectedBodyStyle,
@@ -146,15 +148,24 @@ export default function ServiceSelectionForm({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bookingVehicles.length, garageVehicles, isHydrated, selectedBodyStyle]);
 
-    const handleSelectGarageVehicle = (vehicle: GarageVehicleOption) => {
-        replaceBookingVehicles([{
+    // Checkbox semantics: a detailer visits once, so one appointment can cover
+    // several cars. Unchecking the last one goes through removeBookingVehicle,
+    // which also clears the fallback body style — otherwise the page would keep
+    // pricing a style the customer never explicitly picked.
+    const handleToggleGarageVehicle = (vehicle: GarageVehicleOption) => {
+        const index = bookingVehicles.findIndex((booked) => booked.id === vehicle.id);
+        if (index >= 0) {
+            removeBookingVehicle(index);
+            return;
+        }
+        addBookingVehicle({
             id: vehicle.id,
             make: vehicle.make,
             model: vehicle.model,
             year: vehicle.year,
             color: vehicle.color,
             type: normalizeVehicleBodyStyle(vehicle.type),
-        }]);
+        });
     };
 
     const handleSelectBodyStyle = (style: VehicleBodyStyle) => {
@@ -227,9 +238,11 @@ export default function ServiceSelectionForm({
                         <BookingVehiclePicker
                             locale={locale}
                             garageVehicles={garageVehicles}
-                            selectedVehicleId={bookingVehicles[0]?.id ?? null}
+                            selectedVehicleIds={bookingVehicles
+                                .map((vehicle) => vehicle.id)
+                                .filter((id): id is string => Boolean(id))}
                             selectedBodyStyle={bookingVehicles.length > 0 ? null : selectedBodyStyle}
-                            onSelectVehicle={handleSelectGarageVehicle}
+                            onToggleVehicle={handleToggleGarageVehicle}
                             onSelectBodyStyle={handleSelectBodyStyle}
                             isPriceLoading={previewStatus === 'loading'}
                         />

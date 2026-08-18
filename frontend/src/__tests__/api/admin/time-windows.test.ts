@@ -37,6 +37,16 @@ function makeRequest(body: Record<string, unknown>) {
   })
 }
 
+function mockSupabaseInsert() {
+  const single = jest.fn().mockResolvedValue({ data: { id: 1 }, error: null })
+  const select = jest.fn(() => ({ single }))
+  const insert = jest.fn(() => ({ select }))
+  const from = jest.fn(() => ({ insert }))
+  const { createServiceClient } = jest.requireMock('@/lib/supabase/server')
+  ;(createServiceClient as jest.Mock).mockReturnValue({ from })
+  return { insert }
+}
+
 describe('POST /api/admin/time-windows', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -44,26 +54,41 @@ describe('POST /api/admin/time-windows', () => {
     ;(verifyAdmin as jest.Mock).mockResolvedValue(true)
   })
 
-  it('rejects missing range with 400', async () => {
+  // Since ad75823, missing ranges are not an error: the route falls back to the
+  // labels so admins are never blocked by the optional display fields.
+  it('defaults a missing range to the label', async () => {
+    const { insert } = mockSupabaseInsert()
     const res = await POST(makeRequest({
       slot: '09:00',
       label: '9 AM',
       range_es: '9:00 AM',
       sort_order: 1,
     }))
-    expect(res.status).toBe(400)
-    expect((res.body as unknown as Record<string, string>).error).toMatch(/range/i)
+    expect(res.status).toBe(200)
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ range: '9 AM' }))
   })
 
-  it('rejects missing range_es with 400', async () => {
+  it('defaults a missing range_es to the Spanish label, then the English one', async () => {
+    const { insert } = mockSupabaseInsert()
     const res = await POST(makeRequest({
+      slot: '09:00',
+      label: '9 AM',
+      label_es: '9 de la mañana',
+      range: '9:00 AM',
+      sort_order: 1,
+    }))
+    expect(res.status).toBe(200)
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ range_es: '9 de la mañana' }))
+
+    const { insert: insertNoEs } = mockSupabaseInsert()
+    const resNoEs = await POST(makeRequest({
       slot: '09:00',
       label: '9 AM',
       range: '9:00 AM',
       sort_order: 1,
     }))
-    expect(res.status).toBe(400)
-    expect((res.body as unknown as Record<string, string>).error).toMatch(/range.*spanish/i)
+    expect(resNoEs.status).toBe(200)
+    expect(insertNoEs).toHaveBeenCalledWith(expect.objectContaining({ range_es: '9 AM' }))
   })
 
   it('rejects missing sort_order with 400', async () => {

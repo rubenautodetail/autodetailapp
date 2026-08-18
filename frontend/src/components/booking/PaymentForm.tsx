@@ -159,7 +159,7 @@ function CheckoutForm({
           : (locale === "es" ? `Pagar $${(Number(total) || 0).toFixed(2)}` : `Pay $${(Number(total) || 0).toFixed(2)}`)}
       </Button>
 
-      <div className="flex items-center justify-center text-sm text-[#5E698F]">
+      <div className="flex items-center justify-center text-sm text-[#8994B8]">
         <svg className="w-4 h-4 mr-2 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
@@ -383,7 +383,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                   },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between items-start gap-4">
-                    <span className="text-[#5E698F] flex-shrink-0">{label}:</span>
+                    <span className="text-[#8994B8] flex-shrink-0">{label}:</span>
                     <span className="text-white font-medium text-right">{value}</span>
                   </div>
                 ))}
@@ -496,27 +496,19 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
-                vehicleCount={1}
+                vehicleLines={priceQuote?.vehicles.map((line, index) => {
+                  const vehicle = bookingVehicles[index] ?? (index === 0 ? vehicleInfo : null);
+                  return {
+                    key: vehicle?.id ?? `${line.bodyStyle}-${index}`,
+                    label: vehicle
+                      ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+                      : getVehicleBodyStyleLabel(line.bodyStyle, locale),
+                    sublabel: vehicle ? getVehicleBodyStyleLabel(line.bodyStyle, locale) : undefined,
+                    total: line.total,
+                  };
+                })}
               />
-              {priceQuote && (
-                <div className="mt-4 rounded-xl border border-[#2C355E] bg-[#1A2142] p-4" aria-live="polite">
-                  <p className="text-sm font-semibold text-white">{locale === "es" ? "Por vehículo" : "Per vehicle"}</p>
-                  <div className="mt-2 space-y-2">
-                    {priceQuote.vehicles.map((line, index) => {
-                      const vehicle = bookingVehicles[index] ?? (index === 0 ? vehicleInfo : null);
-                      return (
-                        <div key={vehicle?.id ?? index} className="flex justify-between gap-3 text-xs">
-                          <span className="text-[#A5B0D1]">
-                            {vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model} · ` : ''}{getVehicleBodyStyleLabel(line.bodyStyle, locale)}
-                          </span>
-                          <span className="font-semibold text-white">${line.total.toFixed(2)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <p className="sr-only">{locale === "es" ? `Revisión de precio ${pricingRevision ?? ''}` : `Pricing revision ${pricingRevision ?? ''}`}</p>
-                </div>
-              )}
+              <p className="sr-only">{locale === "es" ? `Revisión de precio ${pricingRevision ?? ''}` : `Pricing revision ${pricingRevision ?? ''}`}</p>
             </div>
           </div>
         </div>

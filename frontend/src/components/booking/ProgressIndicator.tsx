@@ -35,7 +35,7 @@ export default function ProgressIndicator({ currentStep, locale = "en" }: Progre
                 font-bold text-xs sm:text-sm transition-all duration-300
                 ${currentStep >= step
                   ? "bg-[#D0B078] text-[#131835] shadow-[0_0_15px_rgba(208,176,120,0.4)]"
-                  : "bg-[#2C355E] text-[#5E698F]"
+                  : "bg-[#2C355E] text-[#8994B8]"
                 }
               `}
             >
@@ -45,7 +45,7 @@ export default function ProgressIndicator({ currentStep, locale = "en" }: Progre
             <span
               className={`
                 mt-2 sm:mt-3 text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-center
-                ${currentStep >= step ? "text-[#D0B078]" : "text-[#5E698F]"}
+                ${currentStep >= step ? "text-[#D0B078]" : "text-[#8994B8]"}
               `}
             >
               {labels[step - 1]}

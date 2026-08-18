@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { X, Plus, Car, Warehouse } from "lucide-react";
 import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle, type VehicleBodyStyle } from "@/types/vehicle";
 import { VehicleBodyStyleSelector } from "@/components/vehicles/VehicleBodyStyleSelector";
+import { VehicleBodyStyleArtwork } from "@/components/vehicles/VehicleBodyStyleArtwork";
 
 interface ReviewPageProps {
   params: Promise<{
@@ -72,15 +73,18 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   const [saveToGarage, setSaveToGarage] = useState(true);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const contactCardRef = useRef<HTMLDivElement>(null);
+  const vehiclesCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (selectedBodyStyle) setVehicleType(selectedBodyStyle);
   }, [selectedBodyStyle]);
 
-  // Auto-add first garage vehicle if user has vehicles and none selected (runs once)
+  // Auto-add the garage vehicle only when there is exactly one, matching the
+  // service step: with two or more we ask instead of silently pricing garage[0].
   const autoAddedRef = useRef(false);
   useEffect(() => {
-    if (!autoAddedRef.current && !selectedBodyStyle && garageVehicles.length > 0 && bookingVehicles.length === 0) {
+    if (!autoAddedRef.current && !selectedBodyStyle && garageVehicles.length === 1 && bookingVehicles.length === 0) {
       autoAddedRef.current = true;
       addBookingVehicle({
         id: garageVehicles[0].id,
@@ -109,7 +113,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     }
   }, [selectedService, customerLocation, selectedDate, selectedTimeWindow, router, locale]);
 
-  const validateForm = (): boolean => {
+  const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
     if (!name.trim()) {
@@ -135,14 +139,21 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
-  const isGarageVehicleSelected = (gv: { make: string; model: string; year: string; color: string }) =>
-    bookingVehicles.some(bv => bv.make === gv.make && bv.model === gv.model && bv.year === gv.year && bv.color === gv.color);
+  // Match by id when both sides have one (two identical cars must stay distinct);
+  // hand-entered booking vehicles have no id, so fall back to field equality.
+  const matchesGarageVehicle = (bv: VehicleInfo, gv: { id?: string; make: string; model: string; year: string; color: string }) =>
+    bv.id && gv.id
+      ? bv.id === gv.id
+      : bv.make === gv.make && bv.model === gv.model && bv.year === gv.year && bv.color === gv.color;
+
+  const isGarageVehicleSelected = (gv: { id?: string; make: string; model: string; year: string; color: string }) =>
+    bookingVehicles.some(bv => matchesGarageVehicle(bv, gv));
 
   const toggleGarageVehicle = (gv: { id?: string; make: string; model: string; year: string; color: string; type: string }) => {
-    const idx = bookingVehicles.findIndex(bv => bv.make === gv.make && bv.model === gv.model && bv.year === gv.year && bv.color === gv.color);
+    const idx = bookingVehicles.findIndex(bv => matchesGarageVehicle(bv, gv));
     if (idx >= 0) {
       removeBookingVehicle(idx);
     } else {
@@ -199,8 +210,50 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     setPhone(formatted);
   };
 
+  // What the "Service" row is really worth: the quote's per-vehicle service
+  // prices summed. Before a quote lands, base price times vehicle count.
+  const serviceLineTotal = priceQuote
+    ? priceQuote.vehicles.reduce((sum, line) => sum + line.servicePrice, 0)
+    : (Number(selectedService?.basePrice) || 0) * Math.max(bookingVehicles.length, 1);
+
+  // Per-vehicle lines for the price summary, labeled by the actual vehicles.
+  const summaryVehicleLines = priceQuote?.vehicles.map((line, index) => {
+    const vehicle = bookingVehicles[index];
+    return {
+      key: vehicle?.id ?? `${line.bodyStyle}-${index}`,
+      label: vehicle
+        ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+        : getVehicleBodyStyleLabel(line.bodyStyle, locale),
+      sublabel: vehicle ? getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale) : undefined,
+      total: line.total,
+    };
+  });
+
   const handleContinue = async () => {
-    if (!validateForm()) return;
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      // The button lives in the right column; the broken fields live in the left.
+      // Say why nothing happened right here, and bring the cause into view.
+      setErrors((current) => ({
+        ...current,
+        form: locale === "es"
+          ? "Revisa los campos marcados arriba."
+          : "Check the highlighted fields above.",
+      }));
+      const target = validationErrors.vehicles && !validationErrors.name && !validationErrors.email && !validationErrors.phone
+        ? vehiclesCardRef.current
+        : contactCardRef.current;
+      target?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
+      return;
+    }
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.form;
+      return next;
+    });
 
     // Save contact info
     setCustomerInfo({ name, email, phone, specialNotes });
@@ -229,7 +282,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   if (!selectedService || !customerLocation || !selectedDate || !selectedTimeWindow) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078]"></div>
       </div>
     );
   }
@@ -258,7 +311,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
           {/* Left column: Contact Form & Booking Summary */}
           <div className="lg:col-span-2 space-y-8">
             {/* Contact Information */}
-            <Card className="p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
+            <Card ref={contactCardRef} className="scroll-mt-6 p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
               <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,7 +338,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     className={`
                       w-full px-4 py-3 bg-[#1A2142] border rounded-xl text-white
                       focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent
-                      transition-colors placeholder:text-[#5E698F]
+                      transition-colors placeholder:text-[#8994B8]
                       ${errors.name ? "border-red-500/50 bg-red-500/5" : "border-[#2C355E]"}
                     `}
                   />
@@ -316,7 +369,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                       className={`
                         w-full px-4 py-3 bg-[#1A2142] border rounded-xl text-white
                         focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent
-                        transition-colors placeholder:text-[#5E698F]
+                        transition-colors placeholder:text-[#8994B8]
                         ${errors.email ? "border-red-500/50 bg-red-500/5" : "border-[#2C355E]"}
                       `}
                     />
@@ -343,7 +396,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                       className={`
                         w-full px-4 py-3 bg-[#1A2142] border rounded-xl text-white
                         focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent
-                        transition-colors placeholder:text-[#5E698F]
+                        transition-colors placeholder:text-[#8994B8]
                         ${errors.phone ? "border-red-500/50 bg-red-500/5" : "border-[#2C355E]"}
                       `}
                       maxLength={14}
@@ -375,11 +428,11 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     className="
                       w-full px-4 py-3 bg-[#1A2142] border border-[#2C355E] rounded-xl text-white
                       focus:outline-none focus:ring-2 focus:ring-[#D0B078] focus:border-transparent
-                      transition-colors placeholder:text-[#5E698F] resize-none
+                      transition-colors placeholder:text-[#8994B8] resize-none
                     "
                     maxLength={500}
                   />
-                  <p className="mt-2 text-xs text-[#5E698F] text-right font-medium">
+                  <p className="mt-2 text-xs text-[#8994B8] text-right font-medium">
                     {specialNotes.length}/500
                   </p>
                 </div>
@@ -387,7 +440,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
             </Card>
 
             {/* Vehicle Selection — Multi-Vehicle */}
-            <Card className="p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
+            <Card ref={vehiclesCardRef} className="scroll-mt-6 p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
               <h3 className="text-lg sm:text-xl font-bold text-white mb-2 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                   <Car className="w-5 h-5 text-[#D0B078]" />
@@ -399,7 +452,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   </span>
                 )}
               </h3>
-              <p className="text-sm text-[#5E698F] mb-6">
+              <p className="text-sm text-[#8994B8] mb-6">
                 {locale === "es"
                   ? "Selecciona los vehículos a detallar. Puedes agregar varios para una sola cita."
                   : "Select which vehicles to detail. You can add multiple for one appointment."}
@@ -418,16 +471,24 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     {locale === "es" ? "Seleccionados" : "Selected"}
                   </p>
                   {bookingVehicles.map((v, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <Car className="w-4 h-4 text-[#D0B078]" />
-                        <span className="text-white font-medium text-sm">{v.year} {v.make} {v.model}</span>
-                        <span className="text-[#5E698F] text-xs">({v.color} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(v.type), locale)})</span>
+                    <div key={idx} className="flex items-center justify-between gap-3 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl px-3 py-2.5">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                          <VehicleBodyStyleArtwork
+                            style={normalizeVehicleBodyStyle(v.type)}
+                            locale={locale}
+                            className="h-8 w-full min-w-0 shrink-0"
+                          />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-white font-medium text-sm">{v.year} {v.make} {v.model}</span>
+                          <span className="block text-[#8994B8] text-xs">{getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(v.type), locale)} · {v.color}</span>
+                        </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeBookingVehicle(idx)}
-                        className="text-[#5E698F] hover:text-red-400 transition-colors p-1"
+                        className="text-[#8994B8] hover:text-red-400 transition-colors p-1"
                         aria-label="Remove vehicle"
                       >
                         <X className="w-4 h-4" />
@@ -440,35 +501,52 @@ export default function ReviewPage({ params }: ReviewPageProps) {
               {/* Garage Vehicles */}
               {garageVehicles.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-xs font-semibold text-[#5E698F] uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <p className="text-xs font-semibold text-[#8994B8] uppercase tracking-wider mb-3 flex items-center gap-2">
                     <Warehouse className="w-3.5 h-3.5" />
                     {locale === "es" ? "Tu Garaje" : "Your Garage"}
                   </p>
                   <div className="grid gap-2">
                     {garageVehicles.map(gv => {
                       const selected = isGarageVehicleSelected(gv);
+                      const style = normalizeVehicleBodyStyle(gv.type);
                       return (
                         <button
                           key={gv.id}
                           type="button"
+                          role="checkbox"
+                          aria-checked={selected}
                           onClick={() => toggleGarageVehicle(gv)}
-                          className={`
-                            flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all text-sm
-                            ${selected
-                              ? "border-[#D0B078] bg-[#D0B078]/10 text-[#D0B078]"
-                              : "border-[#2C355E] text-[#A5B0D1] hover:border-[#D0B078]/50 hover:text-white"
-                            }
-                          `}
+                          className={`flex items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${
+                            selected
+                              ? "border-[#D0B078] bg-[#D0B078]/10"
+                              : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
+                          }`}
                         >
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${selected ? "border-[#D0B078] bg-[#D0B078]" : "border-[#5E698F]"}`}>
-                            {selected && (
-                              <svg className="w-3 h-3 text-[#131835]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                          <span className="font-medium">{gv.year} {gv.make} {gv.model}</span>
-                          <span className="text-[#5E698F] text-xs capitalize">({gv.color})</span>
+                          <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                            <VehicleBodyStyleArtwork
+                              style={style}
+                              locale={locale}
+                              className="h-11 w-full min-w-0 shrink-0"
+                            />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-bold text-white">
+                              {gv.year} {gv.make} {gv.model}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-[#A5B0D1]">
+                              {getVehicleBodyStyleLabel(style, locale)} · {gv.color}
+                            </span>
+                          </span>
+                          <span
+                            aria-hidden="true"
+                            className={`ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                              selected
+                                ? "bg-[#D0B078] text-[#131835]"
+                                : "border-2 border-[#4A5580]"
+                            }`}
+                          >
+                            {selected ? "✓" : ""}
+                          </span>
                         </button>
                       );
                     })}
@@ -490,7 +568,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 <div className="border border-[#2C355E] rounded-xl p-5 space-y-4">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-semibold text-white">{locale === "es" ? "Nuevo Vehículo" : "New Vehicle"}</p>
-                    <button type="button" onClick={() => setShowNewForm(false)} className="text-[#5E698F] hover:text-white transition-colors">
+                    <button type="button" onClick={() => setShowNewForm(false)} className="text-[#8994B8] hover:text-white transition-colors">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -500,7 +578,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                         {locale === "es" ? "Marca" : "Make"}<span className="text-[#D0B078] ml-0.5">*</span>
                       </label>
                       <input type="text" value={vehicleMake} onChange={(e) => { setVehicleMake(e.target.value); if (errors.vehicleMake) setErrors(prev => ({ ...prev, vehicleMake: "" })); }}
-                        placeholder="Toyota, Honda..." className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#5E698F] ${errors.vehicleMake ? "border-red-500/50" : "border-[#2C355E]"}`} />
+                        placeholder="Toyota, Honda..." className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleMake ? "border-red-500/50" : "border-[#2C355E]"}`} />
                       {errors.vehicleMake && <p className="mt-1 text-xs text-red-400">{errors.vehicleMake}</p>}
                     </div>
                     <div>
@@ -508,7 +586,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                         {locale === "es" ? "Modelo" : "Model"}<span className="text-[#D0B078] ml-0.5">*</span>
                       </label>
                       <input type="text" value={vehicleModel} onChange={(e) => { setVehicleModel(e.target.value); if (errors.vehicleModel) setErrors(prev => ({ ...prev, vehicleModel: "" })); }}
-                        placeholder="Camry, Civic..." className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#5E698F] ${errors.vehicleModel ? "border-red-500/50" : "border-[#2C355E]"}`} />
+                        placeholder="Camry, Civic..." className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleModel ? "border-red-500/50" : "border-[#2C355E]"}`} />
                       {errors.vehicleModel && <p className="mt-1 text-xs text-red-400">{errors.vehicleModel}</p>}
                     </div>
                     <div>
@@ -516,7 +594,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                         {locale === "es" ? "Año" : "Year"}<span className="text-[#D0B078] ml-0.5">*</span>
                       </label>
                       <input type="text" value={vehicleYear} onChange={(e) => { setVehicleYear(e.target.value); if (errors.vehicleYear) setErrors(prev => ({ ...prev, vehicleYear: "" })); }}
-                        placeholder="2024" maxLength={4} className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#5E698F] ${errors.vehicleYear ? "border-red-500/50" : "border-[#2C355E]"}`} />
+                        placeholder="2024" maxLength={4} className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleYear ? "border-red-500/50" : "border-[#2C355E]"}`} />
                       {errors.vehicleYear && <p className="mt-1 text-xs text-red-400">{errors.vehicleYear}</p>}
                     </div>
                     <div>
@@ -524,13 +602,14 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                         {locale === "es" ? "Color" : "Color"}<span className="text-[#D0B078] ml-0.5">*</span>
                       </label>
                       <input type="text" value={vehicleColor} onChange={(e) => { setVehicleColor(e.target.value); if (errors.vehicleColor) setErrors(prev => ({ ...prev, vehicleColor: "" })); }}
-                        placeholder={locale === "es" ? "Blanco, Negro..." : "White, Black..."} className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#5E698F] ${errors.vehicleColor ? "border-red-500/50" : "border-[#2C355E]"}`} />
+                        placeholder={locale === "es" ? "Blanco, Negro..." : "White, Black..."} className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleColor ? "border-red-500/50" : "border-[#2C355E]"}`} />
                       {errors.vehicleColor && <p className="mt-1 text-xs text-red-400">{errors.vehicleColor}</p>}
                     </div>
                   </div>
                   <VehicleBodyStyleSelector
                     locale={locale}
                     appearance="dark"
+                    layout="carousel"
                     value={vehicleType}
                     onChange={setVehicleType}
                     name="booking-vehicle-body-style"
@@ -567,7 +646,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                         <span className="text-[#A5B0D1]">
                           {vehicle.year} {vehicle.make} {vehicle.model} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
                         </span>
-                        <span className="font-semibold text-white">
+                        <span key={priceQuote?.vehicles[index]?.total ?? 'pending'} className="price-changed font-semibold text-white">
                           {priceQuote?.vehicles[index] ? `$${priceQuote.vehicles[index].total.toFixed(2)}` : "—"}
                         </span>
                       </div>
@@ -592,10 +671,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
 
               <div className="space-y-6">
                 {/* Service */}
-                <div className="flex justify-between items-start border-b border-[#2C355E] pb-6 relative">
-                  <div className="absolute -left-8 top-0 bottom-0 w-1 bg-[#D0B078] rounded-r-md opacity-0 transition-opacity"></div>
+                <div className="flex justify-between items-start border-b border-[#2C355E] pb-6">
                   <div>
-                    <p className="text-sm font-medium text-[#5E698F] mb-1 uppercase tracking-wider">
+                    <p className="text-sm font-medium text-[#8994B8] mb-1 uppercase tracking-wider">
                       {locale === "es" ? "Servicio" : "Service"}
                     </p>
                     <p className="text-lg font-bold text-white">{selectedService.name}</p>
@@ -606,15 +684,22 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                       {selectedService.duration} {locale === "es" ? "minutos" : "min"}
                     </p>
                   </div>
-                  <p className="font-bold text-lg text-white">
-                    ${(Number(selectedService.basePrice) || 0).toFixed(2)}
-                  </p>
+                  <div className="text-right">
+                    <p key={serviceLineTotal} className="price-changed font-bold text-lg text-white">
+                      ${serviceLineTotal.toFixed(2)}
+                    </p>
+                    {bookingVehicles.length > 1 && (
+                      <p className="mt-0.5 text-xs text-[#8994B8]">
+                        {bookingVehicles.length} {locale === "es" ? "vehículos" : "vehicles"}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Add-ons */}
                 {selectedAddOns.length > 0 && (
                   <div className="border-b border-[#2C355E] pb-6">
-                    <p className="text-sm font-medium text-[#5E698F] mb-3 uppercase tracking-wider">
+                    <p className="text-sm font-medium text-[#8994B8] mb-3 uppercase tracking-wider">
                       {locale === "es" ? "Extras" : "Add-ons"}
                     </p>
                     <div className="space-y-3">
@@ -632,7 +717,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
 
                 {/* Location */}
                 <div className="border-b border-[#2C355E] pb-6">
-                  <p className="text-sm font-medium text-[#5E698F] mb-3 uppercase tracking-wider">
+                  <p className="text-sm font-medium text-[#8994B8] mb-3 uppercase tracking-wider">
                     {locale === "es" ? "Ubicación" : "Location"}
                   </p>
                   <div className="flex items-start gap-3">
@@ -652,7 +737,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
 
                 {/* Schedule */}
                 <div className="pt-2">
-                  <p className="text-sm font-medium text-[#5E698F] mb-3 uppercase tracking-wider">
+                  <p className="text-sm font-medium text-[#8994B8] mb-3 uppercase tracking-wider">
                     {locale === "es" ? "Fecha y Hora" : "Date & Time"}
                   </p>
                   <div className="flex items-start gap-3">
@@ -689,7 +774,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
-                vehicleCount={1}
+                vehicleLines={summaryVehicleLines}
               />
 
               {/* Action buttons */}
@@ -715,6 +800,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     />
                   </svg>
                 </Button>
+                {errors.form && <p role="alert" className="text-center text-sm font-medium text-[#D0B078]">{errors.form}</p>}
                 {errors.pricing && <p role="alert" className="text-sm text-red-400">{errors.pricing}</p>}
 
                 <Button

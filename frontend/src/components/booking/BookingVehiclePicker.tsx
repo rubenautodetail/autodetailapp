@@ -3,17 +3,18 @@
 /**
  * BookingVehiclePicker
  *
- * One control that answers "which vehicle are we pricing?" for both audiences:
- * - Returning customers pick from their garage (or price a one-off vehicle).
+ * One control that answers "which vehicles are we pricing?" for both audiences:
+ * - Returning customers check any of their garage vehicles (a detailer visits
+ *   once, so one appointment can cover several cars) or price a one-off vehicle.
  * - First-time customers pick a body style, then the picker collapses into the
  *   same compact summary a returning customer sees.
  *
  * Prices elsewhere on the page are driven by whatever is selected here, so the
- * collapsed state always names the vehicle the prices belong to.
+ * collapsed state always names every vehicle the prices belong to.
  */
 
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Pencil } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, Pencil } from 'lucide-react';
 import {
     getVehicleBodyStyleLabel,
     normalizeVehicleBodyStyle,
@@ -34,11 +35,11 @@ export interface GarageVehicleOption {
 interface BookingVehiclePickerProps {
     locale: 'en' | 'es';
     garageVehicles: GarageVehicleOption[];
-    /** Garage vehicle currently driving pricing, if any. */
-    selectedVehicleId: string | null;
+    /** Garage vehicles currently driving pricing (checkbox semantics). */
+    selectedVehicleIds: string[];
     /** Body style currently driving pricing when no garage vehicle is selected. */
     selectedBodyStyle: VehicleBodyStyle | null;
-    onSelectVehicle: (vehicle: GarageVehicleOption) => void;
+    onToggleVehicle: (vehicle: GarageVehicleOption) => void;
     onSelectBodyStyle: (style: VehicleBodyStyle) => void;
     isPriceLoading?: boolean;
 }
@@ -46,20 +47,19 @@ interface BookingVehiclePickerProps {
 export function BookingVehiclePicker({
     locale,
     garageVehicles,
-    selectedVehicleId,
+    selectedVehicleIds,
     selectedBodyStyle,
-    onSelectVehicle,
+    onToggleVehicle,
     onSelectBodyStyle,
     isPriceLoading = false,
 }: BookingVehiclePickerProps) {
     const isEs = locale === 'es';
-    const selectedVehicle = garageVehicles.find((vehicle) => vehicle.id === selectedVehicleId) ?? null;
-    const hasSelection = Boolean(selectedVehicle || selectedBodyStyle);
+    const selectedVehicles = garageVehicles.filter((vehicle) => selectedVehicleIds.includes(vehicle.id));
+    const hasSelection = selectedVehicles.length > 0 || Boolean(selectedBodyStyle);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [showOneOff, setShowOneOff] = useState(!selectedVehicle && Boolean(selectedBodyStyle));
+    const [showOneOff, setShowOneOff] = useState(selectedVehicles.length === 0 && Boolean(selectedBodyStyle));
     const panelRef = useRef<HTMLDivElement>(null);
     const changeButtonRef = useRef<HTMLButtonElement>(null);
-    const garageRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const shouldFocusPanel = useRef(false);
     const shouldFocusChange = useRef(false);
 
@@ -79,40 +79,22 @@ export function BookingVehiclePicker({
         }
     }, [isOpen]);
 
-    const activeStyle: VehicleBodyStyle | null = selectedVehicle
-        ? normalizeVehicleBodyStyle(selectedVehicle.type)
+    const activeStyle: VehicleBodyStyle | null = selectedVehicles[0]
+        ? normalizeVehicleBodyStyle(selectedVehicles[0].type)
         : selectedBodyStyle;
 
-    const handleVehicleSelect = (vehicle: GarageVehicleOption) => {
-        shouldFocusChange.current = true;
-        onSelectVehicle(vehicle);
+    const handleVehicleToggle = (vehicle: GarageVehicleOption) => {
+        // Checking one car doesn't collapse the panel: the whole point of
+        // checkboxes is that a second tap may be coming. Done closes it.
+        setIsExpanded(true);
         setShowOneOff(false);
-        setIsExpanded(false);
+        onToggleVehicle(vehicle);
     };
 
     const handleBodyStyleSelect = (style: VehicleBodyStyle) => {
         shouldFocusChange.current = true;
         onSelectBodyStyle(style);
         setIsExpanded(false);
-    };
-
-    // Native radios give the body-style grid arrow-key nav for free; the garage
-    // cards are buttons, so they need it wired by hand to match the role we claim.
-    const handleGarageKeyDown = (event: ReactKeyboardEvent, index: number) => {
-        const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'];
-        if (!keys.includes(event.key)) return;
-        event.preventDefault();
-
-        const last = garageVehicles.length - 1;
-        const next = event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-                ? last
-                : event.key === 'ArrowRight' || event.key === 'ArrowDown'
-                    ? (index + 1) % garageVehicles.length
-                    : (index - 1 + garageVehicles.length) % garageVehicles.length;
-
-        garageRefs.current[next]?.focus();
     };
 
     return (
@@ -130,39 +112,58 @@ export function BookingVehiclePicker({
                     </h2>
 
                     {hasSelection ? (
-                        <div className="mt-2 flex items-center gap-3">
-                            {activeStyle && (
-                                <span className="flex h-11 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
-                                    <VehicleBodyStyleArtwork
-                                        style={activeStyle}
-                                        locale={locale}
-                                        className="h-10 w-full min-w-0 shrink-0"
-                                    />
-                                </span>
-                            )}
-                            <div className="min-w-0">
-                                <p className="truncate text-base font-bold text-white">
-                                    {selectedVehicle
-                                        ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`
-                                        : activeStyle
-                                            ? getVehicleBodyStyleLabel(activeStyle, locale)
-                                            : ''}
-                                </p>
-                                <p className="mt-0.5 text-xs text-[#A5B0D1]">
-                                    {selectedVehicle && activeStyle
-                                        ? getVehicleBodyStyleLabel(activeStyle, locale)
-                                        : isEs
-                                            ? 'Vehículo de esta reserva'
-                                            : 'This booking’s vehicle'}
-                                </p>
+                        selectedVehicles.length > 0 ? (
+                            <div className="mt-2 space-y-2">
+                                {selectedVehicles.map((vehicle) => {
+                                    const style = normalizeVehicleBodyStyle(vehicle.type);
+                                    return (
+                                        <div key={vehicle.id} className="flex items-center gap-3">
+                                            <span className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                                                <VehicleBodyStyleArtwork
+                                                    style={style}
+                                                    locale={locale}
+                                                    className="h-9 w-full min-w-0 shrink-0"
+                                                />
+                                            </span>
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-bold text-white">
+                                                    {vehicle.year} {vehicle.make} {vehicle.model}
+                                                </p>
+                                                <p className="mt-0.5 text-xs text-[#A5B0D1]">
+                                                    {getVehicleBodyStyleLabel(style, locale)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        </div>
+                        ) : (
+                            <div className="mt-2 flex items-center gap-3">
+                                {activeStyle && (
+                                    <span className="flex h-11 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                                        <VehicleBodyStyleArtwork
+                                            style={activeStyle}
+                                            locale={locale}
+                                            className="h-10 w-full min-w-0 shrink-0"
+                                        />
+                                    </span>
+                                )}
+                                <div className="min-w-0">
+                                    <p className="truncate text-base font-bold text-white">
+                                        {activeStyle ? getVehicleBodyStyleLabel(activeStyle, locale) : ''}
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-[#A5B0D1]">
+                                        {isEs ? 'Vehículo de esta reserva' : 'This booking’s vehicle'}
+                                    </p>
+                                </div>
+                            </div>
+                        )
                     ) : (
                         garageVehicles.length > 0 && (
                             <p className="mt-2 max-w-md text-sm text-[#A5B0D1]">
                                 {isEs
-                                    ? 'Elige el vehículo de esta reserva para ver sus precios exactos.'
-                                    : 'Pick the vehicle for this booking to see its exact prices.'}
+                                    ? 'Elige los vehículos de esta reserva para ver sus precios exactos.'
+                                    : 'Pick the vehicles for this booking to see their exact prices.'}
                             </p>
                         )
                     )}
@@ -180,9 +181,11 @@ export function BookingVehiclePicker({
                         aria-controls="booking-vehicle-picker-panel"
                         className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#D0B078]/40 min-h-11 px-4 py-2 text-sm font-semibold text-[#D0B078] transition-colors hover:bg-[#D0B078]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
                     >
-                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         {isOpen
-                            ? isEs ? 'Cerrar' : 'Done'
+                            ? <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                            : <Pencil className="h-3.5 w-3.5" aria-hidden="true" />}
+                        {isOpen
+                            ? isEs ? 'Listo' : 'Done'
                             : isEs ? 'Cambiar' : 'Change'}
                     </button>
                 )}
@@ -191,11 +194,15 @@ export function BookingVehiclePicker({
             <p className="sr-only" aria-live="polite">
                 {isPriceLoading
                     ? isEs ? 'Actualizando precios…' : 'Updating prices…'
-                    : activeStyle
+                    : selectedVehicles.length > 1
                         ? isEs
-                            ? `Precios actualizados para ${getVehicleBodyStyleLabel(activeStyle, locale)}.`
-                            : `Prices updated for ${getVehicleBodyStyleLabel(activeStyle, locale)}.`
-                        : ''}
+                            ? `Precios actualizados para ${selectedVehicles.length} vehículos.`
+                            : `Prices updated for ${selectedVehicles.length} vehicles.`
+                        : activeStyle
+                            ? isEs
+                                ? `Precios actualizados para ${getVehicleBodyStyleLabel(activeStyle, locale)}.`
+                                : `Prices updated for ${getVehicleBodyStyleLabel(activeStyle, locale)}.`
+                            : ''}
             </p>
 
             {isOpen && (
@@ -210,55 +217,61 @@ export function BookingVehiclePicker({
                             <p className="text-base font-bold text-white">
                                 {isEs ? 'Tu garaje' : 'Your garage'}
                             </p>
+                            {garageVehicles.length > 1 && (
+                                <p className="mt-1 text-sm text-[#A5B0D1]">
+                                    {isEs
+                                        ? 'Selecciona cada vehículo para esta cita.'
+                                        : 'Select each vehicle for this appointment.'}
+                                </p>
+                            )}
                             <div
-                                role="radiogroup"
+                                role="group"
                                 aria-label={isEs ? 'Vehículos guardados' : 'Saved vehicles'}
-                                className="mt-3 grid gap-2.5 sm:grid-cols-2"
+                                className="mt-3 flex gap-2.5 overflow-x-auto snap-x snap-mandatory overscroll-x-contain pb-1 [&::-webkit-scrollbar]:hidden"
+                                style={{ scrollbarWidth: 'none' }}
                             >
-                                {garageVehicles.map((vehicle, index) => {
+                                {garageVehicles.map((vehicle) => {
                                     const style = normalizeVehicleBodyStyle(vehicle.type);
-                                    const isActive = vehicle.id === selectedVehicleId;
-                                    const isTabStop = selectedVehicleId ? isActive : index === 0;
+                                    const isChecked = selectedVehicleIds.includes(vehicle.id);
 
                                     return (
                                         <button
                                             key={vehicle.id}
-                                            ref={(node) => { garageRefs.current[index] = node; }}
                                             type="button"
-                                            role="radio"
-                                            aria-checked={isActive}
-                                            tabIndex={isTabStop ? 0 : -1}
-                                            onKeyDown={(event) => handleGarageKeyDown(event, index)}
-                                            onClick={() => handleVehicleSelect(vehicle)}
-                                            className={`flex items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${
-                                                isActive
+                                            role="checkbox"
+                                            aria-checked={isChecked}
+                                            onClick={() => handleVehicleToggle(vehicle)}
+                                            className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${
+                                                isChecked
                                                     ? 'border-[#D0B078] bg-[#D0B078]/10'
                                                     : 'border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60'
                                             }`}
                                         >
-                                            <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                                            <span className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
                                                 <VehicleBodyStyleArtwork
                                                     style={style}
                                                     locale={locale}
-                                                    className="h-11 w-full min-w-0 shrink-0"
+                                                    className="h-9 w-full min-w-0 shrink-0"
                                                 />
                                             </span>
                                             <span className="min-w-0">
-                                                <span className="block truncate text-sm font-bold text-white">
+                                                <span className="block truncate text-xs font-bold text-white">
                                                     {vehicle.year} {vehicle.make} {vehicle.model}
                                                 </span>
-                                                <span className="mt-0.5 block text-xs text-[#A5B0D1]">
+                                                <span className="mt-0.5 block text-[11px] text-[#A5B0D1]">
                                                     {getVehicleBodyStyleLabel(style, locale)}
                                                 </span>
                                             </span>
-                                            {isActive && (
-                                                <span
-                                                    aria-hidden="true"
-                                                    className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#D0B078] text-sm font-black text-[#131835]"
-                                                >
-                                                    ✓
-                                                </span>
-                                            )}
+                                            <span
+                                                aria-hidden="true"
+                                                className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                                                    isChecked
+                                                        ? 'bg-[#D0B078] text-[#131835]'
+                                                        : 'border-2 border-[#4A5580]'
+                                                }`}
+                                            >
+                                                {isChecked ? '✓' : ''}
+                                            </span>
                                         </button>
                                     );
                                 })}
@@ -271,8 +284,8 @@ export function BookingVehiclePicker({
                                     className="mt-3 text-sm font-semibold text-[#D0B078] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
                                 >
                                     {isEs
-                                        ? 'Reservar para otro vehículo'
-                                        : 'Booking for a different vehicle?'}
+                                        ? '¿Un vehículo que no está en tu garaje?'
+                                        : 'Vehicle not in your garage?'}
                                 </button>
                             )}
                         </div>
@@ -283,7 +296,8 @@ export function BookingVehiclePicker({
                             <VehicleBodyStyleSelector
                                 locale={locale}
                                 appearance="dark"
-                                value={selectedVehicle ? null : selectedBodyStyle}
+                                layout="carousel"
+                                value={selectedVehicles.length > 0 ? null : selectedBodyStyle}
                                 onChange={handleBodyStyleSelect}
                                 name="booking-vehicle-body-style"
                                 required={garageVehicles.length === 0}
@@ -292,8 +306,8 @@ export function BookingVehiclePicker({
                                     : undefined}
                                 description={garageVehicles.length > 0
                                     ? isEs
-                                        ? 'Elige su estilo para ver el precio de esta reserva.'
-                                        : 'Pick its body style to price this booking.'
+                                        ? 'Esto cotiza la reserva por estilo, en lugar de tus vehículos guardados.'
+                                        : 'This prices the booking by body style instead of your saved vehicles.'
                                     : isEs
                                         ? 'Elige la opción más parecida. Los precios de abajo se actualizan al instante.'
                                         : 'Choose the closest match. Prices below update instantly.'}

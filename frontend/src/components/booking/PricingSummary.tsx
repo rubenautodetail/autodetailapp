@@ -3,15 +3,28 @@
 import { Service, AddOn } from "@/contexts";
 import { Card } from "@/components/ui/Card";
 
+/** One quoted vehicle line. `total` includes that vehicle's service and add-ons. */
+export interface PricingSummaryVehicleLine {
+  key: string;
+  label: string;
+  sublabel?: string;
+  total: number;
+}
+
 interface PricingSummaryProps {
   service: Service | null;
   addOns: AddOn[];
   subtotal: number;
   serviceFee: number;
+  /** Authoritative booking total across all vehicles (matches the server quote). */
   total: number;
   locale?: "en" | "es";
   className?: string;
-  vehicleCount?: number;
+  /**
+   * Per-vehicle quote lines. When provided, they carry the money itemization:
+   * the service row drops its own price so every visible number sums to the total.
+   */
+  vehicleLines?: PricingSummaryVehicleLine[];
   onRemoveAddOn?: (addOnId: string | number) => void;
 }
 
@@ -23,7 +36,7 @@ export default function PricingSummary({
   total,
   locale = "en",
   className = "",
-  vehicleCount = 1,
+  vehicleLines,
   onRemoveAddOn,
 }: PricingSummaryProps) {
   if (!service) {
@@ -31,6 +44,8 @@ export default function PricingSummary({
   }
 
   const serviceName = service.name;
+  const hasLines = Boolean(vehicleLines && vehicleLines.length > 0);
+  const isMultiVehicle = (vehicleLines?.length ?? 0) > 1;
 
   return (
     <Card className={`p-6 !bg-[#1A2142] !border-[#2C355E] ${className}`}>
@@ -42,11 +57,14 @@ export default function PricingSummary({
         <div className="flex items-center justify-between">
           <div>
             <p className="font-semibold text-white">{serviceName}</p>
-            <p className="text-sm text-[#5E698F]">
+            <p className="text-sm text-[#8994B8]">
               {service.duration} {locale === "es" ? "min" : "min"}
             </p>
           </div>
-          <span className="font-bold text-white">${(Number(service.basePrice) || 0).toFixed(2)}</span>
+          {/* With quote lines, the per-vehicle rows below carry the prices. */}
+          {!hasLines && (
+            <span className="font-bold text-white">${(Number(service.basePrice) || 0).toFixed(2)}</span>
+          )}
         </div>
 
         {addOns.length > 0 && (
@@ -71,6 +89,31 @@ export default function PricingSummary({
                 <span className="font-medium text-white">+${(Number(addOn.price) || 0).toFixed(2)}</span>
               </div>
             ))}
+            {isMultiVehicle && (
+              <p className="text-xs text-[#8994B8]">
+                {locale === "es"
+                  ? "Los extras se cobran por vehículo."
+                  : "Add-ons are charged per vehicle."}
+              </p>
+            )}
+          </div>
+        )}
+
+        {hasLines && (
+          <div className="border-t border-[#2C355E] pt-4 mt-2 space-y-2.5" aria-live="polite">
+            {vehicleLines!.map((line) => (
+              <div key={line.key} className="flex items-start justify-between gap-3 text-sm">
+                <div className="min-w-0">
+                  <p className="font-medium text-white truncate">{line.label}</p>
+                  {line.sublabel && (
+                    <p className="text-xs text-[#8994B8]">{line.sublabel}</p>
+                  )}
+                </div>
+                <span key={line.total} className="price-changed font-semibold text-white shrink-0">
+                  ${line.total.toFixed(2)}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -87,29 +130,14 @@ export default function PricingSummary({
           )}
         </div>
 
-        {vehicleCount > 1 && (
-          <div className="border-t border-[#2C355E] pt-4 mt-2">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[#A5B0D1] font-medium">
-                {locale === "es" ? "Por vehículo" : "Per vehicle"}
-              </span>
-              <span className="font-bold text-white">${(Number(total) || 0).toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[#A5B0D1] text-sm">
-                &times; {vehicleCount} {locale === "es" ? "vehículos" : "vehicles"}
-              </span>
-              <span className="text-sm text-[#A5B0D1]">${((Number(total) || 0) * vehicleCount).toFixed(2)}</span>
-            </div>
-          </div>
-        )}
-
         <div className="border-t border-[#2C355E] pt-4 mt-2">
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold text-white">
-              {locale === "es" ? "Total" : "Total"}
+              {locale === "es" ? "Total de la reserva" : "Booking total"}
             </span>
-            <span className="text-2xl font-bold text-[#D0B078]">${((Number(total) || 0) * vehicleCount).toFixed(2)}</span>
+            <span key={total} className="price-changed text-2xl font-bold text-[#D0B078]">
+              ${(Number(total) || 0).toFixed(2)}
+            </span>
           </div>
         </div>
       </div>
