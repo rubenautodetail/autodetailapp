@@ -13,6 +13,8 @@ describe('Content Security Policy', () => {
 
   it('allows Microsoft Clarity scripts and telemetry', () => {
     expect(directive('script-src')).toContain('https://www.clarity.ms');
+    // The www loader chains to scripts.clarity.ms; blocking it silently kills analytics.
+    expect(directive('script-src')).toContain('https://scripts.clarity.ms');
     expect(directive('connect-src')).toContain('https://*.clarity.ms');
     expect(directive('connect-src')).toContain('https://c.bing.com');
     expect(directive('img-src')).toContain('https://*.clarity.ms');

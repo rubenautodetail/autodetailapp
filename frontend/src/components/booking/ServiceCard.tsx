@@ -2,7 +2,13 @@
 
 /**
  * ServiceCard Component
- * Displays a selectable service card with pricing and duration
+ *
+ * Two layouts from one component:
+ * - Mobile (<sm): a compact tappable row. Name and meta on the left, the price
+ *   lined up on the right edge so every service can be compared in one glance,
+ *   selection shown as a fill-in circle, description behind a Details toggle.
+ *   Five services fit in about one screen instead of five.
+ * - sm and up: the full card with description, duration and Select pill.
  */
 
 import React, { useState } from 'react';
@@ -42,6 +48,9 @@ export function ServiceCard({
         ? description.slice(0, DESCRIPTION_TRUNCATE_LENGTH).trimEnd() + '...'
         : description;
     const visiblePrice = displayPrice ?? service.basePrice;
+    const metaCaption = isPriceLoading
+        ? isEs ? 'Actualizando precio…' : 'Updating price…'
+        : priceCaption;
 
     return (
         <Card
@@ -50,7 +59,7 @@ export function ServiceCard({
             // instead of inheriting the light/dark theme token.
             style={{ backgroundColor: isSelected ? '#232845' : '#1A2142' }}
             className={`
-                relative cursor-pointer p-5 transition-all duration-300 flex flex-col h-full overflow-hidden
+                relative cursor-pointer p-3.5 sm:p-5 transition-all duration-300 flex flex-col h-full overflow-hidden
                 ${isSelected
                     ? 'border-[#D0B078] ring-1 ring-[#D0B078]'
                     : 'border-[#2C355E] hover:border-[#D0B078]/50 hover:shadow-lg'
@@ -68,37 +77,89 @@ export function ServiceCard({
             }}
         >
             {isSelected && (
-                <div className="absolute top-3 right-3 bg-[#D0B078] text-[#131835] p-1 rounded-full shadow-md">
+                <div className="absolute top-3 right-3 hidden bg-[#D0B078] text-[#131835] p-1 rounded-full shadow-md sm:block">
                     <Check className="w-4 h-4" />
                 </div>
             )}
 
-            <div className="mb-3 pr-6">
-                <h3 className={`text-base font-bold leading-tight break-words ${isSelected ? 'text-[#D0B078]' : 'text-[#FFFFFF]'}`}>
-                    {service.name}
-                </h3>
-                <div className="mt-1" aria-live="polite">
-                    {/* Re-keyed on the amount so the flash replays each time the price moves. */}
-                    <span key={`${visiblePrice}-${isEstimate}`} className="price-changed">
+            <div className="flex items-center justify-between gap-3 sm:mb-3 sm:block sm:pr-6">
+                <div className="min-w-0">
+                    <h3 className={`text-sm sm:text-base font-bold leading-tight break-words ${isSelected ? 'text-[#D0B078]' : 'text-[#FFFFFF]'}`}>
+                        {service.name}
+                    </h3>
+
+                    {/* Mobile meta line: duration and price context in one glance. */}
+                    <p className="mt-0.5 text-[11px] font-medium text-[#8994B8] sm:hidden" aria-live="polite">
+                        {service.duration} {isEs ? 'min' : 'mins'}
+                        {metaCaption ? ` · ${metaCaption}` : ''}
+                    </p>
+
+                    {/* Desktop price block */}
+                    <div className="mt-1 hidden sm:block" aria-live="polite">
+                        {/* Re-keyed on the amount so the flash replays each time the price moves. */}
+                        <span key={`${visiblePrice}-${isEstimate}`} className="price-changed">
+                            {isEstimate && (
+                                <span className="mr-1 text-sm font-semibold text-[#8994B8]">
+                                    {isEs ? 'Desde' : 'From'}
+                                </span>
+                            )}
+                            <span className="text-[#A5B0D1] text-sm font-semibold">$</span>
+                            <span className={`text-xl font-bold ml-0.5 ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
+                                {(Number(visiblePrice) || 0).toFixed(2)}
+                            </span>
+                        </span>
+                        <p className="mt-0.5 min-h-4 text-[11px] font-medium text-[#8994B8]">
+                            {metaCaption}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Mobile right edge: price plus selection circle. */}
+                <div className="flex shrink-0 items-center gap-2.5 sm:hidden" aria-live="polite">
+                    <span key={`m-${visiblePrice}-${isEstimate}`} className="price-changed whitespace-nowrap text-right">
                         {isEstimate && (
-                            <span className="mr-1 text-sm font-semibold text-[#8994B8]">
+                            <span className="mr-1 text-[11px] font-semibold text-[#8994B8]">
                                 {isEs ? 'Desde' : 'From'}
                             </span>
                         )}
-                        <span className="text-[#A5B0D1] text-sm font-semibold">$</span>
-                        <span className={`text-xl font-bold ml-0.5 ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
+                        <span className="text-xs font-semibold text-[#A5B0D1]">$</span>
+                        <span className={`ml-0.5 text-base font-bold ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
                             {(Number(visiblePrice) || 0).toFixed(2)}
                         </span>
                     </span>
-                    <p className="mt-0.5 min-h-4 text-[11px] font-medium text-[#8994B8]">
-                        {isPriceLoading
-                            ? locale === 'es' ? 'Actualizando precio…' : 'Updating price…'
-                            : priceCaption}
-                    </p>
+                    <span
+                        aria-hidden="true"
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                            isSelected
+                                ? 'bg-[#D0B078] text-[#131835]'
+                                : 'border-2 border-[#4A5580]'
+                        }`}
+                    >
+                        {isSelected ? '✓' : ''}
+                    </span>
                 </div>
             </div>
 
-            <div className="mb-4 text-base leading-relaxed flex-grow min-h-[3rem]">
+            {/* Mobile disclosure: the description is on demand, not in the way. */}
+            {description && (
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded((prev) => !prev);
+                    }}
+                    aria-expanded={isExpanded}
+                    className="mt-1 self-start text-[11px] font-semibold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors sm:hidden"
+                >
+                    {isExpanded
+                        ? isEs ? 'Ocultar detalles' : 'Hide details'
+                        : isEs ? 'Ver detalles' : 'Details'}
+                </button>
+            )}
+
+            <div
+                className={`${isExpanded ? 'mt-2 block border-t border-[#2C355E] pt-2' : 'hidden'} text-sm leading-relaxed sm:mt-0 sm:mb-4 sm:block sm:border-0 sm:pt-0 sm:text-base sm:flex-grow sm:min-h-[3rem]`}
+            >
                 <p className="text-[#A5B0D1]">
                     {displayDescription}
                 </p>
@@ -109,7 +170,7 @@ export function ServiceCard({
                             e.stopPropagation();
                             setIsExpanded((prev) => !prev);
                         }}
-                        className="text-[#D0B078] hover:text-[#D0B078]/80 font-semibold mt-1 text-xs transition-colors"
+                        className="hidden text-[#D0B078] hover:text-[#D0B078]/80 font-semibold mt-1 text-xs transition-colors sm:inline"
                     >
                         {isExpanded
                             ? isEs ? 'Ver menos' : 'View less'
@@ -118,7 +179,7 @@ export function ServiceCard({
                 )}
             </div>
 
-            <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#2C355E] gap-2">
+            <div className="hidden items-center justify-between mt-auto pt-3 border-t border-[#2C355E] gap-2 sm:flex">
                 <div className="flex items-center text-[#8994B8] text-xs shrink-0">
                     <svg
                         className="w-4 h-4 mr-2"
@@ -135,7 +196,7 @@ export function ServiceCard({
                         />
                     </svg>
                     <span>
-                        {service.duration} {locale === 'es' ? 'min' : 'mins'}
+                        {service.duration} {isEs ? 'min' : 'mins'}
                     </span>
                 </div>
 
@@ -149,12 +210,8 @@ export function ServiceCard({
                     `}
                 >
                     {isSelected
-                        ? locale === 'es'
-                            ? 'Seleccionado'
-                            : 'Selected'
-                        : locale === 'es'
-                            ? 'Seleccionar'
-                            : 'Select'}
+                        ? isEs ? 'Seleccionado' : 'Selected'
+                        : isEs ? 'Seleccionar' : 'Select'}
                 </div>
             </div>
         </Card>

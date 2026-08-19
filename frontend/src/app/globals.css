@@ -195,3 +195,10 @@ h6 {
     animation: none;
   }
 }
+
+/* The booking flow is a committed dark canvas. Paint the body behind it too,
+   so overscroll, the locale layout's bottom-nav padding, and the translucent
+   MobileBottomNav never reveal the light theme background as white patches. */
+body:has([data-booking-shell]) {
+  background-color: #131835;
+}

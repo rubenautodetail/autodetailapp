@@ -209,12 +209,12 @@ export default function ServiceSelectionForm({
         <div className={`min-h-screen bg-[#131835] pt-8 ${selectedService ? 'pb-44 sm:pb-24' : 'pb-8'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Progress Indicator */}
-                <div className="mb-8 sm:mb-12 max-w-3xl mx-auto">
+                <div className="mb-6 sm:mb-12 max-w-3xl mx-auto">
                     <ProgressIndicator currentStep={currentStep} locale={locale} />
                 </div>
 
                 {/* Header */}
-                <div className="text-center mb-8 sm:mb-12">
+                <div className="text-center mb-6 sm:mb-12">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4" style={{ fontFamily: 'var(--font-display)' }}>
                         {locale === "es"
                             ? "Elige Tu Paquete"
@@ -285,7 +285,7 @@ export default function ServiceSelectionForm({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
                                 {services.map((service) => {
                                     const preview = servicePricePreviews[getServicePricePreviewKey(service)];
                                     const singleStyle = pricingTargetLabel;
@@ -523,34 +523,33 @@ export default function ServiceSelectionForm({
             {/* Floating Cart (Appears when service is selected) */}
             {selectedService && (
                 <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 md:left-auto md:right-8 z-40 animate-fade-in-up md:w-96 shadow-2xl">
-                    <div className="bg-[#1A2142] border border-[#D0B078]/50 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-                        <div className="flex items-center justify-between w-full md:w-auto md:flex-col md:items-start md:gap-1">
-                            <div>
-                                <p className="text-sm font-semibold text-white">
-                                    {selectedService.name}
-                                </p>
-                                <p className="text-xs text-[#A5B0D1]">
-                                    {!hasPricingTarget
-                                        ? locale === "es" ? "Falta elegir el vehículo" : "Choose your vehicle first"
-                                        : selectedAddOns.length > 0
-                                            ? `${selectedAddOns.length} ${locale === "es" ? "Extras" : "Add-ons"}`
-                                            : locale === "es" ? "Sin extras" : "No add-ons"}
-                                </p>
-                            </div>
-                            <div className="text-right md:text-left">
-                                <p className="text-xs text-[#A5B0D1] uppercase tracking-wider">
-                                    {locale === "es" ? "Total de la reserva" : "Booking total"}
-                                </p>
-                                <p className="text-xl font-bold text-[#D0B078]">
-                                    ${(Number(total) || 0).toFixed(2)}
-                                </p>
-                            </div>
+                    <div className="bg-[#1A2142] border border-[#D0B078]/50 rounded-2xl p-3 md:p-4 flex items-center justify-between gap-3 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                        <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-white md:text-sm">
+                                {selectedService.name}
+                            </p>
+                            <p className="text-[11px] text-[#A5B0D1] md:text-xs">
+                                {!hasPricingTarget
+                                    ? locale === "es" ? "Falta elegir el vehículo" : "Choose your vehicle first"
+                                    : [
+                                        locale === "es" ? "Total de la reserva" : "Booking total",
+                                        activeVehicles.length > 1
+                                            ? `${activeVehicles.length} ${locale === "es" ? "vehículos" : "vehicles"}`
+                                            : null,
+                                        selectedAddOns.length > 0
+                                            ? `${selectedAddOns.length} ${locale === "es" ? "extras" : "add-ons"}`
+                                            : null,
+                                    ].filter(Boolean).join(" · ")}
+                            </p>
+                            <p className="mt-0.5 text-lg font-bold leading-tight text-[#D0B078] md:text-xl">
+                                <span key={total} className="price-changed">${(Number(total) || 0).toFixed(2)}</span>
+                            </p>
                         </div>
                         <Button
                             variant="primary"
                             onClick={handleContinue}
                             disabled={activeVehicles.length === 0 && !selectedBodyStyle}
-                            className="w-full md:w-auto whitespace-nowrap"
+                            className="shrink-0 whitespace-nowrap"
                         >
                             {locale === "es" ? "Continuar" : "Continue"}
                             <svg className="inline-block ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

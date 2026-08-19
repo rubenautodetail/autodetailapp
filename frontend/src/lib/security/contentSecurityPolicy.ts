@@ -2,7 +2,8 @@
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   // Next.js currently requires inline scripts/styles; unsafe-eval is intentionally excluded.
-  "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://js.stripe.com https://www.googletagmanager.com https://www.clarity.ms",
+  // Clarity's www loader chains to scripts.clarity.ms, so both hosts are needed.
+  "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://js.stripe.com https://www.googletagmanager.com https://www.clarity.ms https://scripts.clarity.ms",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com https://js.stripe.com data:",
   [

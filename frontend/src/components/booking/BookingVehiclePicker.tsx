@@ -155,6 +155,11 @@ export function BookingVehiclePicker({
                                     <p className="mt-0.5 text-xs text-[#A5B0D1]">
                                         {isEs ? 'Vehículo de esta reserva' : 'This booking’s vehicle'}
                                     </p>
+                                    <p className="mt-1 text-xs text-[#8994B8]">
+                                        {isEs
+                                            ? '¿Más de un vehículo? Podrás agregar los demás en el paso de revisión.'
+                                            : 'Booking more than one vehicle? You can add the rest at the review step.'}
+                                    </p>
                                 </div>
                             </div>
                         )
@@ -185,7 +190,7 @@ export function BookingVehiclePicker({
                             ? <Check className="h-3.5 w-3.5" aria-hidden="true" />
                             : <Pencil className="h-3.5 w-3.5" aria-hidden="true" />}
                         {isOpen
-                            ? isEs ? 'Listo' : 'Done'
+                            ? `${isEs ? 'Listo' : 'Done'}${selectedVehicles.length > 0 ? ` (${selectedVehicles.length})` : ''}`
                             : isEs ? 'Cambiar' : 'Change'}
                     </button>
                 )}
