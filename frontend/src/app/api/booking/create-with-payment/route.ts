@@ -56,6 +56,7 @@ const CreateWithPaymentSchema = z.object({
         vehicleId: z.string().min(1).optional(),
         bodyStyle: bodyStyleSchema,
         serviceId: z.union([z.string().min(1), z.number().int().positive()]).optional(),
+        addOnIds: z.array(z.union([z.string().min(1), z.number().int().positive()])).optional(),
     })).min(1).max(10).optional(),
     subtotal: z.number().optional(),
     serviceFee: z.number().optional(),
@@ -66,7 +67,7 @@ const CreateWithPaymentSchema = z.object({
         price: z.number(),
     })).optional(),
     addOnIds: z.array(z.union([z.string().min(1), z.number().int().positive()])).optional(),
-    pricingRevision: z.string().regex(/^v[12]_[a-f0-9]{64}$/).optional(),
+    pricingRevision: z.string().regex(/^v[1-3]_[a-f0-9]{64}$/).optional(),
     bodyStyle: bodyStyleSchema.optional(),
     currency: z.literal('usd').optional().default('usd'),
     locale: z.enum(['en', 'es']).optional().default('en'),
@@ -132,6 +133,7 @@ export async function POST(req: NextRequest) {
             bodyStyle: bodyStyle!,
             vehicleId: undefined as string | undefined,
             serviceId: undefined as string | number | undefined,
+            addOnIds: undefined as Array<string | number> | undefined,
         }];
 
     const vehicleCount = vehicles.length;
@@ -150,6 +152,7 @@ export async function POST(req: NextRequest) {
                 bodyStyle: vehicle.bodyStyle,
                 vehicleId: vehicle.vehicleId,
                 ...(vehicle.serviceId !== undefined ? { serviceId: vehicle.serviceId } : {}),
+                ...(vehicle.addOnIds !== undefined ? { addOnIds: vehicle.addOnIds } : {}),
             })),
             currency,
         }, supabase);
@@ -201,7 +204,9 @@ export async function POST(req: NextRequest) {
     const distinctServiceIds = [...new Set(quote.vehicles.map((vehicle) => vehicle.serviceId))];
 
     // ── Step 1: Create booking(s) — one per vehicle ─────────────────────────
-    const verifiedAddOns = quote.addOns.map((addOn) => ({
+    // Each row stores the add-ons its own vehicle carries; the resolver already
+    // verified them against the catalog.
+    const verifiedAddOnsFor = (index: number) => quote.vehicles[index].addOns.map((addOn) => ({
         id: addOn.id,
         name: addOn.name,
         price: centsToDollars(addOn.priceCents),
@@ -227,7 +232,7 @@ export async function POST(req: NextRequest) {
         total_amount: formatCents(quote.vehicles[index].totalCents),
         service_name: quote.vehicles[index].serviceName,
         service_id: quote.vehicles[index].serviceId,
-        selected_add_ons: verifiedAddOns,
+        selected_add_ons: verifiedAddOnsFor(index),
         vehicle_type: quote.vehicles[index].bodyStyle,
         vehicle_body_style: quote.vehicles[index].bodyStyle,
         service_price_cents: quote.vehicles[index].servicePriceCents,

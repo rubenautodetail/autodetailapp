@@ -46,6 +46,9 @@ export default function ServiceSelectionForm({
         perVehicleServices,
         setPerVehicleServices,
         allVehiclesAssigned,
+        addOnsForBookingVehicle,
+        addVehicleAddOn,
+        removeVehicleAddOn,
         hasMixedServices,
         bookingServiceLabel,
         selectedAddOns,
@@ -245,12 +248,34 @@ export default function ServiceSelectionForm({
     };
 
     const handleAddOnToggle = (addOn: AddOn, selected: boolean) => {
+        if (serviceMode === 'per-vehicle' && activeVehicle?.id) {
+            if (selected) addVehicleAddOn(activeVehicle.id, addOn);
+            else removeVehicleAddOn(activeVehicle.id, addOn.id);
+            return;
+        }
         if (selected) {
             addAddOn(addOn);
         } else {
             removeAddOn(addOn.id);
         }
     };
+
+    // In per-vehicle mode the add-on list belongs to the active pill, and only
+    // once that car has a service — extras without a service would count for
+    // nothing until one is picked.
+    const activeVehicleService = activeVehicle ? assignedServiceFor(activeVehicle.id) : null;
+    const showAddOns = serviceMode === 'per-vehicle'
+        ? Boolean(activeVehicle && activeVehicleService)
+        : Boolean(selectedService);
+    const activeAddOns = serviceMode === 'per-vehicle' && activeVehicle
+        ? addOnsForBookingVehicle(activeVehicle)
+        : selectedAddOns;
+    const addOnNoun = (count: number) => locale === "es"
+        ? (count === 1 ? "extra" : "extras")
+        : (count === 1 ? "add-on" : "add-ons");
+    const cartAddOnCount = serviceMode === 'per-vehicle'
+        ? bookingVehicles.reduce((count, vehicle) => count + addOnsForBookingVehicle(vehicle).length, 0)
+        : selectedAddOns.length;
 
     const handleContinue = () => {
         if (!selectedService || (activeVehicles.length === 0 && !selectedBodyStyle)) return;
@@ -362,6 +387,7 @@ export default function ServiceSelectionForm({
                                         >
                                             {bookingVehicles.map((vehicle) => {
                                                 const assigned = assignedServiceFor(vehicle.id);
+                                                const addOnCount = addOnsForBookingVehicle(vehicle).length;
                                                 const isActivePill = vehicle.id === activeVehicle?.id;
                                                 return (
                                                     <button
@@ -391,6 +417,11 @@ export default function ServiceSelectionForm({
                                                                     ? assigned.name
                                                                     : locale === "es" ? "Elige un servicio" : "Pick a service"}
                                                             </span>
+                                                            {assigned && addOnCount > 0 && (
+                                                                <span className="block truncate text-[10px] font-semibold text-[#D0B078]">
+                                                                    +{addOnCount} {addOnNoun(addOnCount)}
+                                                                </span>
+                                                            )}
                                                         </span>
                                                     </button>
                                                 );
@@ -456,13 +487,18 @@ export default function ServiceSelectionForm({
                         </div>
 
                         {/* Add-ons (only show if service selected) */}
-                        {selectedService && (
+                        {showAddOns && (
                             <div className="animate-fade-in-up">
                                 <AddOnSelector
                                     addOns={addOns}
-                                    selectedAddOns={selectedAddOns}
+                                    selectedAddOns={activeAddOns}
                                     onAddOnToggle={handleAddOnToggle}
                                     locale={locale}
+                                    forLabel={serviceMode === 'per-vehicle' && activeVehicle
+                                        ? (locale === "es"
+                                            ? `Para ${activeVehicle.year} ${activeVehicle.model}`
+                                            : `For the ${activeVehicle.year} ${activeVehicle.model}`)
+                                        : undefined}
                                 />
                             </div>
                         )}
@@ -566,6 +602,9 @@ export default function ServiceSelectionForm({
                                                                     {getVehicleBodyStyleLabel(style, locale)}
                                                                     {hasMixedServices && line?.serviceName ? ` · ${line.serviceName}` : ''}
                                                                 </p>
+                                                                {serviceMode === 'per-vehicle' && addOnsForBookingVehicle(vehicle).map((addOn) => (
+                                                                    <p key={addOn.id} className="text-[11px] text-[#8994B8]">+ {addOn.name}</p>
+                                                                ))}
                                                             </div>
                                                             <div className="text-right">
                                                                 <span key={line?.total ?? 'pending'} className="price-changed font-semibold text-[#D0B078]">
@@ -683,8 +722,8 @@ export default function ServiceSelectionForm({
                                         activeVehicles.length > 1
                                             ? `${activeVehicles.length} ${locale === "es" ? "vehículos" : "vehicles"}`
                                             : null,
-                                        selectedAddOns.length > 0
-                                            ? `${selectedAddOns.length} ${locale === "es" ? "extras" : "add-ons"}`
+                                        cartAddOnCount > 0
+                                            ? `${cartAddOnCount} ${addOnNoun(cartAddOnCount)}`
                                             : null,
                                     ].filter(Boolean).join(" · ")}
                             </p>

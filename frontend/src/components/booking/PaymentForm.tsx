@@ -14,7 +14,7 @@ import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import type { BookingPriceQuote, VehiclePriceLine } from "@/contexts/BookingContext";
-import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle } from "@/types/vehicle";
+import { normalizeVehicleBodyStyle } from "@/types/vehicle";
 import { getStableCatalogRef } from "@/lib/pricing/servicePricePreviews";
 
 interface PaymentFormProps {
@@ -182,8 +182,10 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     vehicleInfo,
     bookingVehicles,
     vehicleServices,
-    hasMixedServices,
     allVehiclesAssigned,
+    perVehicleServices,
+    addOnsForBookingVehicle,
+    vehicleSummaryLines,
     bookingServiceLabel,
     subtotal,
     serviceFee,
@@ -242,6 +244,9 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
         ? bookingVehicles.map(v => {
             const override = v.id ? vehicleServices[v.id] : undefined;
             const overrideId = override ? getStableCatalogRef(override) : undefined;
+            const vehicleAddOnIds = addOnsForBookingVehicle(v)
+              .map(getStableCatalogRef)
+              .filter((id): id is string | number => id !== undefined);
             return {
               make: v.make,
               model: v.model,
@@ -250,6 +255,8 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
               vehicleId: v.id,
               bodyStyle: normalizeVehicleBodyStyle(v.type),
               ...(overrideId !== undefined ? { serviceId: overrideId } : {}),
+              // Per-vehicle mode: this car's own add-ons, even when empty.
+              ...(perVehicleServices ? { addOnIds: vehicleAddOnIds } : {}),
             };
           })
         : vehicleInfo
@@ -284,10 +291,14 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           total: activeQuote.total,
           serviceId: activeQuote.service.id,
           serviceName: selectedService.name,
-          addOnIds: selectedAddOns
-            .map(getStableCatalogRef)
-            .filter((id): id is string | number => id !== undefined),
-          selectedAddOns: selectedAddOns.map(a => ({ name: a.name, price: a.price })),
+          // Booking-wide add-ons only exist outside per-vehicle mode; there each
+          // vehicle carries its own list above.
+          addOnIds: perVehicleServices
+            ? []
+            : selectedAddOns
+              .map(getStableCatalogRef)
+              .filter((id): id is string | number => id !== undefined),
+          selectedAddOns: perVehicleServices ? [] : selectedAddOns.map(a => ({ name: a.name, price: a.price })),
           pricingRevision: activeQuote.pricingRevision,
           vehicles,
           // Backwards compat — first vehicle
@@ -509,20 +520,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
-                vehicleLines={priceQuote?.vehicles.map((line, index) => {
-                  const vehicle = bookingVehicles[index] ?? (index === 0 ? vehicleInfo : null);
-                  const styleLabel = getVehicleBodyStyleLabel(line.bodyStyle, locale);
-                  const parts = vehicle ? [styleLabel] : [];
-                  if (hasMixedServices && line.serviceName) parts.push(line.serviceName);
-                  return {
-                    key: vehicle?.id ?? `${line.bodyStyle}-${index}`,
-                    label: vehicle
-                      ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
-                      : styleLabel,
-                    sublabel: parts.length > 0 ? parts.join(' · ') : undefined,
-                    total: line.total,
-                  };
-                })}
+                vehicleLines={vehicleSummaryLines(locale)}
               />
               <p className="sr-only">{locale === "es" ? `Revisión de precio ${pricingRevision ?? ''}` : `Pricing revision ${pricingRevision ?? ''}`}</p>
             </div>

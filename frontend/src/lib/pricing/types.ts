@@ -17,6 +17,8 @@ export interface PricingVehicleInput {
   vehicleId?: string;
   /** Per-vehicle service. Falls back to the booking's default service when omitted. */
   serviceId?: string | number;
+  /** Per-vehicle add-ons. When present it replaces the booking-wide list for this vehicle. */
+  addOnIds?: Array<string | number>;
 }
 
 export interface ResolveBookingPriceInput {
@@ -45,6 +47,8 @@ export interface VehiclePriceLine {
   serviceDurationMinutes: number;
   priceSource: 'override' | 'base';
   servicePriceCents: number;
+  /** The add-ons this vehicle carries (its own list, or the booking-wide one). */
+  addOns: ResolvedAddOn[];
   addOnsPriceCents: number;
   totalCents: number;
 }

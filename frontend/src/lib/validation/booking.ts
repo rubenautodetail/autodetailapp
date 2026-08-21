@@ -64,6 +64,7 @@ export const PriceCalculateSchema = z.object({
     vehicleId: z.string().min(1).optional(),
     bodyStyle: bodyStyleSchema,
     serviceId: flexibleIdSchema.optional(),
+    addOnIds: z.array(flexibleIdSchema).optional(),
   })).min(1).max(10).optional(),
 }).refine((value) => value.serviceId !== undefined || value.serviceName !== undefined, {
   message: 'Service ID or service name is required',

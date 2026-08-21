@@ -41,6 +41,7 @@ export default function LocationPage({ params }: LocationPageProps) {
     isHydrated,
     selectedService,
     allVehiclesAssigned,
+    vehicleSummaryLines,
     selectedAddOns,
     customerLocation,
     setLocation,
@@ -463,6 +464,7 @@ export default function LocationPage({ params }: LocationPageProps) {
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
+                vehicleLines={vehicleSummaryLines(locale)}
               />
 
               {/* Action buttons */}

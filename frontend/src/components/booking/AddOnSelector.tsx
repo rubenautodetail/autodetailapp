@@ -9,6 +9,8 @@ interface AddOnSelectorProps {
   selectedAddOns: AddOn[];
   onAddOnToggle: (addOn: AddOn, selected: boolean) => void;
   locale?: "en" | "es";
+  /** Shown under the heading when the list applies to one vehicle only. */
+  forLabel?: string;
 }
 
 export default function AddOnSelector({
@@ -16,6 +18,7 @@ export default function AddOnSelector({
   selectedAddOns,
   onAddOnToggle,
   locale = "en",
+  forLabel,
 }: AddOnSelectorProps) {
   const isSelected = (addOnId: string | number) => {
     return selectedAddOns.some((a) => a.id === addOnId);
@@ -27,9 +30,12 @@ export default function AddOnSelector({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-6">
+      <h3 className={`text-xl font-bold text-white ${forLabel ? "mb-1" : "mb-6"}`}>
         {locale === "es" ? "Extras Opcionales" : "Optional Enhancements"}
       </h3>
+      {forLabel && (
+        <p className="mb-6 text-sm font-semibold text-[#D0B078]" aria-live="polite">{forLabel}</p>
+      )}
 
       <div className="space-y-3">
         {addOns.map((addOn) => {
@@ -39,10 +45,10 @@ export default function AddOnSelector({
             <Card
               key={addOn.id}
               className={`
-                p-5 transition-all duration-300
+                p-5 transition-all duration-300 !shadow-none
                 ${selected
-                  ? 'border-[#D0B078] ring-1 ring-[#D0B078] bg-[#D0B078]/5'
-                  : 'border-[var(--divider)] hover:border-[#D0B078]/50'
+                  ? '!border-[#D0B078] ring-1 ring-[#D0B078] !bg-[#D0B078]/10'
+                  : '!border-[#2C355E] !bg-[#1A2142] hover:!border-[#D0B078]/60'
                 }
               `}
               onClick={() => onAddOnToggle(addOn, !selected)}
@@ -58,13 +64,13 @@ export default function AddOnSelector({
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`font-bold text-lg ${selected ? 'text-[#D0B078]' : 'text-[var(--text-primary)]'}`}>
+                    <span className={`font-bold text-lg ${selected ? 'text-[#D0B078]' : 'text-white'}`}>
                       {addOn.name}
                     </span>
                     <span className="font-semibold text-[#D0B078]">+${(Number(addOn.price) || 0).toFixed(2)}</span>
                   </div>
                   {addOn.description && (
-                    <p className="text-sm text-[var(--text-secondary)]">{addOn.description}</p>
+                    <p className="text-sm text-[#A5B0D1]">{addOn.description}</p>
                   )}
                 </div>
 
@@ -84,7 +90,7 @@ export default function AddOnSelector({
                       </svg>
                     </button>
                   )}
-                  <div className="pl-2 border-l border-[var(--divider)]" onClick={(e) => e.stopPropagation()}>
+                  <div className="pl-2 border-l border-[#2C355E]" onClick={(e) => e.stopPropagation()}>
                     <ToggleSwitch
                       checked={selected}
                       onChange={(checked) => onAddOnToggle(addOn, checked)}

@@ -130,6 +130,7 @@ describe('POST /api/booking/create-with-payment', () => {
         serviceDurationMinutes: 90,
         priceSource: 'base',
         servicePriceCents: 15000,
+        addOns: [],
         addOnsPriceCents: 0,
         totalCents: 15000,
       }],

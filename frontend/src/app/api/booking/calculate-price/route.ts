@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
         const basePrice = centsToDollars(quote.service.basePriceCents);
         const addOnsTotal = centsToDollars(
-            quote.addOns.reduce((sum, addOn) => sum + addOn.priceCents, 0)
+            quote.vehicles.reduce((sum, vehicle) => sum + vehicle.addOnsPriceCents, 0)
         );
         const subtotal = centsToDollars(quote.subtotalCents);
         const total = centsToDollars(quote.totalCents);
@@ -62,6 +62,13 @@ export async function POST(req: NextRequest) {
             })),
             vehicles: quote.vehicles.map((vehicle) => ({
                 ...vehicle,
+                addOns: vehicle.addOns.map((addOn) => ({
+                    id: addOn.id,
+                    documentId: addOn.documentId,
+                    name: addOn.name,
+                    price: centsToDollars(addOn.priceCents),
+                    priceCents: addOn.priceCents,
+                })),
                 servicePrice: centsToDollars(vehicle.servicePriceCents),
                 addOnsPrice: centsToDollars(vehicle.addOnsPriceCents),
                 total: centsToDollars(vehicle.totalCents),

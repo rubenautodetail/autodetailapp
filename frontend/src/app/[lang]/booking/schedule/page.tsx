@@ -31,6 +31,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     isHydrated,
     selectedService,
     allVehiclesAssigned,
+    vehicleSummaryLines,
     selectedAddOns,
     customerLocation,
     selectedDate,
@@ -494,6 +495,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                 serviceFee={serviceFee}
                 total={total}
                 locale={locale}
+                vehicleLines={vehicleSummaryLines(locale)}
               />
 
               {/* Action buttons */}

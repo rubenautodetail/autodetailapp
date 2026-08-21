@@ -8,6 +8,8 @@ export interface PricingSummaryVehicleLine {
   key: string;
   label: string;
   sublabel?: string;
+  /** Items folded into this line's total (e.g. the vehicle's own add-ons). */
+  details?: string[];
   total: number;
 }
 
@@ -108,6 +110,9 @@ export default function PricingSummary({
                   {line.sublabel && (
                     <p className="text-xs text-[#8994B8]">{line.sublabel}</p>
                   )}
+                  {line.details?.map((detail) => (
+                    <p key={detail} className="text-xs text-[#8994B8]">+ {detail}</p>
+                  ))}
                 </div>
                 <span key={line.total} className="price-changed font-semibold text-white shrink-0">
                   ${line.total.toFixed(2)}

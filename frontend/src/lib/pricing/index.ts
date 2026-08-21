@@ -183,12 +183,19 @@ export async function resolveBookingPrice(
 
   const styles = input.vehicles.map((vehicle) => normalizeBodyStyle(vehicle.bodyStyle));
   const uniqueStyles = [...new Set(styles)];
+  // One catalog round-trip covers the booking-wide list and every per-vehicle
+  // list; each vehicle then picks its own rows out of that registry.
+  const bookingAddOnIds = input.addOnIds ?? [];
+  const unionAddOnIds = [
+    ...bookingAddOnIds,
+    ...input.vehicles.flatMap((vehicle) => vehicle.addOnIds ?? []),
+  ];
   const [overrideResult, addOns] = await Promise.all([
     client.from('service_body_style_prices')
       .select('service_id, body_style, price_cents, currency, updated_at')
       .in('service_id', involvedServices.map((row) => row.id))
       .in('body_style', uniqueStyles),
-    loadAddOns(client, input.addOnIds ?? [], input.addOnNames ?? []),
+    loadAddOns(client, unionAddOnIds, input.addOnNames ?? []),
   ]);
   if (overrideResult.error) throw overrideResult.error;
 
@@ -201,7 +208,7 @@ export async function resolveBookingPrice(
   }
 
   const basePriceCents = decimalToCents(service.base_price);
-  const resolvedAddOns: ResolvedAddOn[] = addOns
+  const loadedAddOns: ResolvedAddOn[] = addOns
     .map((addOn) => ({
       id: addOn.id,
       documentId: addOn.document_id,
@@ -210,7 +217,31 @@ export async function resolveBookingPrice(
       durationMinutes: addOn.duration_minutes ?? 0,
     }))
     .sort((a, b) => a.id - b.id);
-  const addOnsPriceCents = resolvedAddOns.reduce((sum, addOn) => sum + addOn.priceCents, 0);
+  const addOnByKey = new Map<string, ResolvedAddOn>();
+  for (const addOn of loadedAddOns) {
+    addOnByKey.set(String(addOn.id), addOn);
+    if (addOn.documentId) addOnByKey.set(addOn.documentId, addOn);
+  }
+  // Keys → catalog rows. A key that matched nothing fails the whole quote
+  // rather than silently pricing that add-on at zero.
+  const resolveAddOnKeys = (keys: Array<string | number>): ResolvedAddOn[] => {
+    const unique = new Map<number, ResolvedAddOn>();
+    for (const key of keys) {
+      const addOn = addOnByKey.get(String(key).trim());
+      if (!addOn) throw new PricingInputError('One or more add-ons are invalid or inactive', 'INVALID_ADD_ON');
+      unique.set(addOn.id, addOn);
+    }
+    return [...unique.values()].sort((a, b) => a.id - b.id);
+  };
+  // Booking-wide add-ons: the default for any vehicle without its own list.
+  // The legacy names path only applies when no ids were sent at all.
+  const bookingAddOns = bookingAddOnIds.length > 0
+    ? resolveAddOnKeys(bookingAddOnIds)
+    : unionAddOnIds.length === 0 && (input.addOnNames ?? []).length > 0
+      ? loadedAddOns
+      : [];
+  const addOnsForVehicle = (vehicle: PricingVehicleInput): ResolvedAddOn[] =>
+    vehicle.addOnIds !== undefined ? resolveAddOnKeys(vehicle.addOnIds) : bookingAddOns;
   const overrideByServiceAndStyle = new Map(
     overrides.map((override) => [`${override.service_id}:${override.body_style}`, override]),
   );
@@ -219,6 +250,8 @@ export async function resolveBookingPrice(
     const vehicleService = serviceForVehicle(input.vehicles[index]);
     const override = overrideByServiceAndStyle.get(`${vehicleService.id}:${bodyStyle}`);
     const servicePriceCents = override?.price_cents ?? decimalToCents(vehicleService.base_price);
+    const lineAddOns = addOnsForVehicle(input.vehicles[index]);
+    const addOnsPriceCents = lineAddOns.reduce((sum, addOn) => sum + addOn.priceCents, 0);
     return {
       index,
       ...(input.vehicles[index].vehicleId ? { vehicleId: input.vehicles[index].vehicleId } : {}),
@@ -228,18 +261,24 @@ export async function resolveBookingPrice(
       serviceDurationMinutes: vehicleService.duration_minutes ?? 60,
       priceSource: override ? 'override' as const : 'base' as const,
       servicePriceCents,
+      addOns: lineAddOns,
       addOnsPriceCents,
       totalCents: servicePriceCents + addOnsPriceCents,
     };
   });
+  // Every add-on on the booking, each once — what the legacy consumers expect.
+  const resolvedAddOns = [...new Map(
+    vehicles.flatMap((line) => line.addOns).map((addOn) => [addOn.id, addOn]),
+  ).values()].sort((a, b) => a.id - b.id);
 
   const revisionPayload = {
-    version: 2,
+    version: 3,
     currency: input.currency ?? 'usd',
     services: involvedServices
       .map((row) => [row.id, decimalToCents(row.base_price), row.updated_at])
       .sort(([a], [b]) => Number(a) - Number(b)),
     assignments: vehicles.map((line) => [line.index, line.serviceId]),
+    addOnAssignments: vehicles.map((line) => [line.index, line.addOns.map((addOn) => addOn.id)]),
     overrides: overrides
       .map((row) => [row.service_id, row.body_style, row.price_cents, row.currency, row.updated_at])
       .sort((a, b) => `${a[0]}:${a[1]}`.localeCompare(`${b[0]}:${b[1]}`)),
@@ -247,7 +286,7 @@ export async function resolveBookingPrice(
       .map((row) => [row.id, decimalToCents(row.price), row.updated_at ?? row.created_at])
       .sort(([a], [b]) => Number(a) - Number(b)),
   };
-  const pricingRevision = `v2_${createHash('sha256')
+  const pricingRevision = `v3_${createHash('sha256')
     .update(JSON.stringify(revisionPayload))
     .digest('hex')}`;
 
@@ -266,7 +305,7 @@ export async function resolveBookingPrice(
     totalCents: vehicles.reduce((sum, vehicle) => sum + vehicle.totalCents, 0),
     totalDurationMinutes: vehicles.reduce(
       (sum, line) => sum + line.serviceDurationMinutes
-        + resolvedAddOns.reduce((addOnSum, addOn) => addOnSum + addOn.durationMinutes, 0),
+        + line.addOns.reduce((addOnSum, addOn) => addOnSum + addOn.durationMinutes, 0),
       0,
     ),
     currency: input.currency ?? 'usd',

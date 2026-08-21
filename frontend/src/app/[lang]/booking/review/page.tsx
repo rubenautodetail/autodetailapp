@@ -49,6 +49,8 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     perVehicleServices,
     allVehiclesAssigned,
     serviceForBookingVehicle,
+    addOnsForBookingVehicle,
+    vehicleSummaryLines,
     hasMixedServices,
     bookingServiceLabel,
   } = useBooking();
@@ -239,42 +241,13 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     router.push(`/${locale}/booking/select`);
   };
 
-  // Per-vehicle lines for the price summary, labeled by the actual vehicles.
-  const quotedVehicleLines = priceQuote?.vehicles.map((line, index) => {
-    const vehicle = bookingVehicles[index];
-    const styleLabel = vehicle
-      ? getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)
-      : getVehicleBodyStyleLabel(line.bodyStyle, locale);
-    const serviceSuffix = hasMixedServices && line.serviceName ? ` · ${line.serviceName}` : '';
-    return {
-      key: vehicle?.id ?? `${line.bodyStyle}-${index}`,
-      label: vehicle
-        ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
-        : styleLabel,
-      sublabel: vehicle ? `${styleLabel}${serviceSuffix}` : (serviceSuffix ? line.serviceName : undefined),
-      total: line.total,
-    };
-  });
-  // Before the quote lands, itemize from the same math as the context's
-  // subtotal, so the summary's lines always add up to the number beneath them.
-  const addOnsTotal = selectedAddOns.reduce((sum, addOn) => sum + (Number(addOn.price) || 0), 0);
-  const estimatedVehicleLines = bookingVehicles.length > 0
-    ? bookingVehicles.map((vehicle, index) => {
-        const vehicleService = serviceForBookingVehicle(vehicle);
-        const styleLabel = getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale);
-        return {
-          key: vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`,
-          label: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-          sublabel: !vehicleService
-            ? `${styleLabel} · ${locale === "es" ? "sin servicio" : "no service yet"}`
-            : perVehicleServices
-              ? `${styleLabel} · ${vehicleService.name}`
-              : styleLabel,
-          total: vehicleService ? (Number(vehicleService.basePrice) || 0) + addOnsTotal : 0,
-        };
-      })
-    : undefined;
-  const summaryVehicleLines = quotedVehicleLines ?? estimatedVehicleLines;
+  const summaryVehicleLines = vehicleSummaryLines(locale);
+  // In per-vehicle mode the add-ons card groups each car's own extras.
+  const perVehicleAddOnRows = perVehicleServices
+    ? bookingVehicles
+        .map((vehicle) => ({ vehicle, addOns: addOnsForBookingVehicle(vehicle) }))
+        .filter((row) => row.addOns.length > 0)
+    : [];
 
   const handleContinue = async () => {
     const validationErrors = validateForm();
@@ -785,21 +758,41 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 </div>
 
                 {/* Add-ons */}
-                {selectedAddOns.length > 0 && (
+                {(perVehicleServices ? perVehicleAddOnRows.length > 0 : selectedAddOns.length > 0) && (
                   <div className="border-b border-[#2C355E] pb-6">
                     <p className="text-sm font-medium text-[#8994B8] mb-3 uppercase tracking-wider">
                       {locale === "es" ? "Extras" : "Add-ons"}
                     </p>
-                    <div className="space-y-3">
-                      {selectedAddOns.map((addOn) => (
-                        <div key={addOn.id} className="flex justify-between items-center group">
-                          <p className="text-[#A5B0D1] group-hover:text-white transition-colors">{addOn.name}</p>
-                          <p className="font-semibold text-white">
-                            ${(Number(addOn.price) || 0).toFixed(2)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                    {perVehicleServices ? (
+                      <div className="space-y-4">
+                        {perVehicleAddOnRows.map(({ vehicle, addOns: vehicleAddOns }, index) => (
+                          <div key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`}>
+                            <p className="mb-2 text-xs font-semibold text-white">
+                              {vehicle.year} {vehicle.make} {vehicle.model}
+                            </p>
+                            <div className="space-y-2">
+                              {vehicleAddOns.map((addOn) => (
+                                <div key={addOn.id} className="flex justify-between items-center">
+                                  <p className="text-[#A5B0D1]">{addOn.name}</p>
+                                  <p className="font-semibold text-white">${(Number(addOn.price) || 0).toFixed(2)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {selectedAddOns.map((addOn) => (
+                          <div key={addOn.id} className="flex justify-between items-center group">
+                            <p className="text-[#A5B0D1] group-hover:text-white transition-colors">{addOn.name}</p>
+                            <p className="font-semibold text-white">
+                              ${(Number(addOn.price) || 0).toFixed(2)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

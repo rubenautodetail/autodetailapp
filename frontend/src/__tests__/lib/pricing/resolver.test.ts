@@ -85,7 +85,7 @@ describe('resolveBookingPrice', () => {
       expect.objectContaining({ bodyStyle: 'pickup', priceSource: 'base', totalCents: 12000 }),
     ]);
     expect(quote.totalCents).toBe(40500);
-    expect(quote.pricingRevision).toMatch(/^v2_[a-f0-9]{64}$/);
+    expect(quote.pricingRevision).toMatch(/^v3_[a-f0-9]{64}$/);
     expect(queriedTables).toEqual(['services', 'service_body_style_prices', 'add_ons']);
   });
 
@@ -136,7 +136,7 @@ describe('resolveBookingPrice', () => {
     expect(quote.totalDurationMinutes).toBe(80 + 15 + 180 + 15);
     // The default service stays the summary service; the revision hash is v2.
     expect(quote.service.id).toBe(7);
-    expect(quote.pricingRevision).toMatch(/^v2_[a-f0-9]{64}$/);
+    expect(quote.pricingRevision).toMatch(/^v3_[a-f0-9]{64}$/);
   });
 
   it('resolves a non-canonical per-vehicle key instead of silently using the default', async () => {
@@ -183,5 +183,89 @@ describe('resolveBookingPrice', () => {
       serviceId: 7,
       vehicles: [{ bodyStyle: 'sedan', serviceId: 999 }],
     }, client)).rejects.toThrow('Service not found or inactive');
+  });
+
+  it('prices each vehicle with its own add-ons, falling back to the booking-wide list', async () => {
+    const tables: Record<string, Row[]> = {
+      services: [{
+        id: 7, document_id: null, name: 'Complete Detail', base_price: '100.00',
+        duration_minutes: 90, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+      }],
+      service_body_style_prices: [],
+      add_ons: [
+        { id: 3, document_id: null, name: 'Pet Hair', price: '20.00', duration_minutes: 15,
+          created_at: '2026-08-01T00:00:00Z', updated_at: '2026-08-03T00:00:00Z', is_active: true },
+        { id: 5, document_id: 'wax-doc', name: 'Wax', price: '30.00', duration_minutes: 10,
+          created_at: '2026-08-01T00:00:00Z', updated_at: '2026-08-03T00:00:00Z', is_active: true },
+      ],
+    };
+    const client = {
+      from(table: string) { return new FakeQuery(tables[table] ?? []); },
+    } as unknown as NonNullable<Parameters<typeof resolveBookingPrice>[1]>;
+
+    const quote = await resolveBookingPrice({
+      serviceId: 7,
+      addOnIds: [3],
+      vehicles: [
+        { bodyStyle: 'sedan' },                        // inherits the booking-wide [3]
+        { bodyStyle: 'sedan', addOnIds: [] },          // explicitly none
+        { bodyStyle: 'sedan', addOnIds: ['wax-doc'] }, // its own, by document id
+      ],
+    }, client);
+
+    expect(quote.vehicles.map((line) => [line.addOns.map((a) => a.id), line.addOnsPriceCents, line.totalCents])).toEqual([
+      [[3], 2000, 12000],
+      [[], 0, 10000],
+      [[5], 3000, 13000],
+    ]);
+    expect(quote.addOns.map((addOn) => addOn.id)).toEqual([3, 5]);
+    expect(quote.totalCents).toBe(35000);
+    expect(quote.totalDurationMinutes).toBe(90 + 15 + 90 + 90 + 10);
+  });
+
+  it('hashes which vehicle carries which add-on into the pricing revision', async () => {
+    const tables: Record<string, Row[]> = {
+      services: [{
+        id: 7, document_id: null, name: 'Complete Detail', base_price: '100.00',
+        duration_minutes: 90, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+      }],
+      service_body_style_prices: [],
+      add_ons: [{ id: 3, document_id: null, name: 'Pet Hair', price: '20.00', duration_minutes: 15,
+        created_at: '2026-08-01T00:00:00Z', updated_at: '2026-08-03T00:00:00Z', is_active: true }],
+    };
+    const client = {
+      from(table: string) { return new FakeQuery(tables[table] ?? []); },
+    } as unknown as NonNullable<Parameters<typeof resolveBookingPrice>[1]>;
+
+    const onFirst = await resolveBookingPrice({
+      serviceId: 7,
+      vehicles: [{ bodyStyle: 'sedan', addOnIds: [3] }, { bodyStyle: 'suv', addOnIds: [] }],
+    }, client);
+    const onSecond = await resolveBookingPrice({
+      serviceId: 7,
+      vehicles: [{ bodyStyle: 'sedan', addOnIds: [] }, { bodyStyle: 'suv', addOnIds: [3] }],
+    }, client);
+
+    expect(onFirst.totalCents).toBe(onSecond.totalCents);
+    expect(onFirst.pricingRevision).not.toBe(onSecond.pricingRevision);
+  });
+
+  it('rejects a per-vehicle add-on that does not exist', async () => {
+    const tables: Record<string, Row[]> = {
+      services: [{
+        id: 7, document_id: null, name: 'Complete Detail', base_price: '100.00',
+        duration_minutes: 90, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+      }],
+      service_body_style_prices: [],
+      add_ons: [],
+    };
+    const client = {
+      from(table: string) { return new FakeQuery(tables[table] ?? []); },
+    } as unknown as NonNullable<Parameters<typeof resolveBookingPrice>[1]>;
+
+    await expect(resolveBookingPrice({
+      serviceId: 7,
+      vehicles: [{ bodyStyle: 'sedan', addOnIds: [999] }],
+    }, client)).rejects.toThrow('One or more add-ons are invalid or inactive');
   });
 });
