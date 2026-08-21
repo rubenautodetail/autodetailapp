@@ -23,8 +23,24 @@ export function getServicePricePreviewKey(service: Pick<Service, 'id' | 'catalog
     return String(service.catalogId ?? service.id);
 }
 
-function getStableCatalogId(service: Pick<Service, 'id' | 'catalogId'>): string | number | undefined {
-    return service.catalogId ?? (typeof service.id === 'number' ? service.id : undefined);
+/**
+ * The one home of the stable-reference rule for services and add-ons: the
+ * numeric catalog id when we have it, then a numeric own id, then the Hygraph
+ * document id (which the pricing resolver also matches). Returning undefined
+ * means the item cannot be priced by reference at all.
+ */
+export function getStableCatalogRef(item: {
+    id: string | number;
+    catalogId?: number;
+    documentId?: string | null;
+}): string | number | undefined {
+    return item.catalogId
+        ?? (typeof item.id === 'number' ? item.id : undefined)
+        ?? (item.documentId || undefined);
+}
+
+function getStableCatalogId(service: { id: string | number; catalogId?: number; documentId?: string | null }): string | number | undefined {
+    return getStableCatalogRef(service);
 }
 
 /**
@@ -32,7 +48,7 @@ function getStableCatalogId(service: Pick<Service, 'id' | 'catalogId'>): string 
  * without a stable catalog id are never requested, so callers must not count them
  * as failed lookups.
  */
-export function canPreviewServicePrice(service: Pick<Service, 'id' | 'catalogId'>): boolean {
+export function canPreviewServicePrice(service: { id: string | number; catalogId?: number; documentId?: string | null }): boolean {
     return getStableCatalogId(service) !== undefined;
 }
 

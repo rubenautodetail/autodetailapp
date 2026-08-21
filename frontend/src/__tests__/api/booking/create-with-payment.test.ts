@@ -91,11 +91,13 @@ function mockAuth(user: { id: string } | null) {
 function mockServiceClient(bookingRows: Record<string, unknown>[] | null = null) {
   const selectResult = bookingRows ?? [{ id: 1, confirmation_code: 'ABC123' }]
   const inMock = jest.fn().mockResolvedValue({})
-  ;(createServiceClient as jest.Mock).mockReturnValue({
+  const insertMock = jest.fn().mockReturnValue({
+    select: jest.fn().mockResolvedValue({ data: selectResult, error: null }),
+  })
+  const client = {
+    __insertMock: insertMock,
     from: jest.fn().mockReturnValue({
-      insert: jest.fn().mockReturnValue({
-        select: jest.fn().mockResolvedValue({ data: selectResult, error: null }),
-      }),
+      insert: insertMock,
       update: jest.fn().mockReturnValue({
         in: inMock,
       }),
@@ -103,7 +105,9 @@ function mockServiceClient(bookingRows: Record<string, unknown>[] | null = null)
         in: inMock,
       }),
     }),
-  })
+  }
+  ;(createServiceClient as jest.Mock).mockReturnValue(client)
+  return client
 }
 
 describe('POST /api/booking/create-with-payment', () => {
@@ -121,6 +125,9 @@ describe('POST /api/booking/create-with-payment', () => {
       vehicles: [{
         index: 0,
         bodyStyle: 'sedan',
+        serviceId: 7,
+        serviceName: 'Complete Detail',
+        serviceDurationMinutes: 90,
         priceSource: 'base',
         servicePriceCents: 15000,
         addOnsPriceCents: 0,
@@ -155,7 +162,7 @@ describe('POST /api/booking/create-with-payment', () => {
 
   it('creates booking for valid request', async () => {
     mockAuth({ id: 'user-1' })
-    mockServiceClient()
+    const client = mockServiceClient()
     ;(createPaymentIntent as jest.Mock).mockResolvedValue({
       clientSecret: 'pi_secret_456',
       paymentIntentId: 'pi_456',
@@ -178,5 +185,9 @@ describe('POST /api/booking/create-with-payment', () => {
         pricingRevision: `v1_${'a'.repeat(64)}`,
       },
     }))
+    // Each booking row records ITS vehicle's own service from the quote line.
+    const insertedRows = client.__insertMock.mock.calls[0][0] as Array<Record<string, unknown>>
+    expect(insertedRows).toHaveLength(1)
+    expect(insertedRows[0]).toMatchObject({ service_id: 7, service_name: 'Complete Detail' })
   })
 })

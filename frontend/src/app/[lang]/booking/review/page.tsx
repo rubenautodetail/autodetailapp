@@ -45,6 +45,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     quoteError,
     refreshPriceQuote,
     selectedBodyStyle,
+    vehicleServices,
+    hasMixedServices,
+    bookingServiceLabel,
   } = useBooking();
 
   const { vehicles: garageVehicles, addVehicle } = useBookingStatus();
@@ -211,20 +214,30 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   };
 
   // What the "Service" row is really worth: the quote's per-vehicle service
-  // prices summed. Before a quote lands, base price times vehicle count.
+  // prices summed. Before a quote lands, estimate per vehicle honoring any
+  // per-vehicle service assignments, matching the context's own math.
   const serviceLineTotal = priceQuote
     ? priceQuote.vehicles.reduce((sum, line) => sum + line.servicePrice, 0)
-    : (Number(selectedService?.basePrice) || 0) * Math.max(bookingVehicles.length, 1);
+    : bookingVehicles.length > 0
+      ? bookingVehicles.reduce((sum, vehicle) => {
+          const vehicleService = (vehicle.id && vehicleServices[vehicle.id]) || selectedService;
+          return sum + (Number(vehicleService?.basePrice) || 0);
+        }, 0)
+      : Number(selectedService?.basePrice) || 0;
 
   // Per-vehicle lines for the price summary, labeled by the actual vehicles.
   const summaryVehicleLines = priceQuote?.vehicles.map((line, index) => {
     const vehicle = bookingVehicles[index];
+    const styleLabel = vehicle
+      ? getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)
+      : getVehicleBodyStyleLabel(line.bodyStyle, locale);
+    const serviceSuffix = hasMixedServices && line.serviceName ? ` · ${line.serviceName}` : '';
     return {
       key: vehicle?.id ?? `${line.bodyStyle}-${index}`,
       label: vehicle
         ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
-        : getVehicleBodyStyleLabel(line.bodyStyle, locale),
-      sublabel: vehicle ? getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale) : undefined,
+        : styleLabel,
+      sublabel: vehicle ? `${styleLabel}${serviceSuffix}` : (serviceSuffix ? line.serviceName : undefined),
       total: line.total,
     };
   });
@@ -645,6 +658,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                       <div key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`} className="flex justify-between gap-3 text-xs">
                         <span className="text-[#A5B0D1]">
                           {vehicle.year} {vehicle.make} {vehicle.model} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
+                          {hasMixedServices && priceQuote?.vehicles[index]?.serviceName
+                            ? ` · ${priceQuote.vehicles[index].serviceName}`
+                            : ''}
                         </span>
                         <span key={priceQuote?.vehicles[index]?.total ?? 'pending'} className="price-changed font-semibold text-white">
                           {priceQuote?.vehicles[index] ? `$${priceQuote.vehicles[index].total.toFixed(2)}` : "—"}
@@ -676,7 +692,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     <p className="text-sm font-medium text-[#8994B8] mb-1 uppercase tracking-wider">
                       {locale === "es" ? "Servicio" : "Service"}
                     </p>
-                    <p className="text-lg font-bold text-white">{selectedService.name}</p>
+                    <p className="text-lg font-bold text-white">
+                      {bookingServiceLabel(locale) || selectedService.name}
+                    </p>
                     <p className="text-sm text-[#A5B0D1] mt-1 flex items-center gap-1">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

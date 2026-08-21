@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import type { BookingPriceQuote, VehiclePriceLine } from "@/contexts/BookingContext";
 import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle } from "@/types/vehicle";
+import { getStableCatalogRef } from "@/lib/pricing/servicePricePreviews";
 
 interface PaymentFormProps {
   locale: "en" | "es";
@@ -180,6 +181,9 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     customerInfo,
     vehicleInfo,
     bookingVehicles,
+    vehicleServices,
+    hasMixedServices,
+    bookingServiceLabel,
     subtotal,
     serviceFee,
     total,
@@ -234,14 +238,19 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
 
       // Build vehicles array — use bookingVehicles if multi, else single vehicleInfo
       const vehicles = bookingVehicles.length > 0
-        ? bookingVehicles.map(v => ({
-            make: v.make,
-            model: v.model,
-            year: v.year,
-            color: v.color,
-            vehicleId: v.id,
-            bodyStyle: normalizeVehicleBodyStyle(v.type),
-          }))
+        ? bookingVehicles.map(v => {
+            const override = v.id ? vehicleServices[v.id] : undefined;
+            const overrideId = override ? getStableCatalogRef(override) : undefined;
+            return {
+              make: v.make,
+              model: v.model,
+              year: v.year,
+              color: v.color,
+              vehicleId: v.id,
+              bodyStyle: normalizeVehicleBodyStyle(v.type),
+              ...(overrideId !== undefined ? { serviceId: overrideId } : {}),
+            };
+          })
         : vehicleInfo
           ? [{
               make: vehicleInfo.make,
@@ -272,12 +281,11 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           subtotal: activeQuote.subtotal,
           serviceFee: activeQuote.serviceFee,
           total: activeQuote.total,
-          perVehicleTotal: activeQuote.vehicles[0]?.total,
           serviceId: activeQuote.service.id,
           serviceName: selectedService.name,
           addOnIds: selectedAddOns
-            .map((addOn) => addOn.catalogId ?? (typeof addOn.id === 'number' ? addOn.id : undefined))
-            .filter((id): id is number => id !== undefined),
+            .map(getStableCatalogRef)
+            .filter((id): id is string | number => id !== undefined),
           selectedAddOns: selectedAddOns.map(a => ({ name: a.name, price: a.price })),
           pricingRevision: activeQuote.pricingRevision,
           vehicles,
@@ -490,7 +498,11 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           <div className="lg:col-span-1">
             <div className="sticky top-8">
               <PricingSummary
-                service={{ ...selectedService, basePrice: priceQuote?.vehicles[0]?.servicePrice ?? selectedService.basePrice }}
+                service={{
+                  ...selectedService,
+                  name: bookingServiceLabel(locale),
+                  basePrice: priceQuote?.vehicles[0]?.servicePrice ?? selectedService.basePrice,
+                }}
                 addOns={selectedAddOns}
                 subtotal={subtotal}
                 serviceFee={serviceFee}
@@ -498,12 +510,15 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                 locale={locale}
                 vehicleLines={priceQuote?.vehicles.map((line, index) => {
                   const vehicle = bookingVehicles[index] ?? (index === 0 ? vehicleInfo : null);
+                  const styleLabel = getVehicleBodyStyleLabel(line.bodyStyle, locale);
+                  const parts = vehicle ? [styleLabel] : [];
+                  if (hasMixedServices && line.serviceName) parts.push(line.serviceName);
                   return {
                     key: vehicle?.id ?? `${line.bodyStyle}-${index}`,
                     label: vehicle
                       ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
-                      : getVehicleBodyStyleLabel(line.bodyStyle, locale),
-                    sublabel: vehicle ? getVehicleBodyStyleLabel(line.bodyStyle, locale) : undefined,
+                      : styleLabel,
+                    sublabel: parts.length > 0 ? parts.join(' · ') : undefined,
                     total: line.total,
                   };
                 })}

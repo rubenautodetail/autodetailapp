@@ -15,6 +15,8 @@ export type LegacyBodyStyle = BodyStyle | 'truck';
 export interface PricingVehicleInput {
   bodyStyle: LegacyBodyStyle;
   vehicleId?: string;
+  /** Per-vehicle service. Falls back to the booking's default service when omitted. */
+  serviceId?: string | number;
 }
 
 export interface ResolveBookingPriceInput {
@@ -38,6 +40,9 @@ export interface VehiclePriceLine {
   index: number;
   vehicleId?: string;
   bodyStyle: BodyStyle;
+  serviceId: number;
+  serviceName: string;
+  serviceDurationMinutes: number;
   priceSource: 'override' | 'base';
   servicePriceCents: number;
   addOnsPriceCents: number;

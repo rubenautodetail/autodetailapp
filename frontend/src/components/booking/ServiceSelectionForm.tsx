@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useBooking, useBookingStatus, Service, AddOn } from "@/contexts";
 import { AddOnSelector, PricingSummary, ProgressIndicator } from "@/components/booking";
 import { ServiceCard } from "@/components/booking/ServiceCard";
 import { Button } from "@/components/ui/Button";
 import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle, type VehicleBodyStyle } from "@/types/vehicle";
 import { BookingVehiclePicker, type GarageVehicleOption } from "@/components/booking/BookingVehiclePicker";
+import { VehicleBodyStyleArtwork } from "@/components/vehicles/VehicleBodyStyleArtwork";
 import {
     canPreviewServicePrice,
     fetchServicePricePreviews,
@@ -40,6 +41,12 @@ export default function ServiceSelectionForm({
 
     const {
         selectedService,
+        vehicleServices,
+        assignVehicleService,
+        seedVehicleServices,
+        clearVehicleServices,
+        hasMixedServices,
+        bookingServiceLabel,
         selectedAddOns,
         setService,
         addAddOn,
@@ -68,21 +75,75 @@ export default function ServiceSelectionForm({
             ? [vehicleInfo]
             : [];
 
+    // ── Per-vehicle service assignment ──────────────────────────────────────
+    // 'same' applies one service to every vehicle (the default). 'per-vehicle'
+    // lets each selected car carry its own service; taps on the service list
+    // then assign to the active vehicle pill.
+    const [serviceMode, setServiceMode] = useState<'same' | 'per-vehicle'>('same');
+    const [activeVehicleId, setActiveVehicleId] = useState<string | null>(null);
+    const restoredModeRef = useRef(false);
+    const canSplitServices = bookingVehicles.length > 1;
+
+    // Restore per-vehicle mode when hydrated state already carries assignments.
+    useEffect(() => {
+        if (!isHydrated || restoredModeRef.current) return;
+        restoredModeRef.current = true;
+        if (canSplitServices && Object.keys(vehicleServices).length > 0) {
+            setServiceMode('per-vehicle');
+        }
+    }, [canSplitServices, isHydrated, vehicleServices]);
+
+    // Keep the active pill pointing at a vehicle that still exists.
+    useEffect(() => {
+        if (serviceMode !== 'per-vehicle') return;
+        if (!canSplitServices) {
+            setServiceMode('same');
+            return;
+        }
+        if (!activeVehicleId || !bookingVehicles.some((vehicle) => vehicle.id === activeVehicleId)) {
+            setActiveVehicleId(bookingVehicles[0]?.id ?? null);
+        }
+    }, [activeVehicleId, bookingVehicles, canSplitServices, serviceMode]);
+
+    const activeVehicle = serviceMode === 'per-vehicle'
+        ? bookingVehicles.find((vehicle) => vehicle.id === activeVehicleId) ?? null
+        : null;
+    // Explicit assignments only: a vehicle without one shows "Pick a service",
+    // never a silent fallback that reads as chosen.
+    const assignedServiceFor = (vehicleId: string | undefined): Service | null =>
+        (vehicleId ? vehicleServices[vehicleId] : undefined) ?? null;
+    const allVehiclesAssigned = serviceMode !== 'per-vehicle'
+        || (bookingVehicles.length > 0 && bookingVehicles.every(
+            (vehicle) => vehicle.id && vehicleServices[vehicle.id],
+        ));
+
+    const handleServiceModeChange = (mode: 'same' | 'per-vehicle') => {
+        if (mode === serviceMode) return;
+        setServiceMode(mode);
+        if (mode === 'same') {
+            clearVehicleServices();
+        } else {
+            // Seed every vehicle with the current service so each assignment
+            // is explicit from the first moment of per-vehicle mode.
+            if (selectedService) seedVehicleServices(selectedService);
+            setActiveVehicleId(bookingVehicles[0]?.id ?? null);
+        }
+    };
+
     const previewVehicles = useMemo(() => {
+        if (serviceMode === 'per-vehicle' && activeVehicle) {
+            return [{ bodyStyle: normalizeVehicleBodyStyle(activeVehicle.type) }];
+        }
         if (bookingVehicles.length > 0) {
             return bookingVehicles.map((vehicle) => ({
-                vehicleId: vehicle.id,
                 bodyStyle: normalizeVehicleBodyStyle(vehicle.type),
             }));
         }
         if (vehicleInfo) {
-            return [{
-                vehicleId: vehicleInfo.id,
-                bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type),
-            }];
+            return [{ bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type) }];
         }
         return selectedBodyStyle ? [{ bodyStyle: selectedBodyStyle }] : [];
-    }, [bookingVehicles, selectedBodyStyle, vehicleInfo]);
+    }, [activeVehicle, bookingVehicles, selectedBodyStyle, serviceMode, vehicleInfo]);
 
     const hasPricingTarget = previewVehicles.length > 0;
     const pricingTargetLabel = previewVehicles.length === 1
@@ -98,27 +159,41 @@ export default function ServiceSelectionForm({
         });
     }, [dataSource, isHydrated, previewAttempt, previewVehicles, services]);
 
-    const servicePricePreviews = previewResult.requestKey === previewRequestKey
-        ? previewResult.previews
-        : {};
+    // Successful preview rounds are cached by request key, so switching
+    // between vehicle pills (or re-selecting the same body styles) renders
+    // instantly instead of refiring one POST per service card.
+    const previewCacheRef = useRef(new Map<string, Record<string, ServicePricePreview>>());
+    const cachedPreviews = previewRequestKey
+        ? previewCacheRef.current.get(previewRequestKey)
+        : undefined;
+    const servicePricePreviews = cachedPreviews
+        ?? (previewResult.requestKey === previewRequestKey ? previewResult.previews : {});
     const previewStatus: 'idle' | 'loading' | 'ready' = !previewRequestKey
         ? 'idle'
-        : previewResult.requestKey === previewRequestKey
+        : cachedPreviews || previewResult.requestKey === previewRequestKey
             ? 'ready'
             : 'loading';
 
     useEffect(() => {
-        if (!previewRequestKey) return;
+        if (!previewRequestKey || previewCacheRef.current.has(previewRequestKey)) return;
 
         const controller = new AbortController();
 
         void fetchServicePricePreviews(services, previewVehicles, controller.signal)
             .then((previews) => {
                 if (controller.signal.aborted) return;
+                const cache = previewCacheRef.current;
+                cache.set(previewRequestKey, previews);
+                if (cache.size > 30) {
+                    const oldest = cache.keys().next().value;
+                    if (oldest !== undefined) cache.delete(oldest);
+                }
                 setPreviewResult({ requestKey: previewRequestKey, previews });
             })
             .catch((error) => {
                 if (error instanceof DOMException && error.name === 'AbortError') return;
+                // Failures are not cached: the retry button mints a new attempt key,
+                // and transient errors should not stick for the session.
                 setPreviewResult({ requestKey: previewRequestKey, previews: {} });
             });
 
@@ -184,6 +259,10 @@ export default function ServiceSelectionForm({
     }, [preselectedServiceName, services]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleServiceSelect = (service: Service) => {
+        if (serviceMode === 'per-vehicle' && activeVehicle?.id) {
+            assignVehicleService(activeVehicle.id, service);
+            return;
+        }
         setService(service);
     };
 
@@ -197,6 +276,7 @@ export default function ServiceSelectionForm({
 
     const handleContinue = () => {
         if (!selectedService || (activeVehicles.length === 0 && !selectedBodyStyle)) return;
+        if (!allVehiclesAssigned) return;
         nextStep();
         router.push(`/${locale}/booking/location`);
     };
@@ -253,7 +333,11 @@ export default function ServiceSelectionForm({
                                 {locale === "es" ? "Elige un servicio" : "Choose a service"}
                             </h2>
                             <p className="mb-4 mt-1 text-sm text-[#A5B0D1]">
-                                {hasPricingTarget
+                                {serviceMode === 'per-vehicle' && activeVehicle
+                                    ? locale === "es"
+                                        ? `Asigna un servicio a cada vehículo. Precios para el ${activeVehicle.year} ${activeVehicle.model}.`
+                                        : `Assign a service to each vehicle. Prices shown for the ${activeVehicle.year} ${activeVehicle.model}.`
+                                    : hasPricingTarget
                                     ? pricingTargetLabel
                                         ? locale === "es"
                                             ? `Precios para ${pricingTargetLabel}.`
@@ -265,6 +349,79 @@ export default function ServiceSelectionForm({
                                         ? "Precios iniciales. Elige tu vehículo arriba para ver el precio exacto."
                                         : "Starting prices. Choose your vehicle above to see exact pricing."}
                             </p>
+                            {canSplitServices && (
+                                <div className="mb-4 space-y-3">
+                                    <div
+                                        role="radiogroup"
+                                        aria-label={locale === "es" ? "Modo de servicio" : "Service mode"}
+                                        className="inline-flex rounded-full border border-[#2C355E] bg-[#151B3A] p-1"
+                                    >
+                                        {([
+                                            ["same", locale === "es" ? "Un servicio para todos" : "One service for all"],
+                                            ["per-vehicle", locale === "es" ? "Elegir por vehículo" : "Choose per vehicle"],
+                                        ] as const).map(([mode, label]) => (
+                                            <button
+                                                key={mode}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={serviceMode === mode}
+                                                onClick={() => handleServiceModeChange(mode)}
+                                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] ${
+                                                    serviceMode === mode
+                                                        ? "bg-[#D0B078] text-[#131835]"
+                                                        : "text-[#A5B0D1] hover:text-white"
+                                                }`}
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {serviceMode === 'per-vehicle' && (
+                                        <div
+                                            className="flex gap-2 overflow-x-auto snap-x overscroll-x-contain pb-1 [&::-webkit-scrollbar]:hidden"
+                                            style={{ scrollbarWidth: 'none' }}
+                                        >
+                                            {bookingVehicles.map((vehicle) => {
+                                                const assigned = assignedServiceFor(vehicle.id);
+                                                const isActivePill = vehicle.id === activeVehicle?.id;
+                                                return (
+                                                    <button
+                                                        key={vehicle.id}
+                                                        type="button"
+                                                        aria-pressed={isActivePill}
+                                                        onClick={() => setActiveVehicleId(vehicle.id ?? null)}
+                                                        className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-2.5 rounded-xl border-2 p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${
+                                                            isActivePill
+                                                                ? "border-[#D0B078] bg-[#D0B078]/10"
+                                                                : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
+                                                        }`}
+                                                    >
+                                                        <span className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                                                            <VehicleBodyStyleArtwork
+                                                                style={normalizeVehicleBodyStyle(vehicle.type)}
+                                                                locale={locale}
+                                                                className="h-8 w-full min-w-0 shrink-0"
+                                                            />
+                                                        </span>
+                                                        <span className="min-w-0">
+                                                            <span className="block truncate text-xs font-bold text-white">
+                                                                {vehicle.year} {vehicle.model}
+                                                            </span>
+                                                            <span className={`block truncate text-[11px] ${assigned ? "text-[#8994B8]" : "font-semibold text-[#D0B078]"}`}>
+                                                                {assigned
+                                                                    ? assigned.name
+                                                                    : locale === "es" ? "Elige un servicio" : "Pick a service"}
+                                                            </span>
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {previewIncomplete && (
                                 <div
                                     role="alert"
@@ -305,7 +462,9 @@ export default function ServiceSelectionForm({
                                         <ServiceCard
                                             key={service.id}
                                             service={service}
-                                            isSelected={selectedService?.id === service.id}
+                                            isSelected={(serviceMode === 'per-vehicle'
+                                                ? assignedServiceFor(activeVehicle?.id)?.id
+                                                : selectedService?.id) === service.id}
                                             onSelect={handleServiceSelect}
                                             locale={locale}
                                             displayPrice={preview?.servicePrice}
@@ -427,6 +586,7 @@ export default function ServiceSelectionForm({
                                                                 </p>
                                                                 <p className="text-xs text-[#A5B0D1]">
                                                                     {getVehicleBodyStyleLabel(style, locale)}
+                                                                    {hasMixedServices && line?.serviceName ? ` · ${line.serviceName}` : ''}
                                                                 </p>
                                                             </div>
                                                             <div className="text-right">
@@ -463,7 +623,7 @@ export default function ServiceSelectionForm({
                                             fullWidth
                                             variant="primary"
                                             onClick={handleContinue}
-                                            disabled={activeVehicles.length === 0 && !selectedBodyStyle}
+                                            disabled={(activeVehicles.length === 0 && !selectedBodyStyle) || !allVehiclesAssigned}
                                         >
                                             {locale === "es" ? "Continuar a Ubicación" : "Continue to Location"}
                                             <svg
@@ -486,6 +646,13 @@ export default function ServiceSelectionForm({
                                                 {locale === "es"
                                                     ? "Elige tu vehículo arriba para continuar."
                                                     : "Choose your vehicle above to continue."}
+                                            </p>
+                                        )}
+                                        {hasPricingTarget && !allVehiclesAssigned && (
+                                            <p className="text-center text-xs font-medium text-[#D0B078]">
+                                                {locale === "es"
+                                                    ? "Asigna un servicio a cada vehículo para continuar."
+                                                    : "Assign a service to every vehicle to continue."}
                                             </p>
                                         )}
 
@@ -526,11 +693,13 @@ export default function ServiceSelectionForm({
                     <div className="bg-[#1A2142] border border-[#D0B078]/50 rounded-2xl p-3 md:p-4 flex items-center justify-between gap-3 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
                         <div className="min-w-0">
                             <p className="truncate text-xs font-semibold text-white md:text-sm">
-                                {selectedService.name}
+                                {bookingServiceLabel(locale)}
                             </p>
                             <p className="text-[11px] text-[#A5B0D1] md:text-xs">
                                 {!hasPricingTarget
                                     ? locale === "es" ? "Falta elegir el vehículo" : "Choose your vehicle first"
+                                    : !allVehiclesAssigned
+                                    ? locale === "es" ? "Asigna un servicio a cada vehículo" : "Assign a service to every vehicle"
                                     : [
                                         locale === "es" ? "Total de la reserva" : "Booking total",
                                         activeVehicles.length > 1
@@ -548,7 +717,7 @@ export default function ServiceSelectionForm({
                         <Button
                             variant="primary"
                             onClick={handleContinue}
-                            disabled={activeVehicles.length === 0 && !selectedBodyStyle}
+                            disabled={(activeVehicles.length === 0 && !selectedBodyStyle) || !allVehiclesAssigned}
                             className="shrink-0 whitespace-nowrap"
                         >
                             {locale === "es" ? "Continuar" : "Continue"}

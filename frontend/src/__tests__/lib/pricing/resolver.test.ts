@@ -85,7 +85,103 @@ describe('resolveBookingPrice', () => {
       expect.objectContaining({ bodyStyle: 'pickup', priceSource: 'base', totalCents: 12000 }),
     ]);
     expect(quote.totalCents).toBe(40500);
-    expect(quote.pricingRevision).toMatch(/^v1_[a-f0-9]{64}$/);
+    expect(quote.pricingRevision).toMatch(/^v2_[a-f0-9]{64}$/);
     expect(queriedTables).toEqual(['services', 'service_body_style_prices', 'add_ons']);
+  });
+
+  it('prices each vehicle with its own service and falls back to the default', async () => {
+    const tables: Record<string, Row[]> = {
+      services: [
+        {
+          id: 7, document_id: 'express-doc', name: 'Express Detail', base_price: '75.00',
+          duration_minutes: 80, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+        },
+        {
+          id: 9, document_id: 'interior-doc', name: 'Interior Detail', base_price: '160.00',
+          duration_minutes: 180, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+        },
+      ],
+      service_body_style_prices: [
+        // Pickup override exists for Express only; Interior has none.
+        { service_id: 7, body_style: 'pickup', price_cents: 10000, currency: 'usd', updated_at: '2026-08-02T00:00:00Z' },
+      ],
+      add_ons: [{
+        id: 3, document_id: null, name: 'Pet Hair', price: '20.00', duration_minutes: 15,
+        created_at: '2026-08-01T00:00:00Z', updated_at: '2026-08-03T00:00:00Z', is_active: true,
+      }],
+    };
+    const client = {
+      from(table: string) { return new FakeQuery(tables[table] ?? []); },
+    } as unknown as NonNullable<Parameters<typeof resolveBookingPrice>[1]>;
+
+    const quote = await resolveBookingPrice({
+      serviceId: 7,
+      addOnIds: [3],
+      vehicles: [
+        { bodyStyle: 'pickup' },                    // default service (Express, override 100)
+        { bodyStyle: 'sedan', serviceId: 9 },       // Interior, base 160
+      ],
+    }, client);
+
+    expect(quote.vehicles[0]).toMatchObject({
+      serviceId: 7, serviceName: 'Express Detail', priceSource: 'override',
+      servicePriceCents: 10000, addOnsPriceCents: 2000, totalCents: 12000,
+    });
+    expect(quote.vehicles[1]).toMatchObject({
+      serviceId: 9, serviceName: 'Interior Detail', priceSource: 'base',
+      servicePriceCents: 16000, addOnsPriceCents: 2000, totalCents: 18000,
+    });
+    // Group totals sum both lines; duration respects each service.
+    expect(quote.totalCents).toBe(30000);
+    expect(quote.totalDurationMinutes).toBe(80 + 15 + 180 + 15);
+    // The default service stays the summary service; the revision hash is v2.
+    expect(quote.service.id).toBe(7);
+    expect(quote.pricingRevision).toMatch(/^v2_[a-f0-9]{64}$/);
+  });
+
+  it('resolves a non-canonical per-vehicle key instead of silently using the default', async () => {
+    const tables: Record<string, Row[]> = {
+      services: [
+        {
+          id: 7, document_id: null, name: 'Express Detail', base_price: '75.00',
+          duration_minutes: 80, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+        },
+        {
+          id: 9, document_id: null, name: 'Interior Detail', base_price: '160.00',
+          duration_minutes: 180, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+        },
+      ],
+      service_body_style_prices: [],
+      add_ons: [],
+    };
+    const client = {
+      from(table: string) { return new FakeQuery(tables[table] ?? []); },
+    } as unknown as NonNullable<Parameters<typeof resolveBookingPrice>[1]>;
+
+    // '9' with whitespace: trimmed key still resolves to Interior Detail.
+    const quote = await resolveBookingPrice({
+      serviceId: 7,
+      vehicles: [{ bodyStyle: 'sedan', serviceId: ' 9 ' }],
+    }, client);
+    expect(quote.vehicles[0]).toMatchObject({ serviceId: 9, serviceName: 'Interior Detail' });
+  });
+
+  it('rejects a per-vehicle service that does not exist', async () => {
+    const tables: Record<string, Row[]> = {
+      services: [{
+        id: 7, document_id: null, name: 'Express Detail', base_price: '75.00',
+        duration_minutes: 80, updated_at: '2026-08-01T00:00:00Z', is_active: true,
+      }],
+      service_body_style_prices: [],
+      add_ons: [],
+    };
+    const client = {
+      from(table: string) { return new FakeQuery(tables[table] ?? []); },
+    } as unknown as NonNullable<Parameters<typeof resolveBookingPrice>[1]>;
+
+    await expect(resolveBookingPrice({
+      serviceId: 7,
+      vehicles: [{ bodyStyle: 'sedan', serviceId: 999 }],
+    }, client)).rejects.toThrow('Service not found or inactive');
   });
 });

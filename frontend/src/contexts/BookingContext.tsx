@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useState, useRef, ReactNode, useEffect } from "react";
+import { getStableCatalogRef } from "@/lib/pricing/servicePricePreviews";
 import {
   normalizeVehicleBodyStyle,
   type VehicleBodyStyle,
@@ -33,8 +34,14 @@ function ssClear() {
   try { sessionStorage.removeItem(SS_KEY); } catch { /* ignore */ }
 }
 
-function getStableCatalogId(item: { id: string | number; catalogId?: number }): string | number | undefined {
-  return item.catalogId ?? (typeof item.id === 'number' ? item.id : undefined);
+function createLocalVehicleId(): string {
+  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? `veh_${crypto.randomUUID()}`
+    : `veh_${Math.random().toString(36).slice(2, 10)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function getStableCatalogId(item: { id: string | number; catalogId?: number; documentId?: string | null }): string | number | undefined {
+  return getStableCatalogRef(item);
 }
 
 // Types adapted from Uber clone but for auto detailing
@@ -96,6 +103,8 @@ export interface VehiclePriceLine {
   index: number;
   vehicleId?: string;
   bodyStyle: VehicleBodyStyle;
+  serviceId?: number;
+  serviceName?: string;
   priceSource: 'override' | 'base';
   servicePriceCents: number;
   addOnsPriceCents: number;
@@ -124,8 +133,17 @@ export interface BookingPriceQuote {
 }
 
 interface BookingContextType {
-  // Service selection
+  // Service selection. selectedService is the default applied to every vehicle;
+  // vehicleServices overrides it per vehicle (keyed by the vehicle's id).
   selectedService: Service | null;
+  vehicleServices: Record<string, Service>;
+  assignVehicleService: (vehicleId: string, service: Service) => void;
+  seedVehicleServices: (service: Service) => void;
+  clearVehicleServices: () => void;
+  /** True when the booking's vehicles carry different services (assigned or quoted). */
+  hasMixedServices: boolean;
+  /** Display name for the booking's service: the service, or the mixed label. */
+  bookingServiceLabel: (locale: 'en' | 'es') => string;
   selectedAddOns: AddOn[];
 
   // Location
@@ -191,6 +209,7 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 // Provider component
 export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [vehicleServices, setVehicleServices] = useState<Record<string, Service>>({});
   const [selectedAddOns, setSelectedAddOns] = useState<AddOn[]>([]);
   const [customerLocation, setCustomerLocation] = useState<Location | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -236,8 +255,10 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const step = ssGet<number>('currentStep');
     const storedQuote = ssGet<BookingPriceQuote>('priceQuote');
     const storedBodyStyle = ssGet<unknown>('selectedBodyStyle');
+    const storedVehicleServices = ssGet<Record<string, Service>>('vehicleServices');
 
     if (svc) setSelectedService(svc);
+    if (storedVehicleServices) setVehicleServices(storedVehicleServices);
     if (addOns) setSelectedAddOns(addOns);
     if (loc) setCustomerLocation(loc);
     if (dateStr) setSelectedDate(new Date(dateStr));
@@ -248,6 +269,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       : null;
     const normalizedBookingVehicles = bv?.map((vehicle) => ({
       ...vehicle,
+      // Sessions saved before per-vehicle services carried no ids; every
+      // vehicle needs one because assignments are keyed by it.
+      id: vehicle.id ?? createLocalVehicleId(),
       type: normalizeVehicleBodyStyle(vehicle.type),
     })) ?? [];
     if (normalizedVehicle) setVehicleInfo(normalizedVehicle);
@@ -272,7 +296,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
     // Recalculate pricing from restored state
     if (svc && !storedQuote) {
-      calculateTotalWithService(svc, addOns ?? []);
+      calculateTotalWithService(svc, addOns ?? [], normalizedBookingVehicles, storedVehicleServices ?? {});
     }
 
     setIsHydrated(true);
@@ -281,9 +305,52 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   // Action: Set service (adapted from Uber clone's driver selection)
   const setService = (service: Service) => {
     setSelectedService(service);
+    setVehicleServices({});
     setPriceQuote(null);
-    ssSave({ selectedService: service, priceQuote: null });
-    calculateTotalWithService(service, selectedAddOns, bookingVehicles.length);
+    ssSave({ selectedService: service, vehicleServices: {}, priceQuote: null });
+    calculateTotalWithService(service, selectedAddOns, bookingVehicles, {});
+  };
+
+  // Per-vehicle override. The first assignment also becomes the default so the
+  // step guards (which require a selected service) keep working.
+  const assignVehicleService = (vehicleId: string, service: Service) => {
+    if (vehicleServices[vehicleId]?.id === service.id) return;
+    const nextOverrides = { ...vehicleServices, [vehicleId]: service };
+    const nextPrimary = selectedService ?? service;
+    setVehicleServices(nextOverrides);
+    if (!selectedService) setSelectedService(nextPrimary);
+    setPriceQuote(null);
+    ssSave({ vehicleServices: nextOverrides, selectedService: nextPrimary, priceQuote: null });
+    calculateTotalWithService(nextPrimary, selectedAddOns, bookingVehicles, nextOverrides);
+  };
+
+  /**
+   * Entering per-vehicle mode: give every vehicle an explicit assignment
+   * (keeping existing ones), so no vehicle is ever silently billed through an
+   * invisible fallback. No-op without a default service or with fewer than
+   * two vehicles.
+   */
+  const seedVehicleServices = (service: Service) => {
+    if (bookingVehicles.length < 2) return;
+    const next: Record<string, Service> = {};
+    for (const vehicle of bookingVehicles) {
+      if (vehicle.id) next[vehicle.id] = vehicleServices[vehicle.id] ?? service;
+    }
+    const unchanged = Object.keys(next).length === Object.keys(vehicleServices).length
+      && Object.entries(next).every(([id, svc]) => vehicleServices[id]?.id === svc.id);
+    if (unchanged) return;
+    setVehicleServices(next);
+    setPriceQuote(null);
+    ssSave({ vehicleServices: next, priceQuote: null });
+    calculateTotalWithService(selectedService ?? service, selectedAddOns, bookingVehicles, next);
+  };
+
+  const clearVehicleServices = () => {
+    if (Object.keys(vehicleServices).length === 0) return;
+    setVehicleServices({});
+    setPriceQuote(null);
+    ssSave({ vehicleServices: {}, priceQuote: null });
+    calculateTotalWithService(selectedService, selectedAddOns, bookingVehicles, {});
   };
 
   // Action: Add add-on
@@ -293,7 +360,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     ssSave({ selectedAddOns: newAddOns });
     setPriceQuote(null);
     ssSave({ priceQuote: null });
-    calculateTotalWithService(selectedService, newAddOns, bookingVehicles.length);
+    calculateTotalWithService(selectedService, newAddOns);
   };
 
   // Action: Remove add-on
@@ -303,7 +370,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     ssSave({ selectedAddOns: newAddOns });
     setPriceQuote(null);
     ssSave({ priceQuote: null });
-    calculateTotalWithService(selectedService, newAddOns, bookingVehicles.length);
+    calculateTotalWithService(selectedService, newAddOns);
   };
 
   // Action: Set location (adapted from Uber clone's setUserLocation)
@@ -319,11 +386,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     ssSave({ selectedDate: date.toISOString(), selectedTimeWindow: timeWindow });
   };
 
-  // Helper function for calculating total
+  // Client-side estimate until the server quote lands. Each vehicle is priced
+  // by its own service (falling back to the default), matching the resolver.
   const calculateTotalWithService = (
     service: Service | null,
     addOns: AddOn[],
-    vehicleCount = 1,
+    vehicles: VehicleInfo[] = bookingVehicles,
+    overrides: Record<string, Service> = vehicleServices,
   ) => {
     if (!service) {
       setSubtotal(0);
@@ -332,9 +401,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const servicePrice = service.basePrice;
     const addOnsTotal = addOns.reduce((sum, addon) => sum + addon.price, 0);
-    const newSubtotal = (servicePrice + addOnsTotal) * Math.max(vehicleCount, 1);
+    const newSubtotal = vehicles.length === 0
+      ? service.basePrice + addOnsTotal
+      : vehicles.reduce((sum, vehicle) => {
+          const vehicleService = (vehicle.id && overrides[vehicle.id]) || service;
+          return sum + vehicleService.basePrice + addOnsTotal;
+        }, 0);
 
     // Service fee removed - included in base price
     const newServiceFee = 0;
@@ -347,7 +420,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Action: Calculate total (public interface)
   const calculateTotal = () => {
-    calculateTotalWithService(selectedService, selectedAddOns, bookingVehicles.length);
+    calculateTotalWithService(selectedService, selectedAddOns);
   };
 
   const applyPriceQuote = useCallback((quote: BookingPriceQuote) => {
@@ -365,10 +438,15 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     if (!selectedService) return null;
 
     const vehicles = bookingVehicles.length > 0
-      ? bookingVehicles.map((vehicle) => ({
-          vehicleId: vehicle.id,
-          bodyStyle: normalizeVehicleBodyStyle(vehicle.type),
-        }))
+      ? bookingVehicles.map((vehicle) => {
+          const override = vehicle.id ? vehicleServices[vehicle.id] : undefined;
+          const overrideServiceId = override ? getStableCatalogId(override) : undefined;
+          return {
+            vehicleId: vehicle.id,
+            bodyStyle: normalizeVehicleBodyStyle(vehicle.type),
+            ...(overrideServiceId !== undefined ? { serviceId: overrideServiceId } : {}),
+          };
+        })
       : vehicleInfo
         ? [{
             vehicleId: vehicleInfo.id,
@@ -382,7 +460,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       setPriceQuote(null);
       setQuoteStatus('idle');
       setQuoteError(null);
-      calculateTotalWithService(selectedService, selectedAddOns, 1);
+      calculateTotalWithService(selectedService, selectedAddOns, []);
       ssSave({ priceQuote: null });
       return null;
     }
@@ -449,7 +527,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       setQuoteError(error instanceof Error ? error.message : 'Unable to refresh pricing');
       return null;
     }
-  }, [applyPriceQuote, bookingVehicles, customerLocation?.zipCode, selectedAddOns, selectedBodyStyle, selectedService, vehicleInfo]);
+  }, [applyPriceQuote, bookingVehicles, customerLocation?.zipCode, selectedAddOns, selectedBodyStyle, selectedService, vehicleInfo, vehicleServices]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -476,67 +554,84 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     ssSave({ selectedBodyStyle: style, priceQuote: null });
   };
 
+  /**
+   * Per-vehicle overrides after the vehicle list changes: drop entries whose
+   * vehicle is gone, and drop everything when fewer than two vehicles remain
+   * (assignments only mean something for a multi-vehicle booking). Returns the
+   * same reference when nothing changed so callers can skip no-op updates.
+   */
+  const pruneOverrides = (nextVehicles: VehicleInfo[]): Record<string, Service> => {
+    if (Object.keys(vehicleServices).length === 0) return vehicleServices;
+    if (nextVehicles.length < 2) return {};
+    const survivingIds = new Set(nextVehicles.map(vehicle => vehicle.id));
+    const entries = Object.entries(vehicleServices).filter(([id]) => survivingIds.has(id));
+    return entries.length === Object.keys(vehicleServices).length
+      ? vehicleServices
+      : Object.fromEntries(entries);
+  };
+
+  const commitVehicles = (next: VehicleInfo[]) => {
+    const nextOverrides = pruneOverrides(next);
+    if (nextOverrides !== vehicleServices) {
+      setVehicleServices(nextOverrides);
+      ssSave({ vehicleServices: nextOverrides });
+    }
+    setBookingVehicles(next);
+    setPriceQuote(null);
+    calculateTotalWithService(selectedService, selectedAddOns, next, nextOverrides);
+    ssSave({ bookingVehicles: next, priceQuote: null });
+    // Keep vehicleInfo (first-vehicle mirror) and the body-style fallback in sync.
+    if (next.length > 0) {
+      setVehicleInfo(next[0]);
+      setSelectedBodyStyleState(normalizeVehicleBodyStyle(next[0].type));
+      ssSave({ vehicleInfo: next[0], selectedBodyStyle: normalizeVehicleBodyStyle(next[0].type) });
+    } else {
+      setVehicleInfo(null);
+      setSelectedBodyStyleState(null);
+      ssSave({ vehicleInfo: null, selectedBodyStyle: null });
+    }
+  };
+
   const addBookingVehicle = (vehicle: VehicleInfo) => {
-    setBookingVehicles(prev => {
-      const normalized = { ...vehicle, type: normalizeVehicleBodyStyle(vehicle.type) };
-      const next = [...prev, normalized];
-      setPriceQuote(null);
-      calculateTotalWithService(selectedService, selectedAddOns, next.length);
-      ssSave({ bookingVehicles: next, priceQuote: null });
-      // Keep vehicleInfo in sync with first vehicle
-      if (next.length === 1) {
-        setVehicleInfo(normalized);
-        setSelectedBodyStyleState(normalized.type);
-        ssSave({ vehicleInfo: normalized, selectedBodyStyle: normalized.type });
-      }
-      return next;
-    });
+    const normalized = {
+      ...vehicle,
+      id: vehicle.id ?? createLocalVehicleId(),
+      type: normalizeVehicleBodyStyle(vehicle.type),
+    };
+    commitVehicles([...bookingVehicles, normalized]);
   };
 
   const removeBookingVehicle = (index: number) => {
-    setBookingVehicles(prev => {
-      const next = prev.filter((_, i) => i !== index);
-      setPriceQuote(null);
-      calculateTotalWithService(selectedService, selectedAddOns, next.length);
-      ssSave({ bookingVehicles: next, priceQuote: null });
-      // Keep vehicleInfo in sync
-      if (next.length > 0) {
-        setVehicleInfo(next[0]);
-        setSelectedBodyStyleState(normalizeVehicleBodyStyle(next[0].type));
-        ssSave({ vehicleInfo: next[0], selectedBodyStyle: normalizeVehicleBodyStyle(next[0].type) });
-      } else {
-        setVehicleInfo(null);
-        setSelectedBodyStyleState(null);
-        ssSave({ vehicleInfo: null, selectedBodyStyle: null });
-      }
-      return next;
-    });
+    commitVehicles(bookingVehicles.filter((_, i) => i !== index));
   };
 
   /** Replaces the whole booking-vehicle list in one commit (used by the vehicle picker). */
   const replaceBookingVehicles = (vehicles: VehicleInfo[]) => {
-    const normalized = vehicles.map(vehicle => ({
+    commitVehicles(vehicles.map(vehicle => ({
       ...vehicle,
+      id: vehicle.id ?? createLocalVehicleId(),
       type: normalizeVehicleBodyStyle(vehicle.type),
-    }));
-    setBookingVehicles(normalized);
-    setPriceQuote(null);
-    calculateTotalWithService(selectedService, selectedAddOns, normalized.length);
-
-    if (normalized.length > 0) {
-      setVehicleInfo(normalized[0]);
-      setSelectedBodyStyleState(normalized[0].type);
-      ssSave({
-        bookingVehicles: normalized,
-        vehicleInfo: normalized[0],
-        selectedBodyStyle: normalized[0].type,
-        priceQuote: null,
-      });
-    } else {
-      setVehicleInfo(null);
-      ssSave({ bookingVehicles: normalized, vehicleInfo: null, priceQuote: null });
-    }
+    })));
   };
+
+  // One shared answer to "does this booking mix services?" — true the moment
+  // assignments diverge, without waiting for the server quote.
+  const distinctAssignedServices = new Set(
+    bookingVehicles
+      .map((vehicle) => (vehicle.id && vehicleServices[vehicle.id]) || selectedService)
+      .filter((service): service is Service => Boolean(service))
+      .map((service) => String(getStableCatalogRef(service) ?? service.id)),
+  );
+  const distinctQuotedServices = new Set(
+    (priceQuote?.vehicles ?? [])
+      .map((line) => line.serviceId)
+      .filter((id): id is number => id !== undefined),
+  );
+  const hasMixedServices = distinctAssignedServices.size > 1 || distinctQuotedServices.size > 1;
+
+  const bookingServiceLabel = (labelLocale: 'en' | 'es'): string => hasMixedServices
+    ? (labelLocale === 'es' ? 'Varios servicios' : 'Multiple services')
+    : selectedService?.name ?? '';
 
   // Navigation actions
   const nextStep = () => {
@@ -558,6 +653,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   // Action: Reset booking (like Uber clone's navigation reset)
   const resetBooking = () => {
     setSelectedService(null);
+    setVehicleServices({});
     setSelectedAddOns([]);
     setCustomerLocation(null);
     setSelectedDate(null);
@@ -580,6 +676,12 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   const value: BookingContextType = {
     selectedService,
+    vehicleServices,
+    assignVehicleService,
+    seedVehicleServices,
+    clearVehicleServices,
+    hasMixedServices,
+    bookingServiceLabel,
     selectedAddOns,
     customerLocation,
     selectedDate,

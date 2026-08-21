@@ -101,19 +101,28 @@ export async function POST(req: NextRequest) {
             const bookingId = pi.metadata?.bookingId;
             const safeId = bookingId ? String(bookingId).replace(/[^a-zA-Z0-9\-_]/g, '') : '';
             if (safeId && safeId !== 'test_booking' && safeId === bookingId) {
-                const { data: updatedBooking } = await supabase
+                // A multi-vehicle appointment is several booking rows sharing one
+                // payment intent. Authorize the WHOLE group, not just the primary
+                // row the metadata names — otherwise sibling vehicles stay
+                // pending_payment forever.
+                // .eq('payment_status', 'unpaid') ensures idempotency: duplicate events are no-ops
+                const { data: authorizedRows } = await supabase
                     .from('bookings')
                     // pending_payment → pending_assignment (card authorized; now visible to contractors)
-                    // .eq('payment_status', 'unpaid') ensures idempotency: duplicate events are no-ops
                     .update({ payment_status: 'authorized', status: 'pending_assignment' })
-                    .eq('id', safeId)
+                    .eq('payment_intent_id', pi.id)
                     .eq('payment_status', 'unpaid')
-                    .select()
-                    .single();
+                    .select();
+
+                const groupRows = (authorizedRows ?? []) as BookingRow[];
+                const updatedBooking = groupRows.find((row) => String(row.id) === safeId) ?? groupRows[0];
 
                 if (updatedBooking) {
                     const booking = updatedBooking as BookingRow;
-                    const serviceName = booking.service_name ?? 'Detailing Service';
+                    // Name every service in the appointment, not just the primary row's.
+                    const serviceName = [...new Set(
+                        groupRows.map((row) => row.service_name).filter((name): name is string => Boolean(name)),
+                    )].join(' + ') || 'Detailing Service';
                     const zipCode = booking.zip_code ?? '';
                     const bookingWithService = { ...updatedBooking, service_name: serviceName };
 
@@ -124,15 +133,19 @@ export async function POST(req: NextRequest) {
                         (err) => console.error('webhook: customer confirmation email failed:', err)
                     );
 
-                    // Broadcast to eligible contractors — first to accept wins.
-                    // Fail closed: if the booking has no service_id we cannot match
+                    // Broadcast to eligible contractors — first to accept wins. The
+                    // contractor takes the whole appointment, so they must be
+                    // verified for EVERY service in the group.
+                    // Fail closed: if any row has no service_id we cannot match
                     // contractors safely, so we skip the fan-out entirely.
-                    const bookingServiceIdWh: number | null =
-                        booking.service_id ?? null;
+                    const groupServiceIds = [...new Set(
+                        groupRows.map((row) => row.service_id).filter((id): id is number => id != null),
+                    )];
+                    const hasNullServiceId = groupRows.some((row) => row.service_id == null);
 
                     let eligibleWh: { id: string; email: string; verified_service_type_ids: number[] | null }[] = [];
-                    if (bookingServiceIdWh === null) {
-                        console.error(`webhook: booking ${booking.id} has NULL service_id — skipping contractor notification`);
+                    if (hasNullServiceId || groupServiceIds.length === 0) {
+                        console.error(`webhook: booking ${booking.id} group has NULL service_id — skipping contractor notification`);
                     } else {
                         const { data: contractors } = await supabase
                             .from('profiles')
@@ -142,11 +155,11 @@ export async function POST(req: NextRequest) {
                             .eq('is_available', true);
 
                         // Skill match: only notify contractors whose verified_service_type_ids
-                        // contains this booking's service_id. NULL or empty arrays are skipped.
+                        // covers every service in the appointment. NULL or empty arrays are skipped.
                         eligibleWh = (contractors ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
                             const v = c.verified_service_type_ids;
                             if (!v || v.length === 0) return false;
-                            return v.includes(bookingServiceIdWh);
+                            return groupServiceIds.every((serviceId) => v.includes(serviceId));
                         });
                     }
 

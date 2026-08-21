@@ -55,7 +55,12 @@ export async function POST(req: NextRequest) {
         } catch {
             return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
         }
-        const { zipCode, month, serviceId: serviceIdRaw } = body as { zipCode?: string; month?: string; serviceId?: string | number };
+        const { zipCode, month, serviceId: serviceIdRaw, serviceIds: serviceIdsRaw } = body as {
+            zipCode?: string;
+            month?: string;
+            serviceId?: string | number;
+            serviceIds?: Array<string | number>;
+        };
 
         if (!zipCode || !month) {
             return NextResponse.json(
@@ -73,9 +78,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid month format. Use YYYY-MM' }, { status: 400 });
         }
 
-        // serviceId is required so we can match contractor skills. The client
-        // passes it on every call once a service is selected.
-        const serviceId = serviceIdRaw != null && serviceIdRaw !== '' ? Number(serviceIdRaw) : null;
+        // Skill matching. A mixed multi-vehicle booking sends every service in
+        // the appointment via serviceIds; the contractor must cover ALL of them.
+        // Non-numeric values (e.g. Hygraph document ids) are ignored rather than
+        // poisoning the filter with NaN.
+        const requestedServiceIds = [...new Set(
+            [
+                ...(Array.isArray(serviceIdsRaw) ? serviceIdsRaw : []),
+                ...(serviceIdRaw != null && serviceIdRaw !== '' ? [serviceIdRaw] : []),
+            ]
+                .map(Number)
+                .filter((id) => Number.isFinite(id)),
+        )];
 
         const [year, monthNum] = month.split('-').map(Number);
         const endDate = new Date(year, monthNum, 0); // last day of month
@@ -98,9 +112,10 @@ export async function POST(req: NextRequest) {
             .eq('approval_status', 'approved')
             .eq('is_available', true);
 
-        if (serviceId !== null) {
-            // Postgres array-contains operator via PostgREST `cs` filter.
-            contractorQuery.contains('verified_service_type_ids', [serviceId]);
+        if (requestedServiceIds.length > 0) {
+            // Postgres array-contains operator via PostgREST `cs` filter:
+            // the contractor's verified list must include every requested service.
+            contractorQuery.contains('verified_service_type_ids', requestedServiceIds);
         }
 
         const [

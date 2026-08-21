@@ -40,6 +40,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     currentStep,
     nextStep,
     previousStep,
+    priceQuote,
   } = useBooking();
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -124,7 +125,13 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             zipCode: customerLocation.zipCode,
-            serviceId: selectedService.documentId,
+            serviceId: selectedService.catalogId ?? selectedService.documentId,
+            // Mixed bookings: availability must hold for every service in the group.
+            serviceIds: priceQuote
+              ? [...new Set(priceQuote.vehicles
+                  .map((line) => line.serviceId)
+                  .filter((id): id is number => typeof id === 'number'))]
+              : undefined,
             month,
           }),
           signal: controller.signal,
@@ -168,7 +175,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
     fetchAvailability();
     return () => controller.abort();
-  }, [currentMonth, customerLocation, selectedService, locale]);
+  }, [currentMonth, customerLocation, selectedService, priceQuote, locale]);
 
   // Generate calendar days
   const getDaysInMonth = (date: Date) => {

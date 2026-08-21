@@ -5,6 +5,7 @@ import {
   type BodyStyle,
   type LegacyBodyStyle,
   PricingInputError,
+  type PricingVehicleInput,
   type ResolveBookingPriceInput,
   type ResolvedAddOn,
   type ResolvedBookingPrice,
@@ -142,12 +143,50 @@ export async function resolveBookingPrice(
     throw new PricingInputError('Service not found or inactive', 'SERVICE_NOT_FOUND');
   }
 
+  // Per-vehicle services: the default service covers any vehicle without its
+  // own serviceId. Every distinct service is loaded once and validated; a
+  // lookup miss throws rather than silently repricing with the default.
+  const serviceRegistry = new Map<string, ServiceRow>();
+  const registeredServices: ServiceRow[] = [];
+  const registerService = (row: ServiceRow, rawKey?: string) => {
+    if (!registeredServices.some((existing) => existing.id === row.id)) {
+      registeredServices.push(row);
+    }
+    serviceRegistry.set(String(row.id), row);
+    if (row.document_id) serviceRegistry.set(row.document_id, row);
+    if (rawKey) serviceRegistry.set(rawKey, row);
+  };
+  registerService(service, input.serviceId !== undefined ? String(input.serviceId).trim() : undefined);
+  const perVehicleServiceKeys = [...new Set(
+    input.vehicles
+      .map((vehicle) => vehicle.serviceId)
+      .filter((id): id is string | number => id !== undefined && String(id).trim() !== '')
+      .map((id) => String(id).trim()),
+  )];
+  const missingKeys = perVehicleServiceKeys.filter((key) => !serviceRegistry.has(key));
+  const loadedRows = await Promise.all(missingKeys.map((key) => findService(client, key)));
+  loadedRows.forEach((row, index) => {
+    if (!row) {
+      throw new PricingInputError('Service not found or inactive', 'SERVICE_NOT_FOUND');
+    }
+    registerService(row, missingKeys[index]);
+  });
+  const serviceForVehicle = (vehicle: PricingVehicleInput): ServiceRow => {
+    if (vehicle.serviceId === undefined || String(vehicle.serviceId).trim() === '') return service;
+    const resolved = serviceRegistry.get(String(vehicle.serviceId).trim());
+    if (!resolved) {
+      throw new PricingInputError('Service not found or inactive', 'SERVICE_NOT_FOUND');
+    }
+    return resolved;
+  };
+  const involvedServices = registeredServices;
+
   const styles = input.vehicles.map((vehicle) => normalizeBodyStyle(vehicle.bodyStyle));
   const uniqueStyles = [...new Set(styles)];
   const [overrideResult, addOns] = await Promise.all([
     client.from('service_body_style_prices')
       .select('service_id, body_style, price_cents, currency, updated_at')
-      .eq('service_id', service.id)
+      .in('service_id', involvedServices.map((row) => row.id))
       .in('body_style', uniqueStyles),
     loadAddOns(client, input.addOnIds ?? [], input.addOnNames ?? []),
   ]);
@@ -172,15 +211,21 @@ export async function resolveBookingPrice(
     }))
     .sort((a, b) => a.id - b.id);
   const addOnsPriceCents = resolvedAddOns.reduce((sum, addOn) => sum + addOn.priceCents, 0);
-  const overrideByStyle = new Map(overrides.map((override) => [override.body_style, override]));
+  const overrideByServiceAndStyle = new Map(
+    overrides.map((override) => [`${override.service_id}:${override.body_style}`, override]),
+  );
 
   const vehicles = styles.map((bodyStyle, index) => {
-    const override = overrideByStyle.get(bodyStyle);
-    const servicePriceCents = override?.price_cents ?? basePriceCents;
+    const vehicleService = serviceForVehicle(input.vehicles[index]);
+    const override = overrideByServiceAndStyle.get(`${vehicleService.id}:${bodyStyle}`);
+    const servicePriceCents = override?.price_cents ?? decimalToCents(vehicleService.base_price);
     return {
       index,
       ...(input.vehicles[index].vehicleId ? { vehicleId: input.vehicles[index].vehicleId } : {}),
       bodyStyle,
+      serviceId: vehicleService.id,
+      serviceName: vehicleService.name,
+      serviceDurationMinutes: vehicleService.duration_minutes ?? 60,
       priceSource: override ? 'override' as const : 'base' as const,
       servicePriceCents,
       addOnsPriceCents,
@@ -189,17 +234,20 @@ export async function resolveBookingPrice(
   });
 
   const revisionPayload = {
-    version: 1,
+    version: 2,
     currency: input.currency ?? 'usd',
-    service: [service.id, basePriceCents, service.updated_at],
+    services: involvedServices
+      .map((row) => [row.id, decimalToCents(row.base_price), row.updated_at])
+      .sort(([a], [b]) => Number(a) - Number(b)),
+    assignments: vehicles.map((line) => [line.index, line.serviceId]),
     overrides: overrides
-      .map((row) => [row.body_style, row.price_cents, row.currency, row.updated_at])
-      .sort(([a], [b]) => String(a).localeCompare(String(b))),
+      .map((row) => [row.service_id, row.body_style, row.price_cents, row.currency, row.updated_at])
+      .sort((a, b) => `${a[0]}:${a[1]}`.localeCompare(`${b[0]}:${b[1]}`)),
     addOns: addOns
       .map((row) => [row.id, decimalToCents(row.price), row.updated_at ?? row.created_at])
       .sort(([a], [b]) => Number(a) - Number(b)),
   };
-  const pricingRevision = `v1_${createHash('sha256')
+  const pricingRevision = `v2_${createHash('sha256')
     .update(JSON.stringify(revisionPayload))
     .digest('hex')}`;
 
@@ -216,9 +264,10 @@ export async function resolveBookingPrice(
     subtotalCents: vehicles.reduce((sum, vehicle) => sum + vehicle.totalCents, 0),
     serviceFeeCents: 0,
     totalCents: vehicles.reduce((sum, vehicle) => sum + vehicle.totalCents, 0),
-    totalDurationMinutes: vehicles.length * (
-      (service.duration_minutes ?? 60) +
-      resolvedAddOns.reduce((sum, addOn) => sum + addOn.durationMinutes, 0)
+    totalDurationMinutes: vehicles.reduce(
+      (sum, line) => sum + line.serviceDurationMinutes
+        + resolvedAddOns.reduce((addOnSum, addOn) => addOnSum + addOn.durationMinutes, 0),
+      0,
     ),
     currency: input.currency ?? 'usd',
     pricingRevision,

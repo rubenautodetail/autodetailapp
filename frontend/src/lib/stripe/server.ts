@@ -44,6 +44,8 @@ export async function createPaymentIntent({
     currency?: string;
     metadata?: {
         serviceId: string;
+        /** Comma-separated distinct service ids when vehicles carry different services. */
+        serviceIds?: string;
         bodyStyleSummary: string;
         vehicleCount: string;
         pricingRevision: string;

@@ -55,18 +55,18 @@ const CreateWithPaymentSchema = z.object({
         color: z.string().optional(),
         vehicleId: z.string().min(1).optional(),
         bodyStyle: bodyStyleSchema,
+        serviceId: z.union([z.string().min(1), z.number().int().positive()]).optional(),
     })).min(1).max(10).optional(),
     subtotal: z.number().optional(),
     serviceFee: z.number().optional(),
     total: z.number().positive('Total must be a positive number'),
-    perVehicleTotal: z.number().optional(),
     specialInstructions: z.string().optional().default(''),
     selectedAddOns: z.array(z.object({
         name: z.string(),
         price: z.number(),
     })).optional(),
     addOnIds: z.array(z.union([z.string().min(1), z.number().int().positive()])).optional(),
-    pricingRevision: z.string().regex(/^v1_[a-f0-9]{64}$/).optional(),
+    pricingRevision: z.string().regex(/^v[12]_[a-f0-9]{64}$/).optional(),
     bodyStyle: bodyStyleSchema.optional(),
     currency: z.literal('usd').optional().default('usd'),
     locale: z.enum(['en', 'es']).optional().default('en'),
@@ -130,6 +130,8 @@ export async function POST(req: NextRequest) {
             year: vehicleYear,
             color: vehicleColor,
             bodyStyle: bodyStyle!,
+            vehicleId: undefined as string | undefined,
+            serviceId: undefined as string | number | undefined,
         }];
 
     const vehicleCount = vehicles.length;
@@ -147,6 +149,7 @@ export async function POST(req: NextRequest) {
             vehicles: vehicles.map((vehicle) => ({
                 bodyStyle: vehicle.bodyStyle,
                 vehicleId: vehicle.vehicleId,
+                ...(vehicle.serviceId !== undefined ? { serviceId: vehicle.serviceId } : {}),
             })),
             currency,
         }, supabase);
@@ -195,6 +198,7 @@ export async function POST(req: NextRequest) {
 
     // Generate a group ID when booking multiple vehicles in one appointment
     const bookingGroupId = vehicleCount > 1 ? crypto.randomUUID() : null;
+    const distinctServiceIds = [...new Set(quote.vehicles.map((vehicle) => vehicle.serviceId))];
 
     // ── Step 1: Create booking(s) — one per vehicle ─────────────────────────
     const verifiedAddOns = quote.addOns.map((addOn) => ({
@@ -221,8 +225,8 @@ export async function POST(req: NextRequest) {
         subtotal: formatCents(quote.vehicles[index].totalCents),
         service_fee: 0,
         total_amount: formatCents(quote.vehicles[index].totalCents),
-        service_name: quote.service.name,
-        service_id: quote.service.id,
+        service_name: quote.vehicles[index].serviceName,
+        service_id: quote.vehicles[index].serviceId,
         selected_add_ons: verifiedAddOns,
         vehicle_type: quote.vehicles[index].bodyStyle,
         vehicle_body_style: quote.vehicles[index].bodyStyle,
@@ -261,6 +265,7 @@ export async function POST(req: NextRequest) {
             currency,
             metadata: {
                 serviceId: String(quote.service.id),
+                ...(distinctServiceIds.length > 1 ? { serviceIds: distinctServiceIds.join(',') } : {}),
                 bodyStyleSummary: summarizeBodyStyles(quote.vehicles.map((vehicle) => vehicle.bodyStyle)),
                 vehicleCount: String(vehicleCount),
                 pricingRevision: quote.pricingRevision,
@@ -286,7 +291,10 @@ export async function POST(req: NextRequest) {
     // ── Step 4: Customer confirmation email only ──────────────────────────────
     // Contractor notifications fire from the webhook (payment_intent.amount_capturable_updated)
     // AFTER payment is confirmed, so contractors only see jobs that have been paid for.
-    notifyCustomer(bookings[0], quote.service.name).catch(
+    notifyCustomer(
+        bookings[0],
+        [...new Set(quote.vehicles.map((vehicle) => vehicle.serviceName))].join(' + '),
+    ).catch(
         (err) => {
             console.error('create-with-payment: customer notification failed:', err);
             Sentry.captureException(err, { tags: { context: 'customer_notification', bookingId: bookings[0].id } });
