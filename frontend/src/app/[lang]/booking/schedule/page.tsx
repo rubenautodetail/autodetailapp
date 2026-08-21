@@ -28,7 +28,9 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const locale = lang || "en";
 
   const {
+    isHydrated,
     selectedService,
+    allVehiclesAssigned,
     selectedAddOns,
     customerLocation,
     selectedDate,
@@ -53,15 +55,17 @@ export default function SchedulePage({ params }: SchedulePageProps) {
   const [windowDays, setWindowDays] = useState(14);
   const [minLeadHours, setMinLeadHours] = useState(1);
 
-  // Redirect if prerequisites not met
+  // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
-    if (!selectedService) {
+    if (!isHydrated) return;
+    if (!selectedService || !allVehiclesAssigned) {
       router.push(`/${locale}/booking/select`);
+      return;
     }
     if (!customerLocation) {
       router.push(`/${locale}/booking/location`);
     }
-  }, [selectedService, customerLocation, router, locale]);
+  }, [isHydrated, selectedService, allVehiclesAssigned, customerLocation, router, locale]);
 
   // Fetch time windows when language changes
   useEffect(() => {

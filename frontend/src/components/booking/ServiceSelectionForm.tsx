@@ -43,8 +43,9 @@ export default function ServiceSelectionForm({
         selectedService,
         vehicleServices,
         assignVehicleService,
-        seedVehicleServices,
-        clearVehicleServices,
+        perVehicleServices,
+        setPerVehicleServices,
+        allVehiclesAssigned,
         hasMixedServices,
         bookingServiceLabel,
         selectedAddOns,
@@ -79,31 +80,19 @@ export default function ServiceSelectionForm({
     // 'same' applies one service to every vehicle (the default). 'per-vehicle'
     // lets each selected car carry its own service; taps on the service list
     // then assign to the active vehicle pill.
-    const [serviceMode, setServiceMode] = useState<'same' | 'per-vehicle'>('same');
     const [activeVehicleId, setActiveVehicleId] = useState<string | null>(null);
-    const restoredModeRef = useRef(false);
     const canSplitServices = bookingVehicles.length > 1;
-
-    // Restore per-vehicle mode when hydrated state already carries assignments.
-    useEffect(() => {
-        if (!isHydrated || restoredModeRef.current) return;
-        restoredModeRef.current = true;
-        if (canSplitServices && Object.keys(vehicleServices).length > 0) {
-            setServiceMode('per-vehicle');
-        }
-    }, [canSplitServices, isHydrated, vehicleServices]);
+    // The mode lives in the booking state, so the running estimate, the server
+    // quote and the step guard all read the same answer.
+    const serviceMode: 'same' | 'per-vehicle' = perVehicleServices ? 'per-vehicle' : 'same';
 
     // Keep the active pill pointing at a vehicle that still exists.
     useEffect(() => {
-        if (serviceMode !== 'per-vehicle') return;
-        if (!canSplitServices) {
-            setServiceMode('same');
-            return;
-        }
+        if (!perVehicleServices) return;
         if (!activeVehicleId || !bookingVehicles.some((vehicle) => vehicle.id === activeVehicleId)) {
             setActiveVehicleId(bookingVehicles[0]?.id ?? null);
         }
-    }, [activeVehicleId, bookingVehicles, canSplitServices, serviceMode]);
+    }, [activeVehicleId, bookingVehicles, perVehicleServices]);
 
     const activeVehicle = serviceMode === 'per-vehicle'
         ? bookingVehicles.find((vehicle) => vehicle.id === activeVehicleId) ?? null
@@ -112,22 +101,11 @@ export default function ServiceSelectionForm({
     // never a silent fallback that reads as chosen.
     const assignedServiceFor = (vehicleId: string | undefined): Service | null =>
         (vehicleId ? vehicleServices[vehicleId] : undefined) ?? null;
-    const allVehiclesAssigned = serviceMode !== 'per-vehicle'
-        || (bookingVehicles.length > 0 && bookingVehicles.every(
-            (vehicle) => vehicle.id && vehicleServices[vehicle.id],
-        ));
 
     const handleServiceModeChange = (mode: 'same' | 'per-vehicle') => {
         if (mode === serviceMode) return;
-        setServiceMode(mode);
-        if (mode === 'same') {
-            clearVehicleServices();
-        } else {
-            // Seed every vehicle with the current service so each assignment
-            // is explicit from the first moment of per-vehicle mode.
-            if (selectedService) seedVehicleServices(selectedService);
-            setActiveVehicleId(bookingVehicles[0]?.id ?? null);
-        }
+        setPerVehicleServices(mode === 'per-vehicle');
+        if (mode === 'per-vehicle') setActiveVehicleId(bookingVehicles[0]?.id ?? null);
     };
 
     const previewVehicles = useMemo(() => {

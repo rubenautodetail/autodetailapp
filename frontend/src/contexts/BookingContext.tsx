@@ -40,6 +40,22 @@ function createLocalVehicleId(): string {
     : `veh_${Math.random().toString(36).slice(2, 10)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
+/**
+ * The service a vehicle is booked with. In per-vehicle mode there is no
+ * fallback: an unassigned vehicle returns null so it stays out of the total
+ * until the customer picks a service for it.
+ */
+function serviceForVehicle(
+  vehicle: VehicleInfo,
+  fallback: Service | null,
+  overrides: Record<string, Service>,
+  perVehicle: boolean,
+): Service | null {
+  const assigned = vehicle.id ? overrides[vehicle.id] : undefined;
+  if (assigned) return assigned;
+  return perVehicle ? null : fallback;
+}
+
 function getStableCatalogId(item: { id: string | number; catalogId?: number; documentId?: string | null }): string | number | undefined {
   return getStableCatalogRef(item);
 }
@@ -138,8 +154,17 @@ interface BookingContextType {
   selectedService: Service | null;
   vehicleServices: Record<string, Service>;
   assignVehicleService: (vehicleId: string, service: Service) => void;
-  seedVehicleServices: (service: Service) => void;
-  clearVehicleServices: () => void;
+  /**
+   * True while every vehicle carries its own service. Nothing is pre-assigned:
+   * a vehicle with no entry in vehicleServices has not been chosen for yet and
+   * contributes nothing to the total.
+   */
+  perVehicleServices: boolean;
+  setPerVehicleServices: (on: boolean) => void;
+  /** False while per-vehicle mode still has a vehicle waiting for a service. */
+  allVehiclesAssigned: boolean;
+  /** The service a vehicle is booked with; null while it still waits for one. */
+  serviceForBookingVehicle: (vehicle: VehicleInfo) => Service | null;
   /** True when the booking's vehicles carry different services (assigned or quoted). */
   hasMixedServices: boolean;
   /** Display name for the booking's service: the service, or the mixed label. */
@@ -210,6 +235,7 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [vehicleServices, setVehicleServices] = useState<Record<string, Service>>({});
+  const [perVehicleServices, setPerVehicleServicesState] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState<AddOn[]>([]);
   const [customerLocation, setCustomerLocation] = useState<Location | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -256,6 +282,10 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const storedQuote = ssGet<BookingPriceQuote>('priceQuote');
     const storedBodyStyle = ssGet<unknown>('selectedBodyStyle');
     const storedVehicleServices = ssGet<Record<string, Service>>('vehicleServices');
+    // Sessions saved before this flag existed only ever stored assignments
+    // while per-vehicle mode was on, so a non-empty map implies it.
+    const rawPerVehicle = ssGet<boolean>('perVehicleServices')
+      ?? (Object.keys(storedVehicleServices ?? {}).length > 0);
 
     if (svc) setSelectedService(svc);
     if (storedVehicleServices) setVehicleServices(storedVehicleServices);
@@ -274,6 +304,12 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       id: vehicle.id ?? createLocalVehicleId(),
       type: normalizeVehicleBodyStyle(vehicle.type),
     })) ?? [];
+    // Per-vehicle services only mean something for a multi-vehicle booking, and
+    // the mode toggle only renders for one, so never restore into a mode the
+    // customer would have no way out of.
+    const storedPerVehicle = rawPerVehicle && normalizedBookingVehicles.length > 1;
+    setPerVehicleServicesState(storedPerVehicle);
+
     if (normalizedVehicle) setVehicleInfo(normalizedVehicle);
     if (normalizedBookingVehicles.length > 0) {
       setBookingVehicles(normalizedBookingVehicles);
@@ -296,7 +332,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
     // Recalculate pricing from restored state
     if (svc && !storedQuote) {
-      calculateTotalWithService(svc, addOns ?? [], normalizedBookingVehicles, storedVehicleServices ?? {});
+      calculateTotalWithService(
+        svc, addOns ?? [], normalizedBookingVehicles, storedVehicleServices ?? {}, storedPerVehicle,
+      );
     }
 
     setIsHydrated(true);
@@ -306,9 +344,12 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const setService = (service: Service) => {
     setSelectedService(service);
     setVehicleServices({});
+    setPerVehicleServicesState(false);
     setPriceQuote(null);
-    ssSave({ selectedService: service, vehicleServices: {}, priceQuote: null });
-    calculateTotalWithService(service, selectedAddOns, bookingVehicles, {});
+    ssSave({
+      selectedService: service, vehicleServices: {}, perVehicleServices: false, priceQuote: null,
+    });
+    calculateTotalWithService(service, selectedAddOns, bookingVehicles, {}, false);
   };
 
   // Per-vehicle override. The first assignment also becomes the default so the
@@ -321,37 +362,32 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     if (!selectedService) setSelectedService(nextPrimary);
     setPriceQuote(null);
     ssSave({ vehicleServices: nextOverrides, selectedService: nextPrimary, priceQuote: null });
-    calculateTotalWithService(nextPrimary, selectedAddOns, bookingVehicles, nextOverrides);
+    calculateTotalWithService(
+      nextPrimary, selectedAddOns, bookingVehicles, nextOverrides, perVehicleServices,
+    );
   };
 
   /**
-   * Entering per-vehicle mode: give every vehicle an explicit assignment
-   * (keeping existing ones), so no vehicle is ever silently billed through an
-   * invisible fallback. No-op without a default service or with fewer than
-   * two vehicles.
+   * Turn per-vehicle services on or off. Turning it on assigns nothing: every
+   * vehicle waits for its own tap, so the total only counts the cars the
+   * customer has actually chosen a service for. Turning it off drops every
+   * assignment and puts all vehicles back on the default service.
    */
-  const seedVehicleServices = (service: Service) => {
-    if (bookingVehicles.length < 2) return;
-    const next: Record<string, Service> = {};
-    for (const vehicle of bookingVehicles) {
-      if (vehicle.id) next[vehicle.id] = vehicleServices[vehicle.id] ?? service;
-    }
-    const unchanged = Object.keys(next).length === Object.keys(vehicleServices).length
-      && Object.entries(next).every(([id, svc]) => vehicleServices[id]?.id === svc.id);
-    if (unchanged) return;
-    setVehicleServices(next);
+  const setPerVehicleServices = (on: boolean) => {
+    if (on === perVehicleServices) return;
+    const nextOverrides = on ? vehicleServices : {};
+    setPerVehicleServicesState(on);
+    if (!on) setVehicleServices(nextOverrides);
     setPriceQuote(null);
-    ssSave({ vehicleServices: next, priceQuote: null });
-    calculateTotalWithService(selectedService ?? service, selectedAddOns, bookingVehicles, next);
+    ssSave({ perVehicleServices: on, vehicleServices: nextOverrides, priceQuote: null });
+    calculateTotalWithService(selectedService, selectedAddOns, bookingVehicles, nextOverrides, on);
   };
 
-  const clearVehicleServices = () => {
-    if (Object.keys(vehicleServices).length === 0) return;
-    setVehicleServices({});
-    setPriceQuote(null);
-    ssSave({ vehicleServices: {}, priceQuote: null });
-    calculateTotalWithService(selectedService, selectedAddOns, bookingVehicles, {});
-  };
+  // One shared answer to "is the booking ready to price?" — the step guards and
+  // the quote fetch both wait on it.
+  const allVehiclesAssigned = !perVehicleServices
+    || (bookingVehicles.length > 0
+      && bookingVehicles.every((vehicle) => vehicle.id && vehicleServices[vehicle.id]));
 
   // Action: Add add-on
   const addAddOn = (addOn: AddOn) => {
@@ -387,12 +423,14 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Client-side estimate until the server quote lands. Each vehicle is priced
-  // by its own service (falling back to the default), matching the resolver.
+  // by its own service, matching the resolver; in per-vehicle mode a car with
+  // no assignment yet is left out, so the total builds up as the customer picks.
   const calculateTotalWithService = (
     service: Service | null,
     addOns: AddOn[],
     vehicles: VehicleInfo[] = bookingVehicles,
     overrides: Record<string, Service> = vehicleServices,
+    perVehicle: boolean = perVehicleServices,
   ) => {
     if (!service) {
       setSubtotal(0);
@@ -405,7 +443,8 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const newSubtotal = vehicles.length === 0
       ? service.basePrice + addOnsTotal
       : vehicles.reduce((sum, vehicle) => {
-          const vehicleService = (vehicle.id && overrides[vehicle.id]) || service;
+          const vehicleService = serviceForVehicle(vehicle, service, overrides, perVehicle);
+          if (!vehicleService) return sum;
           return sum + vehicleService.basePrice + addOnsTotal;
         }, 0);
 
@@ -436,6 +475,17 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const refreshPriceQuote = useCallback(async (): Promise<BookingPriceQuote | null> => {
     const requestId = ++quoteRequestId.current;
     if (!selectedService) return null;
+
+    // A quote for only some of the cars would read as the final total, so wait
+    // until every vehicle has a service. The local estimate covers the rest.
+    if (!allVehiclesAssigned) {
+      setPriceQuote(null);
+      setQuoteStatus('idle');
+      setQuoteError(null);
+      calculateTotalWithService(selectedService, selectedAddOns, bookingVehicles, vehicleServices);
+      ssSave({ priceQuote: null });
+      return null;
+    }
 
     const vehicles = bookingVehicles.length > 0
       ? bookingVehicles.map((vehicle) => {
@@ -527,7 +577,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       setQuoteError(error instanceof Error ? error.message : 'Unable to refresh pricing');
       return null;
     }
-  }, [applyPriceQuote, bookingVehicles, customerLocation?.zipCode, selectedAddOns, selectedBodyStyle, selectedService, vehicleInfo, vehicleServices]);
+  }, [allVehiclesAssigned, applyPriceQuote, bookingVehicles, customerLocation?.zipCode, selectedAddOns, selectedBodyStyle, selectedService, vehicleInfo, vehicleServices]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -572,13 +622,19 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   const commitVehicles = (next: VehicleInfo[]) => {
     const nextOverrides = pruneOverrides(next);
+    // Per-vehicle services only mean something for a multi-vehicle booking.
+    const nextPerVehicle = perVehicleServices && next.length > 1;
     if (nextOverrides !== vehicleServices) {
       setVehicleServices(nextOverrides);
       ssSave({ vehicleServices: nextOverrides });
     }
+    if (nextPerVehicle !== perVehicleServices) {
+      setPerVehicleServicesState(nextPerVehicle);
+      ssSave({ perVehicleServices: nextPerVehicle });
+    }
     setBookingVehicles(next);
     setPriceQuote(null);
-    calculateTotalWithService(selectedService, selectedAddOns, next, nextOverrides);
+    calculateTotalWithService(selectedService, selectedAddOns, next, nextOverrides, nextPerVehicle);
     ssSave({ bookingVehicles: next, priceQuote: null });
     // Keep vehicleInfo (first-vehicle mirror) and the body-style fallback in sync.
     if (next.length > 0) {
@@ -618,7 +674,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   // assignments diverge, without waiting for the server quote.
   const distinctAssignedServices = new Set(
     bookingVehicles
-      .map((vehicle) => (vehicle.id && vehicleServices[vehicle.id]) || selectedService)
+      .map((vehicle) => serviceForVehicle(vehicle, selectedService, vehicleServices, perVehicleServices))
       .filter((service): service is Service => Boolean(service))
       .map((service) => String(getStableCatalogRef(service) ?? service.id)),
   );
@@ -629,9 +685,18 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   );
   const hasMixedServices = distinctAssignedServices.size > 1 || distinctQuotedServices.size > 1;
 
-  const bookingServiceLabel = (labelLocale: 'en' | 'es'): string => hasMixedServices
-    ? (labelLocale === 'es' ? 'Varios servicios' : 'Multiple services')
-    : selectedService?.name ?? '';
+  const serviceForBookingVehicle = (vehicle: VehicleInfo): Service | null =>
+    serviceForVehicle(vehicle, selectedService, vehicleServices, perVehicleServices);
+
+  const bookingServiceLabel = (labelLocale: 'en' | 'es'): string => {
+    if (hasMixedServices) return labelLocale === 'es' ? 'Varios servicios' : 'Multiple services';
+    // Per-vehicle mode before the first tap: nothing is chosen yet, so don't
+    // name the old default as if it were.
+    if (perVehicleServices && distinctAssignedServices.size === 0) {
+      return labelLocale === 'es' ? 'Servicios por vehículo' : 'Per-vehicle services';
+    }
+    return selectedService?.name ?? '';
+  };
 
   // Navigation actions
   const nextStep = () => {
@@ -678,8 +743,10 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     selectedService,
     vehicleServices,
     assignVehicleService,
-    seedVehicleServices,
-    clearVehicleServices,
+    perVehicleServices,
+    setPerVehicleServices,
+    allVehiclesAssigned,
+    serviceForBookingVehicle,
     hasMixedServices,
     bookingServiceLabel,
     selectedAddOns,

@@ -45,7 +45,10 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     quoteError,
     refreshPriceQuote,
     selectedBodyStyle,
-    vehicleServices,
+    isHydrated,
+    perVehicleServices,
+    allVehiclesAssigned,
+    serviceForBookingVehicle,
     hasMixedServices,
     bookingServiceLabel,
   } = useBooking();
@@ -100,8 +103,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     }
   }, [garageVehicles, bookingVehicles.length, addBookingVehicle, selectedBodyStyle]);
 
-  // Redirect if prerequisites not met
+  // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
+    if (!isHydrated) return;
     if (!selectedService) {
       router.push(`/${locale}/booking/select`);
       return;
@@ -114,7 +118,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
       router.push(`/${locale}/booking/schedule`);
       return;
     }
-  }, [selectedService, customerLocation, selectedDate, selectedTimeWindow, router, locale]);
+  }, [isHydrated, selectedService, customerLocation, selectedDate, selectedTimeWindow, router, locale]);
 
   const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
@@ -214,19 +218,29 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   };
 
   // What the "Service" row is really worth: the quote's per-vehicle service
-  // prices summed. Before a quote lands, estimate per vehicle honoring any
-  // per-vehicle service assignments, matching the context's own math.
+  // prices summed. Before a quote lands, estimate per vehicle through the
+  // context's own resolver, so a vehicle still waiting for a service counts 0.
   const serviceLineTotal = priceQuote
     ? priceQuote.vehicles.reduce((sum, line) => sum + line.servicePrice, 0)
     : bookingVehicles.length > 0
-      ? bookingVehicles.reduce((sum, vehicle) => {
-          const vehicleService = (vehicle.id && vehicleServices[vehicle.id]) || selectedService;
-          return sum + (Number(vehicleService?.basePrice) || 0);
-        }, 0)
+      ? bookingVehicles.reduce(
+          (sum, vehicle) => sum + (Number(serviceForBookingVehicle(vehicle)?.basePrice) || 0),
+          0,
+        )
       : Number(selectedService?.basePrice) || 0;
 
+  // Vehicles added here (garage toggle, new-vehicle form) in per-vehicle mode
+  // arrive without a service; the service step is the only place to pick one.
+  const unassignedVehicles = perVehicleServices
+    ? bookingVehicles.filter((vehicle) => !serviceForBookingVehicle(vehicle))
+    : [];
+  const goChooseServices = () => {
+    setCustomerInfo({ name, email, phone, specialNotes });
+    router.push(`/${locale}/booking/select`);
+  };
+
   // Per-vehicle lines for the price summary, labeled by the actual vehicles.
-  const summaryVehicleLines = priceQuote?.vehicles.map((line, index) => {
+  const quotedVehicleLines = priceQuote?.vehicles.map((line, index) => {
     const vehicle = bookingVehicles[index];
     const styleLabel = vehicle
       ? getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)
@@ -241,6 +255,26 @@ export default function ReviewPage({ params }: ReviewPageProps) {
       total: line.total,
     };
   });
+  // Before the quote lands, itemize from the same math as the context's
+  // subtotal, so the summary's lines always add up to the number beneath them.
+  const addOnsTotal = selectedAddOns.reduce((sum, addOn) => sum + (Number(addOn.price) || 0), 0);
+  const estimatedVehicleLines = bookingVehicles.length > 0
+    ? bookingVehicles.map((vehicle, index) => {
+        const vehicleService = serviceForBookingVehicle(vehicle);
+        const styleLabel = getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale);
+        return {
+          key: vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`,
+          label: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+          sublabel: !vehicleService
+            ? `${styleLabel} · ${locale === "es" ? "sin servicio" : "no service yet"}`
+            : perVehicleServices
+              ? `${styleLabel} · ${vehicleService.name}`
+              : styleLabel,
+          total: vehicleService ? (Number(vehicleService.basePrice) || 0) + addOnsTotal : 0,
+        };
+      })
+    : undefined;
+  const summaryVehicleLines = quotedVehicleLines ?? estimatedVehicleLines;
 
   const handleContinue = async () => {
     const validationErrors = validateForm();
@@ -270,6 +304,20 @@ export default function ReviewPage({ params }: ReviewPageProps) {
 
     // Save contact info
     setCustomerInfo({ name, email, phone, specialNotes });
+
+    if (!allVehiclesAssigned) {
+      setErrors((current) => ({
+        ...current,
+        pricing: locale === "es"
+          ? "Elige un servicio para cada vehículo antes de continuar."
+          : "Choose a service for every vehicle before continuing.",
+      }));
+      vehiclesCardRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
+      return;
+    }
 
     const quote = await refreshPriceQuote();
     if (!quote) {
@@ -660,7 +708,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                           {vehicle.year} {vehicle.make} {vehicle.model} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
                           {hasMixedServices && priceQuote?.vehicles[index]?.serviceName
                             ? ` · ${priceQuote.vehicles[index].serviceName}`
-                            : ''}
+                            : perVehicleServices
+                              ? ` · ${serviceForBookingVehicle(vehicle)?.name ?? (locale === "es" ? "sin servicio" : "no service yet")}`
+                              : ''}
                         </span>
                         <span key={priceQuote?.vehicles[index]?.total ?? 'pending'} className="price-changed font-semibold text-white">
                           {priceQuote?.vehicles[index] ? `$${priceQuote.vehicles[index].total.toFixed(2)}` : "—"}
@@ -670,6 +720,26 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   </div>
                   {quoteStatus === "loading" && <p className="mt-2 pl-6 text-xs text-[#A5B0D1]">{locale === "es" ? "Actualizando precio…" : "Updating price…"}</p>}
                   {quoteError && <p role="alert" className="mt-2 pl-6 text-xs text-red-400">{locale === "es" ? "No pudimos actualizar el precio." : "We couldn't refresh pricing."}</p>}
+                  {unassignedVehicles.length > 0 && (
+                    <div role="status" className="mt-3 ml-6 flex flex-col gap-2 rounded-lg border border-[#D0B078]/40 bg-[#131835] p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xs text-[#A5B0D1]">
+                        <span className="font-semibold text-white">
+                          {unassignedVehicles.map((vehicle) => `${vehicle.year} ${vehicle.make} ${vehicle.model}`).join(", ")}
+                        </span>
+                        {" "}
+                        {unassignedVehicles.length === 1
+                          ? (locale === "es" ? "todavía no tiene servicio." : "doesn't have a service yet.")
+                          : (locale === "es" ? "todavía no tienen servicio." : "don't have a service yet.")}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={goChooseServices}
+                        className="shrink-0 rounded-lg bg-[#D0B078] px-3 py-1.5 text-xs font-bold text-[#131835] transition-colors hover:bg-[#C4A060] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
+                      >
+                        {locale === "es" ? "Elegir servicios" : "Choose services"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </Card>
@@ -801,7 +871,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   fullWidth
                   variant="primary"
                   onClick={handleContinue}
-                  disabled={quoteStatus === "loading"}
+                  disabled={quoteStatus === "loading" || !allVehiclesAssigned}
                 >
                   {locale === "es" ? "Continuar al Pago" : "Continue to Payment"}
                   <svg

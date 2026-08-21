@@ -38,7 +38,9 @@ export default function LocationPage({ params }: LocationPageProps) {
   const locale = lang || "en";
 
   const {
+    isHydrated,
     selectedService,
+    allVehiclesAssigned,
     selectedAddOns,
     customerLocation,
     setLocation,
@@ -113,12 +115,13 @@ export default function LocationPage({ params }: LocationPageProps) {
     setSavedAddresses(updated);
   };
 
-  // Redirect if prerequisites not met
+  // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
-    if (!selectedService) {
+    if (!isHydrated) return;
+    if (!selectedService || !allVehiclesAssigned) {
       router.push(`/${locale}/booking/select`);
     }
-  }, [selectedService, router, locale]);
+  }, [isHydrated, selectedService, allVehiclesAssigned, router, locale]);
 
   // Validate ZIP code when changed
   useEffect(() => {

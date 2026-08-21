@@ -183,6 +183,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     bookingVehicles,
     vehicleServices,
     hasMixedServices,
+    allVehiclesAssigned,
     bookingServiceLabel,
     subtotal,
     serviceFee,
@@ -212,11 +213,11 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
   // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
     if (!isHydrated) return;
-    if (!selectedService) { router.push(`/${locale}/booking/select`); return; }
+    if (!selectedService || !allVehiclesAssigned) { router.push(`/${locale}/booking/select`); return; }
     if (!customerLocation) { router.push(`/${locale}/booking/location`); return; }
     if (!selectedDate || !selectedTimeWindow) { router.push(`/${locale}/booking/schedule`); return; }
     if (!customerInfo) { router.push(`/${locale}/booking/review`); return; }
-  }, [isHydrated, selectedService, customerLocation, selectedDate, selectedTimeWindow, customerInfo, router, locale]);
+  }, [isHydrated, selectedService, allVehiclesAssigned, customerLocation, selectedDate, selectedTimeWindow, customerInfo, router, locale]);
 
   const handleCreateBooking = async () => {
     if (isProcessing || bookingCreated) return;
