@@ -335,7 +335,15 @@ export default async function LandingPage({
                                         <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
                                             {service.title}
                                         </h3>
-                                        <p className="text-white/75 text-base leading-relaxed">{service.desc}</p>
+                                    <ul className="text-white/75 text-base leading-relaxed space-y-1 list-disc list-inside">
+    {service.desc
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter((line: string) => line.length > 0)
+        .map((line: string, idx: number) => (
+            <li key={idx}>{line}</li>
+        ))}
+</ul>
                                     </div>
                                     <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
                                         <span className="text-[#D0B078] font-bold text-base">{service.price}</span>
