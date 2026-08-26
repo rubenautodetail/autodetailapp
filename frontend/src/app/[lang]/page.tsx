@@ -335,7 +335,7 @@ export default async function LandingPage({
                                         <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
                                             {service.title}
                                         </h3>
-                  <ul className="text-white/75 text-base leading-relaxed space-y-1.5 max-h-72 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#D0B078]/40 scrollbar-track-transparent">
+                <ul className="text-white/75 text-base leading-relaxed space-y-1.5 max-h-72 overflow-y-auto pr-2 gold-scrollbar">
     {service.desc
         .split('\n')
         .map((line: string) => line.trim())

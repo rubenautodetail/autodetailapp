@@ -202,3 +202,13 @@ h6 {
 body:has([data-booking-shell]) {
   background-color: #131835;
 }
+.gold-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.gold-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.gold-scrollbar::-webkit-scrollbar-thumb {
+    background: #D0B078;
+    border-radius: 10px;
+}
