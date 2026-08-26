@@ -418,19 +418,19 @@ export default function AdminServicesPage({ params }: AdminServicesProps) {
 
                             <FormField label={t.descEn}>
                                 <textarea
-                                    rows={2}
+                                    rows={6}
                                     value={editItem.description ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 resize-none"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 resize-y"
                                 />
                             </FormField>
 
                             <FormField label={t.descEs}>
                                 <textarea
-                                    rows={2}
+                                    rows={6}
                                     value={editItem.description_es ?? ''}
                                     onChange={(e) => setEditItem({ ...editItem, description_es: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 resize-none"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 resize-y"
                                 />
                             </FormField>
 
