@@ -335,13 +335,16 @@ export default async function LandingPage({
                                         <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
                                             {service.title}
                                         </h3>
-                                    <ul className="text-white/75 text-base leading-relaxed space-y-1 list-disc list-inside">
+                  <ul className="text-white/75 text-base leading-relaxed space-y-1.5">
     {service.desc
         .split('\n')
         .map((line: string) => line.trim())
         .filter((line: string) => line.length > 0)
         .map((line: string, idx: number) => (
-            <li key={idx}>{line}</li>
+            <li key={idx} className="flex gap-2">
+                <span className="text-white/40 shrink-0">•</span>
+                <span>{line}</span>
+            </li>
         ))}
 </ul>
                                     </div>
