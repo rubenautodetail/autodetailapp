@@ -160,9 +160,18 @@ export function ServiceCard({
             <div
                 className={`${isExpanded ? 'mt-2 block border-t border-[#2C355E] pt-2' : 'hidden'} text-sm leading-relaxed sm:mt-0 sm:mb-4 sm:block sm:border-0 sm:pt-0 sm:text-base sm:flex-grow sm:min-h-[3rem]`}
             >
-                <p className="text-[#A5B0D1]">
-                    {displayDescription}
-                </p>
+               <ul className="text-[#A5B0D1] space-y-1 max-h-56 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
+    {displayDescription
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter((line: string) => line.length > 0)
+        .map((line: string, idx: number) => (
+            <li key={idx} className="flex gap-2">
+                <span className="text-white/40 shrink-0">•</span>
+                <span>{line}</span>
+            </li>
+        ))}
+</ul>
                 {needsTruncation && (
                     <button
                         type="button"
