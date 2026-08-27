@@ -69,9 +69,20 @@ export default function AddOnSelector({
                     </span>
                     <span className="font-semibold text-[#D0B078]">+${(Number(addOn.price) || 0).toFixed(2)}</span>
                   </div>
-                  {addOn.description && (
-                    <p className="text-sm text-[#A5B0D1]">{addOn.description}</p>
-                  )}
+                 {addOn.description && (
+    <ul className="text-sm text-[#A5B0D1] space-y-1 max-h-40 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
+        {addOn.description
+            .split('\n')
+            .map((line: string) => line.trim())
+            .filter((line: string) => line.length > 0 && !/^=+$/.test(line))
+            .map((line: string, idx: number) => (
+                <li key={idx} className="flex gap-2">
+                    <span className="text-white/40 shrink-0">•</span>
+                    <span>{line}</span>
+                </li>
+            ))}
+    </ul>
+)}
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
