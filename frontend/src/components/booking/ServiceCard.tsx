@@ -108,9 +108,9 @@ export function ServiceCard({
                                 {(Number(visiblePrice) || 0).toFixed(2)}
                             </span>
                         </span>
-                        <p className="mt-0.5 min-h-4 text-[11px] font-medium text-[#8994B8]">
-                            {metaCaption}
-                        </p>
+<p className="mt-0.5 min-h-4 text-[11px] font-semibold uppercase tracking-wide text-[#D0B078]">
+    {metaCaption}
+</p>
                     </div>
                 </div>
 
