@@ -4,7 +4,17 @@ import { i18n } from '@/i18n-config';
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
 }
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+    const { lang } = await params;
+    const isEs = lang === 'es';
 
+    return {
+        title: isEs ? 'Términos y Condiciones' : 'Terms and Conditions',
+        description: isEs
+            ? 'Términos y condiciones de uso de Lux Auto Detail Services en Miami-Dade.'
+            : 'Terms and conditions for using Lux Auto Detail Services in Miami-Dade.',
+    };
+}
 export default async function TermsPage({
     params,
 }: {
