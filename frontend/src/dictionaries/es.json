@@ -1,7 +1,7 @@
 {
     "common": {
         "siteName": "Detailing on Demand",
-        "tagline": "Detallado Móvil Premium",
+       "tagline": "Reserva un detallador profesional en minutos. Vamos a tu casa u oficina en Miami-Dade — precios desde $70, sin filas ni esperas.",
         "getStarted": "Comenzar",
         "learnMore": "Más Información",
         "bookNow": "Reservar Ahora",
@@ -17,24 +17,24 @@
             "title": "Servicios Premium",
             "subtitle": "Elige el paquete perfecto para tu vehículo",
             "express": {
-                "title": "Detalle Exprés",
+                "title": "Detallado Exprés",
                 "desc": "Aspirado interior, limpieza de cristales y superficies + lavado a mano exterior, brillo de llantas y cera spray.",
                 "price": "Desde $100"
             },
             "interior": {
-                "title": "Detalle Interior",
+                "title": "Detallado Interior",
                 "desc": "Aspirado completo, limpieza de superficies con APC, alfombras y tapetes, acondicionamiento de asientos y tapicería.",
-                "price": "Desde $160"
+                "price": "Desde $200"
             },
             "exterior": {
-                "title": "Detalle Exterior",
+                "title": "Detallado Exterior",
                 "desc": "Pre-lavado con espuma, descontaminación con arcilla, lavado a mano, bordes de puerta y sealant de cera premium.",
-                "price": "Desde $160"
+                "price": "Desde $200"
             },
             "full": {
-                "title": "Detalle Completo",
+                "title": "Detallado Completo",
                 "desc": "La transformación total. Limpieza interior profunda + descontaminación exterior, arcilla y protección con cera.",
-                "price": "Desde $300"
+                "price": "Desde $400"
             }
         },
         "howItWorks": {

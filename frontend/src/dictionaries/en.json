@@ -1,7 +1,7 @@
 {
   "common": {
     "siteName": "Detailing on Demand",
-    "tagline": "Premium Mobile Car Detailing",
+   "tagline": "Book a professional mobile detailer in minutes. We come to your home or office in Miami-Dade — no driving, no waiting. From $70.",
     "getStarted": "Get Started",
     "learnMore": "Learn More",
     "bookNow": "Book Now",
@@ -24,17 +24,17 @@
       "interior": {
         "title": "Interior Detail",
         "desc": "Full vacuum, complete wipe-down with APC, carpet & mat cleaning, seat conditioning, and headliner care.",
-        "price": "From $160"
+        "price": "From $200"
       },
       "exterior": {
         "title": "Exterior Detail",
         "desc": "Pre-wash foam, clay bar decontamination, hand wash, door jambs, and premium wax sealant.",
-        "price": "From $160"
+        "price": "From $200"
       },
       "full": {
         "title": "Full Detail",
         "desc": "The complete makeover. Interior deep clean + exterior decontamination, clay bar, and wax protection.",
-        "price": "From $300"
+        "price": "From $400"
       }
     },
     "howItWorks": {
