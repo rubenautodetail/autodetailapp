@@ -68,8 +68,8 @@ export default async function LandingPage({
     const heroImage = hygraph.hero?.heroImageUrl ?? null;
     const allGalleryImages = hygraph.galleryImages ?? [];
     const workImages = allGalleryImages.filter((img) => img.section === 'home-hero' || img.section === 'home-gallery');
-    const serviceImages = allGalleryImages.filter((img) => img.section === 'home-services').sort((a,b) => a.sortOrder - b.sortOrder);
-    const stepImages = allGalleryImages.filter((img) => img.section === 'how-it-works').sort((a,b) => a.sortOrder - b.sortOrder);
+    const serviceImages = allGalleryImages.filter((img) => img.section === 'home-services').sort((a, b) => a.sortOrder - b.sortOrder);
+    const stepImages = allGalleryImages.filter((img) => img.section === 'how-it-works').sort((a, b) => a.sortOrder - b.sortOrder);
 
     // ── Services: live from Supabase so admin edits reflect here immediately ──
     let dbServices: { id: number; name: string; name_es: string | null; description: string | null; description_es: string | null; base_price: number; sort_order: number | null }[] = [];
@@ -98,15 +98,15 @@ export default async function LandingPage({
             title: locale === 'es' ? (s.name_es ?? s.name) : s.name,
             desc: locale === 'es' ? (s.description_es ?? s.description ?? '') : (s.description ?? ''),
             price: `From $${Math.round(s.base_price)}`,
-            icon: SERVICE_ICONS[s.name] ?? SERVICE_ICONS[Object.keys(SERVICE_ICONS).find(k => s.name.toLowerCase().includes(k.toLowerCase())) ?? ''] ?? ['\u26a1','\ud83e\udea1','\u2728','\ud83c\udfc6'][i] ?? '\u2728',
+            icon: SERVICE_ICONS[s.name] ?? SERVICE_ICONS[Object.keys(SERVICE_ICONS).find(k => s.name.toLowerCase().includes(k.toLowerCase())) ?? ''] ?? ['\u26a1', '\ud83e\udea1', '\u2728', '\ud83c\udfc6'][i] ?? '\u2728',
             image: serviceImages[i]?.imageUrl,
-          }))
+        }))
         : [
             { ...dict.home.services.express, icon: '\u26a1', image: serviceImages[0]?.imageUrl || '/images/services/mobile-car-detailing.png' },
             { ...dict.home.services.interior, icon: '\ud83e\udea1', image: serviceImages[1]?.imageUrl || '/images/services/interior-car-detailing.png' },
             { ...dict.home.services.exterior, icon: '\u2728', image: serviceImages[2]?.imageUrl || '/images/services/exterior-car-detailing.png' },
             { ...dict.home.services.full, icon: '\ud83c\udfc6', image: serviceImages[3]?.imageUrl || '/images/services/ceramic-coating.png' },
-          ];
+        ];
 
     const steps = [
         { number: '01', ...dict.home.howItWorks.step1, icon: '📍', image: stepImages[0]?.imageUrl },
@@ -159,7 +159,7 @@ export default async function LandingPage({
                 {/* Promotional Banner */}
                 {hygraph.promotionalBanner?.isActive && (
                     <div className="absolute top-0 left-0 right-0 z-50 text-[#131835] py-2.5 px-6 text-center shadow-lg font-medium text-sm sm:text-base tracking-wide flex items-center justify-center gap-2 overflow-hidden"
-                         style={{ background: 'linear-gradient(90deg, #c4a068 0%, #E6C88D 50%, #c4a068 100%)', backgroundSize: '200% auto', animation: 'shimmer 3s linear infinite' }}>
+                        style={{ background: 'linear-gradient(90deg, #c4a068 0%, #E6C88D 50%, #c4a068 100%)', backgroundSize: '200% auto', animation: 'shimmer 3s linear infinite' }}>
                         <style>{`
                             @keyframes shimmer {
                                 0% { background-position: 0% center; }
@@ -175,7 +175,7 @@ export default async function LandingPage({
                     <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
                     <Link
                         href={`/${locale}/login`}
-                        className="text-xs font-medium text-[#D0B078] border border-[#D0B078]/30 rounded-full px-4 py-1.5 hover:bg-[#D0B078]/10 transition-colors"
+                        className="btn-primary text-sm px-6 py-2.5"
                     >
                         {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
                     </Link>
@@ -309,9 +309,8 @@ export default async function LandingPage({
                         {services.map((service, i) => (
                             <div
                                 key={service.title}
-                                className={`glass-card rounded-2xl flex flex-col overflow-hidden ${
-                                    i === 3 ? 'ring-1 ring-[#D0B078]/30 shadow-[0_0_30px_rgba(208,176,120,0.1)]' : ''
-                                }`}
+                                className={`glass-card rounded-2xl flex flex-col overflow-hidden ${i === 3 ? 'ring-1 ring-[#D0B078]/30 shadow-[0_0_30px_rgba(208,176,120,0.1)]' : ''
+                                    }`}
                             >
                                 {service.image && (
                                     <div className="relative h-44 w-full shrink-0">
@@ -335,18 +334,18 @@ export default async function LandingPage({
                                         <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
                                             {service.title}
                                         </h3>
-                <ul className="text-white/75 text-base leading-relaxed space-y-1.5 max-h-72 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
-    {service.desc
-        .split('\n')
-        .map((line: string) => line.trim())
-        .filter((line: string) => line.length > 0)
-        .map((line: string, idx: number) => (
-            <li key={idx} className="flex gap-2">
-                <span className="text-white/40 shrink-0">•</span>
-                <span>{line}</span>
-            </li>
-        ))}
-</ul>
+                                        <ul className="text-white/75 text-base leading-relaxed space-y-1.5 max-h-72 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
+                                            {service.desc
+                                                .split('\n')
+                                                .map((line: string) => line.trim())
+                                                .filter((line: string) => line.length > 0)
+                                                .map((line: string, idx: number) => (
+                                                    <li key={idx} className="flex gap-2">
+                                                        <span className="text-white/40 shrink-0">•</span>
+                                                        <span>{line}</span>
+                                                    </li>
+                                                ))}
+                                        </ul>
                                     </div>
                                     <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
                                         <span className="text-[#D0B078] font-bold text-base">{service.price}</span>
