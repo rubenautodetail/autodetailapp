@@ -1,16 +1,19 @@
-# Detailing on Demand (DTailWash)
+# Lux Auto Detail Services (dtailwash.com)
 
 > Bilingual (English/Spanish) mobile car detailing marketplace serving Miami-Dade County, Florida. Customers book vetted, insured independent detailers who come to their home or office; contractors receive jobs and get paid through the platform.
 
 ## Company
 
-- Service area: Miami-Dade County (Miami, Miami Beach, Hialeah, Coral Gables, Doral, Kendall, Homestead)
+- Brand: Lux Auto Detail Services
+- Website: dtailwash.com
+- Service area: Miami-Dade County — Hialeah, Little Havana, Doral, Brickell, Miami Beach, Coral Gables, Kendall, Miami, Westchester, Sweetwater, Aventura, North Miami, Miami Gardens, Homestead, Cutler Bay, Pinecrest
 - Languages: English and Spanish, fully bilingual site and booking flow
-- Services: Express Detail, Interior Detail, Exterior Detail, Full Detail
+- Services: Mobile Car Detailing, Interior Car Detailing, Exterior Car Detailing, Ceramic Coating
 
 ## Pages
 
-- [Homepage (English)](https://dtailwash.com/en): Overview of services, pricing, and booking
-- [Homepage (Spanish)](https://dtailwash.com/es): Resumen de servicios, precios y reservas
-- [Book a detail](https://dtailwash.com/en/booking/select): Start a booking
-- [Contractors](https://dtailwash.com/en/contractors): Information for detailers who want to join the platform
+- [Homepage (English)](https://www.dtailwash.com/en): Overview of services, pricing, and booking
+- [Homepage (Spanish)](https://www.dtailwash.com/es): Resumen de servicios, precios y reservas
+- [Book a detail](https://www.dtailwash.com/en/booking/select): Start a booking
+- [Contractors](https://www.dtailwash.com/en/contractors): Information for detailers who want to join the platform
+- Service + location pages: https://www.dtailwash.com/en/[service]/[city] — e.g. /en/ceramic-coating/doral, /en/mobile-car-detailing/kendall
