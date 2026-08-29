@@ -235,9 +235,9 @@ export default async function LandingPage({
             <section className="border-y border-white/5 bg-white/[0.02]">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-3 gap-2 sm:gap-4 text-center">
                     {[
-                        { value: '2,400+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
-                        { value: '4.97', label: locale === 'es' ? 'Calificación promedio' : 'Average rating' },
-                        { value: '1', label: locale === 'es' ? 'Ciudad servida' : 'City served' },
+                        { value: '90+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
+                        { value: '5', label: locale === 'es' ? 'Calificación promedio' : 'Average rating' },
+                        { value: '16', label: locale === 'es' ? 'Ciudad servida' : 'City served' },
                     ].map((stat) => (
                         <div key={stat.label} className="space-y-1">
                             <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gold-gradient">{stat.value}</div>
