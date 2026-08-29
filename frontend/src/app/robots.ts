@@ -12,6 +12,14 @@ const PRIVATE_DISALLOW = [
     '/es/dashboard/',
     '/en/customer/',
     '/es/customer/',
+    '/en/login',
+    '/es/login',
+    '/en/register',
+    '/es/register',
+    '/en/forgot-password',
+    '/es/forgot-password',
+    '/en/reset-password',
+    '/es/reset-password',
     '/api/',
 ];
 
