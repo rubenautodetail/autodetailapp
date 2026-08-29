@@ -132,8 +132,8 @@ export function getCityServiceBusinessSchema(
         },
         aggregateRating: {
             '@type': 'AggregateRating',
-            ratingValue: '4.97',
-            reviewCount: '2400',
+            ratingValue: '5',
+            reviewCount: '8',
         },
     };
 }
