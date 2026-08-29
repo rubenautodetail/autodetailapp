@@ -5,6 +5,17 @@ export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+    const { lang } = await params;
+    const isEs = lang === 'es';
+
+    return {
+        title: isEs ? 'Política de Privacidad' : 'Privacy Policy',
+        description: isEs
+            ? 'Política de privacidad de Lux Auto Detail Services en Miami-Dade.'
+            : 'Privacy policy for Lux Auto Detail Services in Miami-Dade.',
+    };
+}
 export default async function PrivacyPage({
     params,
 }: {
