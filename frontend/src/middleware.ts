@@ -22,7 +22,10 @@ export default async function proxy(request: NextRequest) {
 
     // ── 2. Handle Session & Auth Protection ──────────────────────────────────
     // updateSession handles session refresh AND route/role protection
-    return await updateSession(request)
+const locale = i18n.locales.find((l) => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) || i18n.defaultLocale
+const response = await updateSession(request)
+response.headers.set('x-locale', locale)
+return response
 }
 
 export const config = {

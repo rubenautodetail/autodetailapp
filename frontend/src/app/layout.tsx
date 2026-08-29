@@ -1,4 +1,5 @@
 import { Inter, Playfair_Display } from "next/font/google";
+import { headers } from 'next/headers';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import Script from 'next/script';
 import './globals.css';
@@ -21,13 +22,16 @@ const GSC_VERIFICATION = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
 const BING_VERIFICATION = process.env.NEXT_PUBLIC_BING_VERIFICATION;
 const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const locale = headersList.get('x-locale') || 'en';
+
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang={locale} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {GSC_VERIFICATION && (
