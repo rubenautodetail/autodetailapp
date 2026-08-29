@@ -6,6 +6,17 @@ import { getContractorLandingContent } from '@/lib/hygraph';
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
 }
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+    const { lang } = await params;
+    const isEs = lang === 'es';
+
+    return {
+        title: isEs ? 'Trabaja con Nosotros' : 'Work With Us',
+        description: isEs
+            ? 'Únete como contratista de detallado de autos en Miami-Dade. Más clientes, tu propio horario, pagos rápidos.'
+            : 'Join as a mobile car detailing contractor in Miami-Dade. More clients, your own schedule, fast payouts.',
+    };
+}
 
 const PERKS = [
     {
