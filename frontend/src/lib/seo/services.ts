@@ -47,7 +47,7 @@ export const SERVICES: DetailService[] = [
     {
         id: 'mobile-car-detailing',
         slug: { en: 'mobile-car-detailing', es: 'detallado-de-autos-a-domicilio' },
-        schemaType: 'AutoDetailing',
+        schemaType: 'AutoWash',
         name: { en: 'Mobile Car Detailing', es: 'Detallado de Autos a Domicilio' },
         tagline: {
             en: 'A professional detailer comes to your home or office — no driving, no waiting rooms.',
@@ -71,7 +71,7 @@ export const SERVICES: DetailService[] = [
     {
         id: 'interior-detailing',
         slug: { en: 'interior-car-detailing', es: 'detallado-interior-de-autos' },
-        schemaType: 'AutoDetailing',
+        schemaType: 'AutoWash',
         name: { en: 'Interior Car Detailing', es: 'Detallado Interior de Autos' },
         tagline: {
             en: 'Deep-clean every surface inside your car — seats, carpets, vents, and dash restored.',
@@ -95,7 +95,7 @@ export const SERVICES: DetailService[] = [
     {
         id: 'exterior-detailing',
         slug: { en: 'exterior-car-detailing', es: 'detallado-exterior-de-autos' },
-        schemaType: 'AutoDetailing',
+        schemaType: 'AutoWash',
         name: { en: 'Exterior Car Detailing', es: 'Detallado Exterior de Autos' },
         tagline: {
             en: 'Restore a deep, glossy shine with a paint-safe wash, decontamination, and wax.',
@@ -119,7 +119,7 @@ export const SERVICES: DetailService[] = [
     {
         id: 'ceramic-coating',
         slug: { en: 'ceramic-coating', es: 'recubrimiento-ceramico' },
-        schemaType: 'AutoDetailing',
+        schemaType: 'AutoWash',
         name: { en: 'Ceramic Coating', es: 'Recubrimiento Cerámico' },
         tagline: {
             en: 'Years of protection and a mirror finish — hydrophobic, UV-resistant, gloss-locked.',

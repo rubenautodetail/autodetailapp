@@ -108,7 +108,7 @@ export function getCityServiceBusinessSchema(
 ): SchemaObject {
     return {
         '@context': 'https://schema.org',
-        '@type': 'AutoDetailing',
+        '@type': 'AutoWash',
         name: `${siteName} — ${serviceName} ${cityName}`,
         description,
         url,
