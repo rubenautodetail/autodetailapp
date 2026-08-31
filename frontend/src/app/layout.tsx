@@ -33,7 +33,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+       
         {GSC_VERIFICATION && (
           <meta name="google-site-verification" content={GSC_VERIFICATION} />
         )}
