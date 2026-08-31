@@ -22,9 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     const siteName = dict.common.siteName;
     const description = dict.common.tagline;
 
-    const homeTitle = validLang === 'es'
-        ? 'Detallado de Autos a Domicilio en Miami-Dade | Detailing on Demand'
-        : 'Mobile Car Detailing in Miami-Dade | Detailing on Demand';
+    const homeTitle = validLang === 'es' ? 'Detallado a Domicilio Miami-Dade | Detailing on Demand' : 'Mobile Car Detailing in Miami-Dade | Detailing on Demand';
 
     return {
         title: {
