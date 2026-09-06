@@ -115,7 +115,14 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'exterior car detailing', es: 'lavado de autos a domicilio' },
         priority: 0.9,
         icon: '✨',
-        imageUrl: '/images/services/exterior-car-detailing.png',
+        imageUrl: '/images/services/exterior-detailing-01.jpg',
+        imageUrls: [
+            '/images/services/exterior-detailing-01.jpg',
+            '/images/services/exterior-detailing-02.jpg',
+            '/images/services/exterior-detailing-03.jpg',
+            '/images/services/exterior-detailing-04.jpg',
+            '/images/services/exterior-detailing-05.jpg',
+        ],
     },
     {
         id: 'ceramic-coating',
