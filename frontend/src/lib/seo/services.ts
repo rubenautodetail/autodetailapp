@@ -41,6 +41,7 @@ export interface DetailService {
     icon: string;
     /** path to local image asset */
     imageUrl: string;
+    imageUrls?: string[];
 }
 
 export const SERVICES: DetailService[] = [

@@ -7,6 +7,7 @@ import { getDictionary } from '@/lib/dictionaries';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
 import ImagePlaceholder from '@/components/landing/programmatic/ImagePlaceholder';
+import ServiceImageCarousel from '@/components/ServiceImageCarousel';
 import { getAllLandingParams, resolveLanding } from '@/lib/seo/landing';
 import { SERVICES, t } from '@/lib/seo/services';
 import { getNearbyNeighborhoods } from '@/lib/seo/locations';
@@ -181,13 +182,21 @@ export default async function ServiceCityPage({
                     </div>
 
                     <div className="dtw-rise" style={{ animationDelay: '120ms' }}>
-                        <ImagePlaceholder
-                            src={content.imageUrl}
-                            alt={es ? `${service.name.es} en ${neighborhood.name}` : `${service.name.en} in ${neighborhood.name}`}
-                            prompt={`Premium cinematic photo of a professional mobile car detailer working on a luxury car in ${neighborhood.name}, Miami. Deep navy and champagne-gold color grade, golden-hour light, glossy wet paint reflections, DTailWash branded van softly blurred in background. Editorial, high-end, shallow depth of field.`}
-                            aspect="aspect-[4/5]"
-                            priority
-                        />
+                        {content.imageUrls && content.imageUrls.length > 1 ? (
+                            <ServiceImageCarousel
+                                images={content.imageUrls}
+                                alt={es ? `${service.name.es} en ${neighborhood.name}` : `${service.name.en} in ${neighborhood.name}`}
+                                aspect="aspect-[4/5]"
+                            />
+                        ) : (
+                            <ImagePlaceholder
+                                src={content.imageUrl}
+                                alt={es ? `${service.name.es} en ${neighborhood.name}` : `${service.name.en} in ${neighborhood.name}`}
+                                prompt={`Premium cinematic photo of a professional mobile car detailer working on a luxury car in ${neighborhood.name}, Miami. Deep navy and champagne-gold color grade, golden-hour light, glossy wet paint reflections, DTailWash branded van softly blurred in background. Editorial, high-end, shallow depth of field.`}
+                                aspect="aspect-[4/5]"
+                                priority
+                            />
+                        )}
                     </div>
                 </div>
             </section>

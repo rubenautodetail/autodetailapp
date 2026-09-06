@@ -40,6 +40,7 @@ export interface LandingContent {
     faqs: Faq[];
     /** path to service image asset */
     imageUrl: string;
+    imageUrls?: string[];
 }
 
 /** Every (locale, service, city) combination — for generateStaticParams + sitemap. */
@@ -95,6 +96,7 @@ export function resolveLanding(
             durationLabel: `≈ ${hrs}`,
             faqs: buildFaqsEs(service, neighborhood, price, hrs),
             imageUrl: service.imageUrl,
+            imageUrls: service.imageUrls,
         };
     }
 
@@ -114,6 +116,7 @@ export function resolveLanding(
         durationLabel: `≈ ${hrs}`,
         faqs: buildFaqsEn(service, neighborhood, price, hrs),
         imageUrl: service.imageUrl,
+        imageUrls: service.imageUrls,
     };
 }
 
