@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe/server";
 import { verifyAdmin } from "@/lib/verifyAdmin";
+import { notify } from "@/lib/notifications";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     // Fetch booking to get status + payment intent before cancelling
     const { data: booking } = await supabase
       .from("bookings")
-      .select("status, payment_intent_id, payment_status")
+      .select("*")
       .eq("id", bookingId)
       .single();
 
@@ -68,6 +69,34 @@ export async function POST(req: NextRequest) {
       .eq("id", bookingId);
 
     if (error) throw error;
+
+    // --- Notification dispatch (best-effort, never block response) ---
+    try {
+      // 1. Send cancellation email to customer
+      await notify({
+        type: "booking.cancelled",
+        booking: { ...booking, status: "cancelled" },
+      });
+
+      // 2. If a contractor was assigned, notify them
+      if (booking.contractor_id) {
+        const { data: contractor } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", booking.contractor_id)
+          .single();
+
+        if (contractor?.email) {
+          await notify({
+            type: "contractor.job_cancelled",
+            booking: { ...booking, status: "cancelled" },
+            contractorEmail: contractor.email,
+          });
+        }
+      }
+    } catch (notifyErr) {
+      console.error("[admin/cancel] notification failed", notifyErr);
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
