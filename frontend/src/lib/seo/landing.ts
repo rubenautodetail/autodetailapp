@@ -74,21 +74,31 @@ export function resolveLanding(
         : `${service.durationMin} min`;
 
     const path = `/${locale}/${service.slug[locale]}/${neighborhood.slug}`;
+    const isShopBased = service.id === 'ceramic-coating';
     const alternates = {
         en: `${APP_URL}/en/${service.slug.en}/${neighborhood.slug}`,
         es: `${APP_URL}/es/${service.slug.es}/${neighborhood.slug}`,
     };
 
-    if (locale === 'es') {
+      if (locale === 'es') {
         return {
             locale, service, neighborhood, path, alternates,
             title: `${name} en ${place} | DTailWash — Desde ${price}`,
-            metaDescription: `${name} a domicilio en ${place}, Miami-Dade. Un detallador profesional llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
+            metaDescription: isShopBased
+                ? `${name} en nuestro taller en Doral. Trae tu auto para un acabado profesional. Atendemos a clientes de ${place} y todo Miami-Dade. Desde ${price}.`
+                : `${name} a domicilio en ${place}, Miami-Dade. Un detallador profesional llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
             h1: `${name} en ${place}`,
-            heroEyebrow: `A domicilio · ${t(neighborhood.label, locale)}`,
+            heroEyebrow: isShopBased
+                ? `En taller · Doral, FL`
+                : `A domicilio · ${t(neighborhood.label, locale)}`,
             heroSub: t(service.tagline, locale),
-            quickAnswer: `DTailWash ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Un detallador verificado llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp.`,
-            intro: [
+            quickAnswer: isShopBased
+                ? `DTailWash ofrece ${kw} en nuestro taller en Doral, desde ${price}. Trae tu auto para un ambiente controlado; el servicio dura aproximadamente ${hrs}. Llama o envía un mensaje al 305-988-4449 para agendar tu cita.`
+                : `DTailWash ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Un detallador verificado llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp.`,
+            intro: isShopBased ? [
+                `¿Buscas ${kw} en ${place}? DTailWash ofrece recubrimiento cerámico profesional en nuestro taller en Doral — trae tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado posible. Atendemos con orgullo a clientes de todo Miami-Dade, incluyendo ${place}.`,
+                `Precios transparentes desde ${price}, pago seguro y atención en español. Llámanos o escríbenos al 305-988-4449 para agendar tu cita en nuestro taller en Doral.`,
+            ] : [
                 `¿Buscas ${kw} en ${place}? DTailWash conecta a los residentes de ${place} con detalladores móviles verificados que llegan hasta tu puerta — sin manejar hasta un taller ni esperar en fila. ${t(neighborhood.blurb, locale)}`,
                 `Cubrimos los códigos postales ${neighborhood.zips.slice(0, 4).join(', ')} y zonas cercanas como ${neighborhood.landmarks.join(', ')}. Precios transparentes desde ${price}, pago seguro y atención en español. Reserva tu ${name.toLowerCase()} en menos de 60 segundos.`,
             ],
@@ -100,15 +110,24 @@ export function resolveLanding(
         };
     }
 
-    return {
+       return {
         locale, service, neighborhood, path, alternates,
         title: `${name} in ${place} | DTailWash — From ${price}`,
-        metaDescription: `${name} in ${place}, Miami-Dade. A vetted detailer comes to your home or office — book online in 60 seconds. Transparent pricing from ${price}.`,
+        metaDescription: isShopBased
+            ? `${name} at our Doral facility. Bring your car in for a professional finish. Serving clients from ${place} and all of Miami-Dade. Starting at ${price}.`
+            : `${name} in ${place}, Miami-Dade. A vetted detailer comes to your home or office — book online in 60 seconds. Transparent pricing from ${price}.`,
         h1: `${name} in ${place}`,
-        heroEyebrow: `Mobile · ${t(neighborhood.label, locale)}`,
+        heroEyebrow: isShopBased
+            ? `In-Shop · Doral, FL`
+            : `Mobile · ${t(neighborhood.label, locale)}`,
         heroSub: t(service.tagline, locale),
-        quickAnswer: `DTailWash offers ${kw} in ${place}, Miami-Dade, starting at ${price}. A vetted detailer comes to your location; a typical service takes about ${hrs}. Book online or reserve by text.`,
-        intro: [
+        quickAnswer: isShopBased
+            ? `DTailWash offers ${kw} at our Doral facility, starting at ${price}. Bring your car in for a controlled environment; the service takes about ${hrs}. Call or text 305-988-4449 to book your appointment.`
+            : `DTailWash offers ${kw} in ${place}, Miami-Dade, starting at ${price}. A vetted detailer comes to your location; a typical service takes about ${hrs}. Book online or reserve by text.`,
+        intro: isShopBased ? [
+            `Looking for ${kw} in ${place}? DTailWash offers professional ceramic coating at our Doral facility — bring your car in for a controlled, dust-free environment that ensures the best possible finish. We proudly serve clients across Miami-Dade, including ${place}.`,
+            `Transparent pricing from ${price}, secure payment, and service in English or Spanish. Call or text us at 305-988-4449 to book your appointment at our Doral facility.`,
+        ] : [
             `Looking for ${kw} in ${place}? DTailWash connects ${place} residents with vetted mobile detailers who come to your door — no driving to a shop, no waiting rooms. ${t(neighborhood.blurb, locale)}`,
             `We cover ZIP codes ${neighborhood.zips.slice(0, 4).join(', ')} and nearby areas like ${neighborhood.landmarks.join(', ')}. Transparent pricing from ${price}, secure online payment, and service in English or Spanish. Book your ${name.toLowerCase()} in under 60 seconds.`,
         ],
@@ -122,22 +141,27 @@ export function resolveLanding(
 
 function buildFaqsEn(s: DetailService, n: Neighborhood, price: string, hrs: string): Faq[] {
     const name = s.name.en.toLowerCase();
+    const isShop = s.id === 'ceramic-coating';
     return [
         {
             q: `How much does ${name} cost in ${n.name}?`,
             a: `${s.name.en} in ${n.name} starts at ${price}. Your final quote depends on vehicle size and condition — you'll see transparent pricing before you confirm, with no hidden fees.`,
         },
         {
-            q: `Do you come to my home or office in ${n.name}?`,
-            a: `Yes. DTailWash is fully mobile — a vetted detailer arrives at your home, office, or building in ${n.name} (ZIPs ${n.zips.slice(0, 3).join(', ')} and nearby) with everything needed to complete the job on-site.`,
+            q: isShop ? `Do you come to my home, or do I bring my car in?` : `Do you come to my home or office in ${n.name}?`,
+            a: isShop
+                ? `${s.name.en} is done at our Doral facility, not on-site — you'll bring your car in for a controlled, dust-free environment that ensures the best finish. Call or text 305-988-4449 to book.`
+                : `Yes. DTailWash is fully mobile — a vetted detailer arrives at your home, office, or building in ${n.name} (ZIPs ${n.zips.slice(0, 3).join(', ')} and nearby) with everything needed to complete the job on-site.`,
         },
         {
             q: `How long does ${name} take?`,
             a: `A typical ${name} takes about ${hrs}. You can keep working or relax while it's done — no waiting room required.`,
         },
         {
-            q: `Do I need to provide water or power?`,
-            a: `No. Our detailers arrive self-contained with their own water and equipment, so all we need is access to your vehicle in ${n.name}.`,
+            q: isShop ? `Why is ceramic coating done in-shop instead of mobile?` : `Do I need to provide water or power?`,
+            a: isShop
+                ? `Ceramic coating needs a controlled, dust-free environment for the best results, so we only offer it at our Doral facility rather than on-site.`
+                : `No. Our detailers arrive self-contained with their own water and equipment, so all we need is access to your vehicle in ${n.name}.`,
         },
         {
             q: `Can I book ${name} in Spanish?`,
@@ -145,25 +169,29 @@ function buildFaqsEn(s: DetailService, n: Neighborhood, price: string, hrs: stri
         },
     ];
 }
-
 function buildFaqsEs(s: DetailService, n: Neighborhood, price: string, hrs: string): Faq[] {
     const name = s.name.es.toLowerCase();
+    const isShop = s.id === 'ceramic-coating';
     return [
         {
             q: `¿Cuánto cuesta el ${name} en ${n.name}?`,
             a: `El ${s.name.es.toLowerCase()} en ${n.name} comienza desde ${price}. El precio final depende del tamaño y estado del vehículo — verás el precio claro antes de confirmar, sin cargos ocultos.`,
         },
         {
-            q: `¿Van hasta mi casa u oficina en ${n.name}?`,
-            a: `Sí. DTailWash es totalmente a domicilio — un detallador verificado llega a tu casa, oficina o edificio en ${n.name} (códigos ${n.zips.slice(0, 3).join(', ')} y cercanos) con todo lo necesario para hacer el trabajo en el sitio.`,
+            q: isShop ? `¿Van hasta mi casa o llevo mi auto?` : `¿Van hasta mi casa u oficina en ${n.name}?`,
+            a: isShop
+                ? `El ${name} se hace en nuestro taller en Doral, no a domicilio — traes tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado. Llama o escribe al 305-988-4449 para agendar.`
+                : `Sí. DTailWash es totalmente a domicilio — un detallador verificado llega a tu casa, oficina o edificio en ${n.name} (códigos ${n.zips.slice(0, 3).join(', ')} y cercanos) con todo lo necesario para hacer el trabajo en el sitio.`,
         },
         {
             q: `¿Cuánto tiempo toma el ${name}?`,
             a: `Un ${name} normal toma aproximadamente ${hrs}. Puedes seguir con tu día mientras lo hacemos — sin salas de espera.`,
         },
         {
-            q: `¿Necesito dar agua o electricidad?`,
-            a: `No. Nuestros detalladores llegan con su propia agua y equipo, así que solo necesitamos acceso a tu vehículo en ${n.name}.`,
+            q: isShop ? `¿Por qué el recubrimiento cerámico se hace en taller y no a domicilio?` : `¿Necesito dar agua o electricidad?`,
+            a: isShop
+                ? `El recubrimiento cerámico necesita un ambiente controlado y libre de polvo para el mejor resultado, por eso solo lo ofrecemos en nuestro taller en Doral.`
+                : `No. Nuestros detalladores llegan con su propia agua y equipo, así que solo necesitamos acceso a tu vehículo en ${n.name}.`,
         },
         {
             q: `¿Puedo reservar por WhatsApp?`,
