@@ -17,13 +17,12 @@ import { capturePaymentIntent } from '@/lib/stripe/server';
 import { notify } from '@/lib/notifications';
 import { sendApprovalReminderEmail } from '@/lib/email';
 
-const AUTO_APPROVE_MINUTES = 15;
+const AUTO_APPROVE_MINUTES = 30;
 
 const REMINDERS = [
-    { atMinute: 2,  type: 'approval_reminder_1', minutesRemaining: 13 },
-    { atMinute: 5,  type: 'approval_reminder_2', minutesRemaining: 10 },
-    { atMinute: 10, type: 'approval_reminder_3', minutesRemaining: 5  },
-    { atMinute: 13, type: 'approval_reminder_4', minutesRemaining: 2  },
+    { atMinute: 5,  type: 'approval_reminder_1', minutesRemaining: 25 },
+    { atMinute: 10,  type: 'approval_reminder_2', minutesRemaining: 20 },
+    { atMinute: 15, type: 'approval_reminder_3', minutesRemaining: 15  },
 ] as const;
 
 async function runAutoApprove(): Promise<NextResponse> {
