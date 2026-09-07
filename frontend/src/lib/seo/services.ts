@@ -54,7 +54,7 @@ export const SERVICES: DetailService[] = [
             en: 'A professional detailer comes to your home or office — no driving, no waiting rooms.',
             es: 'Un detallador profesional llega a tu casa u oficina — sin manejar, sin salas de espera.',
         },
-        priceFrom: 79,
+        priceFrom: 70,
         durationMin: 120,
         includes: [
             { en: 'Hand wash & foam bath', es: 'Lavado a mano y baño de espuma' },
@@ -78,8 +78,8 @@ export const SERVICES: DetailService[] = [
             en: 'Deep-clean every surface inside your car — seats, carpets, vents, and dash restored.',
             es: 'Limpieza profunda de cada superficie interior — asientos, alfombras, rejillas y tablero.',
         },
-        priceFrom: 149,
-        durationMin: 150,
+        priceFrom: 200,
+        durationMin: 180,
         includes: [
             { en: 'Full interior vacuum', es: 'Aspirado interior completo' },
             { en: 'Steam-clean seats & carpets', es: 'Limpieza a vapor de asientos y alfombras' },
@@ -102,8 +102,8 @@ export const SERVICES: DetailService[] = [
             en: 'Restore a deep, glossy shine with a paint-safe wash, decontamination, and wax.',
             es: 'Recupera un brillo profundo con lavado seguro, descontaminación y cera.',
         },
-        priceFrom: 129,
-        durationMin: 120,
+        priceFrom: 200,
+        durationMin: 180,
         includes: [
             { en: 'pH-neutral hand wash', es: 'Lavado a mano con pH neutro' },
             { en: 'Clay-bar decontamination', es: 'Descontaminación con clay bar' },
@@ -133,8 +133,8 @@ export const SERVICES: DetailService[] = [
             en: 'Years of protection and a mirror finish — hydrophobic, UV-resistant, gloss-locked.',
             es: 'Años de protección y acabado espejo — hidrofóbico, resistente a UV, brillo sellado.',
         },
-        priceFrom: 599,
-        durationMin: 360,
+        priceFrom: 999,
+        durationMin: 1440,
         includes: [
             { en: 'Full exterior decontamination', es: 'Descontaminación exterior completa' },
             { en: 'Single-stage paint correction', es: 'Corrección de pintura de una etapa' },
