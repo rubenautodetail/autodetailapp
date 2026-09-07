@@ -150,8 +150,8 @@ export default async function ServiceCityPage({
                             {content.heroSub}
                         </p>
                         <div className="dtw-rise flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/60" style={{ animationDelay: '180ms' }}>
-                            <span className="text-[#D0B078]">★ 4.97</span>
-                            <span>· {es ? '2,400+ detalles' : '2,400+ details'}</span>
+                            <span className="text-[#D0B078]">★ 5.0</span>
+                            <span>· {es ? '90+ detalles' : '90+ details'}</span>
                             <span>· {es ? 'Detalladores verificados' : 'Vetted detailers'}</span>
                             <span>· {es ? 'Asegurados' : 'Insured'}</span>
                         </div>
@@ -253,7 +253,7 @@ export default async function ServiceCityPage({
                             { icon: '🛡️', t: es ? 'Verificados y asegurados' : 'Vetted & insured', d: es ? 'Cada detallador es revisado y asegurado.' : 'Every detailer is background-checked and insured.' },
                             { icon: '💳', t: es ? 'Precio transparente' : 'Transparent pricing', d: es ? 'Ves el precio antes de confirmar. Sin sorpresas.' : 'See your price before you confirm. No surprises.' },
                             { icon: '🗣️', t: es ? 'Bilingüe' : 'Bilingual', d: es ? 'Reserva y atención en español o inglés.' : 'Book and get service in English or Spanish.' },
-                            { icon: '⭐', t: es ? '4.97 de calificación' : '4.97 average rating', d: es ? 'Más de 2,400 detalles completados.' : 'Over 2,400 details completed.' },
+                            { icon: '⭐', t: es ? '5.0 de calificación' : '5.0 average rating', d: es ? 'Más de 90 detalles completados.' : 'Over 90 details completed.' },
                             { icon: '📱', t: es ? 'Reserva en 60s' : 'Book in 60s', d: es ? 'En línea o por WhatsApp, cuando quieras.' : 'Online or by text, whenever you want.' },
                         ].map((v) => (
                             <div key={v.t} className="glass-card rounded-2xl p-6">
