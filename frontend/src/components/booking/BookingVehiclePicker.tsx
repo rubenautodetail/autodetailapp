@@ -56,15 +56,15 @@ export function BookingVehiclePicker({
     const isEs = locale === 'es';
     const selectedVehicles = garageVehicles.filter((vehicle) => selectedVehicleIds.includes(vehicle.id));
     const hasSelection = selectedVehicles.length > 0 || Boolean(selectedBodyStyle);
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true);
     const [showOneOff, setShowOneOff] = useState(selectedVehicles.length === 0 && Boolean(selectedBodyStyle));
     const panelRef = useRef<HTMLDivElement>(null);
     const changeButtonRef = useRef<HTMLButtonElement>(null);
     const shouldFocusPanel = useRef(false);
     const shouldFocusChange = useRef(false);
 
-    // Stays open until something is actually driving the prices.
-    const isOpen = !hasSelection || isExpanded;
+    // Stays open until the user manually collapses it with the pencil/check button.
+    const isOpen = isExpanded;
 
     // Keep the keyboard user where they expect to be: in the panel when it opens,
     // on the summary's Change button when a choice collapses it.
@@ -92,9 +92,7 @@ export function BookingVehiclePicker({
     };
 
     const handleBodyStyleSelect = (style: VehicleBodyStyle) => {
-        shouldFocusChange.current = true;
         onSelectBodyStyle(style);
-        setIsExpanded(false);
     };
 
     return (
@@ -246,11 +244,10 @@ export function BookingVehiclePicker({
                                             role="checkbox"
                                             aria-checked={isChecked}
                                             onClick={() => handleVehicleToggle(vehicle)}
-                                            className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${
-                                                isChecked
+                                            className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${isChecked
                                                     ? 'border-[#D0B078] bg-[#D0B078]/10'
                                                     : 'border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60'
-                                            }`}
+                                                }`}
                                         >
                                             <span className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
                                                 <VehicleBodyStyleArtwork
@@ -269,11 +266,10 @@ export function BookingVehiclePicker({
                                             </span>
                                             <span
                                                 aria-hidden="true"
-                                                className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-sm font-black ${
-                                                    isChecked
+                                                className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-sm font-black ${isChecked
                                                         ? 'bg-[#D0B078] text-[#131835]'
                                                         : 'border-2 border-[#4A5580]'
-                                                }`}
+                                                    }`}
                                             >
                                                 {isChecked ? '✓' : ''}
                                             </span>
