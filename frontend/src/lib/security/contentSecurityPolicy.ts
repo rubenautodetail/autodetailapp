@@ -3,7 +3,7 @@ export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   // Next.js currently requires inline scripts/styles; unsafe-eval is intentionally excluded.
   // Clarity's www loader chains to scripts.clarity.ms, so both hosts are needed.
-  "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://js.stripe.com https://www.googletagmanager.com https://www.clarity.ms https://scripts.clarity.ms",
+  "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://js.stripe.com https://www.googletagmanager.com https://www.clarity.ms https://scripts.clarity.ms https://pay.google.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com https://js.stripe.com data:",
   [
@@ -17,7 +17,7 @@ export const CONTENT_SECURITY_POLICY = [
     "https://*.clarity.ms https://c.bing.com",
   ].join(" "),
   "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com https://images.unsplash.com https://images.hygraph.com https://*.graphassets.com https://*.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com",
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://pay.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
