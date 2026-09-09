@@ -163,13 +163,13 @@ export default async function ServiceCityPage({
                                 <span className="text-sm text-white/50">· {content.durationLabel}</span>
                             </div>
                             <div className="flex flex-col gap-3 sm:flex-row">
-                                {es && waHref ? (
+                                {waHref ? (
                                     <>
                                         <a href={waHref} className="rounded-full bg-[#25D366] px-6 py-3 text-center text-sm font-semibold text-white transition-transform hover:scale-[1.03]">
                                             WhatsApp
                                         </a>
                                         <Link href={bookHref} className="rounded-full border border-[#D0B078]/40 bg-[#D0B078]/10 px-6 py-3 text-center text-sm font-semibold text-[#D0B078] transition-colors hover:bg-[#D0B078]/20">
-                                            Reservar en línea
+                                            {es ? 'Reservar en línea' : 'Book online'}
                                         </Link>
                                     </>
                                 ) : (
