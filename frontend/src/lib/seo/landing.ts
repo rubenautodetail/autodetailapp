@@ -86,7 +86,7 @@ export function resolveLanding(
             title: `${name} en ${place} | Dtailwash — Desde ${price}`,
             metaDescription: isShopBased
                 ? `${name} en nuestro taller en Doral. Trae tu auto para un acabado profesional. Atendemos a clientes de ${place} y todo Miami-Dade. Desde ${price}.`
-                : `${name} a domicilio en ${place}, Miami-Dade. Un detallador profesional llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
+                : `${name} a domicilio en ${place}, Miami-Dade. Nuestro equipo llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
             h1: `${name} en ${place}`,
             heroEyebrow: isShopBased
                 ? `En taller · Doral, FL`
@@ -165,7 +165,7 @@ function buildFaqsEn(s: DetailService, n: Neighborhood, price: string, hrs: stri
         },
         {
             q: `Can I book ${name} in Spanish?`,
-            a: `Absolutely. Dtailwash is fully bilingual — book online in English or Spanish, or message us directly and a Spanish-speaking detailer will take care of you.`,
+            a: `Absolutely. Dtailwash is fully bilingual — book online in English or Spanish, or message us directly and someone from our team will take care of you.`,
         },
     ];
 }
@@ -181,7 +181,7 @@ function buildFaqsEs(s: DetailService, n: Neighborhood, price: string, hrs: stri
             q: isShop ? `¿Van hasta mi casa o llevo mi auto?` : `¿Van hasta mi casa u oficina en ${n.name}?`,
             a: isShop
                 ? `El ${name} se hace en nuestro taller en Doral, no a domicilio — traes tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado. Llama o escribe al 305-988-4449 para agendar.`
-                : `Sí. Dtailwash es totalmente a domicilio — un detallador verificado llega a tu casa, oficina o edificio en ${n.name} (códigos ${n.zips.slice(0, 3).join(', ')} y cercanos) con todo lo necesario para hacer el trabajo en el sitio.`,
+                : `Sí. Dtailwash es totalmente a domicilio — nuestro equipo llega a tu casa, oficina o edificio en ${n.name} (códigos ${n.zips.slice(0, 3).join(', ')} y cercanos) con todo lo necesario para hacer el trabajo en el sitio.`,
         },
         {
             q: `¿Cuánto tiempo toma el ${name}?`,
@@ -191,11 +191,11 @@ function buildFaqsEs(s: DetailService, n: Neighborhood, price: string, hrs: stri
             q: isShop ? `¿Por qué el recubrimiento cerámico se hace en taller y no a domicilio?` : `¿Necesito dar agua o electricidad?`,
             a: isShop
                 ? `El recubrimiento cerámico necesita un ambiente controlado y libre de polvo para el mejor resultado, por eso solo lo ofrecemos en nuestro taller en Doral.`
-                : `No. Nuestros detalladores llegan con su propia agua y equipo, así que solo necesitamos acceso a tu vehículo en ${n.name}.`,
+                : `No. Nuestro equipo llega con su propia agua y equipo, así que solo necesitamos acceso a tu vehículo en ${n.name}.`,
         },
         {
             q: `¿Puedo reservar por WhatsApp?`,
-            a: `Claro. Puedes reservar en línea en segundos o escribirnos por WhatsApp y un detallador que habla español te atenderá directamente.`,
+            a: `Claro. Puedes reservar en línea en segundos o escribirnos por WhatsApp y alguien de nuestro equipo te atenderá directamente.`,
         },
     ];
 }

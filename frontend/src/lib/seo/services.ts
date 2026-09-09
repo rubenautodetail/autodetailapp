@@ -112,7 +112,7 @@ export const SERVICES: DetailService[] = [
             { en: 'Trim & plastic restoration', es: 'Restauración de molduras y plásticos' },
             { en: 'Wheel face & barrel clean', es: 'Limpieza de cara y barril de rines' },
         ],
-        headKeyword: { en: 'exterior car detailing', es: 'lavado de autos a domicilio' },
+        headKeyword: { en: 'exterior car detailing', es: 'detallado exterior de autos' },
         priority: 0.9,
         icon: '✨',
         imageUrl: '/images/services/exterior-detailing-01.jpg',

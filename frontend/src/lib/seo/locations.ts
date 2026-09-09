@@ -116,7 +116,7 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         label: { en: 'Kendall, FL', es: 'Kendall, FL' },
         blurb: {
             en: 'Family cars take a beating in Kendall. We handle the car seats, the spills, and the pet hair — right in your driveway, weekends included.',
-            es: 'Los autos familiares sufren en Kendall. Nos encargamos de las sillas de bebé, los derrames y el pelo de mascota — en tu entrada, incluso fines de semana.',
+            es: 'Los autos familiares se ensucian rápido en Kendall. Nos encargamos de las sillas de bebé, los derrames y el pelo de mascota — en tu entrada, incluso los fines de semana.',
         },
         landmarks: ['Dadeland Mall', 'Baptist Hospital', 'The Falls'],
         spanishFirst: true,
