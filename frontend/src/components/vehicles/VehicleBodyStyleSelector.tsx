@@ -122,7 +122,7 @@ export function VehicleBodyStyleSelector({
                     } : undefined}
                     htmlFor={optionId}
                     className={layout === 'carousel'
-                        ? `group relative flex w-[6.75rem] shrink-0 snap-start cursor-pointer flex-col gap-1.5 rounded-xl border-2 p-2 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`
+                        ? `group relative flex w-[6.75rem] shrink-0 snap-start cursor-pointer flex-col gap-0.5 rounded-xl border-2 p-1 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`
                         : `group relative flex min-h-[4.5rem] min-w-0 cursor-pointer flex-row items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 sm:min-h-[11rem] sm:flex-col sm:items-stretch sm:gap-0 sm:p-3 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`}
                 >
                     {selected && (
@@ -134,7 +134,7 @@ export function VehicleBodyStyleSelector({
                         </span>
                     )}
                     <div className={layout === 'carousel'
-                        ? `flex h-12 w-full shrink-0 items-center justify-center overflow-hidden rounded-lg border ${isDark
+                        ? `flex h-16 w-full shrink-0 items-center justify-center overflow-hidden rounded-lg border ${isDark
                             ? 'border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]'
                             : 'border-black/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.2),rgba(255,255,255,0.45)_72%)]'}`
                         : `flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border sm:mb-1 sm:h-[4.5rem] sm:w-full ${
@@ -146,7 +146,7 @@ export function VehicleBodyStyleSelector({
                             style={style}
                             locale={locale}
                             className={layout === 'carousel'
-                                ? 'h-11 w-full min-w-0 shrink-0'
+                                ? 'h-14 w-full min-w-0 shrink-0'
                                 : 'h-[2.75rem] w-full min-w-0 shrink-0 transition-transform duration-200 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:h-[4.75rem]'}
                         />
                     </div>
