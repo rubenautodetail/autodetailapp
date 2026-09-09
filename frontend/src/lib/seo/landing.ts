@@ -94,7 +94,7 @@ export function resolveLanding(
             heroSub: t(service.tagline, locale),
             quickAnswer: isShopBased
                 ? `Dtailwash ofrece ${kw} en nuestro taller en Doral, desde ${price}. Trae tu auto para un ambiente controlado; el servicio dura aproximadamente ${hrs}. Llama o envía un mensaje al 305-988-4449 para agendar tu cita.`
-                : `Dtailwash ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Nuestro equipo llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp.`,
+                : `Dtailwash ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Nuestro equipo llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp al 305-988-4449.`,
             intro: isShopBased ? [
                 `¿Buscas ${kw} en ${place}? Dtailwash ofrece recubrimiento cerámico profesional en nuestro taller en Doral — trae tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado posible. Atendemos con orgullo a clientes de todo Miami-Dade, incluyendo ${place}.`,
                 `Precios transparentes desde ${price}, pago seguro y atención en español. Llámanos o escríbenos al 305-988-4449 para agendar tu cita en nuestro taller en Doral.`,
@@ -123,7 +123,7 @@ export function resolveLanding(
         heroSub: t(service.tagline, locale),
         quickAnswer: isShopBased
             ? `Dtailwash offers ${kw} at our Doral facility, starting at ${price}. Bring your car in for a controlled environment; the service takes about ${hrs}. Call or text 305-988-4449 to book your appointment.`
-            : `Dtailwash offers ${kw} in ${place}, Miami-Dade, starting at ${price}. Our team comes to your location; a typical service takes about ${hrs}. Book online or reserve by text.`,
+            : `Dtailwash offers ${kw} in ${place}, Miami-Dade, starting at ${price}. Our team comes to your location; a typical service takes about ${hrs}. Book online or text us at 305-988-4449.`,
         intro: isShopBased ? [
             `Looking for ${kw} in ${place}? Dtailwash offers professional ceramic coating at our Doral facility — bring your car in for a controlled, dust-free environment that ensures the best possible finish. We proudly serve clients across Miami-Dade, including ${place}.`,
             `Transparent pricing from ${price}, secure payment, and service in English or Spanish. Call or text us at 305-988-4449 to book your appointment at our Doral facility.`,
