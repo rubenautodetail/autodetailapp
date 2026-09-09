@@ -95,9 +95,9 @@ export function ServiceCard({
                     </p>
 
                     {/* Desktop price block */}
-                    <div className="mt-1 hidden sm:block" aria-live="polite">
+                    <div className="mt-1 hidden sm:flex sm:items-start sm:justify-between sm:gap-2" aria-live="polite">
                         {/* Re-keyed on the amount so the flash replays each time the price moves. */}
-                        <span key={`${visiblePrice}-${isEstimate}`} className="price-changed">
+                        <span key={`${visiblePrice}-${isEstimate}`} className="price-changed shrink-0">
                             {isEstimate && (
                                 <span className="mr-1 text-sm font-semibold text-[#8994B8]">
                                     {isEs ? 'Desde' : 'From'}
@@ -108,9 +108,9 @@ export function ServiceCard({
                                 {(Number(visiblePrice) || 0).toFixed(2)}
                             </span>
                         </span>
-<p className="mt-0.5 min-h-4 text-[11px] font-semibold uppercase tracking-wide text-[#D0B078]">
-    {metaCaption}
-</p>
+                        <p className="min-w-0 flex-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[#D0B078]">
+                            {metaCaption}
+                        </p>
                     </div>
                 </div>
 
@@ -129,11 +129,10 @@ export function ServiceCard({
                     </span>
                     <span
                         aria-hidden="true"
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${
-                            isSelected
-                                ? 'bg-[#D0B078] text-[#131835]'
-                                : 'border-2 border-[#4A5580]'
-                        }`}
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${isSelected
+                            ? 'bg-[#D0B078] text-[#131835]'
+                            : 'border-2 border-[#4A5580]'
+                            }`}
                     >
                         {isSelected ? '✓' : ''}
                     </span>
@@ -160,18 +159,18 @@ export function ServiceCard({
             <div
                 className={`${isExpanded ? 'mt-2 block border-t border-[#2C355E] pt-2' : 'hidden'} text-sm leading-relaxed sm:mt-0 sm:mb-4 sm:block sm:border-0 sm:pt-0 sm:text-base sm:flex-grow sm:min-h-[3rem]`}
             >
-               <ul className="text-[#A5B0D1] leading-snug space-y-0.5 max-h-56 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
-    {displayDescription
-        .split('\n')
-        .map((line: string) => line.trim())
-        .filter((line: string) => line.length > 0)
-        .map((line: string, idx: number) => (
-            <li key={idx} className="flex gap-2">
-                <span className="text-white/40 shrink-0">•</span>
-                <span>{line}</span>
-            </li>
-        ))}
-</ul>
+                <ul className="text-[#A5B0D1] leading-snug space-y-0.5 max-h-56 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
+                    {displayDescription
+                        .split('\n')
+                        .map((line: string) => line.trim())
+                        .filter((line: string) => line.length > 0)
+                        .map((line: string, idx: number) => (
+                            <li key={idx} className="flex gap-2">
+                                <span className="text-white/40 shrink-0">•</span>
+                                <span>{line}</span>
+                            </li>
+                        ))}
+                </ul>
                 {needsTruncation && (
                     <button
                         type="button"
