@@ -51,8 +51,8 @@ export const SERVICES: DetailService[] = [
         schemaType: 'AutoWash',
         name: { en: 'Mobile Car Detailing', es: 'Detallado de Autos a Domicilio' },
         tagline: {
-            en: 'A professional detailer comes to your home or office — no driving, no waiting rooms.',
-            es: 'Un detallador profesional llega a tu casa u oficina — sin manejar, sin salas de espera.',
+            en: 'Our team comes to your home or office — no driving, no waiting rooms.',
+            es: 'Nuestro equipo llega a tu casa u oficina — sin manejar, sin salas de espera.',
         },
         priceFrom: 70,
         durationMin: 120,
