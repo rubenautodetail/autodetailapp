@@ -124,6 +124,11 @@ export default async function ServiceCityPage({
                             className="text-xs uppercase tracking-widest text-white/50 transition-colors hover:text-white">
                             {es ? 'EN' : 'ES'}
                         </Link>
+                        {waHref && (
+                            <a href={waHref} className="hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block">
+                                WhatsApp
+                            </a>
+                        )}
                         <Link href={bookHref}
                             className="rounded-full bg-[#D0B078] px-5 py-2 text-sm font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.03]">
                             {es ? 'Reservar' : 'Book now'}
