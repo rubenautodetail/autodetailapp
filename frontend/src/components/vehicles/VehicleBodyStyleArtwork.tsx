@@ -33,7 +33,7 @@ export function VehicleBodyStyleArtwork({
                 alt={artwork.altText || fallbackAlt}
                 fill
                 sizes="160px"
-                className="object-contain p-1.5"
+                className="object-cover object-center"
             />
         </span>
     );
