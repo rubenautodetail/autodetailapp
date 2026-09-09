@@ -99,13 +99,13 @@ export const SERVICES: DetailService[] = [
         schemaType: 'AutoWash',
         name: { en: 'Exterior Car Detailing', es: 'Detallado Exterior de Autos' },
         tagline: {
-            en: 'Restore a deep, glossy shine with a paint-safe wash, decontamination, and wax.',
-            es: 'Recupera un brillo profundo con lavado seguro, descontaminación y cera.',
+            en: 'A thorough exterior restoration that goes beyond a standard car wash — foam pre-wash, a safe two-bucket hand wash, clay bar decontamination, and a wax sealant for a deep, glossy shine that lasts.',
+            es: 'Una restauración exterior completa que va más allá de un lavado estándar — espuma antes del lavado, lavado a mano con el método de dos cubetas, descontaminación con clay bar, y cera selladora para un brillo profundo y duradero.',
         },
         priceFrom: 200,
         durationMin: 180,
         includes: [
-            { en: 'pH-neutral hand wash', es: 'Lavado a mano con pH neutro' },
+            { en: 'Hand wash', es: 'Lavado a mano' },
             { en: 'Clay-bar decontamination', es: 'Descontaminación con clay bar' },
             { en: 'Iron & tar removal', es: 'Eliminación de hierro y alquitrán' },
             { en: 'Machine-applied sealant', es: 'Sellador aplicado a máquina' },
