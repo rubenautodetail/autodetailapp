@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       💡 Reply directly to this email to respond to ${sanitized(name || 'the customer')}.
     </div>
   </div>
-  <div class="footer">DTailWash Support · ${APP_URL}</div>
+  <div class="footer">Dtailwash Support · ${APP_URL}</div>
 </body>
 </html>`;
 
@@ -159,16 +159,16 @@ export async function POST(req: NextRequest) {
     </div>
 
     <p>In the meantime, if you have an urgent issue you can also reach us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
-    <p>— The DTailWash Team</p>
+    <p>— The Dtailwash Team</p>
   </div>
-  <div class="footer">DTailWash · <a href="${APP_URL}" style="color:#9ca3af;">${APP_URL}</a></div>
+  <div class="footer">Dtailwash · <a href="${APP_URL}" style="color:#9ca3af;">${APP_URL}</a></div>
 </body>
 </html>`;
 
         await resend.emails.send({
             from: FROM_EMAIL,
             to: email,
-            subject: `We received your message – DTailWash Support`,
+            subject: `We received your message – Dtailwash Support`,
             html: confirmHtml,
         });
 

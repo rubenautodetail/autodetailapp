@@ -117,7 +117,7 @@ export default async function ServiceCityPage({
             <header className="sticky top-0 z-30 border-b border-white/5 bg-[#131835]/80 backdrop-blur-md">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
                     <Link href={`/${locale}`} className="flex items-center gap-2">
-                        <Image src="/dtailwash_logo_final.png" alt="DTailWash" width={1942} height={809} className="h-8 w-auto" style={{ width: 'auto' }} priority />
+                        <Image src="/dtailwash_logo_final.png" alt="Dtailwash" width={1942} height={809} className="h-8 w-auto" style={{ width: 'auto' }} priority />
                     </Link>
                     <div className="flex items-center gap-3">
                         <Link href={`/${es ? 'en' : 'es'}/${service.slug[es ? 'en' : 'es']}/${neighborhood.slug}`}
@@ -192,7 +192,7 @@ export default async function ServiceCityPage({
                             <ImagePlaceholder
                                 src={content.imageUrl}
                                 alt={es ? `${service.name.es} en ${neighborhood.name}` : `${service.name.en} in ${neighborhood.name}`}
-                                prompt={`Premium cinematic photo of a professional mobile car detailer working on a luxury car in ${neighborhood.name}, Miami. Deep navy and champagne-gold color grade, golden-hour light, glossy wet paint reflections, DTailWash branded van softly blurred in background. Editorial, high-end, shallow depth of field.`}
+                                prompt={`Premium cinematic photo of a professional mobile car detailer working on a luxury car in ${neighborhood.name}, Miami. Deep navy and champagne-gold color grade, golden-hour light, glossy wet paint reflections, Dtailwash branded van softly blurred in background. Editorial, high-end, shallow depth of field.`}
                                 aspect="aspect-[4/5]"
                                 priority
                             />
@@ -238,11 +238,11 @@ export default async function ServiceCityPage({
                 </div>
             </section>
 
-            {/* ── Why DTailWash ───────────────────────────────────────── */}
+            {/* ── Why Dtailwash ───────────────────────────────────────── */}
             <section className="px-6 py-14 sm:py-24">
                 <div className="mx-auto max-w-5xl">
                     <div className="mb-10 space-y-3 text-center">
-                        <p className="text-xs uppercase tracking-widest text-[#D0B078]">{es ? 'Por qué DTailWash' : 'Why DTailWash'}</p>
+                        <p className="text-xs uppercase tracking-widest text-[#D0B078]">{es ? 'Por qué Dtailwash' : 'Why Dtailwash'}</p>
                         <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
                             {es ? 'Detallado sin complicaciones' : 'Detailing without the hassle'}
                         </h2>
@@ -355,7 +355,7 @@ export default async function ServiceCityPage({
             {/* ── Footer ──────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 px-6 py-10">
                 <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-white/40 sm:flex-row">
-                    <span>© {new Date().getFullYear()} DTailWash · {es ? 'Detallado móvil en Miami-Dade' : 'Mobile detailing in Miami-Dade'}</span>
+                    <span>© {new Date().getFullYear()} Dtailwash · {es ? 'Detallado móvil en Miami-Dade' : 'Mobile detailing in Miami-Dade'}</span>
                     <div className="flex gap-4">
                         <Link href={`/${locale}`} className="hover:text-white">{es ? 'Inicio' : 'Home'}</Link>
                         <Link href={`/${locale}/contractors`} className="hover:text-white">{es ? 'Detalladores' : 'For detailers'}</Link>

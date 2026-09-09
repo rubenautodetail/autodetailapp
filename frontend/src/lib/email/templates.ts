@@ -1,6 +1,6 @@
 /**
  * lib/email/templates.ts
- * Typed HTML template functions for every email type sent by DTailWash.
+ * Typed HTML template functions for every email type sent by Dtailwash.
  * Each function returns a plain HTML string ready to pass to Resend.
  */
 
@@ -14,7 +14,7 @@ const APP_URL =
 // ── Shared base layout ────────────────────────────────────────────────────────
 
 /**
- * Wraps content in a consistent DTailWash shell (base styles + footer).
+ * Wraps content in a consistent Dtailwash shell (base styles + footer).
  * headerGradient / headerText are customised per email type.
  */
 function baseLayout(opts: {
@@ -23,7 +23,7 @@ function baseLayout(opts: {
   body: string;
   footerLine?: string;
 }): string {
-  const footer = opts.footerLine ?? 'DTailWash';
+  const footer = opts.footerLine ?? 'Dtailwash';
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -177,7 +177,7 @@ export function bookingConfirmationTemplate(booking: BookingEmailData): string {
     headerGradient: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
     headerText: isEs ? '🚗 ¡Reserva Confirmada!' : '🚗 Booking Confirmed!',
     body,
-    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir Dtailwash' : 'Thank you for choosing Dtailwash',
   });
 }
 
@@ -199,7 +199,7 @@ export function newJobContractorTemplate(booking: BookingEmailData): string {
     headerGradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)',
     headerText: '🔔 New Job Available!',
     body,
-    footerLine: 'DTailWash - Contractor Portal',
+    footerLine: 'Dtailwash - Contractor Portal',
   });
 }
 
@@ -214,8 +214,8 @@ export function paymentReceiptTemplate(booking: BookingEmailData): string {
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${customer.firstName},</p>
     <p>${isEs
-      ? '¡Gracias por elegir DTailWash! Aquí tienes tu recibo del servicio.'
-      : "Thank you for choosing DTailWash! Here's your receipt for the service."}</p>
+      ? '¡Gracias por elegir Dtailwash! Aquí tienes tu recibo del servicio.'
+      : "Thank you for choosing Dtailwash! Here's your receipt for the service."}</p>
     <div style="background:#f9fafb;border:2px solid #3b82f6;padding:20px;margin:20px 0;border-radius:8px;">
       <h3 style="margin-top:0;color:#1e40af;">${isEs ? 'Recibo' : 'Receipt'} #${booking.confirmationCode}</h3>
       <p style="color:#6b7280;font-size:14px;">${isEs ? 'Fecha' : 'Date'}: ${new Date().toLocaleDateString(isEs ? 'es-US' : 'en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'America/New_York'})}</p>
@@ -283,7 +283,7 @@ export function contractorApplicationAdminTemplate(data: ContractorApplicationDa
 export function contractorApplicationReceivedTemplate(data: ContractorApplicationData): string {
   const body = `
     <p>Hi ${data.fullName},</p>
-    <p>Thank you for applying to join the <strong>DTailWash</strong> contractor network!</p>
+    <p>Thank you for applying to join the <strong>Dtailwash</strong> contractor network!</p>
     <p>We've received your application and our team will review it within <strong>1–2 business days</strong>.</p>
     <div style="background:#f9fafb;border-left:4px solid #D0B078;padding:20px;margin:20px 0;border-radius:4px;">
       <p style="margin:0;font-weight:600;color:#4b5563;">What happens next?</p>
@@ -295,13 +295,13 @@ export function contractorApplicationReceivedTemplate(data: ContractorApplicatio
     </div>
     <p>In the meantime, you can log in to check your application status at <a href="${APP_URL}/en/contractor/pending">${APP_URL}</a>.</p>
     <p>Questions? Reply to this email or contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
-    <p>Thanks for joining us!<br/>The DTailWash Team</p>`;
+    <p>Thanks for joining us!<br/>The Dtailwash Team</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#131835 0%,#1e2a50 100%)',
     headerText: 'Application Received! 🎉',
     body,
-    footerLine: 'DTailWash — Contractor Network',
+    footerLine: 'Dtailwash — Contractor Network',
   });
 }
 
@@ -312,11 +312,11 @@ export function welcomeEmailTemplate(user: { name: string }): string {
     <p>First, please confirm your email using the separate confirmation email we just sent you. Once confirmed, you can log in and start booking premium auto detailing services.</p>
     <p style="text-align:center;"><a href="${APP_URL}/en/login" class="btn" style="background:#2563eb;color:white;">Sign in to your account</a></p>
     <p>If you have any questions, just reply to this email.</p>
-    <p>Happy detailing!<br/>The DTailWash Team</p>`;
+    <p>Happy detailing!<br/>The Dtailwash Team</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#2563eb 0%,#1e40af 100%)',
-    headerText: 'Welcome to DTailWash! 🚗',
+    headerText: 'Welcome to Dtailwash! 🚗',
     body,
   });
 }
@@ -331,7 +331,7 @@ export function bookingPendingTemplate(booking: BookingEmailData): string {
     <p>${isEs
       ? 'Tu reserva está marcada como <strong>Pendiente</strong> mientras procesamos la autorización de pago. Una vez que la retención del pago sea exitosa, recibirás un correo de confirmación con todos los detalles y asignaremos un detallador a tu trabajo.'
       : 'Your booking is currently marked as <strong>Pending</strong> while we process the payment authorization. Once the payment hold is successful, you will receive a confirmation email with all the details and we will assign a detailer to your job.'}</p>
-    <p>${isEs ? '¡Gracias por elegir DTailWash!' : 'Thank you for choosing DTailWash!'}</p>`;
+    <p>${isEs ? '¡Gracias por elegir Dtailwash!' : 'Thank you for choosing Dtailwash!'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)',
@@ -388,7 +388,7 @@ export function contractorJobConfirmationTemplate(booking: BookingEmailData): st
     headerGradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)',
     headerText: '✅ Job Confirmed!',
     body,
-    footerLine: 'DTailWash - Contractor Portal',
+    footerLine: 'Dtailwash - Contractor Portal',
   });
 }
 
@@ -420,7 +420,7 @@ export function bookingCancelledTemplate(booking: BookingEmailData): string {
     <p>${isEs
       ? 'Si deseas reprogramar, visita nuestro sitio web para hacer una nueva reserva.'
       : "If you'd like to reschedule, please visit our website to place a new booking."}</p>
-    <p>${isEs ? 'Gracias,' : 'Thank you,'}<br/>${isEs ? 'El equipo de DTailWash' : 'DTailWash Team'}</p>`;
+    <p>${isEs ? 'Gracias,' : 'Thank you,'}<br/>${isEs ? 'El equipo de Dtailwash' : 'Dtailwash Team'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#ef4444 0%,#dc2626 100%)',
@@ -536,7 +536,7 @@ export function jobStartedTemplate(booking: BookingEmailData): string {
     headerGradient: 'linear-gradient(135deg,#f97316 0%,#ea580c 100%)',
     headerText: isEs ? '¡El Detallador Ha Comenzado! 🚿' : 'Detailer Has Started Work! 🚿',
     body,
-    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir Dtailwash' : 'Thank you for choosing Dtailwash',
   });
 }
 
@@ -565,7 +565,7 @@ export function enRouteTemplate(booking: BookingEmailData): string {
     headerGradient: 'linear-gradient(135deg,#6366f1 0%,#4f46e5 100%)',
     headerText: isEs ? '¡Tu Detallador Va en Camino! 🚗' : 'Your Detailer Is On The Way! 🚗',
     body,
-    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir Dtailwash' : 'Thank you for choosing Dtailwash',
   });
 }
 
@@ -591,7 +591,7 @@ export function reviewRequestTemplate(booking: BookingEmailData): string {
     headerGradient: 'linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%)',
     headerText: isEs ? '¿Cómo Fue Tu Detallado? ⭐' : 'How Was Your Detail? ⭐',
     body,
-    footerLine: isEs ? 'Gracias por elegir DTailWash' : 'Thank you for choosing DTailWash',
+    footerLine: isEs ? 'Gracias por elegir Dtailwash' : 'Thank you for choosing Dtailwash',
   });
 }
 
@@ -606,8 +606,8 @@ export function contractorApprovedTemplate(contractor: {
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${contractor.fullName},</p>
     <p>${isEs
-      ? 'Tu solicitud para unirte a la red de contratistas de <strong>DTailWash</strong> ha sido aprobada.'
-      : 'Your application to join the <strong>DTailWash</strong> contractor network has been approved.'}</p>
+      ? 'Tu solicitud para unirte a la red de contratistas de <strong>Dtailwash</strong> ha sido aprobada.'
+      : 'Your application to join the <strong>Dtailwash</strong> contractor network has been approved.'}</p>
     <div style="text-align:center;">
       <a href="${loginUrl}" style="display:inline-block;background:linear-gradient(135deg,#D0B078,#c4a068);color:#131835;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;margin:20px 0;">
         ${isEs ? 'Inicia sesión y comienza a trabajar →' : 'Log in & start accepting jobs →'}
@@ -621,13 +621,13 @@ export function contractorApprovedTemplate(contractor: {
         <li>${isEs ? 'Comienza a recibir y aceptar trabajos' : 'Start receiving and accepting jobs'}</li>
       </ul>
     </div>
-    <p>${isEs ? '¡Bienvenido al equipo!' : 'Welcome to the team!'}<br/>${isEs ? 'El equipo de DTailWash' : 'The DTailWash Team'}</p>`;
+    <p>${isEs ? '¡Bienvenido al equipo!' : 'Welcome to the team!'}<br/>${isEs ? 'El equipo de Dtailwash' : 'The Dtailwash Team'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#131835 0%,#1e2a50 100%)',
     headerText: isEs ? '¡Felicidades, estás aprobado! 🎉' : "Congratulations, You're Approved! 🎉",
     body,
-    footerLine: 'DTailWash — Contractor Network',
+    footerLine: 'Dtailwash — Contractor Network',
   });
 }
 
@@ -641,15 +641,15 @@ export function contractorRejectedTemplate(contractor: {
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${contractor.fullName},</p>
     <p>${isEs
-      ? 'Gracias por tu interés en unirte a <strong>DTailWash</strong>. Después de revisar tu solicitud, lamentamos informarte que no podemos aprobarla en este momento.'
-      : "Thank you for your interest in joining <strong>DTailWash</strong>. After reviewing your application, we're unable to approve it at this time."}</p>
+      ? 'Gracias por tu interés en unirte a <strong>Dtailwash</strong>. Después de revisar tu solicitud, lamentamos informarte que no podemos aprobarla en este momento.'
+      : "Thank you for your interest in joining <strong>Dtailwash</strong>. After reviewing your application, we're unable to approve it at this time."}</p>
     <p>${isEs
       ? 'Esto puede deberse a información incompleta, área de servicio no cubierta, u otros requisitos.'
       : 'This may be due to incomplete information, uncovered service area, or other requirements.'}</p>
     <p>${isEs
       ? 'Si crees que fue un error o tienes preguntas, no dudes en contactarnos.'
       : "If you believe this was a mistake or have questions, please don't hesitate to reach out."}</p>
-    <p>${isEs ? 'Saludos,' : 'Best regards,'}<br/>${isEs ? 'El equipo de DTailWash' : 'The DTailWash Team'}</p>`;
+    <p>${isEs ? 'Saludos,' : 'Best regards,'}<br/>${isEs ? 'El equipo de Dtailwash' : 'The Dtailwash Team'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#131835 0%,#1e2a50 100%)',
@@ -761,6 +761,6 @@ export function payoutConfirmationTemplate(data: PayoutEmailData): string {
     headerGradient: 'linear-gradient(135deg,#1a2142 0%,#131835 100%)',
     headerText: isEs ? 'Pago Enviado' : 'Payment Sent',
     body,
-    footerLine: `DTailWash · Miami-Dade County · <a href="${APP_URL}">${APP_URL}</a>`,
+    footerLine: `Dtailwash · Miami-Dade County · <a href="${APP_URL}">${APP_URL}</a>`,
   });
 }

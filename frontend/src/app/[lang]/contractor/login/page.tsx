@@ -140,7 +140,7 @@ export default function ContractorLoginPage() {
           <div className="flex justify-center mb-5">
             <Image
               src="/dtailwash_logo_final.png"
-              alt="DTailWash"
+              alt="Dtailwash"
               width={216}
               height={65}
               className="h-16 w-auto object-contain"

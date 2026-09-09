@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'DTailWash — Premium Mobile Car Detailing in Miami';
+export const alt = 'Dtailwash — Premium Mobile Car Detailing in Miami';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -31,7 +31,7 @@ export default function Image() {
                 >
                     Miami-Dade
                 </div>
-                <div style={{ fontSize: 76, fontWeight: 700, display: 'flex' }}>DTailWash</div>
+                <div style={{ fontSize: 76, fontWeight: 700, display: 'flex' }}>Dtailwash</div>
                 <div style={{ fontSize: 34, marginTop: 20, opacity: 0.85, display: 'flex' }}>
                     Premium Mobile Car Detailing
                 </div>

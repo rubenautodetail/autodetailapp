@@ -128,8 +128,8 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         zips: ['33127', '33137', '33132', '33136'],
         label: { en: 'Miami, FL', es: 'Miami, FL' },
         blurb: {
-            en: 'From Downtown to Wynwood to Edgewater, DTailWash brings vetted mobile detailers across the city of Miami — booked online, paid securely, done at your door.',
-            es: 'Desde Downtown hasta Wynwood y Edgewater, DTailWash lleva detalladores verificados por toda la ciudad de Miami — reservado en línea, pago seguro, en tu puerta.',
+            en: 'From Downtown to Wynwood to Edgewater, Dtailwash brings vetted mobile detailers across the city of Miami — booked online, paid securely, done at your door.',
+            es: 'Desde Downtown hasta Wynwood y Edgewater, Dtailwash lleva detalladores verificados por toda la ciudad de Miami — reservado en línea, pago seguro, en tu puerta.',
         },
         landmarks: ['Wynwood Walls', 'Bayside', 'Museum Park'],
         spanishFirst: false,

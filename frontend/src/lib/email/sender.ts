@@ -97,9 +97,9 @@ function resolveSubject(payload: EmailPayload): string {
     case 'contractor_application_admin':
       return `New Contractor Application: ${(payload.data as ContractorApplicationData).fullName}`;
     case 'contractor_application_received':
-      return 'Application Received — DTailWash';
+      return 'Application Received — Dtailwash';
     case 'welcome':
-      return 'Welcome to DTailWash! 🚗';
+      return 'Welcome to Dtailwash! 🚗';
     case 'booking_pending': {
       const isEs = (payload.data as BookingEmailData).locale === 'es';
       return isEs ? 'Reserva Recibida - Pago Pendiente' : 'Booking Received - Pending Payment';
@@ -142,11 +142,11 @@ function resolveSubject(payload: EmailPayload): string {
     }
     case 'contractor_approved': {
       const isEs = payload.data.locale === 'es';
-      return isEs ? '¡Aprobado! Bienvenido a DTailWash 🎉' : "You're Approved! Welcome to DTailWash 🎉";
+      return isEs ? '¡Aprobado! Bienvenido a Dtailwash 🎉' : "You're Approved! Welcome to Dtailwash 🎉";
     }
     case 'contractor_rejected': {
       const isEs = payload.data.locale === 'es';
-      return isEs ? 'Actualización de tu solicitud — DTailWash' : 'Application Update — DTailWash';
+      return isEs ? 'Actualización de tu solicitud — Dtailwash' : 'Application Update — Dtailwash';
     }
     case 'contractor_paid':
       return `Job Approved! Booking ${(payload.data as BookingEmailData).confirmationCode} 💰`;
