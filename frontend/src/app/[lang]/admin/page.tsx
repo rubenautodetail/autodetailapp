@@ -68,7 +68,7 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
               </div>
             ))}
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[...Array(2)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="h-5 w-32 bg-gray-200 rounded animate-pulse mb-6" />
@@ -191,7 +191,7 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
         )}
 
         {/* Summary cards */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Contractor summary */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
