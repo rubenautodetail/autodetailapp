@@ -341,7 +341,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left column: Contact Form & Booking Summary */}
           <div className="lg:col-span-2 space-y-8">
             {/* Contact Information */}
@@ -386,7 +386,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   )}
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-medium text-[#A5B0D1] mb-2">
                       {locale === "es" ? "Correo Electrónico" : "Email"}
@@ -606,7 +606,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-[#A5B0D1] mb-1.5">
                         {locale === "es" ? "Marca" : "Make"}<span className="text-[#D0B078] ml-0.5">*</span>
