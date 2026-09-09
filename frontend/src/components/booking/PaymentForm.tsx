@@ -375,7 +375,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Booking Summary */}

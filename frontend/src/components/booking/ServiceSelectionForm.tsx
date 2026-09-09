@@ -315,7 +315,7 @@ export default function ServiceSelectionForm({
                     )}
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                     {/* Left column: Services and Add-ons */}
                     <div className="lg:col-span-2 space-y-10">
                         <BookingVehiclePicker
@@ -505,7 +505,7 @@ export default function ServiceSelectionForm({
 
                         {/* Info Cards */}
                         {selectedService && (
-                            <div className="grid md:grid-cols-3 gap-4 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                                 <div className="bg-[#1A2142] border border-[#2C355E] rounded-[20px] p-5 text-center">
                                     <div className="w-12 h-12 bg-[#D0B078]/10 rounded-full flex items-center justify-center mx-auto mb-3">
                                         <svg className="w-6 h-6 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
