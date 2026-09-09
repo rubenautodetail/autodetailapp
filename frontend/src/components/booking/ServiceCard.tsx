@@ -95,7 +95,7 @@ export function ServiceCard({
                     </p>
 
                     {/* Desktop price block */}
-                    <div className="mt-1 hidden sm:flex sm:items-start sm:justify-between sm:gap-2" aria-live="polite">
+                    <div className="mt-1 hidden w-full sm:flex sm:items-start sm:justify-between sm:gap-2" aria-live="polite">
                         {/* Re-keyed on the amount so the flash replays each time the price moves. */}
                         <span key={`${visiblePrice}-${isEstimate}`} className="price-changed shrink-0">
                             {isEstimate && (
