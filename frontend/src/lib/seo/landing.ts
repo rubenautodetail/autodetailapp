@@ -80,7 +80,7 @@ export function resolveLanding(
         es: `${APP_URL}/es/${service.slug.es}/${neighborhood.slug}`,
     };
 
-      if (locale === 'es') {
+    if (locale === 'es') {
         return {
             locale, service, neighborhood, path, alternates,
             title: `${name} en ${place} | Dtailwash — Desde ${price}`,
@@ -110,7 +110,7 @@ export function resolveLanding(
         };
     }
 
-       return {
+    return {
         locale, service, neighborhood, path, alternates,
         title: `${name} in ${place} | Dtailwash — From ${price}`,
         metaDescription: isShopBased
@@ -161,11 +161,15 @@ function buildFaqsEn(s: DetailService, n: Neighborhood, price: string, hrs: stri
             q: isShop ? `Why is ceramic coating done in-shop instead of mobile?` : `Do I need to provide water or power?`,
             a: isShop
                 ? `Ceramic coating needs a controlled, dust-free environment for the best results, so we only offer it at our Doral facility rather than on-site.`
-                : `No. Our detailers arrive self-contained with their own water and equipment, so all we need is access to your vehicle in ${n.name}.`,
+                : `No. Our team arrives self-contained with their own water and equipment, so all we need is access to your vehicle in ${n.name}.`,
         },
         {
             q: `Can I book ${name} in Spanish?`,
             a: `Absolutely. Dtailwash is fully bilingual — book online in English or Spanish, or message us directly and someone from our team will take care of you.`,
+        },
+        {
+            q: `When do you charge my card?`,
+            a: `You approve the work first — we only charge your card after you confirm everything looks good.`,
         },
     ];
 }
@@ -197,5 +201,9 @@ function buildFaqsEs(s: DetailService, n: Neighborhood, price: string, hrs: stri
             q: `¿Puedo reservar por WhatsApp?`,
             a: `Claro. Puedes reservar en línea en segundos o escribirnos por WhatsApp y alguien de nuestro equipo te atenderá directamente.`,
         },
+        {
+    q: `¿Cuándo cobran mi tarjeta?`,
+    a: `Primero apruebas el trabajo — solo cobramos tu tarjeta después de que confirmes que todo está bien.`,
+},
     ];
 }
