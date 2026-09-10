@@ -75,8 +75,8 @@ export const SERVICES: DetailService[] = [
         schemaType: 'AutoWash',
         name: { en: 'Interior Car Detailing', es: 'Detallado Interior de Autos' },
         tagline: {
-            en: 'Deep-clean every surface inside your car — seats, carpets, vents, and dash restored.',
-            es: 'Limpieza profunda de cada superficie interior — asientos, alfombras, rejillas y tablero.',
+            en: 'Our team deep-cleans every surface inside your car — seats, carpets, vents, and dash restored. Inspect the work, then approve the charge.',
+            es: 'Nuestro equipo limpia a fondo cada superficie interior — asientos, alfombras, rejillas y tablero restaurados. Revisa el trabajo y luego aprueba el cobro.',
         },
         priceFrom: 200,
         durationMin: 180,
@@ -99,8 +99,8 @@ export const SERVICES: DetailService[] = [
         schemaType: 'AutoWash',
         name: { en: 'Exterior Car Detailing', es: 'Detallado Exterior de Autos' },
         tagline: {
-            en: 'A thorough exterior restoration that goes beyond a standard car wash — foam pre-wash, a safe two-bucket hand wash, clay bar decontamination, and a wax sealant for a deep, glossy shine that lasts.',
-            es: 'Una restauración exterior completa que va más allá de un lavado estándar — espuma antes del lavado, lavado a mano con el método de dos cubetas, descontaminación con clay bar, y cera selladora para un brillo profundo y duradero.',
+            en: 'A thorough exterior restoration that goes beyond a standard car wash — foam pre-wash, a safe two-bucket hand wash, clay bar decontamination, and a wax sealant for a deep, glossy shine that lasts. Approve the work before we charge your card.',
+            es: 'Una restauración exterior completa que va más allá de un lavado estándar — espuma antes del lavado, lavado a mano con el método de dos cubetas, descontaminación con clay bar, y cera selladora para un brillo profundo y duradero. Aprueba el trabajo antes de que cobremos tu tarjeta.',
         },
         priceFrom: 200,
         durationMin: 180,
