@@ -1,7 +1,7 @@
 {
     "common": {
-        "siteName": "Detailing on Demand",
-       "tagline": "Reserva un detallador profesional en minutos. Vamos a tu casa u oficina en Miami-Dade — precios desde $70, sin filas ni esperas.",
+        "siteName": "Lux Auto Detail Services",
+       "tagline": "Reserva en minutos y nuestro equipo llega a tu casa u oficina en Miami-Dade — precios desde $70, sin filas ni esperas.",
         "getStarted": "Comenzar",
         "learnMore": "Más Información",
         "bookNow": "Reservar Ahora",
@@ -19,7 +19,7 @@
             "express": {
                 "title": "Detallado Exprés",
                 "desc": "Aspirado interior, limpieza de cristales y superficies + lavado a mano exterior, brillo de llantas y cera spray.",
-                "price": "Desde $100"
+                "price": "Desde $70"
             },
             "interior": {
                 "title": "Detallado Interior",
