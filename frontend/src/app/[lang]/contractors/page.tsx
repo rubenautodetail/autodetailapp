@@ -133,8 +133,8 @@ export default async function ContractorsPage({
                     </h1>
                     <p className="text-lg text-white/70 max-w-xl mx-auto leading-relaxed">
                         {isEs
-                            ? 'Conviértete en un detallador certificado en la plataforma Dtailwash. Tú traes el talento, nosotros traemos los clientes.'
-                            : 'Become a certified detailer on the Dtailwash platform. You bring the skill, we bring the customers.'}
+                            ? 'Conviértete en un detallador verificado en la plataforma Dtailwash. Tú traes el talento, nosotros traemos los clientes.'
+                            : 'Become a vetted detailer on the Dtailwash platform. You bring the skill, we bring the customers.'}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                         <Link
