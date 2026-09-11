@@ -143,7 +143,7 @@ export const SERVICES: DetailService[] = [
             { en: 'Final quality inspection', es: 'Revisión final de calidad' },
             { en: 'Aftercare & maintenance guidance', es: 'Guía de cuidado y mantenimiento posterior' },
         ],
-        headKeyword: { en: 'ceramic coating miami', es: 'recubrimiento cerámico miami' },
+        headKeyword: { en: 'ceramic coating', es: 'recubrimiento cerámico' },
         priority: 0.8,
         icon: '🛡️',
         imageUrl: '/images/services/ceramic-coating.png',
