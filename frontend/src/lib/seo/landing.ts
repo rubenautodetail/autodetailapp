@@ -24,12 +24,8 @@ const CITY_TAGLINE_SUFFIXES: { en: string; es: string }[] = [
     { en: 'Here for drivers in {city}, every day.', es: 'Aquí para los conductores de {city}, todos los días.' },
 ];
 
-function getCityTaglineSuffix(cityName: string, locale: Locale): string {
-    let hash = 0;
-    for (let i = 0; i < cityName.length; i++) {
-        hash = (hash * 31 + cityName.charCodeAt(i)) % CITY_TAGLINE_SUFFIXES.length;
-    }
-    const entry = CITY_TAGLINE_SUFFIXES[hash];
+function getCityTaglineSuffix(cityName: string, locale: Locale, cityIndex: number): string {
+    const entry = CITY_TAGLINE_SUFFIXES[cityIndex % CITY_TAGLINE_SUFFIXES.length];
     return (locale === 'es' ? entry.es : entry.en).replace('{city}', cityName);
 }
 
@@ -111,7 +107,7 @@ export function resolveLanding(
             heroEyebrow: isShopBased
                 ? `En taller · Doral, FL`
                 : `A domicilio · ${t(neighborhood.label, locale)}`,
-            heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale)}`,
+            heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale, NEIGHBORHOODS.findIndex((n) => n.slug === neighborhood.slug))}`,
             quickAnswer: isShopBased
                 ? `Dtailwash ofrece ${kw} en nuestro taller en Doral, desde ${price}. Trae tu auto para un ambiente controlado; el servicio dura aproximadamente ${hrs}. Llama o envía un mensaje al 305-988-4449 para agendar tu cita.`
                 : `Dtailwash ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Nuestro equipo llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp al 305-988-4449.`,
@@ -140,7 +136,7 @@ export function resolveLanding(
         heroEyebrow: isShopBased
             ? `In-Shop · Doral, FL`
             : `Mobile · ${t(neighborhood.label, locale)}`,
-        heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale)}`,
+        heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale, NEIGHBORHOODS.findIndex((n) => n.slug === neighborhood.slug))}`,
         quickAnswer: isShopBased
             ? `Dtailwash offers ${kw} at our Doral facility, starting at ${price}. Bring your car in for a controlled environment; the service takes about ${hrs}. Call or text 305-988-4449 to book your appointment.`
             : `Dtailwash offers ${kw} in ${place}, Miami-Dade, starting at ${price}. Our team comes to your location; a typical service takes about ${hrs}. Book online or text us at 305-988-4449.`,
