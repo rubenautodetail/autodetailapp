@@ -96,7 +96,7 @@ export default function RequestPage() {
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Request Sent</h2>
-                        <p className="text-[var(--text-secondary)]">Waiting for detailer confirmation...</p>
+                        <p className="text-[var(--text-secondary)]">Waiting for our team's confirmation...</p>
                     </div>
                     <div className="bg-[var(--card)] p-4 rounded-xl border border-[var(--divider)] max-w-xs mx-auto">
                         <p className="text-sm text-[var(--text-secondary)]">Estimated arrival: <span className="text-[var(--text-primary)] font-semibold">2:30 PM</span></p>

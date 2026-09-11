@@ -113,8 +113,8 @@ function ConfirmationContent({ locale }: { locale: string }) {
                   ? "Recibirás una confirmación por SMS/email"
                   : "You'll receive a confirmation via SMS/email",
                 locale === "es"
-                  ? "Un detallador será asignado a tu cita"
-                  : "A detailer will be assigned to your appointment",
+                  ? "Nuestro equipo será asignado a tu cita"
+                  : "Our team will be assigned to your appointment",
                 locale === "es"
                   ? "Recibirás actualizaciones en tiempo real el día del servicio"
                   : "You'll get real-time updates on the day of service",
