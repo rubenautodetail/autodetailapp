@@ -39,7 +39,17 @@ export async function GET() {
       return NextResponse.json({ timeWindows: DEFAULT_TIME_WINDOWS });
     }
 
-    return NextResponse.json({ timeWindows: data });
+    const formattedData = data.map((row) => ({
+      slot: row.slot,
+      label: row.label,
+      labelEs: row.label_es,
+      range: row.range,
+      rangeEs: row.range_es,
+      is_active: row.is_active,
+      sort_order: row.sort_order,
+    }));
+
+    return NextResponse.json({ timeWindows: formattedData });
   } catch (err) {
     console.error('GET /api/booking/time-windows error:', err);
     return NextResponse.json({ timeWindows: DEFAULT_TIME_WINDOWS });
