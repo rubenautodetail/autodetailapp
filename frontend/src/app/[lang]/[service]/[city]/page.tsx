@@ -254,7 +254,7 @@ export default async function ServiceCityPage({
                     </div>
                     <div className="grid gap-6 md:grid-cols-3">
                         {[
-                            { icon: '🚐', t: es ? 'Vamos a ti' : 'We come to you', d: es ? `A tu casa u oficina en ${neighborhood.name}.` : `To your home or office in ${neighborhood.name}.` },
+                            { icon: service.id === 'ceramic-coating' ? '🏭' : '🚐', t: es ? (service.id === 'ceramic-coating' ? 'Trae tu auto' : 'Vamos a ti') : (service.id === 'ceramic-coating' ? 'Bring your car in' : 'We come to you'), d: es ? (service.id === 'ceramic-coating' ? 'Visítanos en nuestro taller en Doral.' : `A tu casa u oficina en ${neighborhood.name}.`) : (service.id === 'ceramic-coating' ? 'Visit our facility in Doral.' : `To your home or office in ${neighborhood.name}.`) },
                             { icon: '🛡️', t: es ? 'Verificados y asegurados' : 'Vetted & insured', d: es ? 'Cada detallador es revisado y asegurado.' : 'Every detailer is background-checked and insured.' },
                             { icon: '💳', t: es ? 'Precio transparente' : 'Transparent pricing', d: es ? 'Ves el precio antes de confirmar. Sin sorpresas.' : 'See your price before you confirm. No surprises.' },
                             { icon: '🗣️', t: es ? 'Bilingüe' : 'Bilingual', d: es ? 'Reserva y atención en español o inglés.' : 'Book and get service in English or Spanish.' },
