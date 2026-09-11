@@ -6,7 +6,7 @@
 
 // ── Shared config (read at module init; safe because this runs server-side) ──
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@dtailwash.com';
-const SUPPORT_PHONE = process.env.SUPPORT_PHONE || '(305) 000-0000';
+const SUPPORT_PHONE = process.env.SUPPORT_PHONE || '(305) 988-4449';
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
@@ -164,9 +164,9 @@ export function bookingConfirmationTemplate(booking: BookingEmailData): string {
     </div>
     <h3>${isEs ? '¿Qué sigue?' : "What's Next?"}</h3>
     <ul>
-      <li>${isEs ? 'Estamos asignando un detallador profesional a tu cita' : "We're assigning a professional detailer to your appointment"}</li>
+      <li>${isEs ? 'Estamos asignando a alguien de nuestro equipo a tu cita' : "We're assigning someone from our team to your appointment"}</li>
       <li>${isEs ? 'Recibirás un correo de presentación en los próximos 30 minutos' : "You'll receive an introduction email within 30 minutes"}</li>
-      <li>${isEs ? 'Tu detallador llegará a la hora programada' : 'Your detailer will arrive at the scheduled time'}</li>
+      <li>${isEs ? 'Nuestro equipo llegará a la hora programada' : 'Our team will arrive at the scheduled time'}</li>
     </ul>
     <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#667eea;color:white;">${isEs ? 'Ver Detalles de la Reserva' : 'View Booking Details'}</a></p>
     <p style="color:#6b7280;font-size:14px;margin-top:30px;">${isEs
@@ -329,8 +329,8 @@ export function bookingPendingTemplate(booking: BookingEmailData): string {
       ? `Hemos recibido tu solicitud de reserva para un <strong>${booking.service.name}</strong>.`
       : `We've received your booking request for a <strong>${booking.service.name}</strong>.`}</p>
     <p>${isEs
-      ? 'Tu reserva está marcada como <strong>Pendiente</strong> mientras procesamos la autorización de pago. Una vez que la retención del pago sea exitosa, recibirás un correo de confirmación con todos los detalles y asignaremos un detallador a tu trabajo.'
-      : 'Your booking is currently marked as <strong>Pending</strong> while we process the payment authorization. Once the payment hold is successful, you will receive a confirmation email with all the details and we will assign a detailer to your job.'}</p>
+      ? 'Tu reserva está marcada como <strong>Pendiente</strong> mientras procesamos la autorización de pago. Una vez que la retención del pago sea exitosa, recibirás un correo de confirmación con todos los detalles y asignaremos a alguien de nuestro equipo a tu trabajo.'
+      : 'Your booking is currently marked as <strong>Pending</strong> while we process the payment authorization. Once the payment hold is successful, you will receive a confirmation email with all the details and we will assign someone from our team to your job.'}</p>
     <p>${isEs ? '¡Gracias por elegir Dtailwash!' : 'Thank you for choosing Dtailwash!'}</p>`;
 
   return baseLayout({
@@ -345,7 +345,7 @@ export function jobAcceptedTemplate(booking: BookingEmailData): string {
   const isEs = locale === 'es';
   const contractorName = booking.contractor
     ? `${booking.contractor.firstName} ${booking.contractor.lastName}`
-    : (isEs ? 'Un detallador' : 'A detailer');
+    : (isEs ? 'Alguien de nuestro equipo' : 'Someone from our team');
 
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
@@ -353,8 +353,8 @@ export function jobAcceptedTemplate(booking: BookingEmailData): string {
       ? `¡Buenas noticias! <strong>${contractorName}</strong> ha sido asignado a tu reserva (${booking.confirmationCode}) y llegará a la hora programada.`
       : `Great news! <strong>${contractorName}</strong> has been assigned to your booking (${booking.confirmationCode}) and will be arriving at the scheduled time.`}</p>
     <p>${isEs
-      ? 'Si necesitas contactar a tu detallador antes de que llegue o hacer cambios a tu cita, visita tu panel de control.'
-      : 'If you need to contact your detailer before they arrive or make any changes to your appointment, please visit your dashboard.'}</p>`;
+      ? 'Si necesitas contactar a nuestro equipo antes de que llegue o hacer cambios a tu cita, visita tu panel de control.'
+      : 'If you need to contact our team before they arrive or make any changes to your appointment, please visit your dashboard.'}</p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)',
@@ -435,12 +435,12 @@ export function jobPendingApprovalTemplate(booking: BookingEmailData): string {
   const body = `
     <p style="font-size:16px;">${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
     <p style="font-size:16px;">${isEs
-      ? `¡Tu detallador acaba de terminar el servicio de <strong>${booking.service.name}</strong>!`
-      : `Your detailer has just finished the <strong>${booking.service.name}</strong> service!`}</p>
+      ? `¡Nuestro equipo acaba de terminar el servicio de <strong>${booking.service.name}</strong>!`
+      : `Our team has just finished the <strong>${booking.service.name}</strong> service!`}</p>
     <div style="background:#f3f4f6;padding:20px;border-radius:8px;margin:20px 0;border:1px solid #e5e7eb;">
       <h3 style="margin-top:0;color:#4b5563;">${isEs ? 'Próximos Pasos:' : 'Next Steps:'}</h3>
       <ol style="margin-bottom:0;">
-        <li>${isEs ? 'Sal a tu vehículo e inspecciona el trabajo con tu detallador.' : 'Please walk out to your vehicle and inspect the work with your detailer.'}</li>
+        <li>${isEs ? 'Sal a tu vehículo e inspecciona el trabajo antes de aprobar.' : 'Please walk out to your vehicle and inspect the work before approving.'}</li>
         <li>${isEs ? 'Asegúrate de que todo esté a tu satisfacción.' : 'Make sure everything is to your satisfaction.'}</li>
         <li>${isEs ? 'Haz clic en el botón de abajo para aprobar el trabajo y liberar el pago final.' : 'Click the button below to approve the job and release the final payment.'}</li>
       </ol>
@@ -521,8 +521,8 @@ export function jobStartedTemplate(booking: BookingEmailData): string {
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
     <p>${isEs
-      ? 'Tu detallador ha llegado y comenzó a trabajar en tu vehículo. Te avisarán cuando terminen.'
-      : "Your detailer has arrived and started working on your vehicle. They'll update you when they're finished."}</p>
+      ? 'Nuestro equipo ha llegado y comenzó a trabajar en tu vehículo. Te avisarán cuando terminen.'
+      : "Our team has arrived and started working on your vehicle. They'll update you when they're finished."}</p>
     <div style="background:#fff7ed;border-left:4px solid #f97316;padding:20px;margin:20px 0;border-radius:4px;">
       <h3 style="margin-top:0;color:#ea580c;">${isEs ? 'Servicio en Progreso' : 'Service in Progress'}</h3>
       <p><strong>${isEs ? 'Reserva' : 'Booking'}:</strong> ${booking.confirmationCode}</p>
@@ -546,8 +546,8 @@ export function enRouteTemplate(booking: BookingEmailData): string {
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
     <p>${isEs
-      ? '¡Buenas noticias! Tu detallador va en camino y llegará pronto. Por favor asegúrate de que tu vehículo esté accesible.'
-      : 'Great news! Your detailer is heading to you now and should arrive shortly. Please make sure your vehicle is accessible.'}</p>
+      ? '¡Buenas noticias! Nuestro equipo va en camino y llegará pronto. Por favor asegúrate de que tu vehículo esté accesible.'
+      : 'Great news! Our team is heading to you now and should arrive shortly. Please make sure your vehicle is accessible.'}</p>
     <div style="background:#eef2ff;border-left:4px solid #6366f1;padding:20px;margin:20px 0;border-radius:4px;">
       <h3 style="margin-top:0;color:#4f46e5;">${isEs ? 'Detalles de la Cita' : 'Appointment Details'}</h3>
       <p><strong>${isEs ? 'Reserva' : 'Booking'}:</strong> ${booking.confirmationCode}</p>
