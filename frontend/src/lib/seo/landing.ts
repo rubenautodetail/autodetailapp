@@ -13,6 +13,26 @@ import { NEIGHBORHOODS, getNeighborhoodBySlug, type Neighborhood } from './locat
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 
+const CITY_TAGLINE_SUFFIXES: { en: string; es: string }[] = [
+    { en: 'Serving {city} and nearby areas.', es: 'Atendemos {city} y zonas cercanas.' },
+    { en: 'Proudly serving the {city} community.', es: 'Con orgullo servimos a la comunidad de {city}.' },
+    { en: 'Bringing this same care to {city}.', es: 'Llevando este mismo cuidado a {city}.' },
+    { en: 'Available for clients across {city}.', es: 'Disponible para clientes en {city}.' },
+    { en: 'Trusted by drivers throughout {city}.', es: 'Con la confianza de conductores en {city}.' },
+    { en: 'Now serving {city} and the surrounding area.', es: 'Ahora atendemos {city} y sus alrededores.' },
+    { en: 'Your neighbors in {city} already trust us.', es: 'Tus vecinos en {city} ya confían en nosotros.' },
+    { en: 'Here for drivers in {city}, every day.', es: 'Aquí para los conductores de {city}, todos los días.' },
+];
+
+function getCityTaglineSuffix(cityName: string, locale: Locale): string {
+    let hash = 0;
+    for (let i = 0; i < cityName.length; i++) {
+        hash = (hash * 31 + cityName.charCodeAt(i)) % CITY_TAGLINE_SUFFIXES.length;
+    }
+    const entry = CITY_TAGLINE_SUFFIXES[hash];
+    return (locale === 'es' ? entry.es : entry.en).replace('{city}', cityName);
+}
+
 export interface Faq {
     q: string;
     a: string;
@@ -91,7 +111,7 @@ export function resolveLanding(
             heroEyebrow: isShopBased
                 ? `En taller · Doral, FL`
                 : `A domicilio · ${t(neighborhood.label, locale)}`,
-            heroSub: t(service.tagline, locale),
+            heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale)}`,
             quickAnswer: isShopBased
                 ? `Dtailwash ofrece ${kw} en nuestro taller en Doral, desde ${price}. Trae tu auto para un ambiente controlado; el servicio dura aproximadamente ${hrs}. Llama o envía un mensaje al 305-988-4449 para agendar tu cita.`
                 : `Dtailwash ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Nuestro equipo llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp al 305-988-4449.`,
@@ -120,7 +140,7 @@ export function resolveLanding(
         heroEyebrow: isShopBased
             ? `In-Shop · Doral, FL`
             : `Mobile · ${t(neighborhood.label, locale)}`,
-        heroSub: t(service.tagline, locale),
+        heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale)}`,
         quickAnswer: isShopBased
             ? `Dtailwash offers ${kw} at our Doral facility, starting at ${price}. Bring your car in for a controlled environment; the service takes about ${hrs}. Call or text 305-988-4449 to book your appointment.`
             : `Dtailwash offers ${kw} in ${place}, Miami-Dade, starting at ${price}. Our team comes to your location; a typical service takes about ${hrs}. Book online or text us at 305-988-4449.`,
@@ -202,8 +222,8 @@ function buildFaqsEs(s: DetailService, n: Neighborhood, price: string, hrs: stri
             a: `Claro. Puedes reservar en línea en segundos o escribirnos por WhatsApp y alguien de nuestro equipo te atenderá directamente.`,
         },
         {
-    q: `¿Cuándo cobran mi tarjeta?`,
-    a: `Primero apruebas el trabajo — solo cobramos tu tarjeta después de que confirmes que todo está bien.`,
-},
+            q: `¿Cuándo cobran mi tarjeta?`,
+            a: `Primero apruebas el trabajo — solo cobramos tu tarjeta después de que confirmes que todo está bien.`,
+        },
     ];
 }
