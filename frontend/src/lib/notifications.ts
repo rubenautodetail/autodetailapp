@@ -285,10 +285,10 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 await sendEnRouteEmail(mapBookingData(event.booking));
                 await createInAppNotification(
                     event.booking.user_id,
-                    l === 'es' ? 'Detallador en Camino' : 'Detailer On The Way',
+                    l === 'es' ? 'Nuestro Equipo en Camino' : 'Our Team On The Way',
                     l === 'es'
-                        ? 'Tu detallador va en camino. Llegara en breve.'
-                        : 'Your detailer is heading to you now! They should arrive shortly.',
+                        ? 'Nuestro equipo va en camino. Llegara en breve.'
+                        : 'Our team is heading to you now! They should arrive shortly.',
                     'info',
                     `/${l}/booking/${event.booking.id}/track`
                 );
