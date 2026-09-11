@@ -342,7 +342,9 @@ export default async function ServiceCityPage({
                         {es ? `${service.name.es} en ${neighborhood.name}, hoy` : `${service.name.en} in ${neighborhood.name}, today`}
                     </h2>
                     <p className="mx-auto mt-3 max-w-md text-white/60">
-                        {es ? `Desde ${content.priceLabel.replace('Desde ', '')} · vamos a tu ubicación.` : `${content.priceLabel} · we come to your location.`}
+                        {service.id === 'ceramic-coating'
+                            ? (es ? `Desde ${content.priceLabel.replace('Desde ', '')} · en nuestro taller en Doral.` : `${content.priceLabel} · at our Doral facility.`)
+                            : (es ? `Desde ${content.priceLabel.replace('Desde ', '')} · vamos a tu ubicación.` : `${content.priceLabel} · we come to your location.`)}
                     </p>
                     <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
                         <Link href={bookHref} className="rounded-full bg-[#D0B078] px-8 py-3 text-sm font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.03]">
