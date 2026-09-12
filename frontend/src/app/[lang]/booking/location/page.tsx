@@ -49,9 +49,16 @@ export default function LocationPage({ params }: LocationPageProps) {
     serviceFee,
     total,
     currentStep,
+    setCurrentStep,
     nextStep,
     previousStep,
   } = useBooking();
+
+  useEffect(() => {
+    if (isHydrated && currentStep !== 2) {
+      setCurrentStep(2);
+    }
+  }, [isHydrated]);
 
   const [zipCode, setZipCode] = useState(customerLocation?.zipCode || "");
   const [address, setAddress] = useState(customerLocation?.address || "");
@@ -269,11 +276,10 @@ export default function LocationPage({ params }: LocationPageProps) {
                   {savedAddresses.map(saved => (
                     <div
                       key={saved.id}
-                      className={`flex items-center justify-between gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                        address === saved.address
-                          ? "border-[#D0B078] bg-[#D0B078]/10"
-                          : "border-[#2C355E] hover:border-[#D0B078]/50"
-                      }`}
+                      className={`flex items-center justify-between gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${address === saved.address
+                        ? "border-[#D0B078] bg-[#D0B078]/10"
+                        : "border-[#2C355E] hover:border-[#D0B078]/50"
+                        }`}
                       onClick={() => handleSelectSaved(saved)}
                     >
                       <div className="min-w-0">

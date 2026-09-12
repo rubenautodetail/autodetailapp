@@ -244,6 +244,7 @@ interface BookingContextType {
 
   // Booking step tracking
   currentStep: number;
+  setCurrentStep: (step: number) => void;
 
   // Hydration flag — true once sessionStorage state has been restored
   isHydrated: boolean;
@@ -529,11 +530,11 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const newSubtotal = vehicles.length === 0
       ? service.basePrice + sumAddOns(addOns)
       : vehicles.reduce((sum, vehicle) => {
-          const vehicleService = serviceForVehicle(vehicle, service, overrides, perVehicle);
-          if (!vehicleService) return sum;
-          const vehicleAddOnList = addOnsForVehicle(vehicle, addOns, perVehicleAddOns, perVehicle);
-          return sum + vehicleService.basePrice + sumAddOns(vehicleAddOnList);
-        }, 0);
+        const vehicleService = serviceForVehicle(vehicle, service, overrides, perVehicle);
+        if (!vehicleService) return sum;
+        const vehicleAddOnList = addOnsForVehicle(vehicle, addOns, perVehicleAddOns, perVehicle);
+        return sum + vehicleService.basePrice + sumAddOns(vehicleAddOnList);
+      }, 0);
 
     // Service fee removed - included in base price
     const newServiceFee = 0;
@@ -576,25 +577,25 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
     const vehicles = bookingVehicles.length > 0
       ? bookingVehicles.map((vehicle) => {
-          const override = vehicle.id ? vehicleServices[vehicle.id] : undefined;
-          const overrideServiceId = override ? getStableCatalogId(override) : undefined;
-          const vehicleAddOnIds = addOnsForVehicle(vehicle, selectedAddOns, vehicleAddOns, perVehicleServices)
-            .map(getStableCatalogId)
-            .filter((id): id is string | number => id !== undefined);
-          return {
-            vehicleId: vehicle.id,
-            bodyStyle: normalizeVehicleBodyStyle(vehicle.type),
-            ...(overrideServiceId !== undefined ? { serviceId: overrideServiceId } : {}),
-            // Per-vehicle mode: this car's own add-ons, sent even when empty so
-            // the server never falls back to the booking-wide list for it.
-            ...(perVehicleServices ? { addOnIds: vehicleAddOnIds } : {}),
-          };
-        })
+        const override = vehicle.id ? vehicleServices[vehicle.id] : undefined;
+        const overrideServiceId = override ? getStableCatalogId(override) : undefined;
+        const vehicleAddOnIds = addOnsForVehicle(vehicle, selectedAddOns, vehicleAddOns, perVehicleServices)
+          .map(getStableCatalogId)
+          .filter((id): id is string | number => id !== undefined);
+        return {
+          vehicleId: vehicle.id,
+          bodyStyle: normalizeVehicleBodyStyle(vehicle.type),
+          ...(overrideServiceId !== undefined ? { serviceId: overrideServiceId } : {}),
+          // Per-vehicle mode: this car's own add-ons, sent even when empty so
+          // the server never falls back to the booking-wide list for it.
+          ...(perVehicleServices ? { addOnIds: vehicleAddOnIds } : {}),
+        };
+      })
       : vehicleInfo
         ? [{
-            vehicleId: vehicleInfo.id,
-            bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type),
-          }]
+          vehicleId: vehicleInfo.id,
+          bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type),
+        }]
         : selectedBodyStyle
           ? [{ bodyStyle: selectedBodyStyle }]
           : [];
@@ -915,6 +916,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     refreshPriceQuote,
     applyPriceQuote,
     currentStep,
+    setCurrentStep,
     isHydrated,
     paymentStatus,
     paymentIntentId,
