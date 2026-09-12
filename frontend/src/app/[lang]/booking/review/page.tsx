@@ -67,7 +67,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     if (!name && profile?.full_name) setName(profile.full_name);
     if (!email && user?.email) setEmail(user.email);
     if (!phone && profile?.phone) setPhone(profile.phone);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, user]);
   const [specialNotes, setSpecialNotes] = useState(customerInfo?.specialNotes || "");
 
@@ -226,9 +226,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     ? priceQuote.vehicles.reduce((sum, line) => sum + line.servicePrice, 0)
     : bookingVehicles.length > 0
       ? bookingVehicles.reduce(
-          (sum, vehicle) => sum + (Number(serviceForBookingVehicle(vehicle)?.basePrice) || 0),
-          0,
-        )
+        (sum, vehicle) => sum + (Number(serviceForBookingVehicle(vehicle)?.basePrice) || 0),
+        0,
+      )
       : Number(selectedService?.basePrice) || 0;
 
   // Vehicles added here (garage toggle, new-vehicle form) in per-vehicle mode
@@ -245,8 +245,8 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   // In per-vehicle mode the add-ons card groups each car's own extras.
   const perVehicleAddOnRows = perVehicleServices
     ? bookingVehicles
-        .map((vehicle) => ({ vehicle, addOns: addOnsForBookingVehicle(vehicle) }))
-        .filter((row) => row.addOns.length > 0)
+      .map((vehicle) => ({ vehicle, addOns: addOnsForBookingVehicle(vehicle) }))
+      .filter((row) => row.addOns.length > 0)
     : [];
 
   const handleContinue = async () => {
@@ -313,7 +313,16 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     router.push(`/${locale}/booking/schedule`);
   };
 
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078]"></div>
+      </div>
+    );
+  }
+
   if (!selectedService || !customerLocation || !selectedDate || !selectedTimeWindow) {
+    router.push(`/${locale}/booking/select`);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078]"></div>
@@ -550,11 +559,10 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                           role="checkbox"
                           aria-checked={selected}
                           onClick={() => toggleGarageVehicle(gv)}
-                          className={`flex items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${
-                            selected
+                          className={`flex items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${selected
                               ? "border-[#D0B078] bg-[#D0B078]/10"
                               : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
-                          }`}
+                            }`}
                         >
                           <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
                             <VehicleBodyStyleArtwork
@@ -573,11 +581,10 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                           </span>
                           <span
                             aria-hidden="true"
-                            className={`ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${
-                              selected
+                            className={`ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${selected
                                 ? "bg-[#D0B078] text-[#131835]"
                                 : "border-2 border-[#4A5580]"
-                            }`}
+                              }`}
                           >
                             {selected ? "✓" : ""}
                           </span>
@@ -667,9 +674,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
               {bookingVehicles.length > 0 && (
                 <div className="mt-4 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl p-3" aria-live="polite">
                   <div className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-[#D0B078] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                    <svg className="w-4 h-4 text-[#D0B078] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     <p className="text-xs font-semibold text-[#D0B078]">
                       {locale === "es" ? "Desglose por vehículo" : "Per-vehicle breakdown"}
                     </p>
