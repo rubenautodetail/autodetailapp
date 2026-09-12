@@ -242,32 +242,32 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
       // Build vehicles array — use bookingVehicles if multi, else single vehicleInfo
       const vehicles = bookingVehicles.length > 0
         ? bookingVehicles.map(v => {
-            const override = v.id ? vehicleServices[v.id] : undefined;
-            const overrideId = override ? getStableCatalogRef(override) : undefined;
-            const vehicleAddOnIds = addOnsForBookingVehicle(v)
-              .map(getStableCatalogRef)
-              .filter((id): id is string | number => id !== undefined);
-            return {
-              make: v.make,
-              model: v.model,
-              year: v.year,
-              color: v.color,
-              vehicleId: v.id,
-              bodyStyle: normalizeVehicleBodyStyle(v.type),
-              ...(overrideId !== undefined ? { serviceId: overrideId } : {}),
-              // Per-vehicle mode: this car's own add-ons, even when empty.
-              ...(perVehicleServices ? { addOnIds: vehicleAddOnIds } : {}),
-            };
-          })
+          const override = v.id ? vehicleServices[v.id] : undefined;
+          const overrideId = override ? getStableCatalogRef(override) : undefined;
+          const vehicleAddOnIds = addOnsForBookingVehicle(v)
+            .map(getStableCatalogRef)
+            .filter((id): id is string | number => id !== undefined);
+          return {
+            make: v.make,
+            model: v.model,
+            year: v.year,
+            color: v.color,
+            vehicleId: v.id,
+            bodyStyle: normalizeVehicleBodyStyle(v.type),
+            ...(overrideId !== undefined ? { serviceId: overrideId } : {}),
+            // Per-vehicle mode: this car's own add-ons, even when empty.
+            ...(perVehicleServices ? { addOnIds: vehicleAddOnIds } : {}),
+          };
+        })
         : vehicleInfo
           ? [{
-              make: vehicleInfo.make,
-              model: vehicleInfo.model,
-              year: vehicleInfo.year,
-              color: vehicleInfo.color,
-              vehicleId: vehicleInfo.id,
-              bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type),
-            }]
+            make: vehicleInfo.make,
+            model: vehicleInfo.model,
+            year: vehicleInfo.year,
+            color: vehicleInfo.color,
+            vehicleId: vehicleInfo.id,
+            bodyStyle: normalizeVehicleBodyStyle(vehicleInfo.type),
+          }]
           : [];
 
       // Single atomic call: creates booking(s) + Stripe PaymentIntent together.
@@ -349,7 +349,16 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
     router.push(`/${locale}/booking/review`);
   };
 
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-[#131835] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078]" />
+      </div>
+    );
+  }
+
   if (!selectedService || !customerLocation || !selectedDate || !selectedTimeWindow || !customerInfo) {
+    router.push(`/${locale}/booking/review`);
     return (
       <div className="min-h-screen bg-[#131835] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D0B078]" />
