@@ -341,16 +341,16 @@ export default function ServiceSelectionForm({
                                         ? `Asigna un servicio a cada vehículo. Precios para el ${activeVehicle.year} ${activeVehicle.model}.`
                                         : `Assign a service to each vehicle. Prices shown for the ${activeVehicle.year} ${activeVehicle.model}.`
                                     : hasPricingTarget
-                                    ? pricingTargetLabel
-                                        ? locale === "es"
-                                            ? `Precios para ${pricingTargetLabel}.`
-                                            : `Prices shown for your ${pricingTargetLabel}.`
+                                        ? pricingTargetLabel
+                                            ? locale === "es"
+                                                ? `Precios para ${pricingTargetLabel}.`
+                                                : `Prices shown for your ${pricingTargetLabel}.`
+                                            : locale === "es"
+                                                ? "Precios para los vehículos seleccionados."
+                                                : "Prices shown for the selected vehicles."
                                         : locale === "es"
-                                            ? "Precios para los vehículos seleccionados."
-                                            : "Prices shown for the selected vehicles."
-                                    : locale === "es"
-                                        ? "Precios iniciales. Elige tu vehículo arriba para ver el precio exacto."
-                                        : "Starting prices. Choose your vehicle above to see exact pricing."}
+                                            ? "Precios iniciales. Elige tu vehículo arriba para ver el precio exacto."
+                                            : "Starting prices. Choose your vehicle above to see exact pricing."}
                             </p>
                             {canSplitServices && (
                                 <div className="mb-4 space-y-3">
@@ -369,11 +369,10 @@ export default function ServiceSelectionForm({
                                                 role="radio"
                                                 aria-checked={serviceMode === mode}
                                                 onClick={() => handleServiceModeChange(mode)}
-                                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] ${
-                                                    serviceMode === mode
+                                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] ${serviceMode === mode
                                                         ? "bg-[#D0B078] text-[#131835]"
                                                         : "text-[#A5B0D1] hover:text-white"
-                                                }`}
+                                                    }`}
                                             >
                                                 {label}
                                             </button>
@@ -395,11 +394,10 @@ export default function ServiceSelectionForm({
                                                         type="button"
                                                         aria-pressed={isActivePill}
                                                         onClick={() => setActiveVehicleId(vehicle.id ?? null)}
-                                                        className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-2.5 rounded-xl border-2 p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${
-                                                            isActivePill
+                                                        className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-2.5 rounded-xl border-2 p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${isActivePill
                                                                 ? "border-[#D0B078] bg-[#D0B078]/10"
                                                                 : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <span className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
                                                             <VehicleBodyStyleArtwork
@@ -544,7 +542,7 @@ export default function ServiceSelectionForm({
 
                     {/* Right column: Summary (sticky) */}
                     <div className="lg:col-span-1">
-                        <div className="sticky top-8 space-y-4">
+                        <div className="sticky top-8 space-y-4 md:pb-24">
                             {selectedService ? (
                                 <div className="animate-fade-in-up">
                                     <PricingSummary
@@ -716,16 +714,16 @@ export default function ServiceSelectionForm({
                                 {!hasPricingTarget
                                     ? locale === "es" ? "Falta elegir el vehículo" : "Choose your vehicle first"
                                     : !allVehiclesAssigned
-                                    ? locale === "es" ? "Asigna un servicio a cada vehículo" : "Assign a service to every vehicle"
-                                    : [
-                                        locale === "es" ? "Total de la reserva" : "Booking total",
-                                        activeVehicles.length > 1
-                                            ? `${activeVehicles.length} ${locale === "es" ? "vehículos" : "vehicles"}`
-                                            : null,
-                                        cartAddOnCount > 0
-                                            ? `${cartAddOnCount} ${addOnNoun(cartAddOnCount)}`
-                                            : null,
-                                    ].filter(Boolean).join(" · ")}
+                                        ? locale === "es" ? "Asigna un servicio a cada vehículo" : "Assign a service to every vehicle"
+                                        : [
+                                            locale === "es" ? "Total de la reserva" : "Booking total",
+                                            activeVehicles.length > 1
+                                                ? `${activeVehicles.length} ${locale === "es" ? "vehículos" : "vehicles"}`
+                                                : null,
+                                            cartAddOnCount > 0
+                                                ? `${cartAddOnCount} ${addOnNoun(cartAddOnCount)}`
+                                                : null,
+                                        ].filter(Boolean).join(" · ")}
                             </p>
                             <p className="mt-0.5 text-lg font-bold leading-tight text-[#D0B078] md:text-xl">
                                 <span key={total} className="price-changed">${(Number(total) || 0).toFixed(2)}</span>
