@@ -434,17 +434,6 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                   />
                 </StripeProvider>
 
-                <Button
-                  variant="secondary"
-                  onClick={handleBack}
-                  fullWidth
-                  className="py-4 text-lg"
-                >
-                  <svg className="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  {locale === "es" ? "Volver a Revisar" : "Back to Review"}
-                </Button>
               </>
             ) : (
               <div className="space-y-4">
@@ -545,6 +534,19 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
                 locale={locale}
                 vehicleLines={vehicleSummaryLines(locale)}
               />
+              {clientSecret && bookingCreated && (
+                <Button
+                  variant="secondary"
+                  onClick={handleBack}
+                  fullWidth
+                  className="mt-4"
+                >
+                  <svg className="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  {locale === "es" ? "Volver a Revisar" : "Back to Review"}
+                </Button>
+              )}
               <p className="sr-only">{locale === "es" ? `Revisión de precio ${pricingRevision ?? ''}` : `Pricing revision ${pricingRevision ?? ''}`}</p>
             </div>
           </div>
