@@ -421,17 +421,31 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
 
             {/* Payment Section */}
             {clientSecret && bookingCreated ? (
-              <StripeProvider clientSecret={clientSecret}>
-                <CheckoutForm
-                  locale={locale}
-                  onSuccess={() => setPaymentStatus("paid")}
-                  isProcessing={isProcessing}
-                  total={groupTotal}
-                  confirmationCode={confirmationCode}
-                  serviceName={selectedService.name}
-                  vehicleCount={vehicleCount}
-                />
-              </StripeProvider>
+              <>
+                <StripeProvider clientSecret={clientSecret}>
+                  <CheckoutForm
+                    locale={locale}
+                    onSuccess={() => setPaymentStatus("paid")}
+                    isProcessing={isProcessing}
+                    total={groupTotal}
+                    confirmationCode={confirmationCode}
+                    serviceName={selectedService.name}
+                    vehicleCount={vehicleCount}
+                  />
+                </StripeProvider>
+
+                <Button
+                  variant="secondary"
+                  onClick={handleBack}
+                  fullWidth
+                  className="py-4 text-lg"
+                >
+                  <svg className="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  {locale === "es" ? "Volver a Revisar" : "Back to Review"}
+                </Button>
+              </>
             ) : (
               <div className="space-y-4">
                 {/* Terms */}
