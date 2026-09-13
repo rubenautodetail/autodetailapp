@@ -10,6 +10,9 @@ export const BODY_STYLES = [
 ] as const;
 
 export type VehicleBodyStyle = (typeof BODY_STYLES)[number];
+
+/** Body styles shown to customers when adding a new vehicle. */
+export const SELECTABLE_BODY_STYLES = BODY_STYLES.filter((style) => style !== 'coupe');
 export type VehicleLocale = 'en' | 'es';
 
 const BODY_STYLE_LABELS: Record<VehicleBodyStyle, Record<VehicleLocale, string>> = {

@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef } from 'react';
 import {
     BODY_STYLES,
+    SELECTABLE_BODY_STYLES,
     getVehicleBodyStyleLabel,
     VEHICLE_BODY_STYLE_DESCRIPTIONS,
     type VehicleBodyStyle,
@@ -98,7 +99,7 @@ export function VehicleBodyStyleSelector({
         });
     };
 
-    const renderOptions = () => BODY_STYLES.map((style) => {
+    const renderOptions = () => SELECTABLE_BODY_STYLES.map((style) => {
         const optionId = `${generatedId}-${style}`;
         const descriptionId = `${optionId}-description`;
         const selected = value === style;
@@ -137,10 +138,9 @@ export function VehicleBodyStyleSelector({
                         ? `flex h-16 w-full shrink-0 items-center justify-center overflow-hidden rounded-lg border ${isDark
                             ? 'border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]'
                             : 'border-black/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.2),rgba(255,255,255,0.45)_72%)]'}`
-                        : `flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border sm:mb-1 sm:h-[4.5rem] sm:w-full ${
-                            isDark
-                                ? 'border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]'
-                                : 'border-black/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.2),rgba(255,255,255,0.45)_72%)]'
+                        : `flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border sm:mb-1 sm:h-[4.5rem] sm:w-full ${isDark
+                            ? 'border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]'
+                            : 'border-black/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.2),rgba(255,255,255,0.45)_72%)]'
                         }`}>
                         <VehicleBodyStyleArtwork
                             style={style}
@@ -233,7 +233,7 @@ export function VehicleBodyStyleSelector({
                         </p>
                     )}
                     <div className="sr-only">
-                        {BODY_STYLES.map((style) => (
+                        {SELECTABLE_BODY_STYLES.map((style) => (
                             <span key={style} id={`${generatedId}-${style}-description`}>
                                 {VEHICLE_BODY_STYLE_DESCRIPTIONS[style][locale]}
                             </span>
