@@ -75,8 +75,8 @@ export default async function ServiceCityPage({
     const bookHref = `/${locale}/booking/select`;
     const waText = encodeURIComponent(
         es
-            ? `Hola, quiero ${service.name.es.toLowerCase()} en ${neighborhood.name}.`
-            : `Hi, I'd like ${service.name.en.toLowerCase()} in ${neighborhood.name}.`
+            ? `Hola, quiero ${service.name.es} en ${neighborhood.name}.`
+            : `Hi, I'd like ${service.name.en} in ${neighborhood.name}.`
     );
     const waHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${waText}` : null;
 
@@ -229,7 +229,7 @@ export default async function ServiceCityPage({
                     <div className="mb-10 space-y-3 text-center">
                         <p className="text-xs uppercase tracking-widest text-[#D0B078]">{es ? 'Qué incluye' : 'What’s included'}</p>
                         <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
-                            {es ? `Tu ${service.name.es.toLowerCase()}` : `Your ${service.name.en.toLowerCase()}`}
+                            {es ? `Tu ${service.name.es}` : `Your ${service.name.en}`}
                         </h2>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
