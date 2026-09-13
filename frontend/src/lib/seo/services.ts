@@ -179,6 +179,28 @@ export const SERVICES: DetailService[] = [
             '/images/services/express-detail-06.jpg',
         ],
     },
+    {
+        id: 'headlight-restoration',
+        slug: { en: 'headlight-restoration', es: 'restauracion-de-luces' },
+        schemaType: 'AutoWash',
+        name: { en: 'Headlight Restoration', es: 'Restauración de Luces' },
+        tagline: {
+            en: 'Restore cloudy, yellowed headlights to like-new clarity — better visibility, better looks, in under 2 hours. Inspect the work, then approve the charge.',
+            es: 'Restaura tus faros opacos y amarillentos a una claridad como nueva — mejor visibilidad, mejor apariencia, en menos de 2 horas. Revisa el trabajo y luego aprueba el cobro.',
+        },
+        priceFrom: 120,
+        durationMin: 120,
+        includes: [
+            { en: 'Deep cleaning to remove dirt, debris & contaminants', es: 'Limpieza profunda para eliminar suciedad, residuos y contaminantes' },
+            { en: 'Multi-stage sanding to remove oxidation & yellowing', es: 'Lijado en múltiples etapas para eliminar oxidación y amarillamiento' },
+            { en: 'Protective polymer coating for lasting clarity', es: 'Recubrimiento de polímero protector para claridad duradera' },
+            { en: 'UV protection against future oxidation & sun damage', es: 'Protección UV contra oxidación futura y daño solar' },
+        ],
+        headKeyword: { en: 'Headlight Restoration', es: 'Restauración De Luces' },
+        priority: 0.8,
+        icon: '💡',
+        imageUrl: '/images/services/headlight-restoration.png',
+    },
 ];
 export function getServiceBySlug(slug: string, locale: Locale): DetailService | undefined {
     return SERVICES.find((s) => s.slug[locale] === slug);
