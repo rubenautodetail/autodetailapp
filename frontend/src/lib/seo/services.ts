@@ -148,8 +148,30 @@ export const SERVICES: DetailService[] = [
         icon: '🛡️',
         imageUrl: '/images/services/ceramic-coating.png',
     },
+    {
+        id: 'express-detail',
+        slug: { en: 'express-detailing', es: 'detallado-express' },
+        schemaType: 'AutoWash',
+        name: { en: 'Express Detail', es: 'Detallado Express' },
+        tagline: {
+            en: 'A quick refresh for your daily driver — vacuum, wipe-down, and a hand wash in under 90 minutes. Inspect the work, then approve the charge.',
+            es: 'Un refresco rápido para tu auto del día a día — aspirado, limpieza y lavado a mano en menos de 90 minutos. Revisa el trabajo y luego aprueba el cobro.',
+        },
+        priceFrom: 70,
+        durationMin: 80,
+        includes: [
+            { en: 'Interior vacuum & wipe-down', es: 'Aspirado y limpieza interior' },
+            { en: 'Dashboard, console, doors & panels cleaned', es: 'Limpieza de tablero, consola, puertas y paneles' },
+            { en: 'Cup holders, glass & interior surfaces cleaned', es: 'Limpieza de portavasos, vidrios y superficies interiores' },
+            { en: 'Hand wash & door jambs cleaned', es: 'Lavado a mano y limpieza de marcos de puertas' },
+            { en: 'Wheels, tires, gas cap & bug removal', es: 'Limpieza de rines, llantas, tapa de gasolina y eliminación de insectos' },
+        ],
+        headKeyword: { en: 'express detail', es: 'detallado express' },
+        priority: 0.9,
+        icon: '⚡',
+        imageUrl: '/images/services/express-detail.png',
+    },
 ];
-
 export function getServiceBySlug(slug: string, locale: Locale): DetailService | undefined {
     return SERVICES.find((s) => s.slug[locale] === slug);
 }
