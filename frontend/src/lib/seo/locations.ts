@@ -37,8 +37,8 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         zips: ['33010', '33012', '33013', '33014', '33016', '33018'],
         label: { en: 'Hialeah, FL', es: 'Hialeah, FL' },
         blurb: {
-            en: 'Hialeah is one of the most Spanish-speaking cities in America — and our detailers meet you right at your driveway, no appointment gymnastics required.',
-            es: 'Hialeah es una de las ciudades más hispanohablantes del país — y nuestros detalladores llegan hasta tu entrada, sin complicaciones para agendar.',
+            en: 'In Hialeah, skip the drive — we come straight to you, no appointment gymnastics required.',
+            es: 'En Hialeah, olvídate de manejar — llegamos directo a ti, sin complicaciones para agendar.',
         },
         landmarks: ['Amelia Earhart Park', 'Westland Mall', 'Hialeah Park'],
         spanishFirst: true,
@@ -102,7 +102,7 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         zips: ['33134', '33143', '33146', '33156'],
         label: { en: 'Coral Gables, FL', es: 'Coral Gables, FL' },
         blurb: {
-            en: 'The City Beautiful expects a flawless finish. Our detailers bring show-car results to your Coral Gables home — paint correction and ceramic on request.',
+            en: 'The City Beautiful expects a flawless finish. Our team brings show-car results to your Coral Gables home — paint correction and ceramic on request.',
             es: 'La Ciudad Bella espera un acabado impecable. Llevamos resultados de auto de exhibición a tu hogar en Coral Gables — corrección de pintura y cerámico a pedido.',
         },
         landmarks: ['Miracle Mile', 'Venetian Pool', 'The Biltmore'],
@@ -128,8 +128,8 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         zips: ['33127', '33137', '33132', '33136'],
         label: { en: 'Miami, FL', es: 'Miami, FL' },
         blurb: {
-            en: 'From Downtown to Wynwood to Edgewater, Dtailwash brings vetted mobile detailers across the city of Miami — booked online, paid securely, done at your door.',
-            es: 'Desde Downtown hasta Wynwood y Edgewater, Dtailwash lleva detalladores verificados por toda la ciudad de Miami — reservado en línea, pago seguro, en tu puerta.',
+            en: 'From Downtown to Wynwood to Edgewater, Dtailwash brings our vetted team across the city of Miami — booked online, paid securely, done at your door.',
+            es: 'Desde Downtown hasta Wynwood y Edgewater, Dtailwash lleva a nuestro equipo verificado por toda la ciudad de Miami — reservado en línea, pago seguro, en tu puerta.',
         },
         landmarks: ['Wynwood Walls', 'Bayside', 'Museum Park'],
         spanishFirst: false,
@@ -155,8 +155,8 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         zips: ['33172', '33174', '33182', '33194'],
         label: { en: 'Sweetwater, FL', es: 'Sweetwater, FL' },
         blurb: {
-            en: 'Right by FIU and Dolphin Mall, Sweetwater keeps moving — our detailers work around your schedule, at home or at work.',
-            es: 'Junto a FIU y Dolphin Mall, Sweetwater nunca para — nuestros detalladores se adaptan a tu horario, en casa o en el trabajo.',
+            en: 'Right by FIU and Dolphin Mall, Sweetwater keeps moving — our team works around your schedule, at home or at work.',
+            es: 'Junto a FIU y Dolphin Mall, Sweetwater nunca para — nuestro equipo se adapta a tu horario, en casa o en el trabajo.',
         },
         landmarks: ['Dolphin Mall', 'FIU', 'Fountainebleau'],
         spanishFirst: true,
@@ -207,7 +207,7 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         zips: ['33030', '33031', '33032', '33033', '33034', '33035'],
         label: { en: 'Homestead, FL', es: 'Homestead, FL' },
         blurb: {
-            en: 'Deep South Dade shouldn’t mean driving 40 minutes for a proper detail. Our detailers cover Homestead and Leisure City — trucks and work vehicles welcome.',
+            en: 'Deep South Dade shouldn’t mean driving 40 minutes for a proper detail. Our team covers Homestead and Leisure City — trucks and work vehicles welcome.',
             es: 'Vivir en el sur de Dade no debería significar manejar 40 minutos para un buen detallado. Cubrimos Homestead y Leisure City — camionetas y vehículos de trabajo bienvenidos.',
         },
         landmarks: ['Homestead-Miami Speedway', 'Krome Avenue', 'Losner Park'],
