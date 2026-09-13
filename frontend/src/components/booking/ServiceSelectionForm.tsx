@@ -370,8 +370,8 @@ export default function ServiceSelectionForm({
                                                 aria-checked={serviceMode === mode}
                                                 onClick={() => handleServiceModeChange(mode)}
                                                 className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] ${serviceMode === mode
-                                                        ? "bg-[#D0B078] text-[#131835]"
-                                                        : "text-[#A5B0D1] hover:text-white"
+                                                    ? "bg-[#D0B078] text-[#131835]"
+                                                    : "text-[#A5B0D1] hover:text-white"
                                                     }`}
                                             >
                                                 {label}
@@ -395,8 +395,8 @@ export default function ServiceSelectionForm({
                                                         aria-pressed={isActivePill}
                                                         onClick={() => setActiveVehicleId(vehicle.id ?? null)}
                                                         className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-2.5 rounded-xl border-2 p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${isActivePill
-                                                                ? "border-[#D0B078] bg-[#D0B078]/10"
-                                                                : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
+                                                            ? "border-[#D0B078] bg-[#D0B078]/10"
+                                                            : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
                                                             }`}
                                                     >
                                                         <span className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
@@ -695,6 +695,14 @@ export default function ServiceSelectionForm({
                                             ? "Elige uno de los servicios arriba para comenzar con tu reserva."
                                             : "Choose one of the services above to begin your booking."}
                                     </p>
+                                    <Button
+                                        fullWidth
+                                        variant="secondary"
+                                        onClick={handleBack}
+                                        className="mt-6"
+                                    >
+                                        {locale === "es" ? "Volver a Inicio" : "Back to Home"}
+                                    </Button>
                                 </div>
                             )}
                         </div>
