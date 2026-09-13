@@ -199,7 +199,15 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'Headlight Restoration', es: 'Restauración De Luces' },
         priority: 0.8,
         icon: '💡',
-        imageUrl: '/images/services/headlight-restoration.png',
+        imageUrl: '/images/services/headlight-restoration-01.jpg',
+        imageUrls: [
+            '/images/services/headlight-restoration-01.jpg',
+            '/images/services/headlight-restoration-02.jpg',
+            '/images/services/headlight-restoration-03.jpg',
+            '/images/services/headlight-restoration-04.jpg',
+            '/images/services/headlight-restoration-05.jpg',
+            '/images/services/headlight-restoration-06.jpg',
+        ],
     },
 ];
 export function getServiceBySlug(slug: string, locale: Locale): DetailService | undefined {
