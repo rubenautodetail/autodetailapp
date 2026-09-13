@@ -116,7 +116,7 @@ export function resolveLanding(
                 `Precios transparentes desde ${price}, pago seguro y atención en español. Llámanos o escríbenos al 305-988-4449 para agendar tu cita en nuestro taller en Doral.`,
             ] : [
                 `¿Buscas ${kw} en ${place}? Dtailwash lleva a nuestro equipo verificado hasta la puerta de los residentes de ${place} — sin manejar hasta un taller ni esperar en fila. ${t(neighborhood.blurb, locale)}`,
-                `Cubrimos los códigos postales ${neighborhood.zips.slice(0, 4).join(', ')} y zonas cercanas como ${neighborhood.landmarks.join(', ')}. Precios transparentes desde ${price}, pago seguro y atención en español. Reserva tu ${name.toLowerCase()} en menos de 60 segundos.`,
+                `Cubrimos los códigos postales ${neighborhood.zips.slice(0, 4).join(', ')} y zonas cercanas como ${neighborhood.landmarks.join(', ')}. Precios transparentes desde ${price}, pago seguro y atención en español. Reserva tu ${name} en menos de 60 segundos.`,
             ],
             priceLabel: `Desde ${price}`,
             durationLabel: `≈ ${hrs}`,
@@ -145,7 +145,7 @@ export function resolveLanding(
             `Transparent pricing from ${price}, secure payment, and service in English or Spanish. Call or text us at 305-988-4449 to book your appointment at our Doral facility.`,
         ] : [
             `Looking for ${kw} in ${place}? Dtailwash brings our vetted team to ${place} residents' doors — no driving to a shop, no waiting rooms. ${t(neighborhood.blurb, locale)}`,
-            `We cover ZIP codes ${neighborhood.zips.slice(0, 4).join(', ')} and nearby areas like ${neighborhood.landmarks.join(', ')}. Transparent pricing from ${price}, secure online payment, and service in English or Spanish. Book your ${name.toLowerCase()} in under 60 seconds.`,
+            `We cover ZIP codes ${neighborhood.zips.slice(0, 4).join(', ')} and nearby areas like ${neighborhood.landmarks.join(', ')}. Transparent pricing from ${price}, secure online payment, and service in English or Spanish. Book your ${name} in under 60 seconds.`,
         ],
         priceLabel: `From ${price}`,
         durationLabel: `≈ ${hrs}`,
