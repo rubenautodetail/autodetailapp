@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
 import { getLandingContent, getVehicleBrands, type Testimonial } from '@/lib/hygraph';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient, createClient } from '@/lib/supabase/server';
 import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
@@ -39,7 +39,11 @@ const FALLBACK_TESTIMONIALS: Testimonial[] = [
         vehicleType: '2021 Porsche 911 Carrera',
     },
 ];
-
+async function getIsLoggedIn() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    return !!user;
+}
 export default async function LandingPage({
     params,
 }: {
@@ -50,10 +54,11 @@ export default async function LandingPage({
 
     // No auto-redirect — authenticated users can still view the landing page
 
-    const [dict, hygraph, hygraphVehicleBrands] = await Promise.all([
+    const [dict, hygraph, hygraphVehicleBrands, isLoggedIn] = await Promise.all([
         getDictionary(locale),
         getLandingContent(locale),
         getVehicleBrands(),
+        getIsLoggedIn(),
     ]);
 
     // Merge HyGraph content with dictionary fallbacks
@@ -174,10 +179,12 @@ export default async function LandingPage({
                 <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-20 sm:top-[44px]' : 'top-0'}`}>
                     <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
                     <Link
-                        href={`/${locale}/login`}
+                        href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
                         className="btn-primary text-sm px-6 py-2.5"
                     >
-                        {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
+                        {isLoggedIn
+                            ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
+                            : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
                     </Link>
                 </div>
 
@@ -216,10 +223,12 @@ export default async function LandingPage({
                     <div className="flex items-center justify-center gap-4 pt-2">
                         <span className="text-white/60 text-sm">{locale === 'es' ? '¿Ya tienes cuenta?' : 'Already a member?'}</span>
                         <Link
-                            href={`/${locale}/login`}
+                            href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
                             className="text-sm text-white/60 hover:text-white transition-colors underline underline-offset-4"
                         >
-                            {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
+                            {isLoggedIn
+                                ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
+                                : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
                         </Link>
                     </div>
                 </div>
@@ -534,8 +543,10 @@ export default async function LandingPage({
                         <Link href={`/${locale}/contractor/login`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Acceso contratistas' : 'Contractor login'}
                         </Link>
-                        <Link href={`/${locale}/login`} className="hover:text-white/60 transition-colors">
-                            {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
+                        <Link href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`} className="hover:text-white/60 transition-colors">
+                            {isLoggedIn
+                                ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
+                                : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
                         </Link>
                     </div>
                 </div>
