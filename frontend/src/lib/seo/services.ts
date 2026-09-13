@@ -169,7 +169,15 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'Express Detail', es: 'Detallado Express' },
         priority: 0.9,
         icon: '⚡',
-        imageUrl: '/images/services/express-detail.png',
+        imageUrl: '/images/services/express-detail-01.jpg',
+        imageUrls: [
+            '/images/services/express-detail-01.jpg',
+            '/images/services/express-detail-02.jpg',
+            '/images/services/express-detail-03.jpg',
+            '/images/services/express-detail-04.jpg',
+            '/images/services/express-detail-05.jpg',
+            '/images/services/express-detail-06.jpg',
+        ],
     },
 ];
 export function getServiceBySlug(slug: string, locale: Locale): DetailService | undefined {
