@@ -126,14 +126,7 @@ export function VehicleBodyStyleSelector({
                         ? `group relative flex w-[6.75rem] shrink-0 snap-start cursor-pointer flex-col gap-0.5 rounded-xl border-2 p-1 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`
                         : `group relative flex min-h-[4.5rem] min-w-0 cursor-pointer flex-row items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 sm:min-h-[11rem] sm:flex-col sm:items-stretch sm:gap-0 sm:p-3 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${cardClass}`}
                 >
-                    {selected && (
-                        <span
-                            aria-hidden="true"
-                            className={`absolute right-2 top-2 flex ${layout === 'carousel' ? 'h-5 w-5 text-xs' : 'h-6 w-6 text-sm'} items-center justify-center rounded-full font-black ${isDark ? 'bg-[#D0B078] text-[#131835]' : 'bg-[var(--accent)] text-white'}`}
-                        >
-                            ✓
-                        </span>
-                    )}
+
                     <div className={layout === 'carousel'
                         ? `flex h-16 w-full shrink-0 items-center justify-center overflow-hidden rounded-lg border ${isDark
                             ? 'border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]'
@@ -151,12 +144,12 @@ export function VehicleBodyStyleSelector({
                         />
                     </div>
                     {layout === 'carousel' ? (
-                        <span className={`truncate pr-5 text-xs font-bold ${primaryTextClass}`}>
+                        <span className={`truncate text-center text-xs font-bold ${selected ? 'text-[#D0B078]' : primaryTextClass}`}>
                             {getVehicleBodyStyleLabel(style, locale)}
                         </span>
                     ) : (
                         <span className="flex min-w-0 flex-col sm:contents">
-                            <span className={`pr-7 text-sm font-bold sm:mt-0.5 ${primaryTextClass}`}>
+                            <span className={`text-center text-sm font-bold sm:mt-0.5 ${selected ? 'text-[#D0B078]' : primaryTextClass}`}>
                                 {getVehicleBodyStyleLabel(style, locale)}
                             </span>
                             <span
