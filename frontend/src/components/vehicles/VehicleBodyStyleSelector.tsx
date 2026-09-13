@@ -144,12 +144,12 @@ export function VehicleBodyStyleSelector({
                         />
                     </div>
                     {layout === 'carousel' ? (
-                        <span className={`truncate text-center text-xs font-bold ${selected ? 'rounded-full bg-[#D0B078] px-2 py-0.5 text-[#131835]' : primaryTextClass}`}>
+                        <span className={`truncate text-center text-xs font-bold uppercase ${selected ? 'rounded-full bg-[#D0B078] px-2 py-0.5 text-[#131835]' : primaryTextClass}`}>
                             {getVehicleBodyStyleLabel(style, locale)}
                         </span>
                     ) : (
                         <span className="flex min-w-0 flex-col sm:contents">
-                            <span className={`text-center text-sm font-bold sm:mt-0.5 ${selected ? 'rounded-full bg-[#D0B078] px-3 py-1 text-[#131835]' : primaryTextClass}`}>
+                            <span className={`text-center text-sm font-bold sm:mt-0.5 uppercase ${selected ? 'rounded-full bg-[#D0B078] px-3 py-1 text-[#131835]' : primaryTextClass}`}>
                                 {getVehicleBodyStyleLabel(style, locale)}
                             </span>
                             <span
