@@ -51,17 +51,17 @@ function displayStatus(c: Contractor): string {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-    pending:  "bg-yellow-100 text-yellow-800",
-    active:   "bg-green-100 text-green-800",
+    pending: "bg-yellow-100 text-yellow-800",
+    active: "bg-green-100 text-green-800",
     rejected: "bg-red-100 text-red-800",
-    unknown:  "bg-gray-100 text-gray-700",
+    unknown: "bg-gray-100 text-gray-700",
 };
 
 const PAYMENT_LABELS: Record<string, { en: string; es: string }> = {
     direct_deposit: { en: "ACH / Direct Deposit", es: "ACH / Depósito Directo" },
-    zelle:          { en: "Zelle",                es: "Zelle"                  },
-    check:          { en: "Check",                es: "Cheque"                 },
-    cash:           { en: "Cash",                 es: "Efectivo"               },
+    zelle: { en: "Zelle", es: "Zelle" },
+    check: { en: "Check", es: "Cheque" },
+    cash: { en: "Cash", es: "Efectivo" },
 };
 
 function paymentLabel(pref: string | null, isEs: boolean): string {
@@ -93,78 +93,78 @@ function AdminContractorsContent({ locale }: { locale: string }) {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     // Modals
-    const [rejectModal, setRejectModal]       = useState<{ id: string; name: string } | null>(null);
-    const [rejectReason, setRejectReason]     = useState("");
+    const [rejectModal, setRejectModal] = useState<{ id: string; name: string } | null>(null);
+    const [rejectReason, setRejectReason] = useState("");
     const [terminateModal, setTerminateModal] = useState<{ id: string; name: string } | null>(null);
-    const [detailModal, setDetailModal]       = useState<Contractor | null>(null);
+    const [detailModal, setDetailModal] = useState<Contractor | null>(null);
 
     // Skills verification state
     const [catalogServices, setCatalogServices] = useState<CatalogSvc[]>([]);
-    const [skillVerifyIds, setSkillVerifyIds]   = useState<number[]>([]);
-    const [savingSkills, setSavingSkills]       = useState(false);
+    const [skillVerifyIds, setSkillVerifyIds] = useState<number[]>([]);
+    const [savingSkills, setSavingSkills] = useState(false);
 
     const isEs = locale === "es";
 
     const t = {
-        title:            isEs ? "Gestión de Contratistas"      : "Contractor Management",
-        back:             isEs ? "← Volver al Panel"            : "← Back to Dashboard",
-        all:              isEs ? "Todos"                         : "All",
-        pending:          isEs ? "Pendientes"                   : "Pending",
-        active:           isEs ? "Activos"                      : "Active",
-        rejected:         isEs ? "Rechazados"                   : "Rejected",
-        name:             isEs ? "Nombre"                       : "Name",
-        contact:          isEs ? "Contacto"                     : "Contact",
-        status:           isEs ? "Estado"                       : "Status",
-        joined:           isEs ? "Registro"                     : "Joined",
-        actions:          isEs ? "Acciones"                     : "Actions",
-        approve:          isEs ? "Aprobar"                      : "Approve",
-        reject:           isEs ? "Rechazar"                     : "Reject",
-        terminate:        isEs ? "Terminar"                     : "Terminate",
-        viewDetails:      isEs ? "Ver Detalles"                 : "View Details",
-        noContractors:    isEs ? "No hay contratistas"          : "No contractors found",
+        title: isEs ? "Gestión de Contratistas" : "Contractor Management",
+        back: isEs ? "← Volver al Panel" : "← Back to Dashboard",
+        all: isEs ? "Todos" : "All",
+        pending: isEs ? "Pendientes" : "Pending",
+        active: isEs ? "Activos" : "Active",
+        rejected: isEs ? "Rechazados" : "Rejected",
+        name: isEs ? "Nombre" : "Name",
+        contact: isEs ? "Contacto" : "Contact",
+        status: isEs ? "Estado" : "Status",
+        joined: isEs ? "Registro" : "Joined",
+        actions: isEs ? "Acciones" : "Actions",
+        approve: isEs ? "Aprobar" : "Approve",
+        reject: isEs ? "Rechazar" : "Reject",
+        terminate: isEs ? "Terminar" : "Terminate",
+        viewDetails: isEs ? "Ver Detalles" : "View Details",
+        noContractors: isEs ? "No hay contratistas" : "No contractors found",
         // Reject modal
-        rejectTitle:       isEs ? "Rechazar Solicitud"           : "Reject Application",
+        rejectTitle: isEs ? "Rechazar Solicitud" : "Reject Application",
         rejectPlaceholder: isEs ? "Motivo del rechazo (opcional)..." : "Reason for rejection (optional)...",
-        cancel:            isEs ? "Cancelar"                     : "Cancel",
-        confirmReject:     isEs ? "Confirmar Rechazo"            : "Confirm Rejection",
+        cancel: isEs ? "Cancelar" : "Cancel",
+        confirmReject: isEs ? "Confirmar Rechazo" : "Confirm Rejection",
         // Terminate modal
-        terminateTitle:    isEs ? "Terminar Contratista"         : "Terminate Contractor",
-        terminateMsg:      isEs
+        terminateTitle: isEs ? "Terminar Contratista" : "Terminate Contractor",
+        terminateMsg: isEs
             ? "¿Estás seguro? Se revocará el acceso de este contratista inmediatamente."
             : "Are you sure? This contractor's access will be revoked immediately.",
-        confirmTerminate:  isEs ? "Confirmar Terminación"        : "Confirm Termination",
+        confirmTerminate: isEs ? "Confirmar Terminación" : "Confirm Termination",
         // Detail modal labels
-        detailTitle:       isEs ? "Perfil del Contratista"       : "Contractor Profile",
-        fullName:          isEs ? "Nombre completo"              : "Full Name",
-        emailLabel:        isEs ? "Correo electrónico"           : "Email",
-        phoneLabel:        isEs ? "Teléfono"                     : "Phone",
-        businessName:      isEs ? "Nombre del negocio"           : "Business Name",
-        addressLabel:      isEs ? "Dirección"                    : "Address",
-        serviceZips:       isEs ? "Códigos ZIP de servicio"      : "Service ZIP Codes",
-        paymentPref:       isEs ? "Método de pago preferido"     : "Preferred Payment Method",
-        zelleContact:      isEs ? "Teléfono/Correo de Zelle"      : "Zelle Phone/Email",
-        bankName:          isEs ? "Banco"                         : "Bank Name",
-        bankAccountNum:    isEs ? "Número de cuenta"              : "Account Number",
-        bankRoutingNum:    isEs ? "Número de ruta"                : "Routing Number",
-        bankAccountType:   isEs ? "Tipo de cuenta"                : "Account Type",
-        stripeStatus:      isEs ? "Estado de Stripe"              : "Stripe Status",
-        jobsCompleted:     isEs ? "Trabajos completados"         : "Jobs Completed",
-        ratingLabel:       isEs ? "Calificación"                 : "Rating",
-        registeredOn:      isEs ? "Registrado el"                : "Registered On",
+        detailTitle: isEs ? "Perfil del Contratista" : "Contractor Profile",
+        fullName: isEs ? "Nombre completo" : "Full Name",
+        emailLabel: isEs ? "Correo electrónico" : "Email",
+        phoneLabel: isEs ? "Teléfono" : "Phone",
+        businessName: isEs ? "Nombre del negocio" : "Business Name",
+        addressLabel: isEs ? "Dirección" : "Address",
+        serviceZips: isEs ? "Códigos ZIP de servicio" : "Service ZIP Codes",
+        paymentPref: isEs ? "Método de pago preferido" : "Preferred Payment Method",
+        zelleContact: isEs ? "Teléfono/Correo de Zelle" : "Zelle Phone/Email",
+        bankName: isEs ? "Banco" : "Bank Name",
+        bankAccountNum: isEs ? "Número de cuenta" : "Account Number",
+        bankRoutingNum: isEs ? "Número de ruta" : "Routing Number",
+        bankAccountType: isEs ? "Tipo de cuenta" : "Account Type",
+        stripeStatus: isEs ? "Estado de Stripe" : "Stripe Status",
+        jobsCompleted: isEs ? "Trabajos completados" : "Jobs Completed",
+        ratingLabel: isEs ? "Calificación" : "Rating",
+        registeredOn: isEs ? "Registrado el" : "Registered On",
         // Skills verification
-        skillsTitle:       isEs ? "Servicios y Habilidades"      : "Services & Skills",
-        skillsRequested:   isEs ? "Solicitado por contratista"   : "Requested by contractor",
-        skillsVerifyBtn:   isEs ? "Verificar Seleccionados"       : "Verify Selected",
-        skillsClearBtn:    isEs ? "Revocar Todo"                  : "Revoke All",
-        skillsPending:     isEs ? "Revisión pendiente"           : "Pending review",
-        skillsVerified:    isEs ? "Verificado"                    : "Verified",
-        skillsNoRequest:   isEs ? "Sin solicitud"                 : "No skills requested",
+        skillsTitle: isEs ? "Servicios y Habilidades" : "Services & Skills",
+        skillsRequested: isEs ? "Solicitado por contratista" : "Requested by contractor",
+        skillsVerifyBtn: isEs ? "Verificar Seleccionados" : "Verify Selected",
+        skillsClearBtn: isEs ? "Revocar Todo" : "Revoke All",
+        skillsPending: isEs ? "Revisión pendiente" : "Pending review",
+        skillsVerified: isEs ? "Verificado" : "Verified",
+        skillsNoRequest: isEs ? "Sin solicitud" : "No skills requested",
     };
 
     const STATUS_FILTERS: { key: FilterStatus; label: string }[] = [
-        { key: "all",      label: t.all      },
-        { key: "pending",  label: t.pending  },
-        { key: "active",   label: t.active   },
+        { key: "all", label: t.all },
+        { key: "pending", label: t.pending },
+        { key: "active", label: t.active },
         { key: "rejected", label: t.rejected },
     ];
 
@@ -308,11 +308,10 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                         <button
                             key={key}
                             onClick={() => setStatusFilter(key)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                statusFilter === key
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === key
                                     ? "bg-blue-600 text-white"
                                     : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                            }`}
+                                }`}
                         >
                             {label}
                         </button>
@@ -381,19 +380,18 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {c.service_type_ids && c.service_type_ids.length > 0 ? (
-                                                        <div className="flex flex-col gap-1">
+                                                        <div className="grid grid-cols-2 gap-1 max-h-[110px] overflow-y-auto p-1 border border-gray-200 rounded-lg">
                                                             {c.service_type_ids.map((svcId) => {
                                                                 const svc = catalogServices.find((s) => s.id === svcId);
                                                                 const name = svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${svcId}`;
                                                                 const isVerified = (c.verified_service_type_ids ?? []).includes(svcId);
                                                                 return (
-                                                                    <span key={svcId} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold w-fit ${
-                                                                        c.skills_pending_review
+                                                                    <span key={svcId} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold ${c.skills_pending_review
                                                                             ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
                                                                             : isVerified
                                                                                 ? "bg-green-50 text-green-700 border border-green-200"
                                                                                 : "bg-gray-100 text-gray-500"
-                                                                    }`}>
+                                                                        }`}>
                                                                         {isVerified && !c.skills_pending_review ? "✓ " : c.skills_pending_review ? "⚡ " : ""}{name}
                                                                     </span>
                                                                 );
@@ -484,9 +482,9 @@ function AdminContractorsContent({ locale }: { locale: string }) {
 
                         {/* Modal body */}
                         <div className="overflow-y-auto flex-1 px-6 py-4">
-                            <DetailRow label={t.fullName}    value={detailModal.full_name} />
-                            <DetailRow label={t.emailLabel}  value={detailModal.email} />
-                            <DetailRow label={t.phoneLabel}  value={detailModal.phone} />
+                            <DetailRow label={t.fullName} value={detailModal.full_name} />
+                            <DetailRow label={t.emailLabel} value={detailModal.email} />
+                            <DetailRow label={t.phoneLabel} value={detailModal.phone} />
                             <DetailRow label={t.businessName} value={detailModal.business_name} />
                             <DetailRow label={t.addressLabel} value={detailModal.address} />
                             <DetailRow
@@ -496,11 +494,10 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                             <DetailRow
                                 label={t.paymentPref}
                                 value={
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                        detailModal.payment_preference
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${detailModal.payment_preference
                                             ? "bg-blue-50 text-blue-700"
                                             : "bg-gray-100 text-gray-500"
-                                    }`}>
+                                        }`}>
                                         {paymentLabel(detailModal.payment_preference, isEs)}
                                     </span>
                                 }
@@ -512,7 +509,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                             {/* Bank account details */}
                             {detailModal.payment_preference === "direct_deposit" && (
                                 <>
-                                    <DetailRow label={t.bankName}       value={detailModal.bank_name} />
+                                    <DetailRow label={t.bankName} value={detailModal.bank_name} />
                                     <DetailRow label={t.bankAccountNum} value={detailModal.bank_account_number} />
                                     <DetailRow label={t.bankRoutingNum} value={detailModal.bank_routing_number} />
                                     <DetailRow
