@@ -67,7 +67,15 @@ export const SERVICES: DetailService[] = [
         headKeyword: { en: 'Mobile Car Detailing', es: 'Detallado de Autos a Domicilio' },
         priority: 1.0,
         icon: '🚐',
-        imageUrl: '/images/services/mobile-car-detailing.png',
+        imageUrl: '/images/services/mobile-car-detailing-01.jpg',
+        imageUrls: [
+            '/images/services/mobile-car-detailing-01.jpg',
+            '/images/services/mobile-car-detailing-02.jpg',
+            '/images/services/mobile-car-detailing-03.jpg',
+            '/images/services/mobile-car-detailing-04.jpg',
+            '/images/services/mobile-car-detailing-05.jpg',
+            '/images/services/mobile-car-detailing-06.jpg',
+        ],
     },
     {
         id: 'interior-detailing',
