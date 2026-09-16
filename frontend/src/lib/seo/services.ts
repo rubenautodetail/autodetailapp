@@ -177,7 +177,7 @@ export const SERVICES: DetailService[] = [
         name: { en: 'Express Detail', es: 'Detallado Express' },
         tagline: {
             en: 'A quick refresh for your daily driver — vacuum, wipe-down, and a hand wash in under 90 minutes. Perfect for a busy week when your car needs a boost but you do not have hours to spare. ZERO RISK — inspect first, then authorize the payment.',
-            es: 'Un refresco rápido para tu auto del día a día — aspirado, limpieza y lavado a mano en menos de 90 minutos. Perfecto para una semana ocupada cuando tu auto necesita un empujón, pero no tienes horas de sobra. CERO RIESGO — primero revisa, después autorizas el pago.',
+            es: 'Una renovación rápida para tu auto del día a día — aspirado, limpieza y lavado a mano en menos de 90 minutos. Perfecto para una semana ocupada cuando tu auto necesita un empujón, pero no tienes horas de sobra. CERO RIESGO — primero revisa, después autorizas el pago.',
         },
         priceFrom: 70,
         durationMin: 80,
