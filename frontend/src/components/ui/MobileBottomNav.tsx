@@ -20,22 +20,18 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
     }
 
     const navItems = [
-        { icon: Home, label: "Home", labelEs: "Inicio", path: "/dashboard" },
-        { icon: Sparkles, label: "Book", labelEs: "Servicios", path: "/dashboard/services" },
-        { icon: ClipboardList, label: "Orders", labelEs: "Reservas", path: "/dashboard/orders" },
-        { icon: User, label: "Account", labelEs: "Cuenta", path: "/dashboard/profile" },
+        { icon: Home, label: "Home", labelEs: "Inicio", path: "/customer" },
+        { icon: Sparkles, label: "Book", labelEs: "Servicios", path: "/booking/select" },
+        { icon: ClipboardList, label: "Orders", labelEs: "Reservas", path: "/customer" },
+        { icon: User, label: "Account", labelEs: "Cuenta", path: "/customer/settings" },
     ];
 
     const isActive = (itemPath: string) => {
         const fullPath = `/${lang}${itemPath}`;
-        // Home = exact dashboard match
-        if (itemPath === "/dashboard") return pathname === `/${lang}/dashboard`;
-        // Book/Services section — active for services page or any /booking/* flow
-        if (itemPath === "/dashboard/services") return pathname?.startsWith(`/${lang}/dashboard/services`) || pathname?.startsWith(`/${lang}/booking`);
-        // Orders
-        if (itemPath === "/dashboard/orders") return pathname?.startsWith(`/${lang}/dashboard/orders`);
-        // Profile
-        if (itemPath === "/dashboard/profile") return pathname?.startsWith(`/${lang}/dashboard/profile`);
+        // Book/Services section — active for booking select or any /booking/* flow
+        if (itemPath === "/booking/select") return pathname?.startsWith(`/${lang}/booking`);
+        // Account/Settings
+        if (itemPath === "/customer/settings") return pathname?.startsWith(`/${lang}/customer/settings`);
         return pathname === fullPath;
     };
 
@@ -63,17 +59,15 @@ export default function MobileBottomNav({ lang }: MobileBottomNavProps) {
                                     <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent-gold shadow-[0_0_6px_rgba(208,176,120,0.6)]" />
                                 )}
                                 <Icon
-                                    className={`w-[22px] h-[22px] transition-all duration-300 ${
-                                        active
-                                            ? "text-accent-gold drop-shadow-[0_0_8px_rgba(208,176,120,0.4)]"
-                                            : "text-white/55 group-hover:text-white/70"
-                                    }`}
+                                    className={`w-[22px] h-[22px] transition-all duration-300 ${active
+                                        ? "text-accent-gold drop-shadow-[0_0_8px_rgba(208,176,120,0.4)]"
+                                        : "text-white/55 group-hover:text-white/70"
+                                        }`}
                                     strokeWidth={active ? 2.2 : 1.5}
                                 />
                                 <span
-                                    className={`text-[10px] font-medium tracking-wide transition-all duration-300 ${
-                                        active ? "text-accent-gold" : "text-white/55 group-hover:text-white/70"
-                                    }`}
+                                    className={`text-[10px] font-medium tracking-wide transition-all duration-300 ${active ? "text-accent-gold" : "text-white/55 group-hover:text-white/70"
+                                        }`}
                                 >
                                     {label}
                                 </span>
