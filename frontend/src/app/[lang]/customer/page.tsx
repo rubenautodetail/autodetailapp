@@ -218,7 +218,7 @@ export default function CustomerDashboardPage() {
                                                     </div>
                                                     <div className="shrink-0 flex flex-col items-end gap-1.5">
                                                         {!isCancelled && (
-                                                            <span className="text-xs font-bold px-3 py-1.5 rounded-lg border border-accent-gold/40 text-accent-gold whitespace-nowrap">
+                                                            <span className="text-xs font-bold px-3 py-1.5 rounded-lg border border-accent-gold/40 text-accent-gold whitespace-nowrap transition-colors hover:bg-accent-gold/10 hover:text-white">
                                                                 {isEs ? 'Rastrear Reserva' : 'Track My Booking'}
                                                             </span>
                                                         )}
