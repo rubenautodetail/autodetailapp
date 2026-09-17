@@ -17,9 +17,9 @@ const ACTIVE_STATUSES = new Set(['pending_payment', 'pending', 'pending_assignme
 function formatTimeWindow(tw: string, locale: string): string {
     const isEs = locale === 'es';
     const legacy: Record<string, { en: string; es: string }> = {
-        morning:   { en: 'Morning',   es: 'Mañana' },
+        morning: { en: 'Morning', es: 'Mañana' },
         afternoon: { en: 'Afternoon', es: 'Tarde' },
-        evening:   { en: 'Evening',   es: 'Noche' },
+        evening: { en: 'Evening', es: 'Noche' },
     };
     const key = tw.toLowerCase().trim();
     if (legacy[key]) return isEs ? legacy[key].es : legacy[key].en;
@@ -125,11 +125,10 @@ export default function CustomerDashboardPage() {
                             <div className="flex items-center gap-1 mb-6 bg-white/5 rounded-xl p-1 w-fit">
                                 <button
                                     onClick={() => setTab('active')}
-                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
-                                        tab === 'active'
-                                            ? 'bg-accent-gold text-bg-primary'
-                                            : 'text-text-secondary hover:text-white'
-                                    }`}
+                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'active'
+                                        ? 'bg-accent-gold text-bg-primary'
+                                        : 'text-text-secondary hover:text-white'
+                                        }`}
                                 >
                                     {isEs ? 'Activos' : 'Active'}
                                     {activeBookings.length > 0 && (
@@ -140,11 +139,10 @@ export default function CustomerDashboardPage() {
                                 </button>
                                 <button
                                     onClick={() => setTab('history')}
-                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
-                                        tab === 'history'
-                                            ? 'bg-accent-gold text-bg-primary'
-                                            : 'text-text-secondary hover:text-white'
-                                    }`}
+                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'history'
+                                        ? 'bg-accent-gold text-bg-primary'
+                                        : 'text-text-secondary hover:text-white'
+                                        }`}
                                 >
                                     {isEs ? 'Historial' : 'History'}
                                     {historyBookings.length > 0 && (
@@ -214,31 +212,38 @@ export default function CustomerDashboardPage() {
                                                             {(() => { const d = new Date(b.date); return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }); })()}
                                                             {b.time ? ` · ${formatTimeWindow(b.time, lang)}` : ''}
                                                         </p>
+                                                        <p className={`text-sm font-bold mt-1 ${isCancelled ? 'text-text-muted' : 'text-accent-gold'}`}>
+                                                            ${b.price}
+                                                        </p>
                                                     </div>
-                                                    <span className={`text-sm font-bold shrink-0 ${isCancelled ? 'text-text-muted' : 'text-accent-gold'}`}>
-                                                        ${b.price}
-                                                    </span>
-                                                    {isCompleted && (
-                                                        <span
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className="shrink-0 flex gap-2"
-                                                        >
-                                                            {!b.reviewRating && (
-                                                                <Link
-                                                                    href={`/${lang}/booking/${b.id}/review`}
-                                                                    className="text-xs text-white hover:text-accent-gold font-bold px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 transition-all"
-                                                                >
-                                                                    {isEs ? 'Reseña' : 'Review'}
-                                                                </Link>
-                                                            )}
-                                                            <Link
-                                                                href={`/${lang}/booking/select?service=${encodeURIComponent(b.serviceName)}`}
-                                                                className="text-xs text-accent-gold hover:text-white font-bold px-2 py-1 rounded-lg bg-accent-gold/10 hover:bg-accent-gold/20 transition-all"
+                                                    <div className="shrink-0 flex flex-col items-end gap-1.5">
+                                                        {!isCancelled && (
+                                                            <span className="text-xs font-bold px-3 py-1.5 rounded-lg border border-accent-gold/40 text-accent-gold whitespace-nowrap">
+                                                                {isEs ? 'Rastrear Reserva' : 'Track My Booking'}
+                                                            </span>
+                                                        )}
+                                                        {isCompleted && (
+                                                            <span
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="flex gap-2"
                                                             >
-                                                                {isEs ? 'Repetir' : 'Book Again'}
-                                                            </Link>
-                                                        </span>
-                                                    )}
+                                                                {!b.reviewRating && (
+                                                                    <Link
+                                                                        href={`/${lang}/booking/${b.id}/review`}
+                                                                        className="text-xs text-white hover:text-accent-gold font-bold px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 transition-all"
+                                                                    >
+                                                                        {isEs ? 'Reseña' : 'Review'}
+                                                                    </Link>
+                                                                )}
+                                                                <Link
+                                                                    href={`/${lang}/booking/select?service=${encodeURIComponent(b.serviceName)}`}
+                                                                    className="text-xs text-accent-gold hover:text-white font-bold px-2 py-1 rounded-lg bg-accent-gold/10 hover:bg-accent-gold/20 transition-all"
+                                                                >
+                                                                    {isEs ? 'Repetir' : 'Book Again'}
+                                                                </Link>
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </Link>
                                             );
                                         })}
