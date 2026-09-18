@@ -348,12 +348,24 @@ export default async function LandingPage({
                                                 .split('\n')
                                                 .map((line: string) => line.trim())
                                                 .filter((line: string) => line.length > 0)
-                                                .map((line: string, idx: number) => (
-                                                    <li key={idx} className="flex gap-2">
-                                                        <span className="text-white/40 shrink-0">•</span>
-                                                        <span>{line}</span>
-                                                    </li>
-                                                ))}
+                                                .map((line: string, idx: number) => {
+                                                    const isHeader = line.startsWith('>>>>') || (line.startsWith('—') && line.endsWith('—'));
+                                                    if (isHeader) {
+                                                        const label = line.replace(/[>—<]/g, '').trim();
+                                                        return (
+                                                            <li key={idx} className="text-center text-[#D0B078] font-bold text-[11px] uppercase tracking-widest pt-2 first:pt-0">
+                                                                {label}
+                                                            </li>
+                                                        );
+                                                    }
+                                                    return (
+                                                        <li key={idx} className="flex gap-2">
+                                                            <span className="text-white/40 shrink-0">•</span>
+                                                            <span>{line}</span>
+                                                        </li>
+                                                    );
+                                                })}
+
                                         </ul>
                                     </div>
                                     <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
