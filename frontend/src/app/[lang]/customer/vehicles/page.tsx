@@ -98,11 +98,18 @@ export default function VehiclesPage() {
                     {vehicles.length === 0 && (
                         <div className="col-span-full rounded-2xl border border-dashed border-white/10 py-12 text-center text-text-muted">
                             <Car className="mx-auto mb-4 h-12 w-12 opacity-50" aria-hidden="true" />
-                            <p>
+                            <p className="mb-3">
                                 {isEs
                                     ? 'Aún no tienes vehículos en tu garaje.'
                                     : 'No vehicles in your garage yet.'}
                             </p>
+                            <button
+                                type="button"
+                                onClick={() => setIsAdding(true)}
+                                className="font-bold text-accent-gold hover:text-white transition-colors"
+                            >
+                                {isEs ? 'Agrega tu primer vehículo' : 'Add your first vehicle'}
+                            </button>
                         </div>
                     )}
                 </div>
