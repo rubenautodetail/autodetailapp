@@ -175,11 +175,11 @@ export default async function TermsPage({
                     </p>
                 </div>
 
-                {/* OAC Digital Innovations credit */}
+                {/* Lux Auto Detail Services credit */}
                 <div className="mt-16 pt-8 border-t border-white/5 text-center">
                     <p className="text-white/50 text-xs">
-                        {es ? 'Diseñado por' : 'Designed by'}{' '}
-                        <span className="text-white/65 font-medium">OAC Digital Innovations</span>
+                        {es ? '© 2026' : '© 2026'}{' '}
+                        <span className="text-white/65 font-medium">Lux Auto Detail Services</span>
                     </p>
                 </div>
             </div>

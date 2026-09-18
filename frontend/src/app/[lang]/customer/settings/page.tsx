@@ -226,8 +226,8 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="pt-4 text-center">
                                     <p className="text-white/55 text-xs">
-                                        {params.lang === 'es' ? 'Diseñado por' : 'Designed by'}{' '}
-                                        <span className="text-white/70 font-medium">OAC Digital Innovations</span>
+                                        {params.lang === 'es' ? '© 2026' : '© 2026'}{' '}
+                                        <span className="text-white/70 font-medium">Lux Auto Detail Services</span>
                                     </p>
                                 </div>
                             </div>

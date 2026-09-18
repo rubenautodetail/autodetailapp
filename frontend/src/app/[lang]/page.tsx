@@ -526,8 +526,7 @@ export default async function LandingPage({
                         <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>
                         <p>
-                            {locale === 'es' ? 'Diseñado por' : 'Designed by'}{' '}
-                            <span className="text-white/45 font-medium">OAC Digital Innovations</span>
+                            <span className="text-white/45 font-medium">Lux Auto Detail Services</span>
                         </p>
                     </div>
                     <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">

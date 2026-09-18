@@ -312,8 +312,7 @@ export default async function ContractorsPage({
                         <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>
                         <p>
-                            {isEs ? 'Diseñado por' : 'Designed by'}{' '}
-                            <span className="text-white/45 font-medium">OAC Digital Innovations</span>
+                            <span className="text-white/45 font-medium">Lux Auto Detail Services</span>
                         </p>
                     </div>
                     <div className="flex gap-6">
