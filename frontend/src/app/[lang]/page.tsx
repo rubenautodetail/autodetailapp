@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MapPin, Truck, Coffee } from 'lucide-react';
 import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
 import { getLandingContent, getVehicleBrands, type Testimonial } from '@/lib/hygraph';
@@ -114,9 +115,9 @@ export default async function LandingPage({
         ];
 
     const steps = [
-        { number: '01', ...dict.home.howItWorks.step1, icon: '📍', image: stepImages[0]?.imageUrl },
-        { number: '02', ...dict.home.howItWorks.step2, icon: '🚐', image: stepImages[1]?.imageUrl },
-        { number: '03', ...dict.home.howItWorks.step3, icon: '☕', image: stepImages[2]?.imageUrl },
+        { number: '01', ...dict.home.howItWorks.step1, icon: MapPin, image: stepImages[0]?.imageUrl },
+        { number: '02', ...dict.home.howItWorks.step2, icon: Truck, image: stepImages[1]?.imageUrl },
+        { number: '03', ...dict.home.howItWorks.step3, icon: Coffee, image: stepImages[2]?.imageUrl },
     ];
 
     return (
@@ -285,8 +286,7 @@ export default async function LandingPage({
                                 )}
                                 <div className={`p-8 space-y-4 flex-1 ${step.image ? '-mt-10 relative z-10' : ''}`}>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-4xl drop-shadow-lg">{step.icon}</span>
-                                        <span className="text-5xl font-bold text-white/5 group-hover:text-[#D0B078]/10 transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
+                                        <step.icon className="w-9 h-9 text-[#D0B078] drop-shadow-lg" strokeWidth={1.75} />                                        <span className="text-5xl font-bold text-white/5 group-hover:text-[#D0B078]/10 transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
                                             {step.number}
                                         </span>
                                     </div>
