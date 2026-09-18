@@ -127,8 +127,14 @@ export default function SettingsPage() {
                                             className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-accent-gold focus:outline-none transition-colors"
                                             placeholder="+1 (000) 000-0000"
                                             value={profileForm.phone}
-                                            onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })}
-                                        />
+                                            onChange={e => {
+                                                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                                let formatted = digits;
+                                                if (digits.length > 6) formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+                                                else if (digits.length > 3) formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                                                else if (digits.length > 0) formatted = `(${digits}`;
+                                                setProfileForm({ ...profileForm, phone: formatted });
+                                            }} />
                                     </div>
                                 </div>
                                 <div>
@@ -139,8 +145,12 @@ export default function SettingsPage() {
                                         className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-text-muted focus:outline-none cursor-not-allowed"
                                         value={profileForm.email}
                                     />
-                                    <p className="text-[10px] text-text-muted mt-1 italic">{isEs ? 'El correo no se puede cambiar directamente.' : 'Email cannot be changed directly.'}</p>
-                                </div>
+                                    <p className="text-[10px] text-text-muted mt-1 italic">
+                                        {isEs ? 'El correo no se puede cambiar directamente. ' : 'Email cannot be changed directly. '}
+                                        <Link href={`/${lang}/customer/support`} className="text-accent-gold hover:text-white not-italic underline">
+                                            {isEs ? 'Contacta soporte' : 'Contact support'}
+                                        </Link>
+                                    </p>                                </div>
 
                                 <div className="pt-4 flex justify-end">
                                     <button type="submit" className="btn-primary py-2 px-6 rounded-lg font-bold shadow-glow flex items-center">
