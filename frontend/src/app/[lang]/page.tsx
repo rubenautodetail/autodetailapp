@@ -353,7 +353,7 @@ export default async function LandingPage({
                                                     if (isHeader) {
                                                         const label = line.replace(/[>—<]/g, '').trim();
                                                         return (
-                                                            <li key={idx} className="text-center text-[#D0B078] font-bold text-[11px] uppercase tracking-widest pt-2 first:pt-0">
+                                                            <li key={idx} className="text-center text-[#D0B078] font-bold text-base uppercase tracking-wide pt-2 first:pt-0">
                                                                 {label}
                                                             </li>
                                                         );
