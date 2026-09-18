@@ -148,16 +148,15 @@ export function ServiceCard({
                         setIsExpanded((prev) => !prev);
                     }}
                     aria-expanded={isExpanded}
-                    className="mt-1 self-start text-[11px] font-semibold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors sm:hidden"
-                >
+                    className="mt-1 self-start text-[11px] sm:text-xs font-semibold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors"                >
                     {isExpanded
                         ? isEs ? 'Ocultar detalles' : 'Hide details'
-                        : isEs ? 'Ver detalles' : 'Details'}
+                        : isEs ? 'Ver detalles' : 'View details'}
                 </button>
             )}
 
             <div
-                className={`${isExpanded ? 'mt-2 block border-t border-[#2C355E] pt-2' : 'hidden'} text-sm leading-relaxed sm:mt-0 sm:mb-4 sm:block sm:border-0 sm:pt-0 sm:text-base sm:flex-grow sm:min-h-[3rem]`}
+                className={`${isExpanded ? 'mt-2 block border-t border-[#2C355E] pt-2' : 'hidden'} text-sm leading-relaxed sm:mt-0 sm:mb-4 sm:border-0 sm:pt-0 sm:text-base sm:flex-grow sm:min-h-[3rem]`}
             >
                 <ul className="text-[#A5B0D1] leading-snug space-y-0.5 max-h-56 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
                     {displayDescription
