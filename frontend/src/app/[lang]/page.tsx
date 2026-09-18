@@ -246,7 +246,7 @@ export default async function LandingPage({
                     {[
                         { value: '90+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
                         { value: '5', label: locale === 'es' ? 'Calificación promedio' : 'Average rating' },
-                        { value: '16', label: locale === 'es' ? 'Ciudad servida' : 'City served' },
+                        { value: '16', label: locale === 'es' ? 'Ciudades servidas' : 'Cities served' },
                     ].map((stat) => (
                         <div key={stat.label} className="space-y-1">
                             <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gold-gradient">{stat.value}</div>
