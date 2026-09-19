@@ -43,10 +43,7 @@ export function ServiceCard({
     const [isExpanded, setIsExpanded] = useState(false);
     const isEs = locale === 'es';
     const description = service.description ?? '';
-    const needsTruncation = description.length > DESCRIPTION_TRUNCATE_LENGTH;
-    const displayDescription = needsTruncation && !isExpanded
-        ? description.slice(0, DESCRIPTION_TRUNCATE_LENGTH).trimEnd() + '...'
-        : description;
+    const displayDescription = description;
     const visiblePrice = displayPrice ?? service.basePrice;
     const metaCaption = isPriceLoading
         ? isEs ? 'Actualizando precio…' : 'Updating price…'
@@ -181,20 +178,6 @@ export function ServiceCard({
                             );
                         })}
                 </ul>
-                {needsTruncation && (
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsExpanded((prev) => !prev);
-                        }}
-                        className="hidden text-[#D0B078] hover:text-[#D0B078]/80 font-semibold mt-1 text-xs transition-colors sm:inline"
-                    >
-                        {isExpanded
-                            ? isEs ? 'Ver menos' : 'View less'
-                            : isEs ? 'Ver más' : 'View more'}
-                    </button>
-                )}
             </div>
 
             <div className="hidden items-center justify-between mt-auto pt-3 border-t border-[#2C355E] gap-2 sm:flex">
