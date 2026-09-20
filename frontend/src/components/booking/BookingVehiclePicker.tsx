@@ -429,17 +429,7 @@ export function BookingVehiclePicker({
                                     })}
                                 </div>
 
-                                {!showOneOff && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowOneOff(true)}
-                                        className="mt-3 text-sm font-semibold text-[#D0B078] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
-                                    >
-                                        {isEs
-                                            ? '¿Un vehículo que no está en tu garaje?'
-                                            : 'Vehicle not in your garage?'}
-                                    </button>
-                                )}
+
                             </div>
                         )}
 
