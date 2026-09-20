@@ -71,7 +71,7 @@ export function BookingVehiclePicker({
     const [newVehicleModel, setNewVehicleModel] = useState('');
     const [newVehicleYear, setNewVehicleYear] = useState('');
     const [newVehicleColor, setNewVehicleColor] = useState('');
-    const [newVehicleType, setNewVehicleType] = useState<VehicleBodyStyle>('sedan');
+    const [newVehicleType, setNewVehicleType] = useState<VehicleBodyStyle | null>(null);
     const [newVehicleErrors, setNewVehicleErrors] = useState<Record<string, string>>({});
 
     const handleAddNewVehicleInline = async () => {
@@ -80,9 +80,11 @@ export function BookingVehiclePicker({
         if (!newVehicleModel.trim()) errors.model = isEs ? 'Modelo requerido' : 'Model required';
         if (!newVehicleYear.trim()) errors.year = isEs ? 'Año requerido' : 'Year required';
         if (!newVehicleColor.trim()) errors.color = isEs ? 'Color requerido' : 'Color required';
+        if (!newVehicleType) errors.type = isEs ? 'Tipo de carrocería requerido' : 'Body style required';
         if (Object.keys(errors).length > 0) { setNewVehicleErrors(errors); return; }
 
-        addBookingVehicle({ make: newVehicleMake, model: newVehicleModel, year: newVehicleYear, color: newVehicleColor, type: newVehicleType });
+        const confirmedType = newVehicleType as VehicleBodyStyle;
+        addBookingVehicle({ make: newVehicleMake, model: newVehicleModel, year: newVehicleYear, color: newVehicleColor, type: confirmedType });
 
         if (saveNewVehicleToGarage) {
             try {
@@ -91,16 +93,17 @@ export function BookingVehiclePicker({
                     model: newVehicleModel,
                     year: newVehicleYear,
                     color: newVehicleColor,
-                    type: normalizeVehicleBodyStyle(newVehicleType),
+                    type: confirmedType,
                     licensePlate: '',
                 });
             } catch { /* ignore */ }
         }
+
         setNewVehicleMake('');
         setNewVehicleModel('');
         setNewVehicleYear('');
         setNewVehicleColor('');
-        setNewVehicleType('sedan');
+        setNewVehicleType(null);
         setNewVehicleErrors({});
         setShowNewVehicleForm(false);
     };
@@ -157,61 +160,6 @@ export function BookingVehiclePicker({
                                 ✕
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                    {isEs ? 'Marca' : 'Make'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newVehicleMake}
-                                    onChange={(e) => setNewVehicleMake(e.target.value)}
-                                    placeholder="Toyota, Honda..."
-                                    className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.make ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                />
-                                {newVehicleErrors.make && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.make}</p>}
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                    {isEs ? 'Modelo' : 'Model'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newVehicleModel}
-                                    onChange={(e) => setNewVehicleModel(e.target.value)}
-                                    placeholder="Camry, Civic..."
-                                    className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.model ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                />
-                                {newVehicleErrors.model && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.model}</p>}
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                    {isEs ? 'Año' : 'Year'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newVehicleYear}
-                                    onChange={(e) => setNewVehicleYear(e.target.value)}
-                                    placeholder="2024"
-                                    maxLength={4}
-                                    className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.year ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                />
-                                {newVehicleErrors.year && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.year}</p>}
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                    {isEs ? 'Color' : 'Color'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newVehicleColor}
-                                    onChange={(e) => setNewVehicleColor(e.target.value)}
-                                    placeholder={isEs ? 'Blanco, Negro...' : 'White, Black...'}
-                                    className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.color ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                />
-                                {newVehicleErrors.color && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.color}</p>}
-                            </div>
-                        </div>
                         <VehicleBodyStyleSelector
                             locale={locale}
                             appearance="dark"
@@ -221,6 +169,63 @@ export function BookingVehiclePicker({
                             name="new-vehicle-inline-body-style"
                             required
                         />
+                        {newVehicleType && (
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
+                                        {isEs ? 'Marca' : 'Make'}<span className="ml-0.5 text-[#D0B078]">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newVehicleMake}
+                                        onChange={(e) => setNewVehicleMake(e.target.value)}
+                                        placeholder="Toyota, Honda..."
+                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.make ? 'border-red-500/50' : 'border-[#2C355E]'}`}
+                                    />
+                                    {newVehicleErrors.make && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.make}</p>}
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
+                                        {isEs ? 'Modelo' : 'Model'}<span className="ml-0.5 text-[#D0B078]">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newVehicleModel}
+                                        onChange={(e) => setNewVehicleModel(e.target.value)}
+                                        placeholder="Camry, Civic..."
+                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.model ? 'border-red-500/50' : 'border-[#2C355E]'}`}
+                                    />
+                                    {newVehicleErrors.model && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.model}</p>}
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
+                                        {isEs ? 'Año' : 'Year'}<span className="ml-0.5 text-[#D0B078]">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newVehicleYear}
+                                        onChange={(e) => setNewVehicleYear(e.target.value)}
+                                        placeholder="2024"
+                                        maxLength={4}
+                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.year ? 'border-red-500/50' : 'border-[#2C355E]'}`}
+                                    />
+                                    {newVehicleErrors.year && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.year}</p>}
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
+                                        {isEs ? 'Color' : 'Color'}<span className="ml-0.5 text-[#D0B078]">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newVehicleColor}
+                                        onChange={(e) => setNewVehicleColor(e.target.value)}
+                                        placeholder={isEs ? 'Blanco, Negro...' : 'White, Black...'}
+                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.color ? 'border-red-500/50' : 'border-[#2C355E]'}`}
+                                    />
+                                    {newVehicleErrors.color && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.color}</p>}
+                                </div>
+                            </div>
+                        )}
                         <label className="flex items-center gap-2 text-xs text-[#A5B0D1]">
                             <input
                                 type="checkbox"
@@ -230,6 +235,7 @@ export function BookingVehiclePicker({
                             />
                             {isEs ? 'Guardar en mi garaje' : 'Save to my garage'}
                         </label>
+
                         <button
                             type="button"
                             onClick={handleAddNewVehicleInline}
