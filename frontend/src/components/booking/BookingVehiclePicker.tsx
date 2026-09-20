@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { useBooking } from '@/contexts';
+import { useBooking, useBookingStatus } from '@/contexts';
 import { Check, Pencil } from 'lucide-react';
 import {
     getVehicleBodyStyleLabel,
@@ -64,6 +64,8 @@ export function BookingVehiclePicker({
     const shouldFocusPanel = useRef(false);
     const shouldFocusChange = useRef(false);
     const { addBookingVehicle } = useBooking();
+    const { addVehicle: addGarageVehicle } = useBookingStatus();
+    const [saveNewVehicleToGarage, setSaveNewVehicleToGarage] = useState(true);
     const [showNewVehicleForm, setShowNewVehicleForm] = useState(false);
     const [newVehicleMake, setNewVehicleMake] = useState('');
     const [newVehicleModel, setNewVehicleModel] = useState('');
@@ -72,7 +74,7 @@ export function BookingVehiclePicker({
     const [newVehicleType, setNewVehicleType] = useState<VehicleBodyStyle>('sedan');
     const [newVehicleErrors, setNewVehicleErrors] = useState<Record<string, string>>({});
 
-    const handleAddNewVehicleInline = () => {
+    const handleAddNewVehicleInline = async () => {
         const errors: Record<string, string> = {};
         if (!newVehicleMake.trim()) errors.make = isEs ? 'Marca requerida' : 'Make required';
         if (!newVehicleModel.trim()) errors.model = isEs ? 'Modelo requerido' : 'Model required';
@@ -82,6 +84,18 @@ export function BookingVehiclePicker({
 
         addBookingVehicle({ make: newVehicleMake, model: newVehicleModel, year: newVehicleYear, color: newVehicleColor, type: newVehicleType });
 
+        if (saveNewVehicleToGarage) {
+            try {
+                await addGarageVehicle({
+                    make: newVehicleMake,
+                    model: newVehicleModel,
+                    year: newVehicleYear,
+                    color: newVehicleColor,
+                    type: normalizeVehicleBodyStyle(newVehicleType),
+                    licensePlate: '',
+                });
+            } catch { /* ignore */ }
+        }
         setNewVehicleMake('');
         setNewVehicleModel('');
         setNewVehicleYear('');
@@ -207,6 +221,15 @@ export function BookingVehiclePicker({
                             name="new-vehicle-inline-body-style"
                             required
                         />
+                        <label className="flex items-center gap-2 text-xs text-[#A5B0D1]">
+                            <input
+                                type="checkbox"
+                                checked={saveNewVehicleToGarage}
+                                onChange={(e) => setSaveNewVehicleToGarage(e.target.checked)}
+                                className="h-4 w-4 rounded border-[#2C355E] bg-[#131835] text-[#D0B078] focus:ring-[#D0B078]"
+                            />
+                            {isEs ? 'Guardar en mi garaje' : 'Save to my garage'}
+                        </label>
                         <button
                             type="button"
                             onClick={handleAddNewVehicleInline}
