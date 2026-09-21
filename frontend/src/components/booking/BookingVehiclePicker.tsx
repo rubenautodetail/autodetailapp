@@ -367,7 +367,7 @@ export function BookingVehiclePicker({
                         className="mt-5 focus:outline-none"
                     >
                         {garageVehicles.length > 0 && (
-                            <div className="mb-5">
+                            <div className="mb-5 rounded-2xl border border-[#2C355E] bg-[#131835]/40 p-4">
                                 <p className="text-base font-bold text-white">
                                     {isEs ? 'Tu garaje' : 'Your garage'}
                                 </p>
