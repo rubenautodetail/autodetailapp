@@ -320,17 +320,6 @@ export function BookingVehiclePicker({
                         })}
                     </div>
 
-                    {!showOneOff && (
-                        <button
-                            type="button"
-                            onClick={() => setShowOneOff(true)}
-                            className="mt-3 text-sm font-semibold text-[#D0B078] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
-                        >
-                            {isEs
-                                ? 'Vista previa de precio para otro tipo de vehículo'
-                                : 'Preview pricing for another vehicle type'}
-                        </button>
-                    )}
                 </div>
             )}
 
@@ -464,6 +453,18 @@ export function BookingVehiclePicker({
                         className="mt-5 focus:outline-none"
                     >
 
+
+                        {garageVehicles.length > 0 && !showOneOff && (
+                            <button
+                                type="button"
+                                onClick={() => setShowOneOff(true)}
+                                className="mb-4 text-sm font-semibold text-[#D0B078] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
+                            >
+                                {isEs
+                                    ? 'Vista previa de precio para otro tipo de vehículo'
+                                    : 'Preview pricing for another vehicle type'}
+                            </button>
+                        )}
 
                         {(garageVehicles.length === 0 || showOneOff) && (
                             <div className={garageVehicles.length > 0 ? 'border-t border-[#2C355E] pt-5' : ''}>
