@@ -363,9 +363,9 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             console.error("Failed to parse guest vehicles", e);
             return;
         }
-        
+
         if (guestVehicles.length === 0) return;
-        
+
         const userId = user.id;
 
         async function syncVehicles() {
@@ -479,7 +479,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         }
         const supabase = createClient();
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('vehicles')
             .insert({
                 user_id: user.id,
@@ -489,12 +489,21 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 color: vehicle.color,
                 license_plate: vehicle.licensePlate,
                 type: bodyStyle
-            });
+            })
+            .select()
+            .single();
 
         if (error) {
             console.error('Error adding vehicle:', error);
             addNotification({ title: loc === 'es' ? 'Accion Fallida' : 'Action Failed', message: error.message, type: 'error' });
             return;
+        }
+
+        if (data) {
+            setVehicles(prev => {
+                if (prev.some(v => v.id === data.id)) return prev;
+                return [...prev, mapDbVehicleToVehicle(data)];
+            });
         }
 
         addNotification({
