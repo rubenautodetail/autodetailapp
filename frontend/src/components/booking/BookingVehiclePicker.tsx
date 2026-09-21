@@ -145,14 +145,21 @@ export function BookingVehiclePicker({
         <>
             <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">
                 {!showNewVehicleForm ? (
-                    <button
-                        type="button"
-                        onClick={() => setShowNewVehicleForm(true)}
-                        className="flex w-full items-center justify-center gap-2 text-sm font-bold text-[#D0B078] hover:text-white transition-colors"
-                    >
-                        <span className="text-lg leading-none">+</span>
-                        {isEs ? 'Agregar otro vehículo' : 'Add another vehicle'}
-                    </button>
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowNewVehicleForm(true)}
+                            className="flex w-full items-center justify-center gap-2 text-sm font-bold text-[#D0B078] hover:text-white transition-colors"
+                        >
+                            <span className="text-lg leading-none">+</span>
+                            {isEs ? 'Agregar otro vehículo' : 'Add another vehicle'}
+                        </button>
+                        <p className="mt-2 text-center text-xs text-[#8994B8]">
+                            {isEs
+                                ? '¿Reservas para más de un vehículo? Agrégalos aquí.'
+                                : 'Booking more than one vehicle? Add them here.'}
+                        </p>
+                    </>
                 ) : (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -390,11 +397,7 @@ export function BookingVehiclePicker({
                                         <p className="mt-0.5 text-xs text-[#A5B0D1]">
                                             {isEs ? 'Vehículo de esta reserva' : 'This booking’s vehicle'}
                                         </p>
-                                        <p className="mt-1 text-xs text-[#8994B8]">
-                                            {isEs
-                                                ? '¿Más de un vehículo? Podrás agregar los demás en el paso de revisión.'
-                                                : 'Booking more than one vehicle? You can add the rest at the review step.'}
-                                        </p>
+
                                     </div>
                                 </div>
                             )
