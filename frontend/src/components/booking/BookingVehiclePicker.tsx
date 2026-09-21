@@ -276,55 +276,58 @@ export function BookingVehiclePicker({
                                 : 'Select each vehicle for this appointment.'}
                         </p>
                     )}
-                    <div
-                        role="group"
-                        aria-label={isEs ? 'Vehículos guardados' : 'Saved vehicles'}
-                        className="mt-3 flex gap-2.5 overflow-x-auto snap-x snap-mandatory overscroll-x-contain pb-1 [&::-webkit-scrollbar]:hidden"
-                        style={{ scrollbarWidth: 'none' }}
-                    >
-                        {garageVehicles.map((vehicle) => {
-                            const style = normalizeVehicleBodyStyle(vehicle.type);
-                            const isChecked = selectedVehicleIds.includes(vehicle.id);
+                    <div className="relative mt-3">
+                        <div
+                            role="group"
+                            aria-label={isEs ? 'Vehículos guardados' : 'Saved vehicles'}
+                            className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory overscroll-x-contain pb-1 [&::-webkit-scrollbar]:hidden"
+                            style={{ scrollbarWidth: 'none' }}
+                        >
+                            {garageVehicles.map((vehicle) => {
+                                const style = normalizeVehicleBodyStyle(vehicle.type);
+                                const isChecked = selectedVehicleIds.includes(vehicle.id);
 
-                            return (
-                                <button
-                                    key={vehicle.id}
-                                    type="button"
-                                    role="checkbox"
-                                    aria-checked={isChecked}
-                                    onClick={() => handleVehicleToggle(vehicle)}
-                                    className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${isChecked
-                                        ? 'border-[#D0B078] bg-[#D0B078]/10'
-                                        : 'border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60'
-                                        }`}
-                                >
-                                    <span className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
-                                        <VehicleBodyStyleArtwork
-                                            style={style}
-                                            locale={locale}
-                                            className="h-9 w-full min-w-0 shrink-0"
-                                        />
-                                    </span>
-                                    <span className="min-w-0">
-                                        <span className="block truncate text-xs font-bold text-white">
-                                            {vehicle.year} {vehicle.make} {vehicle.model}
-                                        </span>
-                                        <span className="mt-0.5 block text-[11px] text-[#A5B0D1]">
-                                            {getVehicleBodyStyleLabel(style, locale)}
-                                        </span>
-                                    </span>
-                                    <span
-                                        aria-hidden="true"
-                                        className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-sm font-black ${isChecked
-                                            ? 'bg-[#D0B078] text-[#131835]'
-                                            : 'border-2 border-[#4A5580]'
+                                return (
+                                    <button
+                                        key={vehicle.id}
+                                        type="button"
+                                        role="checkbox"
+                                        aria-checked={isChecked}
+                                        onClick={() => handleVehicleToggle(vehicle)}
+                                        className={`flex w-[11.5rem] shrink-0 snap-start items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${isChecked
+                                            ? 'border-[#D0B078] bg-[#D0B078]/10'
+                                            : 'border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60'
                                             }`}
                                     >
-                                        {isChecked ? '✓' : ''}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                                        <span className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                                            <VehicleBodyStyleArtwork
+                                                style={style}
+                                                locale={locale}
+                                                className="h-9 w-full min-w-0 shrink-0"
+                                            />
+                                        </span>
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-xs font-bold text-white">
+                                                {vehicle.year} {vehicle.make} {vehicle.model}
+                                            </span>
+                                            <span className="mt-0.5 block text-[11px] text-[#A5B0D1]">
+                                                {getVehicleBodyStyleLabel(style, locale)}
+                                            </span>
+                                        </span>
+                                        <span
+                                            aria-hidden="true"
+                                            className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-sm font-black ${isChecked
+                                                ? 'bg-[#D0B078] text-[#131835]'
+                                                : 'border-2 border-[#4A5580]'
+                                                }`}
+                                        >
+                                            {isChecked ? '✓' : ''}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-[#131835] to-transparent" />
                     </div>
 
                 </div>
