@@ -58,6 +58,7 @@ export function BookingVehiclePicker({
     const selectedVehicles = garageVehicles.filter((vehicle) => selectedVehicleIds.includes(vehicle.id));
     const hasSelection = selectedVehicles.length > 0 || Boolean(selectedBodyStyle);
     const [isExpanded, setIsExpanded] = useState(true);
+    const [showGarageSection, setShowGarageSection] = useState(true);
     const [showOneOff, setShowOneOff] = useState(selectedVehicles.length === 0 && Boolean(selectedBodyStyle));
     const panelRef = useRef<HTMLDivElement>(null);
     const changeButtonRef = useRef<HTMLButtonElement>(null);
@@ -366,11 +367,20 @@ export function BookingVehiclePicker({
                         tabIndex={-1}
                         className="mt-5 focus:outline-none"
                     >
-                        {garageVehicles.length > 0 && (
-                            <div className="mb-5 rounded-2xl border border-[#2C355E] bg-[#131835]/40 p-4">
-                                <p className="text-base font-bold text-white">
-                                    {isEs ? 'Tu garaje' : 'Your garage'}
-                                </p>
+                        {garageVehicles.length > 0 && showGarageSection && (
+                            <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-base font-bold text-white">
+                                        {isEs ? 'Tu garaje' : 'Your garage'}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGarageSection(false)}
+                                        className="text-[#8994B8] hover:text-white transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                                 {garageVehicles.length > 1 && (
                                     <p className="mt-1 text-sm text-[#A5B0D1]">
                                         {isEs
@@ -443,6 +453,17 @@ export function BookingVehiclePicker({
                                 )}
 
                             </div>
+                        )}
+
+                        {garageVehicles.length > 0 && !showGarageSection && (
+                            <button
+                                type="button"
+                                onClick={() => setShowGarageSection(true)}
+                                className="mb-4 flex w-full items-center justify-center gap-2 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 text-sm font-bold text-[#D0B078] hover:text-white transition-colors sm:p-5"
+                            >
+                                <span className="text-lg leading-none">+</span>
+                                {isEs ? 'Mostrar tu garaje' : 'Show your garage'}
+                            </button>
                         )}
 
                         {(garageVehicles.length === 0 || showOneOff) && (
