@@ -183,22 +183,25 @@ export default async function LandingPage({
                 <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-20 sm:top-[44px]' : 'top-0'}`}>
                     <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
 
-                    {waHref && (
-                        <a
-                            href={waHref}
-                            className="hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block"
+                    <div className="flex items-center gap-3">
+                        {waHref && (
+                            <a
+                                href={waHref}
+                                className="hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block"
+                            >
+                                WhatsApp
+                            </a>
+                        )}
+                        <Link
+                            href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
+                            className="btn-primary text-sm px-6 py-2.5"
                         >
-                            WhatsApp
-                        </a>
-                    )}
-                    <Link
-                        href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
-                        className="btn-primary text-sm px-6 py-2.5"
-                    >
-                        {isLoggedIn
-                            ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
-                            : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
-                    </Link>
+
+                            {isLoggedIn
+                                ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
+                                : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto text-center space-y-8 py-10">
