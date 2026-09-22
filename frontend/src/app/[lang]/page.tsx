@@ -52,6 +52,9 @@ export default async function LandingPage({
 }) {
     const { lang } = await params;
     const locale = i18n.locales.includes(lang as 'en' | 'es') ? (lang as 'en' | 'es') : 'en';
+    const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+    const waText = encodeURIComponent(locale === 'es' ? 'Hola, quisiera reservar un servicio de detallado.' : 'Hi, I would like to book a detailing service.');
+    const waHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${waText}` : null;
 
     // No auto-redirect — authenticated users can still view the landing page
 
@@ -179,6 +182,15 @@ export default async function LandingPage({
                 {/* Nav bar */}
                 <div className={`absolute left-0 right-0 z-20 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full transition-all ${hygraph.promotionalBanner?.isActive ? 'top-20 sm:top-[44px]' : 'top-0'}`}>
                     <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
+                   
+                                       {waHref && (
+                        
+                            href={waHref}
+                            className="hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block"
+                        >
+                            WhatsApp
+                        </a>
+                    )} 
                     <Link
                         href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
                         className="btn-primary text-sm px-6 py-2.5"
@@ -234,34 +246,34 @@ export default async function LandingPage({
                     </div>
                 </div>
 
-                {/* Scroll indicator - Better positioning to avoid overlap on small screens */}
-                <div className="relative z-10 mt-auto hidden sm:flex flex-col items-center gap-2 opacity-30 pb-4">
-                    <span className="text-xs tracking-widest uppercase">{locale === 'es' ? 'Desplázate' : 'Scroll'}</span>
-                    <div className="w-px h-8 bg-white/40 animate-pulse" />
-                </div>
-            </section>
+                {/* Scroll indicator - Better positioning to avoid overlap on small screens */ }
+    <div className="relative z-10 mt-auto hidden sm:flex flex-col items-center gap-2 opacity-30 pb-4">
+        <span className="text-xs tracking-widest uppercase">{locale === 'es' ? 'Desplázate' : 'Scroll'}</span>
+        <div className="w-px h-8 bg-white/40 animate-pulse" />
+    </div>
+            </section >
 
-            {/* ─── Stats ─────────────────────────────────────────────────────── */}
-            <section className="border-y border-white/5 bg-white/[0.02]">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-3 gap-2 sm:gap-4 text-center">
-                    {[
-                        { value: '90+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
-                        { value: '5', label: locale === 'es' ? 'Calificación promedio' : 'Average rating' },
-                        { value: '16', label: locale === 'es' ? 'Ciudades servidas' : 'Cities served' },
-                    ].map((stat) => (
-                        <div key={stat.label} className="space-y-1">
-                            <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gold-gradient">{stat.value}</div>
-                            <div className="text-xs text-white/55 tracking-wide">{stat.label}</div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+        {/* ─── Stats ─────────────────────────────────────────────────────── */ }
+        < section className = "border-y border-white/5 bg-white/[0.02]" >
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                {[
+                    { value: '90+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
+                    { value: '5', label: locale === 'es' ? 'Calificación promedio' : 'Average rating' },
+                    { value: '16', label: locale === 'es' ? 'Ciudades servidas' : 'Cities served' },
+                ].map((stat) => (
+                    <div key={stat.label} className="space-y-1">
+                        <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gold-gradient">{stat.value}</div>
+                        <div className="text-xs text-white/55 tracking-wide">{stat.label}</div>
+                    </div>
+                ))}
+            </div>
+            </section >
 
-            {/* ─── Vehicle Brands ─────────────────────────────────────────────── */}
-            <BrandCarousel brands={vehicleBrands} locale={locale} />
+        {/* ─── Vehicle Brands ─────────────────────────────────────────────── */ }
+        < BrandCarousel brands = { vehicleBrands } locale = { locale } />
 
-            {/* ─── How It Works ───────────────────────────────────────────────── */}
-            <section className="py-14 sm:py-24 px-6">
+            {/* ─── How It Works ───────────────────────────────────────────────── */ }
+            < section className = "py-14 sm:py-24 px-6" >
                 <div className="max-w-5xl mx-auto">
                     <div className="text-center mb-10 sm:mb-16 space-y-3">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
@@ -299,269 +311,271 @@ export default async function LandingPage({
                         ))}
                     </div>
                 </div>
-            </section>
+            </section >
 
-            {/* ─── Services ───────────────────────────────────────────────────── */}
-            <section className="py-14 sm:py-24 px-6 bg-white/[0.015]">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-10 sm:mb-16 space-y-3">
-                        <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
-                            {locale === 'es' ? 'Nuestros servicios' : 'Our services'}
-                        </p>
-                        <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                            {dict.home.services.title}
-                        </h2>
-                        <p className="text-white/60 text-sm">{dict.home.services.subtitle}</p>
-                    </div>
+        {/* ─── Services ───────────────────────────────────────────────────── */ }
+        < section className = "py-14 sm:py-24 px-6 bg-white/[0.015]" >
+            <div className="max-w-6xl mx-auto">
+                <div className="text-center mb-10 sm:mb-16 space-y-3">
+                    <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
+                        {locale === 'es' ? 'Nuestros servicios' : 'Our services'}
+                    </p>
+                    <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                        {dict.home.services.title}
+                    </h2>
+                    <p className="text-white/60 text-sm">{dict.home.services.subtitle}</p>
+                </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {services.map((service, i) => (
-                            <div
-                                key={service.title}
-                                className={`glass-card rounded-2xl flex flex-col overflow-hidden ${i === 3 ? 'ring-1 ring-[#D0B078]/30 shadow-[0_0_30px_rgba(208,176,120,0.1)]' : ''
-                                    }`}
-                            >
-                                {service.image && (
-                                    <div className="relative h-44 w-full shrink-0">
-                                        <Image src={service.image} alt={service.title} fill className="object-cover" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-[#131835] via-[#131835]/40 to-transparent opacity-90" />
-                                        <div className="absolute bottom-4 left-5 text-3xl drop-shadow-xl z-10">{service.icon}</div>
-                                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    {services.map((service, i) => (
+                        <div
+                            key={service.title}
+                            className={`glass-card rounded-2xl flex flex-col overflow-hidden ${i === 3 ? 'ring-1 ring-[#D0B078]/30 shadow-[0_0_30px_rgba(208,176,120,0.1)]' : ''
+                                }`}
+                        >
+                            {service.image && (
+                                <div className="relative h-44 w-full shrink-0">
+                                    <Image src={service.image} alt={service.title} fill className="object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#131835] via-[#131835]/40 to-transparent opacity-90" />
+                                    <div className="absolute bottom-4 left-5 text-3xl drop-shadow-xl z-10">{service.icon}</div>
+                                </div>
+                            )}
+                            <div className={`p-6 space-y-4 flex-1 flex flex-col ${service.image ? 'pt-5 relative z-10' : ''}`}>
+                                {!service.image && (
+                                    <>
+                                        {i === 3 && (
+                                            <div className="inline-flex self-start px-2.5 py-0.5 rounded-full bg-[#D0B078]/10 text-[#D0B078] text-xs font-semibold tracking-wide">
+                                                {locale === 'es' ? 'Más popular' : 'Most popular'}
+                                            </div>
+                                        )}
+                                        <span className="text-3xl">{service.icon}</span>
+                                    </>
                                 )}
-                                <div className={`p-6 space-y-4 flex-1 flex flex-col ${service.image ? 'pt-5 relative z-10' : ''}`}>
-                                    {!service.image && (
-                                        <>
-                                            {i === 3 && (
-                                                <div className="inline-flex self-start px-2.5 py-0.5 rounded-full bg-[#D0B078]/10 text-[#D0B078] text-xs font-semibold tracking-wide">
-                                                    {locale === 'es' ? 'Más popular' : 'Most popular'}
-                                                </div>
-                                            )}
-                                            <span className="text-3xl">{service.icon}</span>
-                                        </>
-                                    )}
-                                    <div className="space-y-1.5 flex-1">
-                                        <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
-                                            {service.title}
-                                        </h3>
-                                        <ul className="text-white/75 text-base leading-relaxed space-y-1.5 max-h-72 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
-                                            {service.desc
-                                                .split('\n')
-                                                .map((line: string) => line.trim())
-                                                .filter((line: string) => line.length > 0)
-                                                .map((line: string, idx: number) => {
-                                                    const isHeader = line.startsWith('>>>>') || (line.startsWith('—') && line.endsWith('—'));
-                                                    if (isHeader) {
-                                                        const label = line.replace(/[>—<]/g, '').trim();
-                                                        return (
-                                                            <li key={idx} className="text-center text-[#D0B078] font-bold text-base uppercase tracking-wide pt-2 first:pt-0">
-                                                                {label}
-                                                            </li>
-                                                        );
-                                                    }
+                                <div className="space-y-1.5 flex-1">
+                                    <h3 className="text-base font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+                                        {service.title}
+                                    </h3>
+                                    <ul className="text-white/75 text-base leading-relaxed space-y-1.5 max-h-72 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
+                                        {service.desc
+                                            .split('\n')
+                                            .map((line: string) => line.trim())
+                                            .filter((line: string) => line.length > 0)
+                                            .map((line: string, idx: number) => {
+                                                const isHeader = line.startsWith('>>>>') || (line.startsWith('—') && line.endsWith('—'));
+                                                if (isHeader) {
+                                                    const label = line.replace(/[>—<]/g, '').trim();
                                                     return (
-                                                        <li key={idx} className="flex gap-2">
-                                                            <span className="text-white/40 shrink-0">•</span>
-                                                            <span>{line}</span>
+                                                        <li key={idx} className="text-center text-[#D0B078] font-bold text-base uppercase tracking-wide pt-2 first:pt-0">
+                                                            {label}
                                                         </li>
                                                     );
-                                                })}
+                                                }
+                                                return (
+                                                    <li key={idx} className="flex gap-2">
+                                                        <span className="text-white/40 shrink-0">•</span>
+                                                        <span>{line}</span>
+                                                    </li>
+                                                );
+                                            })}
 
-                                        </ul>
-                                    </div>
-                                    <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
-                                        <span className="text-[#D0B078] font-bold text-base">{service.price}</span>
-                                        <Link
-                                            href={`/${locale}/booking/select`}
-                                            className="text-[11px] text-white/55 hover:text-white transition-colors uppercase tracking-widest font-semibold flex items-center gap-1"
-                                        >
-                                            {dict.common.bookNow} <span className="text-[#D0B078]">→</span>
-                                        </Link>
-                                    </div>
+                                    </ul>
+                                </div>
+                                <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
+                                    <span className="text-[#D0B078] font-bold text-base">{service.price}</span>
+                                    <Link
+                                        href={`/${locale}/booking/select`}
+                                        className="text-[11px] text-white/55 hover:text-white transition-colors uppercase tracking-widest font-semibold flex items-center gap-1"
+                                    >
+                                        {dict.common.bookNow} <span className="text-[#D0B078]">→</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            </section >
+
+        {/* ─── Gallery Strip ──────────────────────────────────────────────── */ }
+    {
+        workImages.length > 0 && (
+            <section className="py-10 px-6 overflow-hidden">
+                <div className="max-w-5xl mx-auto">
+                    <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium text-center mb-6">
+                        {locale === 'es' ? 'Galería de trabajos' : 'Our work'}
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {workImages.map((img) => (
+                            <div key={img.imageUrl} className="relative aspect-[4/3] rounded-xl overflow-hidden group">
+                                <Image
+                                    src={img.imageUrl}
+                                    alt={img.caption}
+                                    fill
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                    sizes="(max-width: 768px) 50vw, 33vw"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                    <span className="text-white text-xs font-medium">{img.caption}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
+        )
+    }
 
-            {/* ─── Gallery Strip ──────────────────────────────────────────────── */}
-            {workImages.length > 0 && (
-                <section className="py-10 px-6 overflow-hidden">
-                    <div className="max-w-5xl mx-auto">
-                        <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium text-center mb-6">
-                            {locale === 'es' ? 'Galería de trabajos' : 'Our work'}
-                        </p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {workImages.map((img) => (
-                                <div key={img.imageUrl} className="relative aspect-[4/3] rounded-xl overflow-hidden group">
-                                    <Image
-                                        src={img.imageUrl}
-                                        alt={img.caption}
-                                        fill
-                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                        sizes="(max-width: 768px) 50vw, 33vw"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                                        <span className="text-white text-xs font-medium">{img.caption}</span>
-                                    </div>
-                                </div>
+    {/* ─── Testimonials ───────────────────────────────────────────────── */ }
+    <section className="py-14 sm:py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10 sm:mb-16 space-y-3">
+                <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
+                    {locale === 'es' ? 'Clientes satisfechos' : 'Happy clients'}
+                </p>
+                <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                    {dict.home.testimonials.title}
+                </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {testimonials.map((t) => (
+                    <div key={t.authorName} className="glass-card rounded-2xl p-7 space-y-5">
+                        {/* Stars */}
+                        <div className="flex gap-0.5">
+                            {Array.from({ length: t.rating }).map((_, i) => (
+                                <span key={i} className="text-[#D0B078] text-sm">★</span>
                             ))}
                         </div>
-                    </div>
-                </section>
-            )}
-
-            {/* ─── Testimonials ───────────────────────────────────────────────── */}
-            <section className="py-14 sm:py-24 px-6">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-10 sm:mb-16 space-y-3">
-                        <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
-                            {locale === 'es' ? 'Clientes satisfechos' : 'Happy clients'}
-                        </p>
-                        <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                            {dict.home.testimonials.title}
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {testimonials.map((t) => (
-                            <div key={t.authorName} className="glass-card rounded-2xl p-7 space-y-5">
-                                {/* Stars */}
-                                <div className="flex gap-0.5">
-                                    {Array.from({ length: t.rating }).map((_, i) => (
-                                        <span key={i} className="text-[#D0B078] text-sm">★</span>
-                                    ))}
-                                </div>
-                                <p className="text-white/75 text-sm leading-relaxed italic">&ldquo;{t.text}&rdquo;</p>
-                                <div className="pt-2 border-t border-white/5 space-y-0.5">
-                                    <p className="font-semibold text-sm">{t.authorName}</p>
-                                    <p className="text-white/50 text-xs">{t.vehicleType} · {t.location}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ─── Work With Us ───────────────────────────────────────────────── */}
-            <section className="py-16 px-6 border-y border-white/5">
-                <div className="max-w-5xl mx-auto">
-                    <div
-                        className="rounded-2xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(208,176,120,0.07) 0%, rgba(208,176,120,0.02) 100%)',
-                            border: '1px solid rgba(208,176,120,0.12)',
-                        }}
-                    >
-                        <div className="text-center sm:text-left space-y-2">
-                            <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
-                                {locale === 'es' ? 'Para profesionales' : 'For professionals'}
-                            </p>
-                            <h2 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                                {locale === 'es' ? '¿Eres detallador? Trabaja con nosotros.' : 'Are you a detailer? Work with us.'}
-                            </h2>
-                            <p className="text-white/45 text-sm max-w-md">
-                                {locale === 'es'
-                                    ? 'Accede a más clientes, establece tu horario y haz crecer tu negocio con nosotros.'
-                                    : 'Access more clients, set your own schedule, and grow your business with us.'}
-                            </p>
-                        </div>
-                        <div className="shrink-0 flex flex-col sm:flex-row gap-3">
-                            <Link
-                                href={`/${locale}/register?next=/${locale}/contractors/apply`}
-                                className="btn-primary px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)] whitespace-nowrap text-center"
-                            >
-                                {locale === 'es' ? 'Crear cuenta y aplicar →' : 'Create account & apply →'}
-                            </Link>
-                            <Link
-                                href={`/${locale}/contractor/login`}
-                                className="px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all whitespace-nowrap text-center"
-                            >
-                                {locale === 'es' ? 'Ya tengo cuenta' : 'I have an account'}
-                            </Link>
+                        <p className="text-white/75 text-sm leading-relaxed italic">&ldquo;{t.text}&rdquo;</p>
+                        <div className="pt-2 border-t border-white/5 space-y-0.5">
+                            <p className="font-semibold text-sm">{t.authorName}</p>
+                            <p className="text-white/50 text-xs">{t.vehicleType} · {t.location}</p>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            {/* ─── Final CTA ───────────────────────────────────────────────────── */}
-            <section className="py-14 sm:py-24 px-6">
-                <div className="max-w-2xl mx-auto text-center space-y-8">
-                    <div
-                        className="rounded-3xl p-6 sm:p-12 space-y-6 relative overflow-hidden"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(208, 176, 120, 0.08) 0%, rgba(208, 176, 120, 0.02) 100%)',
-                            border: '1px solid rgba(208, 176, 120, 0.15)',
-                        }}
-                    >
-                        <div
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                                background:
-                                    'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(208, 176, 120, 0.12) 0%, transparent 70%)',
-                            }}
-                        />
-                        <div className="relative z-10 space-y-4">
-                            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                                {locale === 'es'
-                                    ? 'Tu auto merece lo mejor.'
-                                    : 'Your car deserves the best.'}
-                            </h2>
-                            <p className="text-white/50 leading-relaxed">
-                                {locale === 'es'
-                                    ? 'Reserva en 2 minutos. Sin contratos. Sin sorpresas.'
-                                    : 'Book in 2 minutes. No contracts. No surprises.'}
-                            </p>
-                        </div>
-                        <div className="relative z-10 flex flex-col sm:flex-row gap-3 justify-center">
-                            <Link
-                                href={`/${locale}/booking/select`}
-                                className="btn-primary inline-block px-8 py-4 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)]"
-                            >
-                                {dict.common.bookNow}
-                            </Link>
-                            <Link
-                                href={`/${locale}/register`}
-                                className="inline-block px-8 py-4 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all"
-                            >
-                                {dict.common.getStarted}
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ─── Footer ──────────────────────────────────────────────────────── */}
-            <footer className="border-t border-white/5 py-8 px-6">
-                <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
-                    <div className="flex flex-col items-center sm:items-start gap-3">
-                        <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
-                        <p>© {new Date().getFullYear()}</p>
-                        <p>
-                            <span className="text-white/45 font-medium">Lux Auto Detail Services</span>
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">
-                        <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
-                            {locale === 'es' ? 'Términos' : 'Terms'}
-                        </Link>
-                        <Link href={`/${locale}/privacy`} className="hover:text-white/60 transition-colors">
-                            {locale === 'es' ? 'Privacidad' : 'Privacy'}
-                        </Link>
-                        <Link href={`/${locale}/contractors`} className="hover:text-white/60 transition-colors">
-                            {locale === 'es' ? 'Trabaja con nosotros' : 'Work with us'}
-                        </Link>
-                        <Link href={`/${locale}/contractor/login`} className="hover:text-white/60 transition-colors">
-                            {locale === 'es' ? 'Acceso contratistas' : 'Contractor login'}
-                        </Link>
-                        <Link href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`} className="hover:text-white/60 transition-colors">
-                            {isLoggedIn
-                                ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
-                                : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
-                        </Link>
-                    </div>
-                </div>
-            </footer>
+                ))}
+            </div>
         </div>
+    </section>
+
+    {/* ─── Work With Us ───────────────────────────────────────────────── */ }
+    <section className="py-16 px-6 border-y border-white/5">
+        <div className="max-w-5xl mx-auto">
+            <div
+                className="rounded-2xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6"
+                style={{
+                    background: 'linear-gradient(135deg, rgba(208,176,120,0.07) 0%, rgba(208,176,120,0.02) 100%)',
+                    border: '1px solid rgba(208,176,120,0.12)',
+                }}
+            >
+                <div className="text-center sm:text-left space-y-2">
+                    <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
+                        {locale === 'es' ? 'Para profesionales' : 'For professionals'}
+                    </p>
+                    <h2 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                        {locale === 'es' ? '¿Eres detallador? Trabaja con nosotros.' : 'Are you a detailer? Work with us.'}
+                    </h2>
+                    <p className="text-white/45 text-sm max-w-md">
+                        {locale === 'es'
+                            ? 'Accede a más clientes, establece tu horario y haz crecer tu negocio con nosotros.'
+                            : 'Access more clients, set your own schedule, and grow your business with us.'}
+                    </p>
+                </div>
+                <div className="shrink-0 flex flex-col sm:flex-row gap-3">
+                    <Link
+                        href={`/${locale}/register?next=/${locale}/contractors/apply`}
+                        className="btn-primary px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)] whitespace-nowrap text-center"
+                    >
+                        {locale === 'es' ? 'Crear cuenta y aplicar →' : 'Create account & apply →'}
+                    </Link>
+                    <Link
+                        href={`/${locale}/contractor/login`}
+                        className="px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all whitespace-nowrap text-center"
+                    >
+                        {locale === 'es' ? 'Ya tengo cuenta' : 'I have an account'}
+                    </Link>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* ─── Final CTA ───────────────────────────────────────────────────── */ }
+    <section className="py-14 sm:py-24 px-6">
+        <div className="max-w-2xl mx-auto text-center space-y-8">
+            <div
+                className="rounded-3xl p-6 sm:p-12 space-y-6 relative overflow-hidden"
+                style={{
+                    background: 'linear-gradient(135deg, rgba(208, 176, 120, 0.08) 0%, rgba(208, 176, 120, 0.02) 100%)',
+                    border: '1px solid rgba(208, 176, 120, 0.15)',
+                }}
+            >
+                <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background:
+                            'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(208, 176, 120, 0.12) 0%, transparent 70%)',
+                    }}
+                />
+                <div className="relative z-10 space-y-4">
+                    <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                        {locale === 'es'
+                            ? 'Tu auto merece lo mejor.'
+                            : 'Your car deserves the best.'}
+                    </h2>
+                    <p className="text-white/50 leading-relaxed">
+                        {locale === 'es'
+                            ? 'Reserva en 2 minutos. Sin contratos. Sin sorpresas.'
+                            : 'Book in 2 minutes. No contracts. No surprises.'}
+                    </p>
+                </div>
+                <div className="relative z-10 flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link
+                        href={`/${locale}/booking/select`}
+                        className="btn-primary inline-block px-8 py-4 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)]"
+                    >
+                        {dict.common.bookNow}
+                    </Link>
+                    <Link
+                        href={`/${locale}/register`}
+                        className="inline-block px-8 py-4 rounded-xl font-semibold text-sm tracking-wide border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all"
+                    >
+                        {dict.common.getStarted}
+                    </Link>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* ─── Footer ──────────────────────────────────────────────────────── */ }
+    <footer className="border-t border-white/5 py-8 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
+            <div className="flex flex-col items-center sm:items-start gap-3">
+                <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
+                <p>© {new Date().getFullYear()}</p>
+                <p>
+                    <span className="text-white/45 font-medium">Lux Auto Detail Services</span>
+                </p>
+            </div>
+            <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">
+                <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
+                    {locale === 'es' ? 'Términos' : 'Terms'}
+                </Link>
+                <Link href={`/${locale}/privacy`} className="hover:text-white/60 transition-colors">
+                    {locale === 'es' ? 'Privacidad' : 'Privacy'}
+                </Link>
+                <Link href={`/${locale}/contractors`} className="hover:text-white/60 transition-colors">
+                    {locale === 'es' ? 'Trabaja con nosotros' : 'Work with us'}
+                </Link>
+                <Link href={`/${locale}/contractor/login`} className="hover:text-white/60 transition-colors">
+                    {locale === 'es' ? 'Acceso contratistas' : 'Contractor login'}
+                </Link>
+                <Link href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`} className="hover:text-white/60 transition-colors">
+                    {isLoggedIn
+                        ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
+                        : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
+                </Link>
+            </div>
+        </div>
+    </footer>
+        </div >
     );
 }
