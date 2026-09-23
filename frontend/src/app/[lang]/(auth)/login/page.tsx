@@ -75,14 +75,14 @@ function LoginForm() {
         // Contractor tried to use customer login → reject
         if (profile.role === "contractor") {
             dispatch({ type: 'wrong_role', role: 'contractor' });
-            logout().catch(() => {});
+            logout().catch(() => { });
             return;
         }
 
         // Admin tried to use customer login → reject
         if (profile.role === "admin") {
             dispatch({ type: 'wrong_role', role: 'admin' });
-            logout().catch(() => {});
+            logout().catch(() => { });
             return;
         }
 
@@ -166,9 +166,12 @@ function LoginForm() {
             <div className="w-full max-w-sm">
                 {/* Brand */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex justify-center items-center mb-6">
+                    <Link
+                        href={`/${lang}`}
+                        className="inline-flex justify-center items-center mb-6 transition-all duration-200 hover:scale-[1.08] hover:drop-shadow-[0_0_20px_rgba(220,225,235,0.85)]"
+                    >
                         <Image src="/dtailwash_logo_final.png" alt="Dtailwash" width={527} height={142} className="w-auto h-28 sm:h-36 opacity-100" priority />
-                    </div>
+                    </Link>
                     <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-1">{dict.title}</h1>
                     <p className="text-[var(--text-secondary)] text-sm">{dict.subtitle}</p>
                 </div>
