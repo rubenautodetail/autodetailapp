@@ -8,6 +8,7 @@ import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
 import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
+import { NavMenu } from '@/components/landing/NavMenu';
 import { getLocalBusinessSchema, getServiceCatalogSchema } from '@/lib/seo/schema';
 
 export const dynamic = 'force-dynamic';
@@ -184,6 +185,9 @@ export default async function LandingPage({
                     <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
                 </div>
 
+                <div className={`absolute left-1/2 -translate-x-1/2 z-20 transition-all ${hygraph.promotionalBanner?.isActive ? 'top-24 sm:top-[64px]' : 'top-6'}`}>
+                    <NavMenu locale={locale} />
+                </div>
                 <div className={`absolute right-6 z-20 transition-all ${hygraph.promotionalBanner?.isActive ? 'top-24 sm:top-[64px]' : 'top-5'}`}>
                     <div className="flex items-center gap-3">
                         {waHref && (
