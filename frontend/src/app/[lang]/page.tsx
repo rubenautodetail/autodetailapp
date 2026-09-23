@@ -552,7 +552,7 @@ export default async function LandingPage({
 
             {/* ─── Footer ──────────────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 py-8 px-6">
-                <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
                     <div className="flex flex-col items-center sm:items-start gap-3">
                         <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>
