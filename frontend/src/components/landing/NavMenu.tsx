@@ -20,7 +20,7 @@ export function NavMenu({ locale }: NavMenuProps) {
         closeTimer.current = setTimeout(() => setServicesOpen(false), 150);
     };
 
-    const navLinkClass = 'text-sm font-semibold text-white/80 hover:text-white transition-colors';
+    const navLinkClass = 'text-base font-semibold text-white/80 hover:text-white transition-colors';
 
     return (
         <nav className="hidden lg:flex items-center gap-8">
