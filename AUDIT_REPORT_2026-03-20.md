@@ -120,9 +120,7 @@ CREATE POLICY "Users can update own profile" ON profiles
 ## 2. Stripe Integration Audit
 
 ### API Keys Present
-- ✅ **Publishable Key:** `pk_live_51S7pVxJVuCJ0aWPM...` (LIVE mode)
-- ✅ **Secret Key:** `sk_live_51S7pVxJVuCJ0aWPM...` (LIVE mode)
-- ✅ **Webhook Secret:** `whsec_YphfBopyJvB4DLyUQBLW0w9krufsbt5m`
+-- ✅ Stripe keys configured (values redacted for security)
 
 ### Stripe Products (Synchronized)
 All 6 products properly synced with metadata:
