@@ -29,6 +29,7 @@ export function getOrganizationSchema(siteName: string): SchemaObject {
         contactPoint: {
             '@type': 'ContactPoint',
             contactType: 'customer service',
+            telephone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || undefined,
             areaServed: 'US',
             availableLanguage: ['English', 'Spanish'],
         },
