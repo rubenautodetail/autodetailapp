@@ -99,8 +99,8 @@ const faqTime: Pair = {
 const faqHome: Pair = {
     q: { en: "Do you come to my home or office?", es: "¿Vienen a mi casa u oficina?" },
     a: {
-        en: "Yes. Dtailwash is fully mobile: our team arrives at your home, office or building anywhere in Miami-Dade with everything needed to complete the job on-site. We arrive self-contained with our own water and equipment, so all we need is access to your vehicle.",
-        es: "Sí. Dtailwash es totalmente móvil: nuestro equipo llega a tu casa, oficina o edificio en cualquier lugar de Miami-Dade con todo lo necesario para hacer el trabajo en el sitio. Llegamos con nuestra propia agua y equipo, así que solo necesitamos acceso a tu vehículo.",
+        en: "Yes. Lux is fully mobile: our team arrives at your home, office or building anywhere in Miami-Dade with everything needed to complete the job on-site. We arrive self-contained with our own water and equipment, so all we need is access to your vehicle.",
+        es: "Sí. Lux es totalmente móvil: nuestro equipo llega a tu casa, oficina o edificio en cualquier lugar de Miami-Dade con todo lo necesario para hacer el trabajo en el sitio. Llegamos con nuestra propia agua y equipo, así que solo necesitamos acceso a tu vehículo.",
     },
 };
 
@@ -348,8 +348,8 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
                     es: "¿Vienen a mi casa u oficina?",
                 },
                 a: {
-                    en: "Yes. Dtailwash is fully mobile: our team arrives at your home, office or building anywhere in Miami-Dade with everything needed to complete the job on-site. We arrive self-contained with our own water and equipment, so all we need is access to your vehicle.",
-                    es: "Sí. Dtailwash es totalmente móvil: nuestro equipo llega a tu casa, oficina o edificio en cualquier lugar de Miami-Dade con todo lo necesario para hacer el trabajo en el sitio. Llegamos con nuestra propia agua y equipo, así que solo necesitamos acceso a tu vehículo.",
+                    en: "Yes. Lux is fully mobile: our team arrives at your home, office or building anywhere in Miami-Dade with everything needed to complete the job on-site. We arrive self-contained with our own water and equipment, so all we need is access to your vehicle.",
+                    es: "Sí. Lux es totalmente móvil: nuestro equipo llega a tu casa, oficina o edificio en cualquier lugar de Miami-Dade con todo lo necesario para hacer el trabajo en el sitio. Llegamos con nuestra propia agua y equipo, así que solo necesitamos acceso a tu vehículo.",
                 },
             },
             {

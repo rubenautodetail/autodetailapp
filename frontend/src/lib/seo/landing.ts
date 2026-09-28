@@ -99,7 +99,7 @@ export function resolveLanding(
     if (locale === 'es') {
         return {
             locale, service, neighborhood, path, alternates,
-            title: `${name} en ${place} | Dtailwash — Desde ${price}`,
+            title: `${name} en ${place} | Lux — Desde ${price}`,
             metaDescription: isShopBased
                 ? `${name} en nuestro taller en Doral. Trae tu auto para un acabado profesional. Atendemos a clientes de ${place} y todo Miami-Dade. Desde ${price}.`
                 : `${name} a domicilio en ${place}, Miami-Dade. Nuestro equipo llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
@@ -109,13 +109,13 @@ export function resolveLanding(
                 : `A domicilio · ${t(neighborhood.label, locale)}`,
             heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale, NEIGHBORHOODS.findIndex((n) => n.slug === neighborhood.slug))}`,
             quickAnswer: isShopBased
-                ? `Dtailwash ofrece ${kw} en nuestro taller en Doral, desde ${price}. Trae tu auto para un ambiente controlado; el servicio dura aproximadamente ${hrs}. Llama o envía un mensaje al 305-988-4449 para agendar tu cita.`
-                : `Dtailwash ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Nuestro equipo llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp al 305-988-4449.`,
+                ? `Lux ofrece ${kw} en nuestro taller en Doral, desde ${price}. Trae tu auto para un ambiente controlado; el servicio dura aproximadamente ${hrs}. Llama o envía un mensaje al 305-988-4449 para agendar tu cita.`
+                : `Lux ofrece ${kw} en ${place}, Miami-Dade, desde ${price}. Nuestro equipo llega a tu ubicación; un servicio dura aproximadamente ${hrs}. Reserva en línea o escríbenos por WhatsApp al 305-988-4449.`,
             intro: isShopBased ? [
-                `¿Buscas ${kw} en ${place}? Dtailwash ofrece recubrimiento cerámico profesional en nuestro taller en Doral — trae tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado posible. Atendemos con orgullo a clientes de todo Miami-Dade, incluyendo ${place}.`,
+                `¿Buscas ${kw} en ${place}? Lux ofrece recubrimiento cerámico profesional en nuestro taller en Doral — trae tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado posible. Atendemos con orgullo a clientes de todo Miami-Dade, incluyendo ${place}.`,
                 `Precios transparentes desde ${price}, pago seguro y atención en español. Llámanos o escríbenos al 305-988-4449 para agendar tu cita en nuestro taller en Doral.`,
             ] : [
-                `¿Buscas ${kw} en ${place}? Dtailwash lleva a nuestro equipo verificado hasta la puerta de los residentes de ${place} — sin manejar hasta un taller ni esperar en fila. ${t(neighborhood.blurb, locale)}`,
+                `¿Buscas ${kw} en ${place}? Lux lleva a nuestro equipo verificado hasta la puerta de los residentes de ${place} — sin manejar hasta un taller ni esperar en fila. ${t(neighborhood.blurb, locale)}`,
                 `Cubrimos los códigos postales ${neighborhood.zips.slice(0, 4).join(', ')} y zonas cercanas como ${neighborhood.landmarks.join(', ')}. Precios transparentes desde ${price}, pago seguro y atención en español. Reserva tu ${name} en menos de 60 segundos.`,
             ],
             priceLabel: `Desde ${price}`,
@@ -128,7 +128,7 @@ export function resolveLanding(
 
     return {
         locale, service, neighborhood, path, alternates,
-        title: `${name} in ${place} | Dtailwash — From ${price}`,
+        title: `${name} in ${place} | Lux — From ${price}`,
         metaDescription: isShopBased
             ? `${name} at our Doral facility. Bring your car in for a professional finish. Serving clients from ${place} and all of Miami-Dade. Starting at ${price}.`
             : `${name} in ${place}, Miami-Dade. Our team comes to your home or office — book online in 60 seconds. Transparent pricing from ${price}.`,
@@ -138,13 +138,13 @@ export function resolveLanding(
             : `Mobile · ${t(neighborhood.label, locale)}`,
         heroSub: `${t(service.tagline, locale)} ${getCityTaglineSuffix(place, locale, NEIGHBORHOODS.findIndex((n) => n.slug === neighborhood.slug))}`,
         quickAnswer: isShopBased
-            ? `Dtailwash offers ${kw} at our Doral facility, starting at ${price}. Bring your car in for a controlled environment; the service takes about ${hrs}. Call or text 305-988-4449 to book your appointment.`
-            : `Dtailwash offers ${kw} in ${place}, Miami-Dade, starting at ${price}. Our team comes to your location; a typical service takes about ${hrs}. Book online or text us at 305-988-4449.`,
+            ? `Lux offers ${kw} at our Doral facility, starting at ${price}. Bring your car in for a controlled environment; the service takes about ${hrs}. Call or text 305-988-4449 to book your appointment.`
+            : `Lux offers ${kw} in ${place}, Miami-Dade, starting at ${price}. Our team comes to your location; a typical service takes about ${hrs}. Book online or text us at 305-988-4449.`,
         intro: isShopBased ? [
-            `Looking for ${kw} in ${place}? Dtailwash offers professional ceramic coating at our Doral facility — bring your car in for a controlled, dust-free environment that ensures the best possible finish. We proudly serve clients across Miami-Dade, including ${place}.`,
+            `Looking for ${kw} in ${place}? Lux offers professional ceramic coating at our Doral facility — bring your car in for a controlled, dust-free environment that ensures the best possible finish. We proudly serve clients across Miami-Dade, including ${place}.`,
             `Transparent pricing from ${price}, secure payment, and service in English or Spanish. Call or text us at 305-988-4449 to book your appointment at our Doral facility.`,
         ] : [
-            `Looking for ${kw} in ${place}? Dtailwash brings our vetted team to ${place} residents' doors — no driving to a shop, no waiting rooms. ${t(neighborhood.blurb, locale)}`,
+            `Looking for ${kw} in ${place}? Lux brings our vetted team to ${place} residents' doors — no driving to a shop, no waiting rooms. ${t(neighborhood.blurb, locale)}`,
             `We cover ZIP codes ${neighborhood.zips.slice(0, 4).join(', ')} and nearby areas like ${neighborhood.landmarks.join(', ')}. Transparent pricing from ${price}, secure online payment, and service in English or Spanish. Book your ${name} in under 60 seconds.`,
         ],
         priceLabel: `From ${price}`,
@@ -167,7 +167,7 @@ function buildFaqsEn(s: DetailService, n: Neighborhood, price: string, hrs: stri
             q: isShop ? `Do you come to my home, or do I bring my car in?` : `Do you come to my home or office in ${n.name}?`,
             a: isShop
                 ? `${s.name.en} is done at our Doral facility, not on-site — you'll bring your car in for a controlled, dust-free environment that ensures the best finish. Call or text 305-988-4449 to book.`
-                : `Yes. Dtailwash is fully mobile — our team arrives at your home, office, or building in ${n.name} (ZIPs ${n.zips.slice(0, 3).join(', ')} and nearby) with everything needed to complete the job on-site.`,
+                : `Yes. Lux is fully mobile — our team arrives at your home, office, or building in ${n.name} (ZIPs ${n.zips.slice(0, 3).join(', ')} and nearby) with everything needed to complete the job on-site.`,
         },
         {
             q: `How long does ${name} take?`,
@@ -181,7 +181,7 @@ function buildFaqsEn(s: DetailService, n: Neighborhood, price: string, hrs: stri
         },
         {
             q: `Can I book ${name} in Spanish?`,
-            a: `Absolutely. Dtailwash is fully bilingual — book online in English or Spanish, or message us directly and someone from our team will take care of you.`,
+            a: `Absolutely. Lux is fully bilingual — book online in English or Spanish, or message us directly and someone from our team will take care of you.`,
         },
         {
             q: `When do you charge my card?`,
@@ -201,7 +201,7 @@ function buildFaqsEs(s: DetailService, n: Neighborhood, price: string, hrs: stri
             q: isShop ? `¿Van hasta mi casa o llevo mi auto?` : `¿Van hasta mi casa u oficina en ${n.name}?`,
             a: isShop
                 ? `El ${name} se hace en nuestro taller en Doral, no a domicilio — traes tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado. Llama o escribe al 305-988-4449 para agendar.`
-                : `Sí. Dtailwash es totalmente a domicilio — nuestro equipo llega a tu casa, oficina o edificio en ${n.name} (códigos ${n.zips.slice(0, 3).join(', ')} y cercanos) con todo lo necesario para hacer el trabajo en el sitio.`,
+                : `Sí. Lux es totalmente a domicilio — nuestro equipo llega a tu casa, oficina o edificio en ${n.name} (códigos ${n.zips.slice(0, 3).join(', ')} y cercanos) con todo lo necesario para hacer el trabajo en el sitio.`,
         },
         {
             q: `¿Cuánto tiempo toma el ${name}?`,

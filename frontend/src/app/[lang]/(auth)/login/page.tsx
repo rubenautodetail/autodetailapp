@@ -170,7 +170,7 @@ function LoginForm() {
                         href={`/${lang}`}
                         className="inline-flex justify-center items-center mb-6 transition-all duration-200 hover:scale-[1.08] hover:drop-shadow-[0_0_20px_rgba(220,225,235,0.85)]"
                     >
-                        <Image src="/dtailwash_logo_final.png" alt="Dtailwash" width={527} height={142} className="w-auto h-28 sm:h-36 opacity-100" priority />
+                        <Image src="/dtailwash_logo_final.png" alt="Lux Auto Detail Services" width={527} height={142} className="w-auto h-28 sm:h-36 opacity-100" priority />
                     </Link>
                     <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-1">{dict.title}</h1>
                     <p className="text-[var(--text-secondary)] text-sm">{dict.subtitle}</p>

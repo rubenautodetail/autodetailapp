@@ -35,8 +35,8 @@ export default function LeaveReviewPage() {
         title: lang === 'es' ? 'Deja una Reseña' : 'Leave a Review',
         subtitle:
             lang === 'es'
-                ? '¿Cómo fue tu experiencia con Dtailwash?'
-                : 'How was your experience with Dtailwash?',
+                ? '¿Cómo fue tu experiencia con Lux?'
+                : 'How was your experience with Lux?',
         service: lang === 'es' ? 'Servicio' : 'Service',
         technician: lang === 'es' ? 'Técnico' : 'Technician',
         ratingLabel: lang === 'es' ? 'Tu calificación' : 'Your rating',
