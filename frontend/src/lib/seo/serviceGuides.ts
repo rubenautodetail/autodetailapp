@@ -367,25 +367,6 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
         photos: {
             cover: "/images/services/headlight-restoration-06.jpg",
             coverPosition: "60% 60%",
-            beforeAfterTitle: { en: "Before and after", es: "Antes y después" },
-            beforeAfterIntro: {
-                en: "Real headlights from our own jobs.",
-                es: "Faros reales de nuestros propios trabajos.",
-            },
-            beforeAfter: [
-                {
-                    before: "/images/services/headlight-restoration-02.jpg",
-                    after: "/images/services/headlight-restoration-03.jpg",
-                    orientation: "portrait",
-                    caption: { en: "Truck headlight", es: "Faro de camión" },
-                },
-                {
-                    before: "/images/services/headlight-restoration-05.jpg",
-                    after: "/images/services/headlight-restoration-06.jpg",
-                    orientation: "landscape",
-                    caption: { en: "SUV headlight", es: "Faro de SUV" },
-                },
-            ],
         },
     },
     "express-detail": {
