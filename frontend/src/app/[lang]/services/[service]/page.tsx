@@ -26,7 +26,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { i18n, type Locale } from "@/i18n-config";
 import { SERVICES } from "@/lib/seo/services";
 import { SERVICE_GUIDES, type IconKey, type L } from "@/lib/seo/serviceGuides";
-import { getFaqSchema } from "@/lib/seo/schema";
+import { getBreadcrumbSchema, getFaqSchema } from "@/lib/seo/schema";
+import { NEIGHBORHOODS } from "@/lib/seo/locations";
 import JsonLd from "@/components/seo/JsonLd";
 import PhotoCarousel from "@/components/landing/PhotoCarousel";
 import { serviceName, serviceSlug } from "@/lib/seo/serviceNames";
@@ -285,6 +286,15 @@ export default async function ServicePage({ params }: PageProps) {
     };
     const schemas: Record<string, unknown>[] = [serviceSchema];
     if (guide) schemas.push(getFaqSchema(guide.faqs.map((f) => ({ q: t(f.q), a: t(f.a) }))));
+    schemas.push(
+        getBreadcrumbSchema(
+            [
+                { name: isEs ? "Inicio" : "Home", path: "" },
+                { name: name, path: `/services/${slug}` },
+            ],
+            locale,
+        ),
+    );
 
     const h1Lead = isEs ? `${name} a domicilio en` : `${name} in`;
     const bookLabel = isEs ? `Reservar ${name}` : `Book ${name}`;
@@ -647,6 +657,32 @@ export default async function ServicePage({ params }: PageProps) {
                                 ))}
                             </div>
                         </div>
+                    </section>
+                )}
+
+                {/* Areas we serve: links to the city pages of this service (only for services that have them) */}
+                {seo && (
+                    <section className="mx-auto max-w-5xl px-6 py-12">
+                        <h2 className={h2Class} style={displayFont}>
+                            {isEs ? "Zonas donde trabajamos" : "Areas we serve"}
+                        </h2>
+                        <p className="mt-3 max-w-xl text-white/70">
+                            {isEs
+                                ? "Reserva este servicio en cualquier zona de Miami-Dade. Elige la tuya para ver los detalles de tu vecindario."
+                                : "Book this service anywhere in Miami-Dade. Pick your area to see details for your neighborhood."}
+                        </p>
+                        <ul className="mt-6 flex flex-wrap gap-2">
+                            {NEIGHBORHOODS.map((n) => (
+                                <li key={n.slug}>
+                                    <Link
+                                        href={`/${locale}/${seo.slug[locale]}/${n.slug}`}
+                                        className={`inline-block rounded-full border border-[#2C355E] px-4 py-2 text-sm text-white/85 transition-colors hover:border-[#D0B078]/60 hover:text-white ${focusRing}`}
+                                    >
+                                        {n.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
                     </section>
                 )}
 
