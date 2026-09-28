@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
     Car,
     Check,
@@ -92,7 +92,28 @@ function slugify(input: string): string {
         .replace(/^-+|-+$/g, "");
 }
 
-const nameOf = (s: DbService, locale: Locale): string => (locale === "es" ? (s.name_es ?? s.name) : s.name);
+const LOWER_WORDS = new Set(["a", "and", "de", "del", "el", "en", "for", "in", "la", "of", "on", "para", "the", "y"]);
+const KEEP_UPPER = new Set(["suv", "uv", "led", "ppf", "vip"]);
+
+/**
+ * Service names are stored in capitals in Supabase ("HEADLIGHT RESTORATION").
+ * On this page they read better as "Headlight Restoration". Names that are not
+ * entirely in capitals are left exactly as they are. The URL slug is not affected.
+ */
+function toDisplayName(name: string): string {
+    if (name !== name.toUpperCase() || name === name.toLowerCase()) return name;
+    let first = true;
+    return name.toLowerCase().replace(/[^\s/-]+/g, (word) => {
+        const isFirst = first;
+        first = false;
+        if (KEEP_UPPER.has(word)) return word.toUpperCase();
+        if (!isFirst && LOWER_WORDS.has(word)) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+}
+
+const nameOf = (s: DbService, locale: Locale): string =>
+    toDisplayName(locale === "es" ? (s.name_es ?? s.name) : s.name);
 const slugOf = (s: DbService, locale: Locale): string => slugify(nameOf(s, locale));
 const descriptionOf = (s: DbService, locale: Locale): string =>
     locale === "es" ? (s.description_es ?? s.description ?? "") : (s.description ?? "");
@@ -215,7 +236,12 @@ export default async function ServicePage({ params }: PageProps) {
 
     const services = await getServices();
     const svc = services.find((s) => slugOf(s, locale) === slug);
-    if (!svc) notFound();
+    if (!svc) {
+        // Someone changed /en/ to /es/ (or the other way around) by hand: send them to the right address.
+        const other = services.find((s) => slugOf(s, "en") === slug || slugOf(s, "es") === slug);
+        if (other) permanentRedirect(`/${locale}/services/${slugOf(other, locale)}`);
+        notFound();
+    }
 
     const name = nameOf(svc, locale);
     const price = Math.round(svc.base_price);
