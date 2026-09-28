@@ -3,16 +3,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
+    Armchair,
     Car,
     Check,
     ChevronDown,
+    ChevronRight,
     Clock,
+    Droplets,
     Eye,
+    House,
     Lightbulb,
     Moon,
     ShieldCheck,
     Sparkles,
+    Sun,
     Wallet,
+    Wind,
     X,
     type LucideIcon,
 } from "lucide-react";
@@ -35,7 +41,7 @@ import JsonLd from "@/components/seo/JsonLd";
 export const revalidate = 300;
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-const DEFAULT_COVER = "/images/services/mobile-car-detailing.png";
+const DEFAULT_COVER = "/images/services/exterior-car-detailing.png";
 const SITE_NAME = "Lux Auto Detail Services";
 
 /**
@@ -59,6 +65,11 @@ const ICONS: Record<IconKey, LucideIcon> = {
     shield: ShieldCheck,
     car: Car,
     clock: Clock,
+    home: House,
+    sun: Sun,
+    droplets: Droplets,
+    wind: Wind,
+    armchair: Armchair,
 };
 
 const displayFont = { fontFamily: "var(--font-display)" } as const;
@@ -92,7 +103,9 @@ function slugify(input: string): string {
         .replace(/^-+|-+$/g, "");
 }
 
-const LOWER_WORDS = new Set(["a", "and", "de", "del", "el", "en", "for", "in", "la", "of", "on", "para", "the", "y"]);
+const LOWER_WORDS = new Set([
+    "a", "al", "and", "con", "de", "del", "e", "el", "en", "for", "in", "la", "las", "los", "of", "on", "or", "para", "por", "the", "to", "un", "una", "with", "y",
+]);
 const KEEP_UPPER = new Set(["suv", "uv", "led", "ppf", "vip"]);
 
 /**
@@ -249,6 +262,7 @@ export default async function ServicePage({ params }: PageProps) {
     const guide = SERVICE_GUIDES[slugOf(svc, "en")];
     const vars: Vars = { price: `$${price}`, duration: durationPhrase(svc.duration_minutes, locale) };
     const t = (text: L): string => fill(text[locale], vars);
+    const others = services.filter((s) => s.id !== svc.id);
 
     // Photos: real ones for the services that have them, generic cover otherwise.
     const seo = SERVICES.find((x) => x.id === SEO_ID_BY_SLUG[slugOf(svc, "en")]);
@@ -288,7 +302,7 @@ export default async function ServicePage({ params }: PageProps) {
     const schemas: Record<string, unknown>[] = [serviceSchema];
     if (guide) schemas.push(getFaqSchema(guide.faqs.map((f) => ({ q: t(f.q), a: t(f.a) }))));
 
-    const h1 = isEs ? `${name} a domicilio en Miami-Dade` : `${name} in Miami-Dade`;
+    const h1Lead = isEs ? `${name} a domicilio en` : `${name} in`;
     const bookLabel = isEs ? `Reservar ${name}` : `Book ${name}`;
 
     return (
@@ -344,12 +358,12 @@ export default async function ServicePage({ params }: PageProps) {
                     <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#131835] via-[#131835]/80 to-[#131835]/40" />
                     <div
                         className={`mx-auto grid min-h-[360px] max-w-5xl gap-8 px-6 pb-12 pt-20 sm:min-h-[440px] ${
-                            guide ? "lg:grid-cols-[1.25fr_1fr] lg:items-end" : "items-end"
+                            others.length > 0 ? "lg:grid-cols-[1.25fr_1fr] lg:items-end" : "items-end"
                         }`}
                     >
                         <div className="self-end">
                             <h1 className="max-w-2xl text-4xl font-bold leading-tight sm:text-5xl" style={displayFont}>
-                                {h1}
+                                {h1Lead} <span className="whitespace-nowrap">Miami-Dade</span>
                             </h1>
                             {guide && <p className="mt-4 max-w-xl text-lg text-white/85">{t(guide.heroSub)}</p>}
                             <p className="mt-4 text-white/85">
@@ -379,14 +393,24 @@ export default async function ServicePage({ params }: PageProps) {
                             </div>
                         </div>
 
-                        {guide && (
+                        {others.length > 0 && (
                             <aside className="rounded-2xl border border-white/10 bg-[#0f1430]/85 p-6 backdrop-blur">
-                                <h2 className="text-base font-semibold text-[#D0B078]">{t(guide.whyTitle)}</h2>
-                                <ul className="mt-4 space-y-4">
-                                    {guide.why.map((point, i) => (
-                                        <li key={i}>
-                                            <p className="font-semibold">{t(point.t)}</p>
-                                            <p className="mt-0.5 text-sm text-white/70">{t(point.d)}</p>
+                                <h2 className="text-base font-semibold text-[#D0B078]">
+                                    {isEs ? "Otros servicios" : "Other services"}
+                                </h2>
+                                <ul className="mt-3 divide-y divide-white/10">
+                                    {others.map((s) => (
+                                        <li key={s.id}>
+                                            <Link
+                                                href={`/${locale}/services/${slugOf(s, locale)}`}
+                                                className={`flex items-center justify-between gap-3 py-3 text-sm transition-colors hover:text-[#D0B078] ${focusRing}`}
+                                            >
+                                                <span className="font-medium">{nameOf(s, locale)}</span>
+                                                <span className="flex shrink-0 items-center gap-1 text-white/65">
+                                                    {isEs ? "desde" : "from"} ${Math.round(s.base_price)}
+                                                    <ChevronRight aria-hidden="true" className="h-4 w-4" />
+                                                </span>
+                                            </Link>
                                         </li>
                                     ))}
                                 </ul>
@@ -454,7 +478,7 @@ export default async function ServicePage({ params }: PageProps) {
                         </section>
 
                         {/* Before and after photos */}
-                        {guide.photos && guide.photos.beforeAfter.length > 0 && (
+                        {guide.photos?.beforeAfter && guide.photos.beforeAfterTitle && guide.photos.beforeAfter.length > 0 && (
                             <section className="mx-auto max-w-5xl px-6 pb-12">
                                 <h2 className={h2Class} style={displayFont}>
                                     {t(guide.photos.beforeAfterTitle)}
@@ -512,7 +536,11 @@ export default async function ServicePage({ params }: PageProps) {
                                     {t(guide.benefitsTitle)}
                                 </h2>
                                 <p className="mt-3 max-w-xl text-white/70">{t(guide.benefitsIntro)}</p>
-                                <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                <ul
+                                    className={`mt-8 grid gap-4 sm:grid-cols-2 ${
+                                        guide.benefits.length === 6 ? "lg:grid-cols-3" : "lg:grid-cols-4"
+                                    }`}
+                                >
                                     {guide.benefits.map((benefit, i) => {
                                         const Icon = ICONS[benefit.icon];
                                         return (
@@ -599,7 +627,7 @@ export default async function ServicePage({ params }: PageProps) {
                 )}
 
                 {/* Photos */}
-                {gallery.length > 1 && !guide?.photos && (
+                {gallery.length > 1 && !guide?.photos?.beforeAfter && (
                     <section className="mx-auto max-w-5xl px-6 py-12">
                         <h2 className={h2Class} style={displayFont}>
                             {isEs ? "Trabajos recientes" : "Recent work"}
