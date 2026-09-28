@@ -28,6 +28,8 @@ import { SERVICES } from "@/lib/seo/services";
 import { SERVICE_GUIDES, type IconKey, type L } from "@/lib/seo/serviceGuides";
 import { getFaqSchema } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
+import PhotoCarousel from "@/components/landing/PhotoCarousel";
+import { serviceName, serviceSlug } from "@/lib/seo/serviceNames";
 
 /**
  * General (no city) page for each service shown on the home page.
@@ -94,40 +96,8 @@ function toLocale(lang: string): Locale {
     return (i18n.locales as readonly string[]).includes(lang) ? (lang as Locale) : i18n.defaultLocale;
 }
 
-function slugify(input: string): string {
-    return input
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-}
-
-const LOWER_WORDS = new Set([
-    "a", "al", "and", "con", "de", "del", "e", "el", "en", "for", "in", "la", "las", "los", "of", "on", "or", "para", "por", "the", "to", "un", "una", "with", "y",
-]);
-const KEEP_UPPER = new Set(["suv", "uv", "led", "ppf", "vip"]);
-
-/**
- * Service names are stored in capitals in Supabase ("HEADLIGHT RESTORATION").
- * On this page they read better as "Headlight Restoration". Names that are not
- * entirely in capitals are left exactly as they are. The URL slug is not affected.
- */
-function toDisplayName(name: string): string {
-    if (name !== name.toUpperCase() || name === name.toLowerCase()) return name;
-    let first = true;
-    return name.toLowerCase().replace(/[^\s/-]+/g, (word) => {
-        const isFirst = first;
-        first = false;
-        if (KEEP_UPPER.has(word)) return word.toUpperCase();
-        if (!isFirst && LOWER_WORDS.has(word)) return word;
-        return word.charAt(0).toUpperCase() + word.slice(1);
-    });
-}
-
-const nameOf = (s: DbService, locale: Locale): string =>
-    toDisplayName(locale === "es" ? (s.name_es ?? s.name) : s.name);
-const slugOf = (s: DbService, locale: Locale): string => slugify(nameOf(s, locale));
+const nameOf = (s: DbService, locale: Locale): string => serviceName(s, locale);
+const slugOf = (s: DbService, locale: Locale): string => serviceSlug(s, locale);
 const descriptionOf = (s: DbService, locale: Locale): string =>
     locale === "es" ? (s.description_es ?? s.description ?? "") : (s.description ?? "");
 
@@ -268,6 +238,20 @@ export default async function ServicePage({ params }: PageProps) {
     const seo = SERVICES.find((x) => x.id === SEO_ID_BY_SLUG[slugOf(svc, "en")]);
     const gallery = (seo?.imageUrls ?? []).slice(0, 6);
     const cover = guide?.photos?.cover ?? gallery[0] ?? seo?.imageUrl ?? DEFAULT_COVER;
+
+    // Carousel: the service's own photos, or (until it has its own) the general work photos.
+    const hasOwnPhotos = gallery.length > 1;
+    const generalPhotos = (SERVICES.find((x) => x.id === "mobile-car-detailing")?.imageUrls ?? []).slice(0, 6);
+    const carouselPhotos = (hasOwnPhotos ? gallery : generalPhotos).map((src, i) => ({
+        src,
+        alt: hasOwnPhotos
+            ? `${name} – ${isEs ? "foto" : "photo"} ${i + 1}`
+            : `${SITE_NAME} – ${isEs ? "trabajo" : "work"} ${i + 1}`,
+    }));
+    const showCarousel = carouselPhotos.length > 1 && !guide?.photos?.beforeAfter;
+    const carouselTitle = hasOwnPhotos
+        ? isEs ? "Trabajos recientes" : "Recent work"
+        : isEs ? "Nuestro trabajo" : "Our work";
     const coverPosition = guide?.photos?.coverPosition;
 
     // The booking page matches services by their English name, as in "Book Again".
@@ -440,16 +424,6 @@ export default async function ServicePage({ params }: PageProps) {
                                         <p key={i}>{t(paragraph)}</p>
                                     ))}
                                 </div>
-                                <ul className="mt-6 flex flex-wrap gap-2">
-                                    {guide.keywords.map((keyword, i) => (
-                                        <li
-                                            key={i}
-                                            className="rounded-full border border-[#2C355E] px-4 py-1.5 text-sm text-white/80"
-                                        >
-                                            {t(keyword)}
-                                        </li>
-                                    ))}
-                                </ul>
                             </div>
                             <div className="space-y-6 self-start rounded-2xl border border-[#2C355E] bg-[#151B3A] p-6">
                                 <div>
@@ -529,32 +503,24 @@ export default async function ServicePage({ params }: PageProps) {
                             </section>
                         )}
 
-                        {/* Benefits */}
-                        <section className="border-y border-white/5 bg-[#151B3A]">
-                            <div className="mx-auto max-w-5xl px-6 py-12">
-                                <h2 className={h2Class} style={displayFont}>
-                                    {t(guide.benefitsTitle)}
-                                </h2>
-                                <p className="mt-3 max-w-xl text-white/70">{t(guide.benefitsIntro)}</p>
-                                <ul
-                                    className={`mt-8 grid gap-4 sm:grid-cols-2 ${
-                                        guide.benefits.length === 6 ? "lg:grid-cols-3" : "lg:grid-cols-4"
-                                    }`}
-                                >
-                                    {guide.benefits.map((benefit, i) => {
-                                        const Icon = ICONS[benefit.icon];
-                                        return (
-                                            <li key={i} className="rounded-xl border border-[#2C355E] bg-[#131835] p-5">
-                                                <Icon aria-hidden="true" className="h-6 w-6 text-[#D0B078]" />
-                                                <h3 className="mt-4 font-semibold">{t(benefit.t)}</h3>
-                                                <p className="mt-1.5 text-sm text-white/70">{t(benefit.d)}</p>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        </section>
                     </>
+                )}
+
+                {/* Photo carousel */}
+                {showCarousel && (
+                    <section className="mx-auto max-w-5xl px-6 pb-12">
+                        <h2 className={h2Class} style={displayFont}>
+                            {carouselTitle}
+                        </h2>
+                        <div className="mt-6">
+                            <PhotoCarousel
+                                photos={carouselPhotos}
+                                label={carouselTitle}
+                                prevLabel={isEs ? "Foto anterior" : "Previous photo"}
+                                nextLabel={isEs ? "Foto siguiente" : "Next photo"}
+                            />
+                        </div>
+                    </section>
                 )}
 
                 {/* What's included (from Supabase) */}
@@ -583,8 +549,36 @@ export default async function ServicePage({ params }: PageProps) {
                     </section>
                 )}
 
+                {/* Benefits */}
+                {guide && (
+                    <section className="border-y border-white/5 bg-[#151B3A]">
+                        <div className="mx-auto max-w-5xl px-6 py-12">
+                            <h2 className={h2Class} style={displayFont}>
+                                {t(guide.benefitsTitle)}
+                            </h2>
+                            <p className="mt-3 max-w-xl text-white/70">{t(guide.benefitsIntro)}</p>
+                            <ul
+                                className={`mt-8 grid gap-4 sm:grid-cols-2 ${
+                                    guide.benefits.length === 6 ? "lg:grid-cols-3" : "lg:grid-cols-4"
+                                }`}
+                            >
+                                {guide.benefits.map((benefit, i) => {
+                                    const Icon = ICONS[benefit.icon];
+                                    return (
+                                        <li key={i} className="rounded-xl border border-[#2C355E] bg-[#131835] p-5">
+                                            <Icon aria-hidden="true" className="h-6 w-6 text-[#D0B078]" />
+                                            <h3 className="mt-4 font-semibold">{t(benefit.t)}</h3>
+                                            <p className="mt-1.5 text-sm text-white/70">{t(benefit.d)}</p>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    </section>
+                )}
+
                 {/* How it works */}
-                <section className="border-y border-white/5 bg-[#151B3A]">
+                <section className={guide ? "" : "border-y border-white/5 bg-[#151B3A]"}>
                     <div className="mx-auto max-w-5xl px-6 py-12">
                         <h2 className={h2Class} style={displayFont}>
                             {isEs ? "Cómo funciona" : "How it works"}
@@ -623,28 +617,6 @@ export default async function ServicePage({ params }: PageProps) {
                                 </li>
                             ))}
                         </ul>
-                    </section>
-                )}
-
-                {/* Photos */}
-                {gallery.length > 1 && !guide?.photos?.beforeAfter && (
-                    <section className="mx-auto max-w-5xl px-6 py-12">
-                        <h2 className={h2Class} style={displayFont}>
-                            {isEs ? "Trabajos recientes" : "Recent work"}
-                        </h2>
-                        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                            {gallery.map((src, i) => (
-                                <div key={src} className="relative aspect-[4/3] overflow-hidden rounded-xl">
-                                    <Image
-                                        src={src}
-                                        alt={`${name} – ${isEs ? "foto" : "photo"} ${i + 1}`}
-                                        fill
-                                        sizes="(min-width: 640px) 33vw, 50vw"
-                                        className="object-cover"
-                                    />
-                                </div>
-                            ))}
-                        </div>
                     </section>
                 )}
 
@@ -767,12 +739,22 @@ export default async function ServicePage({ params }: PageProps) {
                                 ? "Primero revisas el trabajo y después autorizas el pago."
                                 : "You inspect the work first, then authorize the payment."}
                         </p>
-                        <Link
-                            href={bookHref}
-                            className={`mt-6 inline-block rounded-full bg-[#D0B078] px-6 py-3 text-sm font-semibold text-[#131835] transition-colors hover:bg-[#dcc08d] ${focusRing}`}
-                        >
-                            {bookLabel}
-                        </Link>
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            <Link
+                                href={bookHref}
+                                className={`rounded-full bg-[#D0B078] px-6 py-3 text-sm font-semibold text-[#131835] transition-colors hover:bg-[#dcc08d] ${focusRing}`}
+                            >
+                                {bookLabel}
+                            </Link>
+                            {waHref && (
+                                <a
+                                    href={waHref}
+                                    className={`rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-white/70 ${focusRing}`}
+                                >
+                                    {isEs ? "Preguntar por WhatsApp" : "Ask on WhatsApp"}
+                                </a>
+                            )}
+                        </div>
                     </div>
                 </section>
             </main>

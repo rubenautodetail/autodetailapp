@@ -1,62 +1,46 @@
-'use client';
-
-import { useState, useRef } from 'react';
-import Link from 'next/link';
+import { createServiceClient } from '@/lib/supabase/server';
 import { SERVICES } from '@/lib/seo/services';
+import { serviceName, servicePath } from '@/lib/seo/serviceNames';
+import NavMenuClient, { type NavService } from './NavMenuClient';
 
 interface NavMenuProps {
     locale: 'en' | 'es';
 }
 
-export function NavMenu({ locale }: NavMenuProps) {
-    const [servicesOpen, setServicesOpen] = useState(false);
-    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+type DbNavService = { id: number; name: string; name_es: string | null };
 
-    const openServices = () => {
-        if (closeTimer.current) clearTimeout(closeTimer.current);
-        setServicesOpen(true);
-    };
-    const closeServicesDelayed = () => {
-        closeTimer.current = setTimeout(() => setServicesOpen(false), 150);
-    };
+/**
+ * Header menu. The "Services" list comes from the same Supabase table as the home-page
+ * cards and the service pages, so the menu always matches what is offered and links
+ * to /{lang}/services/{slug}. If the table can't be read, it falls back to the SEO
+ * catalog so the menu is never empty.
+ */
+export async function NavMenu({ locale }: NavMenuProps) {
+    let services: NavService[] = [];
 
-    const navLinkClass = 'text-base font-semibold text-white/80 hover:text-white transition-colors';
+    try {
+        const supabase = createServiceClient();
+        const { data, error } = await supabase
+            .from('services')
+            .select('id, name, name_es, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true })
+            .limit(6);
+        if (error) console.error('[NavMenu] services query error:', error.message);
+        services = ((data ?? []) as unknown as DbNavService[]).map((s) => ({
+            name: serviceName(s, locale),
+            href: servicePath(s, locale),
+        }));
+    } catch (e) {
+        console.error('[NavMenu] services fetch failed:', e);
+    }
 
-    return (
-        <nav className="hidden lg:flex items-center gap-8">
-            <div
-                className="relative"
-                onMouseEnter={openServices}
-                onMouseLeave={closeServicesDelayed}
-            >
-                <button type="button" className={`flex items-center gap-1 ${navLinkClass}`}>
-                    {locale === 'es' ? 'Servicios' : 'Services'}
-                    <span className="text-[10px] text-white/50">▾</span>
-                </button>
-                {servicesOpen && (
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-64 rounded-2xl border border-white/10 bg-[#151B3A] shadow-xl p-2 z-30">
-                        {SERVICES.map((service) => (
-                            <Link
-                                key={service.id}
-                                href={`/${locale}/${service.slug[locale]}/miami`}
-                                className="block px-4 py-2.5 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
-                            >
-                                {service.name[locale]}
-                            </Link>
-                        ))}
-                    </div>
-                )}
-            </div>
+    if (services.length === 0) {
+        services = SERVICES.map((s) => ({
+            name: s.name[locale],
+            href: `/${locale}/${s.slug[locale]}/miami`,
+        }));
+    }
 
-            <Link href={`/${locale}/locations`} className={navLinkClass}>
-                {locale === 'es' ? 'Ciudades' : 'Locations'}
-            </Link>
-            <Link href={`/${locale}/pricing`} className={navLinkClass}>
-                {locale === 'es' ? 'Precios' : 'Pricing'}
-            </Link>
-            <Link href={`/${locale}/about`} className={navLinkClass}>
-                {locale === 'es' ? 'Nosotros' : 'About'}
-            </Link>
-        </nav>
-    );
+    return <NavMenuClient locale={locale} services={services} />;
 }
