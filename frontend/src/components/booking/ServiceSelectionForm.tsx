@@ -231,7 +231,6 @@ export default function ServiceSelectionForm({
     const handleSelectBodyStyle = (style: VehicleBodyStyle) => {
         if (bookingVehicles.length > 0) replaceBookingVehicles([]);
         setSelectedBodyStyle(style);
-        setShowVehicleDetailsModal(true);
     };
 
     // Auto-select service when arriving via "Book Again" link
@@ -299,8 +298,8 @@ export default function ServiceSelectionForm({
         if (!selectedBodyStyle) return;
         addBookingVehicle({ ...details, type: selectedBodyStyle });
         setShowVehicleDetailsModal(false);
-        nextStep();
-        router.push(`/${locale}/booking/location`);
+        // Stay on this step — the customer still needs to pick a service.
+        // "Continuar a Ubicación" (handleContinue) is what moves to the next step.
     };
 
     const handleBack = () => {
