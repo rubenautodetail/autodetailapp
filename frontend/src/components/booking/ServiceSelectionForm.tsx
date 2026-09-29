@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { getVehicleBodyStyleLabel, normalizeVehicleBodyStyle, type VehicleBodyStyle } from "@/types/vehicle";
 import { BookingVehiclePicker, type GarageVehicleOption } from "@/components/booking/BookingVehiclePicker";
 import { VehicleBodyStyleArtwork } from "@/components/vehicles/VehicleBodyStyleArtwork";
+import VehicleDetailsModal from "@/components/booking/VehicleDetailsModal";
 import {
     canPreviewServicePrice,
     fetchServicePricePreviews,
@@ -84,6 +85,9 @@ export default function ServiceSelectionForm({
     // lets each selected car carry its own service; taps on the service list
     // then assign to the active vehicle pill.
     const [activeVehicleId, setActiveVehicleId] = useState<string | null>(null);
+    // Shown when the customer tries to continue with only a body-style pick
+    // (chosen just to preview pricing) instead of a real, fully-detailed vehicle.
+    const [showVehicleDetailsModal, setShowVehicleDetailsModal] = useState(false);
     const canSplitServices = bookingVehicles.length > 1;
     // The mode lives in the booking state, so the running estimate, the server
     // quote and the step guard all read the same answer.
@@ -227,6 +231,7 @@ export default function ServiceSelectionForm({
     const handleSelectBodyStyle = (style: VehicleBodyStyle) => {
         if (bookingVehicles.length > 0) replaceBookingVehicles([]);
         setSelectedBodyStyle(style);
+        setShowVehicleDetailsModal(true);
     };
 
     // Auto-select service when arriving via "Book Again" link
@@ -280,6 +285,20 @@ export default function ServiceSelectionForm({
     const handleContinue = () => {
         if (!selectedService || (activeVehicles.length === 0 && !selectedBodyStyle)) return;
         if (!allVehiclesAssigned) return;
+        // A body style alone (chosen just to preview pricing) isn't a real vehicle —
+        // ask for make/model/year/color before leaving this step.
+        if (bookingVehicles.length === 0 && selectedBodyStyle) {
+            setShowVehicleDetailsModal(true);
+            return;
+        }
+        nextStep();
+        router.push(`/${locale}/booking/location`);
+    };
+
+    const handleVehicleDetailsConfirm = (details: { make: string; model: string; year: string; color: string }) => {
+        if (!selectedBodyStyle) return;
+        addBookingVehicle({ ...details, type: selectedBodyStyle });
+        setShowVehicleDetailsModal(false);
         nextStep();
         router.push(`/${locale}/booking/location`);
     };
@@ -750,6 +769,16 @@ export default function ServiceSelectionForm({
                         </Button>
                     </div>
                 </div>
+            )}
+
+            {selectedBodyStyle && (
+                <VehicleDetailsModal
+                    isOpen={showVehicleDetailsModal}
+                    onClose={() => setShowVehicleDetailsModal(false)}
+                    onConfirm={handleVehicleDetailsConfirm}
+                    bodyStyle={selectedBodyStyle}
+                    locale={locale}
+                />
             )}
         </div>
     );
