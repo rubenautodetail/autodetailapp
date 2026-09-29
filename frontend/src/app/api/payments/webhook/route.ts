@@ -10,7 +10,7 @@
  *   charge.dispute.created                   — chargeback opened; flag booking
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendChargebackAlertEmail } from '@/lib/email';
@@ -343,13 +343,15 @@ export async function POST(req: NextRequest) {
                     );
 
                     // Alert admin immediately — disputes have a response deadline
-                    sendChargebackAlertEmail({
-                        bookingId: booking.id,
-                        disputeId: dispute.id,
-                        paymentIntentId: paymentIntentId,
-                        amount: dispute.amount,
-                        reason: dispute.reason ?? 'unknown',
-                    }).catch((err) => console.error('Failed to send chargeback alert email:', err));
+                    after(() =>
+                        sendChargebackAlertEmail({
+                            bookingId: booking.id,
+                            disputeId: dispute.id,
+                            paymentIntentId: paymentIntentId,
+                            amount: dispute.amount,
+                            reason: dispute.reason ?? 'unknown',
+                        }).catch((err) => console.error('Failed to send chargeback alert email:', err))
+                    );
                 } else {
                     console.warn(`Dispute ${dispute.id} references unknown PaymentIntent ${paymentIntentId}`);
                 }

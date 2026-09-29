@@ -10,7 +10,7 @@
  * Returns: { confirmationCode, clientSecret, paymentIntentId, bookingId }
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
@@ -296,14 +296,16 @@ export async function POST(req: NextRequest) {
     // ── Step 4: Customer confirmation email only ──────────────────────────────
     // Contractor notifications fire from the webhook (payment_intent.amount_capturable_updated)
     // AFTER payment is confirmed, so contractors only see jobs that have been paid for.
-    notifyCustomer(
-        bookings[0],
-        [...new Set(quote.vehicles.map((vehicle) => vehicle.serviceName))].join(' + '),
-    ).catch(
-        (err) => {
-            console.error('create-with-payment: customer notification failed:', err);
-            Sentry.captureException(err, { tags: { context: 'customer_notification', bookingId: bookings[0].id } });
-        }
+    after(() =>
+        notifyCustomer(
+            bookings[0],
+            [...new Set(quote.vehicles.map((vehicle) => vehicle.serviceName))].join(' + '),
+        ).catch(
+            (err) => {
+                console.error('create-with-payment: customer notification failed:', err);
+                Sentry.captureException(err, { tags: { context: 'customer_notification', bookingId: bookings[0].id } });
+            }
+        )
     );
 
     // ── Step 5: Enqueue payment reminder emails via QStash ───────────────────
@@ -346,9 +348,9 @@ async function schedulePaymentReminders(bookingId: number) {
     const url = `${SITE_URL}/api/booking/payment-reminder`;
 
     const reminders: Array<{ delay: number; reminderNumber: 1 | 2 | 3 }> = [
-        { delay: 15 * 60,       reminderNumber: 1 }, // 15 minutes
-        { delay: 2 * 60 * 60,   reminderNumber: 2 }, // 2 hours
-        { delay: 24 * 60 * 60,  reminderNumber: 3 }, // 24 hours
+        { delay: 15 * 60, reminderNumber: 1 }, // 15 minutes
+        { delay: 2 * 60 * 60, reminderNumber: 2 }, // 2 hours
+        { delay: 24 * 60 * 60, reminderNumber: 3 }, // 24 hours
     ];
 
     await Promise.all(
