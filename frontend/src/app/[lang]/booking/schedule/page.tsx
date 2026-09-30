@@ -300,7 +300,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left column: Calendar & Time Selection */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Calendar */}
             <Card className="p-4 sm:p-8 relative !bg-[#1A2142] !border-[#2C355E]">
               {isLoadingAvailability && (
