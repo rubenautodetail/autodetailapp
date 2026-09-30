@@ -467,7 +467,7 @@ export default function ServiceSelectionForm({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+                            <div className="flex gap-2.5 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {services.map((service) => {
                                     const preview = servicePricePreviews[getServicePricePreviewKey(service)];
                                     const singleStyle = pricingTargetLabel;
@@ -482,21 +482,28 @@ export default function ServiceSelectionForm({
                                                         ? `Precio para ${preview.vehicleCount} vehículos`
                                                         : `${preview.vehicleCount}-vehicle price`
                                             : locale === 'es' ? 'Precio base' : 'Base price';
+                                    const isSelected = (serviceMode === 'per-vehicle'
+                                        ? assignedServiceFor(activeVehicle?.id)?.id
+                                        : selectedService?.id) === service.id;
 
                                     return (
-                                        <ServiceCard
+                                        <div
                                             key={service.id}
-                                            service={service}
-                                            isSelected={(serviceMode === 'per-vehicle'
-                                                ? assignedServiceFor(activeVehicle?.id)?.id
-                                                : selectedService?.id) === service.id}
-                                            onSelect={handleServiceSelect}
-                                            locale={locale}
-                                            displayPrice={preview?.servicePrice}
-                                            priceCaption={priceCaption}
-                                            isPriceLoading={previewStatus === 'loading'}
-                                            isEstimate={!hasPricingTarget}
-                                        />
+                                            className={`shrink-0 snap-start transition-all duration-300 ${
+                                                isSelected ? 'w-64 sm:w-72' : 'w-40 sm:w-48'
+                                            }`}
+                                        >
+                                            <ServiceCard
+                                                service={service}
+                                                isSelected={isSelected}
+                                                onSelect={handleServiceSelect}
+                                                locale={locale}
+                                                displayPrice={preview?.servicePrice}
+                                                priceCaption={priceCaption}
+                                                isPriceLoading={previewStatus === 'loading'}
+                                                isEstimate={!hasPricingTarget}
+                                            />
+                                        </div>
                                     );
                                 })}
                             </div>
