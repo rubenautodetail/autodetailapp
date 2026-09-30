@@ -302,7 +302,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           {/* Left column: Calendar & Time Selection */}
           <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-6 items-start">
             {/* Calendar */}
-            <Card className="p-4 sm:p-10 relative flex h-full flex-col justify-center !bg-[#1A2142] !border-[#2C355E]">
+            <Card className="p-4 sm:p-6 relative flex h-full flex-col justify-center !bg-[#1A2142] !border-[#2C355E]">
               {isLoadingAvailability && (
                 <div className="absolute top-6 right-6 flex items-center gap-2 text-sm text-[#D0B078] animate-fade-in">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#D0B078]"></div>
@@ -320,12 +320,12 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                   }
                   className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
-                <h2 className="text-2xl sm:text-3xl font-bold text-white capitalize">{monthName}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white capitalize">{monthName}</h2>
 
                 <button
                   onClick={() =>
@@ -335,14 +335,14 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                   }
                   className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-x-2 sm:gap-x-3 gap-y-3 sm:gap-y-6">
+              <div className="grid grid-cols-7 gap-x-1 sm:gap-x-2 gap-y-2 sm:gap-y-3">
                 {/* Week day headers */}
                 {weekDays.map((day) => (
                   <div key={day} className="text-center text-xs font-semibold uppercase tracking-wider text-[#5E698F] py-2">
@@ -368,7 +368,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       disabled={!isAvailable}
                       className={`
                         aspect-square rounded-xl flex items-center justify-center
-                        font-medium text-lg sm:text-2xl transition-all duration-300
+                        font-medium text-base sm:text-lg transition-all duration-300
                         ${isSelected
                           ? "bg-[#D0B078] text-[#131835] shadow-[0_0_15px_rgba(208,176,120,0.4)]"
                           : isAvailable
