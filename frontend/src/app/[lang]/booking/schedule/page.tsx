@@ -302,7 +302,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           {/* Left column: Calendar & Time Selection */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Calendar */}
-            <Card className="p-4 sm:p-8 relative !bg-[#1A2142] !border-[#2C355E]">
+            <Card className="p-4 sm:p-10 relative flex h-full flex-col justify-center !bg-[#1A2142] !border-[#2C355E]">
               {isLoadingAvailability && (
                 <div className="absolute top-6 right-6 flex items-center gap-2 text-sm text-[#D0B078] animate-fade-in">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#D0B078]"></div>
@@ -320,12 +320,12 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                   }
                   className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
-                <h2 className="text-xl font-bold text-white capitalize">{monthName}</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-white capitalize">{monthName}</h2>
 
                 <button
                   onClick={() =>
@@ -335,14 +335,14 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                   }
                   className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-x-1 sm:gap-x-2 gap-y-2 sm:gap-y-4">
+              <div className="grid grid-cols-7 gap-x-2 sm:gap-x-3 gap-y-3 sm:gap-y-6">
                 {/* Week day headers */}
                 {weekDays.map((day) => (
                   <div key={day} className="text-center text-xs font-semibold uppercase tracking-wider text-[#5E698F] py-2">
@@ -368,7 +368,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                       disabled={!isAvailable}
                       className={`
                         aspect-square rounded-xl flex items-center justify-center
-                        font-medium text-sm transition-all duration-300
+                        font-medium text-lg sm:text-2xl transition-all duration-300
                         ${isSelected
                           ? "bg-[#D0B078] text-[#131835] shadow-[0_0_15px_rgba(208,176,120,0.4)]"
                           : isAvailable
@@ -407,7 +407,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                     </span>
                   </div>
                 ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                   {timeWindows.map((window) => {
                     const isSelected = tempSelectedWindow?.slot === window.slot;
                     const isAvailable = isTimeWindowAvailable(window);
@@ -419,7 +419,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                         onClick={() => handleWindowSelect(window)}
                         disabled={!isAvailable}
                         className={`
-                          p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group
+                          p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden group
                           ${!isAvailable
                             ? "border-[#2C355E] bg-transparent opacity-40 cursor-not-allowed"
                             : isSelected
@@ -438,8 +438,8 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                           </div>
                         )}
 
-                        <div className="text-center mt-2 mb-1">
-                          <p className={`font-bold text-lg mb-1 transition-colors ${isSelected ? 'text-[#D0B078]' : 'text-white'}`}>{label}</p>
+                        <div className="text-center mt-1 mb-0.5">
+                          <p className={`font-bold text-base mb-0.5 transition-colors ${isSelected ? 'text-[#D0B078]' : 'text-white'}`}>{label}</p>
                           <p className={`text-xs flex justify-center items-center gap-1 opacity-80 ${!isAvailable ? 'text-[#5E698F]' : isSelected ? 'text-[#D0B078]' : 'text-[#5E698F] group-hover:text-green-400'}`}>
                             {!isAvailable
                               ? (locale === "es" ? "Pasado" : "Passed")
