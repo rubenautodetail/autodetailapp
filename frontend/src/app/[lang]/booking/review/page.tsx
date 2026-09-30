@@ -642,18 +642,15 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
                   <Car className="w-5 h-5 text-[#D0B078]" />
                 </div>
-                {locale === "es" ? "Vehículos" : "Vehicles"}
+                {locale === "es"
+                  ? (bookingVehicles.length === 1 ? "Vehículo Seleccionado" : "Vehículos Seleccionados")
+                  : (bookingVehicles.length === 1 ? "Selected Vehicle" : "Selected Vehicles")}
                 {bookingVehicles.length > 0 && (
                   <span className="ml-auto text-sm font-medium bg-[#D0B078]/10 text-[#D0B078] px-3 py-1 rounded-full">
                     {bookingVehicles.length} {bookingVehicles.length === 1 ? (locale === "es" ? "vehículo" : "vehicle") : (locale === "es" ? "vehículos" : "vehicles")}
                   </span>
                 )}
               </h3>
-              <p className="text-sm text-[#8994B8] mb-6">
-                {locale === "es"
-                  ? "Selecciona los vehículos a detallar. Puedes agregar varios para una sola cita."
-                  : "Select which vehicles to detail. You can add multiple for one appointment."}
-              </p>
 
               {errors.vehicles && (
                 <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">
@@ -682,14 +679,11 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                           <span className="block text-[#8994B8] text-xs">{getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(v.type), locale)} · {v.color}</span>
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeBookingVehicle(idx)}
-                        className="text-[#8994B8] hover:text-red-400 transition-colors p-1"
-                        aria-label="Remove vehicle"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <span className="ml-auto shrink-0 text-right text-xs font-medium text-[#D0B078]">
+                        {perVehicleServices
+                          ? (serviceForBookingVehicle(v)?.name ?? (locale === "es" ? "Sin servicio" : "No service yet"))
+                          : (bookingServiceLabel(locale) || selectedService?.name)}
+                      </span>
                     </div>
                   ))}
                 </div>
