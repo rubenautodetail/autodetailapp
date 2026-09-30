@@ -739,9 +739,18 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 {/* Service */}
                 <div className="flex justify-between items-start border-b border-[#2C355E] pb-6">
                   <div>
-                    <p className="text-sm font-medium text-[#8994B8] mb-1 uppercase tracking-wider">
-                      {locale === "es" ? "Servicio" : "Service"}
-                    </p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-medium text-[#8994B8] uppercase tracking-wider">
+                        {locale === "es" ? "Servicio" : "Service"}
+                      </p>
+                      <button
+                      type="button"
+                      onClick={() => router.push(`/${locale}/booking/select`)}
+                      className="text-xs font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
+                    >
+                      {locale === "es" ? "Editar" : "Edit"}
+                    </button>
+                    </div>
                     <p className="text-lg font-bold text-white">
                       {bookingServiceLabel(locale) || selectedService.name}
                     </p>
@@ -805,9 +814,18 @@ export default function ReviewPage({ params }: ReviewPageProps) {
 
                 {/* Location */}
                 <div className="border-b border-[#2C355E] pb-6">
-                  <p className="text-sm font-medium text-[#8994B8] mb-3 uppercase tracking-wider">
-                    {locale === "es" ? "Ubicación" : "Location"}
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-[#8994B8] uppercase tracking-wider">
+                      {locale === "es" ? "Ubicación" : "Location"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/${locale}/booking/location`)}
+                      className="text-xs font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
+                    >
+                      {locale === "es" ? "Editar" : "Edit"}
+                    </button>
+                  </div>
                   <div className="flex items-start gap-3">
                     <svg className="w-5 h-5 text-[#D0B078] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -825,9 +843,18 @@ export default function ReviewPage({ params }: ReviewPageProps) {
 
                 {/* Schedule */}
                 <div className="pt-2">
-                  <p className="text-sm font-medium text-[#8994B8] mb-3 uppercase tracking-wider">
-                    {locale === "es" ? "Fecha y Hora" : "Date & Time"}
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-[#8994B8] uppercase tracking-wider">
+                      {locale === "es" ? "Fecha y Hora" : "Date & Time"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/${locale}/booking/schedule`)}
+                      className="text-xs font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
+                    >
+                      {locale === "es" ? "Editar" : "Edit"}
+                    </button>
+                  </div>
                   <div className="flex items-start gap-3">
                     <svg className="w-5 h-5 text-[#D0B078] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
