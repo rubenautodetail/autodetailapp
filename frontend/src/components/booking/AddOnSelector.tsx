@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AddOn } from "@/contexts";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { Card } from "@/components/ui/Card";
@@ -24,6 +26,14 @@ export default function AddOnSelector({
     return selectedAddOns.some((a) => a.id === addOnId);
   };
 
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const scrollCarousel = (direction: 1 | -1) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollBy({ left: direction * el.clientWidth * 0.6, behavior: reduceMotion ? "auto" : "smooth" });
+  };
+
   if (addOns.length === 0) {
     return null;
   }
@@ -37,13 +47,38 @@ export default function AddOnSelector({
         <p className="mb-6 text-sm font-semibold text-[#D0B078]" aria-live="polite">{forLabel}</p>
       )}
 
-      <div className="space-y-3">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => scrollCarousel(-1)}
+          aria-label={locale === "es" ? "Extra anterior" : "Previous enhancement"}
+          className="absolute left-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 -translate-x-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
+        >
+          <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollCarousel(1)}
+          aria-label={locale === "es" ? "Siguiente extra" : "Next enhancement"}
+          className="absolute right-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
+        >
+          <ChevronRight aria-hidden="true" className="h-5 w-5" />
+        </button>
+        <div
+          ref={carouselRef}
+          className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
         {addOns.map((addOn) => {
           const selected = isSelected(addOn.id);
 
           return (
-            <Card
+            <div
               key={addOn.id}
+              className={`shrink-0 snap-start transition-all duration-300 ${
+                selected ? "w-80 sm:w-96" : "w-56 sm:w-64"
+              }`}
+            >
+            <Card
               className={`
                 p-5 transition-all duration-300 !shadow-none
                 ${selected
@@ -111,8 +146,10 @@ export default function AddOnSelector({
                 </div>
               </div>
             </Card>
+            </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
