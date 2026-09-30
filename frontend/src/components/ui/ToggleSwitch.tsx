@@ -21,7 +21,7 @@ export function ToggleSwitch({ checked, onChange, label, disabled = false }: Tog
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75
                 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
                 ${checked
-                    ? 'bg-green-500 border-green-400'
+                    ? 'bg-[#D0B078] border-[#D0B078]'
                     : 'bg-[#2A3155] border-[#3D4F7C]'}
             `}
         >
