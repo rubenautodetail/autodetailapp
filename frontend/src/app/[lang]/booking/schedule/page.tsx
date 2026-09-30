@@ -300,7 +300,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           {/* Left column: Calendar & Time Selection */}
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-6 items-start">
             {/* Calendar */}
             <Card className="p-4 sm:p-10 relative flex h-full flex-col justify-center !bg-[#1A2142] !border-[#2C355E]">
               {isLoadingAvailability && (
@@ -419,7 +419,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                         onClick={() => handleWindowSelect(window)}
                         disabled={!isAvailable}
                         className={`
-                          p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden group
+                          p-2.5 sm:p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden group
                           ${!isAvailable
                             ? "border-[#2C355E] bg-transparent opacity-40 cursor-not-allowed"
                             : isSelected
@@ -439,7 +439,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
                         )}
 
                         <div className="text-center mt-1 mb-0.5">
-                          <p className={`font-bold text-base mb-0.5 transition-colors ${isSelected ? 'text-[#D0B078]' : 'text-white'}`}>{label}</p>
+                          <p className={`font-bold text-sm mb-0.5 transition-colors ${isSelected ? 'text-[#D0B078]' : 'text-white'}`}>{label}</p>
                           <p className={`text-xs flex justify-center items-center gap-1 opacity-80 ${!isAvailable ? 'text-[#5E698F]' : isSelected ? 'text-[#D0B078]' : 'text-[#5E698F] group-hover:text-green-400'}`}>
                             {!isAvailable
                               ? (locale === "es" ? "Pasado" : "Passed")
