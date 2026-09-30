@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useBooking, useBookingStatus, Service, AddOn } from "@/contexts";
 import { AddOnSelector, PricingSummary, ProgressIndicator } from "@/components/booking";
 import { ServiceCard } from "@/components/booking/ServiceCard";
@@ -85,6 +86,13 @@ export default function ServiceSelectionForm({
     // lets each selected car carry its own service; taps on the service list
     // then assign to the active vehicle pill.
     const [activeVehicleId, setActiveVehicleId] = useState<string | null>(null);
+    const serviceCarouselRef = useRef<HTMLDivElement>(null);
+    const scrollServiceCarousel = (direction: 1 | -1) => {
+        const el = serviceCarouselRef.current;
+        if (!el) return;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.scrollBy({ left: direction * el.clientWidth * 0.6, behavior: reduceMotion ? 'auto' : 'smooth' });
+    };
     // Shown when the customer tries to continue with only a body-style pick
     // (chosen just to preview pricing) instead of a real, fully-detailed vehicle.
     const [showVehicleDetailsModal, setShowVehicleDetailsModal] = useState(false);
@@ -467,7 +475,27 @@ export default function ServiceSelectionForm({
                                 </div>
                             )}
 
-                            <div className="flex gap-2.5 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => scrollServiceCarousel(-1)}
+                                    aria-label={locale === "es" ? "Servicio anterior" : "Previous service"}
+                                    className="absolute left-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 -translate-x-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
+                                >
+                                    <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => scrollServiceCarousel(1)}
+                                    aria-label={locale === "es" ? "Siguiente servicio" : "Next service"}
+                                    className="absolute right-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
+                                >
+                                    <ChevronRight aria-hidden="true" className="h-5 w-5" />
+                                </button>
+                                <div
+                                    ref={serviceCarouselRef}
+                                    className="flex gap-2.5 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                >
                                 {services.map((service) => {
                                     const preview = servicePricePreviews[getServicePricePreviewKey(service)];
                                     const singleStyle = pricingTargetLabel;
@@ -506,6 +534,7 @@ export default function ServiceSelectionForm({
                                         </div>
                                     );
                                 })}
+                                </div>
                             </div>
                         </div>
 
