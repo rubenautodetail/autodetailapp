@@ -298,9 +298,9 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           {/* Left column: Calendar & Time Selection */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Calendar */}
             <Card className="p-4 sm:p-10 relative flex h-full flex-col justify-center !bg-[#1A2142] !border-[#2C355E]">
               {isLoadingAvailability && (
