@@ -482,248 +482,6 @@ export default function ReviewPage({ params }: ReviewPageProps) {
               </div>
             </Card>
 
-            {/* Vehicle Selection — Multi-Vehicle */}
-            <Card ref={vehiclesCardRef} className="scroll-mt-6 p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
-                  <Car className="w-5 h-5 text-[#D0B078]" />
-                </div>
-                {locale === "es" ? "Vehículos" : "Vehicles"}
-                {bookingVehicles.length > 0 && (
-                  <span className="ml-auto text-sm font-medium bg-[#D0B078]/10 text-[#D0B078] px-3 py-1 rounded-full">
-                    {bookingVehicles.length} {bookingVehicles.length === 1 ? (locale === "es" ? "vehículo" : "vehicle") : (locale === "es" ? "vehículos" : "vehicles")}
-                  </span>
-                )}
-              </h3>
-              <p className="text-sm text-[#8994B8] mb-6">
-                {locale === "es"
-                  ? "Selecciona los vehículos a detallar. Puedes agregar varios para una sola cita."
-                  : "Select which vehicles to detail. You can add multiple for one appointment."}
-              </p>
-
-              {errors.vehicles && (
-                <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">
-                  {errors.vehicles}
-                </div>
-              )}
-
-              {/* Selected Vehicles */}
-              {bookingVehicles.length > 0 && (
-                <div className="mb-6 space-y-2">
-                  <p className="text-xs font-semibold text-[#D0B078] uppercase tracking-wider mb-2">
-                    {locale === "es" ? "Seleccionados" : "Selected"}
-                  </p>
-                  {bookingVehicles.map((v, idx) => (
-                    <div key={idx} className="flex items-center justify-between gap-3 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl px-3 py-2.5">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
-                          <VehicleBodyStyleArtwork
-                            style={normalizeVehicleBodyStyle(v.type)}
-                            locale={locale}
-                            className="h-8 w-full min-w-0 shrink-0"
-                          />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate text-white font-medium text-sm">{v.year} {v.make} {v.model}</span>
-                          <span className="block text-[#8994B8] text-xs">{getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(v.type), locale)} · {v.color}</span>
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeBookingVehicle(idx)}
-                        className="text-[#8994B8] hover:text-red-400 transition-colors p-1"
-                        aria-label="Remove vehicle"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Garage Vehicles */}
-              {garageVehicles.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-xs font-semibold text-[#8994B8] uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Warehouse className="w-3.5 h-3.5" />
-                    {locale === "es" ? "Tu Garaje" : "Your Garage"}
-                  </p>
-                  <div className="grid gap-2">
-                    {garageVehicles.map(gv => {
-                      const selected = isGarageVehicleSelected(gv);
-                      const style = normalizeVehicleBodyStyle(gv.type);
-                      return (
-                        <button
-                          key={gv.id}
-                          type="button"
-                          role="checkbox"
-                          aria-checked={selected}
-                          onClick={() => toggleGarageVehicle(gv)}
-                          className={`flex items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${selected
-                              ? "border-[#D0B078] bg-[#D0B078]/10"
-                              : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
-                            }`}
-                        >
-                          <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
-                            <VehicleBodyStyleArtwork
-                              style={style}
-                              locale={locale}
-                              className="h-11 w-full min-w-0 shrink-0"
-                            />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-bold text-white">
-                              {gv.year} {gv.make} {gv.model}
-                            </span>
-                            <span className="mt-0.5 block text-xs text-[#A5B0D1]">
-                              {getVehicleBodyStyleLabel(style, locale)} · {gv.color}
-                            </span>
-                          </span>
-                          <span
-                            aria-hidden="true"
-                            className={`ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${selected
-                                ? "bg-[#D0B078] text-[#131835]"
-                                : "border-2 border-[#4A5580]"
-                              }`}
-                          >
-                            {selected ? "✓" : ""}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Add New Vehicle */}
-              {!showNewForm ? (
-                <button
-                  type="button"
-                  onClick={() => setShowNewForm(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#2C355E] text-[#A5B0D1] hover:border-[#D0B078]/50 hover:text-white transition-all text-sm font-medium"
-                >
-                  <Plus className="w-4 h-4" />
-                  {locale === "es" ? "Agregar nuevo vehículo" : "Add new vehicle"}
-                </button>
-              ) : (
-                <div className="border border-[#2C355E] rounded-xl p-5 space-y-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-white">{locale === "es" ? "Nuevo Vehículo" : "New Vehicle"}</p>
-                    <button type="button" onClick={() => setShowNewForm(false)} className="text-[#8994B8] hover:text-white transition-colors">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-[#A5B0D1] mb-1.5">
-                        {locale === "es" ? "Marca" : "Make"}<span className="text-[#D0B078] ml-0.5">*</span>
-                      </label>
-                      <input type="text" value={vehicleMake} onChange={(e) => { setVehicleMake(e.target.value); if (errors.vehicleMake) setErrors(prev => ({ ...prev, vehicleMake: "" })); }}
-                        placeholder="Toyota, Honda..." className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleMake ? "border-red-500/50" : "border-[#2C355E]"}`} />
-                      {errors.vehicleMake && <p className="mt-1 text-xs text-red-400">{errors.vehicleMake}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#A5B0D1] mb-1.5">
-                        {locale === "es" ? "Modelo" : "Model"}<span className="text-[#D0B078] ml-0.5">*</span>
-                      </label>
-                      <input type="text" value={vehicleModel} onChange={(e) => { setVehicleModel(e.target.value); if (errors.vehicleModel) setErrors(prev => ({ ...prev, vehicleModel: "" })); }}
-                        placeholder="Camry, Civic..." className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleModel ? "border-red-500/50" : "border-[#2C355E]"}`} />
-                      {errors.vehicleModel && <p className="mt-1 text-xs text-red-400">{errors.vehicleModel}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#A5B0D1] mb-1.5">
-                        {locale === "es" ? "Año" : "Year"}<span className="text-[#D0B078] ml-0.5">*</span>
-                      </label>
-                      <input type="text" value={vehicleYear} onChange={(e) => { setVehicleYear(e.target.value); if (errors.vehicleYear) setErrors(prev => ({ ...prev, vehicleYear: "" })); }}
-                        placeholder="2024" maxLength={4} className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleYear ? "border-red-500/50" : "border-[#2C355E]"}`} />
-                      {errors.vehicleYear && <p className="mt-1 text-xs text-red-400">{errors.vehicleYear}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#A5B0D1] mb-1.5">
-                        {locale === "es" ? "Color" : "Color"}<span className="text-[#D0B078] ml-0.5">*</span>
-                      </label>
-                      <input type="text" value={vehicleColor} onChange={(e) => { setVehicleColor(e.target.value); if (errors.vehicleColor) setErrors(prev => ({ ...prev, vehicleColor: "" })); }}
-                        placeholder={locale === "es" ? "Blanco, Negro..." : "White, Black..."} className={`w-full px-3 py-2.5 bg-[#131835] border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D0B078] placeholder:text-[#8994B8] ${errors.vehicleColor ? "border-red-500/50" : "border-[#2C355E]"}`} />
-                      {errors.vehicleColor && <p className="mt-1 text-xs text-red-400">{errors.vehicleColor}</p>}
-                    </div>
-                  </div>
-                  <VehicleBodyStyleSelector
-                    locale={locale}
-                    appearance="dark"
-                    layout="carousel"
-                    value={vehicleType}
-                    onChange={setVehicleType}
-                    name="booking-vehicle-body-style"
-                    required
-                  />
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={saveToGarage} onChange={e => setSaveToGarage(e.target.checked)}
-                      className="w-4 h-4 rounded border-[#D0B078]/50 bg-[#131835] text-[#D0B078] focus:ring-[#D0B078]" style={{ accentColor: "#D0B078" }} />
-                    <span className="text-xs text-[#A5B0D1]">
-                      {locale === "es" ? "Guardar en mi garaje" : "Save to my garage"}
-                    </span>
-                  </label>
-                  <button type="button" onClick={handleAddNewVehicle}
-                    className="w-full py-2.5 bg-[#D0B078] text-[#131835] font-bold text-sm rounded-xl hover:bg-[#C4A060] transition-all">
-                    {locale === "es" ? "Agregar Vehículo" : "Add Vehicle"}
-                  </button>
-                </div>
-              )}
-
-              {/* Authoritative per-vehicle pricing */}
-              {bookingVehicles.length > 0 && (
-                <div className="mt-4 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl p-3" aria-live="polite">
-                  <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-[#D0B078] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-xs font-semibold text-[#D0B078]">
-                      {locale === "es" ? "Desglose por vehículo" : "Per-vehicle breakdown"}
-                    </p>
-                  </div>
-                  <div className="mt-2 space-y-1.5 pl-6">
-                    {bookingVehicles.map((vehicle, index) => (
-                      <div key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`} className="flex justify-between gap-3 text-xs">
-                        <span className="text-[#A5B0D1]">
-                          {vehicle.year} {vehicle.make} {vehicle.model} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
-                          {hasMixedServices && priceQuote?.vehicles[index]?.serviceName
-                            ? ` · ${priceQuote.vehicles[index].serviceName}`
-                            : perVehicleServices
-                              ? ` · ${serviceForBookingVehicle(vehicle)?.name ?? (locale === "es" ? "sin servicio" : "no service yet")}`
-                              : ''}
-                        </span>
-                        <span key={priceQuote?.vehicles[index]?.total ?? 'pending'} className="price-changed font-semibold text-white">
-                          {priceQuote?.vehicles[index] ? `$${priceQuote.vehicles[index].total.toFixed(2)}` : "—"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  {quoteStatus === "loading" && <p className="mt-2 pl-6 text-xs text-[#A5B0D1]">{locale === "es" ? "Actualizando precio…" : "Updating price…"}</p>}
-                  {quoteError && <p role="alert" className="mt-2 pl-6 text-xs text-red-400">{locale === "es" ? "No pudimos actualizar el precio." : "We couldn't refresh pricing."}</p>}
-                  {unassignedVehicles.length > 0 && (
-                    <div role="status" className="mt-3 ml-6 flex flex-col gap-2 rounded-lg border border-[#D0B078]/40 bg-[#131835] p-3 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-xs text-[#A5B0D1]">
-                        <span className="font-semibold text-white">
-                          {unassignedVehicles.map((vehicle) => `${vehicle.year} ${vehicle.make} ${vehicle.model}`).join(", ")}
-                        </span>
-                        {" "}
-                        {unassignedVehicles.length === 1
-                          ? (locale === "es" ? "todavía no tiene servicio." : "doesn't have a service yet.")
-                          : (locale === "es" ? "todavía no tienen servicio." : "don't have a service yet.")}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={goChooseServices}
-                        className="shrink-0 rounded-lg bg-[#D0B078] px-3 py-1.5 text-xs font-bold text-[#131835] transition-colors hover:bg-[#C4A060] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
-                      >
-                        {locale === "es" ? "Elegir servicios" : "Choose services"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </Card>
-
             {/* Booking Summary */}
             <Card className="p-8 !bg-[#1A2142] !border-[#2C355E]">
               <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
@@ -876,6 +634,173 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   </div>
                 </div>
               </div>
+            </Card>
+
+            {/* Vehicle Selection — Multi-Vehicle */}
+            <Card ref={vehiclesCardRef} className="scroll-mt-6 p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
+                  <Car className="w-5 h-5 text-[#D0B078]" />
+                </div>
+                {locale === "es" ? "Vehículos" : "Vehicles"}
+                {bookingVehicles.length > 0 && (
+                  <span className="ml-auto text-sm font-medium bg-[#D0B078]/10 text-[#D0B078] px-3 py-1 rounded-full">
+                    {bookingVehicles.length} {bookingVehicles.length === 1 ? (locale === "es" ? "vehículo" : "vehicle") : (locale === "es" ? "vehículos" : "vehicles")}
+                  </span>
+                )}
+              </h3>
+              <p className="text-sm text-[#8994B8] mb-6">
+                {locale === "es"
+                  ? "Selecciona los vehículos a detallar. Puedes agregar varios para una sola cita."
+                  : "Select which vehicles to detail. You can add multiple for one appointment."}
+              </p>
+
+              {errors.vehicles && (
+                <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">
+                  {errors.vehicles}
+                </div>
+              )}
+
+              {/* Selected Vehicles */}
+              {bookingVehicles.length > 0 && (
+                <div className="mb-6 space-y-2">
+                  <p className="text-xs font-semibold text-[#D0B078] uppercase tracking-wider mb-2">
+                    {locale === "es" ? "Seleccionados" : "Selected"}
+                  </p>
+                  {bookingVehicles.map((v, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-3 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl px-3 py-2.5">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                          <VehicleBodyStyleArtwork
+                            style={normalizeVehicleBodyStyle(v.type)}
+                            locale={locale}
+                            className="h-8 w-full min-w-0 shrink-0"
+                          />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-white font-medium text-sm">{v.year} {v.make} {v.model}</span>
+                          <span className="block text-[#8994B8] text-xs">{getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(v.type), locale)} · {v.color}</span>
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeBookingVehicle(idx)}
+                        className="text-[#8994B8] hover:text-red-400 transition-colors p-1"
+                        aria-label="Remove vehicle"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Garage Vehicles */}
+              {garageVehicles.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-xs font-semibold text-[#8994B8] uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Warehouse className="w-3.5 h-3.5" />
+                    {locale === "es" ? "Tu Garaje" : "Your Garage"}
+                  </p>
+                  <div className="grid gap-2">
+                    {garageVehicles.map(gv => {
+                      const selected = isGarageVehicleSelected(gv);
+                      const style = normalizeVehicleBodyStyle(gv.type);
+                      return (
+                        <button
+                          key={gv.id}
+                          type="button"
+                          role="checkbox"
+                          aria-checked={selected}
+                          onClick={() => toggleGarageVehicle(gv)}
+                          className={`flex items-center gap-3 rounded-xl border-2 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835] ${selected
+                              ? "border-[#D0B078] bg-[#D0B078]/10"
+                              : "border-[#2C355E] bg-[#1A2142] hover:border-[#D0B078]/60"
+                            }`}
+                        >
+                          <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/[0.06] bg-[radial-gradient(circle_at_50%_28%,rgba(208,176,120,0.16),rgba(8,12,27,0.2)_72%)]">
+                            <VehicleBodyStyleArtwork
+                              style={style}
+                              locale={locale}
+                              className="h-11 w-full min-w-0 shrink-0"
+                            />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-bold text-white">
+                              {gv.year} {gv.make} {gv.model}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-[#A5B0D1]">
+                              {getVehicleBodyStyleLabel(style, locale)} · {gv.color}
+                            </span>
+                          </span>
+                          <span
+                            aria-hidden="true"
+                            className={`ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black ${selected
+                                ? "bg-[#D0B078] text-[#131835]"
+                                : "border-2 border-[#4A5580]"
+                              }`}
+                          >
+                            {selected ? "✓" : ""}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Authoritative per-vehicle pricing */}
+              {bookingVehicles.length > 0 && (
+                <div className="mt-4 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl p-3" aria-live="polite">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-[#D0B078] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-xs font-semibold text-[#D0B078]">
+                      {locale === "es" ? "Desglose por vehículo" : "Per-vehicle breakdown"}
+                    </p>
+                  </div>
+                  <div className="mt-2 space-y-1.5 pl-6">
+                    {bookingVehicles.map((vehicle, index) => (
+                      <div key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`} className="flex justify-between gap-3 text-xs">
+                        <span className="text-[#A5B0D1]">
+                          {vehicle.year} {vehicle.make} {vehicle.model} · {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
+                          {hasMixedServices && priceQuote?.vehicles[index]?.serviceName
+                            ? ` · ${priceQuote.vehicles[index].serviceName}`
+                            : perVehicleServices
+                              ? ` · ${serviceForBookingVehicle(vehicle)?.name ?? (locale === "es" ? "sin servicio" : "no service yet")}`
+                              : ''}
+                        </span>
+                        <span key={priceQuote?.vehicles[index]?.total ?? 'pending'} className="price-changed font-semibold text-white">
+                          {priceQuote?.vehicles[index] ? `$${priceQuote.vehicles[index].total.toFixed(2)}` : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {quoteStatus === "loading" && <p className="mt-2 pl-6 text-xs text-[#A5B0D1]">{locale === "es" ? "Actualizando precio…" : "Updating price…"}</p>}
+                  {quoteError && <p role="alert" className="mt-2 pl-6 text-xs text-red-400">{locale === "es" ? "No pudimos actualizar el precio." : "We couldn't refresh pricing."}</p>}
+                  {unassignedVehicles.length > 0 && (
+                    <div role="status" className="mt-3 ml-6 flex flex-col gap-2 rounded-lg border border-[#D0B078]/40 bg-[#131835] p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xs text-[#A5B0D1]">
+                        <span className="font-semibold text-white">
+                          {unassignedVehicles.map((vehicle) => `${vehicle.year} ${vehicle.make} ${vehicle.model}`).join(", ")}
+                        </span>
+                        {" "}
+                        {unassignedVehicles.length === 1
+                          ? (locale === "es" ? "todavía no tiene servicio." : "doesn't have a service yet.")
+                          : (locale === "es" ? "todavía no tienen servicio." : "don't have a service yet.")}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={goChooseServices}
+                        className="shrink-0 rounded-lg bg-[#D0B078] px-3 py-1.5 text-xs font-bold text-[#131835] transition-colors hover:bg-[#C4A060] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131835]"
+                      >
+                        {locale === "es" ? "Elegir servicios" : "Choose services"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           </div>
 
