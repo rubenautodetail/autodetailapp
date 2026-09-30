@@ -2,37 +2,27 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { useBooking, Location } from "@/contexts";
-import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/lib/supabase/client";
+import toast from "react-hot-toast";
+import { useBooking } from "@/contexts";
 import { PricingSummary, ProgressIndicator } from "@/components/booking";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
-interface SavedAddress {
-  id: string;
+interface TimeWindowConfig {
+  slot: string;
   label: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  latitude: number;
-  longitude: number;
+  labelEs: string;
+  range: string;
+  rangeEs: string;
 }
 
-const MapboxAddressInput = dynamic(
-  () => import("@/components/maps/MapboxAddressInput"),
-  { ssr: false }
-);
-
-interface LocationPageProps {
+interface SchedulePageProps {
   params: Promise<{
     lang: "en" | "es";
   }>;
 }
 
-export default function LocationPage({ params }: LocationPageProps) {
+export default function SchedulePage({ params }: SchedulePageProps) {
   const router = useRouter();
   const { lang } = use(params);
   const locale = lang || "en";
@@ -44,198 +34,243 @@ export default function LocationPage({ params }: LocationPageProps) {
     vehicleSummaryLines,
     selectedAddOns,
     customerLocation,
-    setLocation,
+    selectedDate,
+    selectedTimeWindow,
+    setSchedule,
     subtotal,
     serviceFee,
     total,
     currentStep,
-    setCurrentStep,
     nextStep,
     previousStep,
+    priceQuote,
   } = useBooking();
 
-  useEffect(() => {
-    if (isHydrated && currentStep !== 2) {
-      setCurrentStep(2);
-    }
-  }, [isHydrated]);
-
-  const [zipCode, setZipCode] = useState(customerLocation?.zipCode || "");
-  const [address, setAddress] = useState(customerLocation?.address || "");
-  const [city, setCity] = useState(customerLocation?.city || "");
-  const [state, setState] = useState(customerLocation?.state || "FL");
-  const [latitude, setLatitude] = useState(customerLocation?.latitude || 0);
-  const [longitude, setLongitude] = useState(customerLocation?.longitude || 0);
-
-  const [isValidating, setIsValidating] = useState(false);
-  const [zipError, setZipError] = useState("");
-  const [addressError, setAddressError] = useState("");
-  const [isValid, setIsValid] = useState(false);
-
-  // Saved addresses
-  const { user } = useAuth();
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
-  const [saveLabel, setSaveLabel] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-    supabase.from("profiles").select("saved_addresses").eq("id", user.id).single().then(({ data }: any) => {
-      if (data?.saved_addresses) setSavedAddresses(data.saved_addresses as SavedAddress[]);
-    });
-  }, [user]);
-
-  const handleSelectSaved = (saved: SavedAddress) => {
-    setAddress(saved.address);
-    setCity(saved.city);
-    setState(saved.state);
-    setZipCode(saved.zipCode);
-    setLatitude(saved.latitude);
-    setLongitude(saved.longitude);
-    setIsValid(true);
-    setZipError("");
-    setAddressError("");
-  };
-
-  const handleSaveAddress = async () => {
-    if (!user || !address || !zipCode || !saveLabel.trim()) return;
-    setSaving(true);
-    const newEntry: SavedAddress = {
-      id: crypto.randomUUID(),
-      label: saveLabel.trim(),
-      address, city, state: state || "FL", zipCode,
-      latitude, longitude,
-    };
-    const updated = [...savedAddresses, newEntry];
-    const supabase = createClient();
-    await supabase.from("profiles").update({ saved_addresses: updated }).eq("id", user.id);
-    setSavedAddresses(updated);
-    setSaveLabel("");
-    setSaving(false);
-  };
-
-  const handleDeleteSaved = async (id: string) => {
-    if (!user) return;
-    const updated = savedAddresses.filter(a => a.id !== id);
-    const supabase = createClient();
-    await supabase.from("profiles").update({ saved_addresses: updated }).eq("id", user.id);
-    setSavedAddresses(updated);
-  };
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(selectedDate);
+  const [tempSelectedWindow, setTempSelectedWindow] = useState<TimeWindowConfig | null>(null);
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+  const [timeWindows, setTimeWindows] = useState<TimeWindowConfig[]>([]);
+  const [isLoadingTimeWindows, setIsLoadingTimeWindows] = useState(true);
+  const [windowDays, setWindowDays] = useState(14);
+  const [minLeadHours, setMinLeadHours] = useState(1);
 
   // Redirect if prerequisites not met — wait for hydration so sessionStorage state is available
   useEffect(() => {
     if (!isHydrated) return;
     if (!selectedService || !allVehiclesAssigned) {
       router.push(`/${locale}/booking/select`);
+      return;
     }
-  }, [isHydrated, selectedService, allVehiclesAssigned, router, locale]);
+    if (!customerLocation) {
+      router.push(`/${locale}/booking/location`);
+    }
+  }, [isHydrated, selectedService, allVehiclesAssigned, customerLocation, router, locale]);
 
-  // Validate ZIP code when changed
+  // Fetch time windows when language changes
   useEffect(() => {
-    const validateZip = async () => {
-      if (zipCode.length !== 5) {
-        setZipError("");
-        setIsValid(false);
-        return;
-      }
-
-      setIsValidating(true);
-      setZipError("");
-
+    const fetchTimeWindows = async () => {
+      setIsLoadingTimeWindows(true);
       try {
-        const response = await fetch(
-          `/api/booking/validate-zip`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ zipCode }),
-          }
-        );
+        const response = await fetch(`/api/booking/time-windows`, {
+          headers: { "Content-Type": "application/json" },
+        });
 
-        const data = await response.json();
-
-        if (!data.available) {
-          setZipError(
-            locale === "es"
-              ? "Lo sentimos, actualmente no prestamos servicios en esta área"
-              : "Sorry, we don't currently service this area"
-          );
-          setIsValid(false);
+        if (!response.ok) {
+          // Fallback to default time windows if API fails
+          setTimeWindows([
+            { slot: "09:00", label: "9:00 AM", labelEs: "9:00 AM", range: "9:00 AM", rangeEs: "9:00 AM" },
+            { slot: "10:00", label: "10:00 AM", labelEs: "10:00 AM", range: "10:00 AM", rangeEs: "10:00 AM" },
+            { slot: "11:00", label: "11:00 AM", labelEs: "11:00 AM", range: "11:00 AM", rangeEs: "11:00 AM" },
+            { slot: "12:00", label: "12:00 PM", labelEs: "12:00 PM", range: "12:00 PM", rangeEs: "12:00 PM" },
+            { slot: "13:00", label: "1:00 PM", labelEs: "1:00 PM", range: "1:00 PM", rangeEs: "1:00 PM" },
+            { slot: "14:00", label: "2:00 PM", labelEs: "2:00 PM", range: "2:00 PM", rangeEs: "2:00 PM" },
+            { slot: "15:00", label: "3:00 PM", labelEs: "3:00 PM", range: "3:00 PM", rangeEs: "3:00 PM" },
+            { slot: "16:00", label: "4:00 PM", labelEs: "4:00 PM", range: "4:00 PM", rangeEs: "4:00 PM" },
+          ]);
         } else {
-          setIsValid(true);
+          const data = await response.json();
+          setTimeWindows(data.timeWindows || []);
         }
       } catch (error) {
-        console.error("ZIP validation error:", error);
-        setZipError(
-          locale === "es"
-            ? "Error al validar código postal"
-            : "Error validating ZIP code"
-        );
-        setIsValid(false);
+        console.error("Error fetching time windows:", error);
+        // Fallback to default time windows
+        setTimeWindows([
+          { slot: "09:00", label: "9:00 AM", labelEs: "9:00 AM", range: "9:00 AM", rangeEs: "9:00 AM" },
+          { slot: "10:00", label: "10:00 AM", labelEs: "10:00 AM", range: "10:00 AM", rangeEs: "10:00 AM" },
+          { slot: "11:00", label: "11:00 AM", labelEs: "11:00 AM", range: "11:00 AM", rangeEs: "11:00 AM" },
+          { slot: "12:00", label: "12:00 PM", labelEs: "12:00 PM", range: "12:00 PM", rangeEs: "12:00 PM" },
+          { slot: "13:00", label: "1:00 PM", labelEs: "1:00 PM", range: "1:00 PM", rangeEs: "1:00 PM" },
+          { slot: "14:00", label: "2:00 PM", labelEs: "2:00 PM", range: "2:00 PM", rangeEs: "2:00 PM" },
+          { slot: "15:00", label: "3:00 PM", labelEs: "3:00 PM", range: "3:00 PM", rangeEs: "3:00 PM" },
+          { slot: "16:00", label: "4:00 PM", labelEs: "4:00 PM", range: "4:00 PM", rangeEs: "4:00 PM" },
+        ]);
       } finally {
-        setIsValidating(false);
+        setIsLoadingTimeWindows(false);
       }
     };
 
-    validateZip();
-  }, [zipCode, locale]);
+    fetchTimeWindows();
+  }, [locale]);
 
-  const handleAddressSelect = (selectedAddress: {
-    address: string;
-    city?: string;
-    state?: string;
-    zipCode: string;
-    latitude: number;
-    longitude: number;
-  }) => {
-    setAddress(selectedAddress.address);
-    setCity(selectedAddress.city || "");
-    setState(selectedAddress.state || "FL");
-    setZipCode(selectedAddress.zipCode);
-    setLatitude(selectedAddress.latitude);
-    setLongitude(selectedAddress.longitude);
+  // Fetch availability when month changes
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchAvailability = async () => {
+      if (!customerLocation?.zipCode || !selectedService) return;
+
+      setIsLoadingAvailability(true);
+      try {
+        const month = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}`;
+
+        const response = await fetch(`/api/booking/availability`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            zipCode: customerLocation.zipCode,
+            serviceId: selectedService.catalogId ?? selectedService.documentId,
+            // Mixed bookings: availability must hold for every service in the group.
+            serviceIds: priceQuote
+              ? [...new Set(priceQuote.vehicles
+                  .map((line) => line.serviceId)
+                  .filter((id): id is number => typeof id === 'number'))]
+              : undefined,
+            month,
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch availability");
+        }
+
+        const data = await response.json();
+
+        // Convert available dates to Set for quick lookup
+        const dateSet = new Set<string>();
+        if (data.availableDates && Array.isArray(data.availableDates)) {
+          data.availableDates.forEach((dateInfo: { date?: string }) => {
+            if (dateInfo.date) {
+              dateSet.add(dateInfo.date);
+            }
+          });
+        }
+
+        setAvailableDates(dateSet);
+        if (typeof data.windowDays === "number") setWindowDays(data.windowDays);
+        if (typeof data.minLeadTimeHours === "number") setMinLeadHours(data.minLeadTimeHours);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.error("Error fetching availability:", error);
+        // Surface the failure instead of silently opening every future date —
+        // a silent fallback masks real outages and lets customers pick days
+        // no contractor can actually work.
+        setAvailableDates(new Set());
+        toast.error(
+          locale === "es"
+            ? "No se pudo cargar la disponibilidad. Intenta otra vez."
+            : "Couldn't load availability. Please try again."
+        );
+      } finally {
+        setIsLoadingAvailability(false);
+      }
+    };
+
+    fetchAvailability();
+    return () => controller.abort();
+  }, [currentMonth, customerLocation, selectedService, priceQuote, locale]);
+
+  // Generate calendar days
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days: (Date | null)[] = [];
+
+    // Add empty cells for days before month starts
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    // Add all days in month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+
+    return days;
+  };
+
+  const isDateAvailable = (date: Date | null): boolean => {
+    if (!date) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Window cutoff is admin-controlled (platform_schedule_settings.booking_window_days).
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + windowDays);
+
+    if (date < today || date > maxDate) return false;
+
+    // Authoritative check: the API already enforces admin blocks, weekday
+    // defaults, contractor availability JSON, and skill matching. Trust it.
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return availableDates.has(dateStr);
+  };
+
+  const handleDateSelect = (date: Date) => {
+    if (!isDateAvailable(date)) return;
+    setTempSelectedDate(date);
+    setTempSelectedWindow(null);
+  };
+
+  const isTimeWindowAvailable = (window: TimeWindowConfig): boolean => {
+    if (!tempSelectedDate) return true;
+    const today = new Date();
+    const isToday = tempSelectedDate.toDateString() === today.toDateString();
+    if (!isToday) return true;
+    const slotHour = parseInt(window.slot.split(":")[0], 10);
+    return slotHour > today.getHours() + minLeadHours;
+  };
+
+  const handleWindowSelect = (window: TimeWindowConfig) => {
+    if (!isTimeWindowAvailable(window)) return;
+    setTempSelectedWindow(window);
   };
 
   const handleContinue = () => {
-    // Final validation
-    if (!zipCode || zipCode.length !== 5) {
-      setZipError(locale === "es" ? "Código postal requerido" : "ZIP code required");
-      return;
-    }
+    if (!tempSelectedDate || !tempSelectedWindow) return;
 
-    if (!address.trim()) {
-      setAddressError(locale === "es" ? "Dirección requerida" : "Address required");
-      return;
-    }
-
-    if (!isValid) {
-      return;
-    }
-
-    // Save to context
-    setLocation({
-      address,
-      city,
-      state,
-      zipCode,
-      latitude,
-      longitude,
-    });
-
-    // Save ZIP to session storage for later use
-    sessionStorage.setItem('serviceZipCode', zipCode);
-
+    setSchedule(tempSelectedDate, tempSelectedWindow);
     nextStep();
-    router.push(`/${locale}/booking/schedule`);
+    router.push(`/${locale}/booking/review`);
   };
 
   const handleBack = () => {
     previousStep();
-    router.push(`/${locale}/booking/select`);
+    router.push(`/${locale}/booking/location`);
   };
 
-  if (!selectedService) {
+  const monthName = currentMonth.toLocaleDateString(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: "America/New_York",
+  });
+
+  const weekDays =
+    locale === "es"
+      ? ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+      : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const days = getDaysInMonth(currentMonth);
+
+  if (!selectedService || !customerLocation) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -245,7 +280,7 @@ export default function LocationPage({ params }: LocationPageProps) {
 
   return (
     <div className="min-h-screen bg-[#131835] py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Indicator */}
         <ProgressIndicator currentStep={currentStep} locale={locale} />
 
@@ -253,211 +288,201 @@ export default function LocationPage({ params }: LocationPageProps) {
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             {locale === "es"
-              ? "¿Dónde te gustaría el servicio?"
-              : "Where would you like service?"}
+              ? "Elige Fecha y Horario"
+              : "Choose Date & Time"}
           </h1>
-          <p className="text-lg text-[#A5B0D1]">
+          <p className="text-lg text-[var(--text-secondary)]">
             {locale === "es"
-              ? "Ingresa tu ubicación para verificar disponibilidad"
-              : "Enter your location to check availability"}
+              ? "Selecciona cuándo te gustaría el servicio"
+              : "Select when you'd like service"}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Left column: Location Input */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Saved Addresses */}
-            {savedAddresses.length > 0 && (
-              <Card className="p-6 !bg-[#1A2142] !border-[#2C355E]">
-                <h3 className="text-base font-bold text-white mb-4">
-                  {locale === "es" ? "Mis Direcciones" : "Saved Addresses"}
-                </h3>
-                <div className="space-y-2">
-                  {savedAddresses.map(saved => (
-                    <div
-                      key={saved.id}
-                      className={`flex items-center justify-between gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${address === saved.address
-                        ? "border-[#D0B078] bg-[#D0B078]/10"
-                        : "border-[#2C355E] hover:border-[#D0B078]/50"
-                        }`}
-                      onClick={() => handleSelectSaved(saved)}
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-[#D0B078]">{saved.label}</p>
-                        <p className="text-xs text-[#A5B0D1] truncate">{saved.address}</p>
-                        <p className="text-xs text-[#5E698F]">{saved.city}, {saved.state} {saved.zipCode}</p>
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteSaved(saved.id); }}
-                        className="text-[#5E698F] hover:text-red-400 transition-colors flex-shrink-0 p-1"
-                        aria-label="Remove"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+          {/* Left column: Calendar & Time Selection */}
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Calendar */}
+            <Card className="p-4 sm:p-8 relative flex h-full flex-col justify-center !bg-[#1A2142] !border-[#2C355E]">
+              {isLoadingAvailability && (
+                <div className="absolute top-6 right-6 flex items-center gap-2 text-sm text-[#D0B078] animate-fade-in">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#D0B078]"></div>
+                  {locale === "es" ? "Cargando..." : "Loading..."}
                 </div>
+              )}
+
+              {/* Month Navigation */}
+              <div className="flex items-center justify-between mb-8">
+                <button
+                  onClick={() =>
+                    setCurrentMonth(
+                      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
+                    )
+                  }
+                  className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <h2 className="text-xl font-bold text-white capitalize">{monthName}</h2>
+
+                <button
+                  onClick={() =>
+                    setCurrentMonth(
+                      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
+                    )
+                  }
+                  className="p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)] hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-x-1 sm:gap-x-2 gap-y-3 sm:gap-y-5">
+                {/* Week day headers */}
+                {weekDays.map((day) => (
+                  <div key={day} className="text-center text-xs font-semibold uppercase tracking-wider text-[#5E698F] py-2">
+                    {day}
+                  </div>
+                ))}
+
+                {/* Calendar days */}
+                {days.map((date, index) => {
+                  if (!date) {
+                    return <div key={`empty-${index}`} className="aspect-square" />;
+                  }
+
+                  const isAvailable = isDateAvailable(date);
+                  const isSelected =
+                    tempSelectedDate?.toDateString() === date.toDateString();
+                  const isToday = date.toDateString() === new Date().toDateString();
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleDateSelect(date)}
+                      disabled={!isAvailable}
+                      className={`
+                        aspect-square rounded-xl flex items-center justify-center
+                        font-medium text-base sm:text-lg transition-all duration-300
+                        ${isSelected
+                          ? "bg-[#D0B078] text-[#131835] shadow-[0_0_15px_rgba(208,176,120,0.4)]"
+                          : isAvailable
+                            ? "bg-white/5 text-white hover:bg-white/10 border border-[#2C355E] hover:border-[#D0B078]/50"
+                            : "bg-transparent text-[#5E698F] opacity-50 cursor-not-allowed"
+                        }
+                        ${isToday && !isSelected ? "border-[#D0B078]/50" : ""}
+                      `}
+                    >
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Time Windows */}
+            {tempSelectedDate && (
+              <Card className="p-8 animate-fade-in-up !bg-[#1A2142] !border-[#2C355E]">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  {locale === "es"
+                    ? "Selecciona Horario"
+                    : "Select Time"}
+                </h3>
+
+                {isLoadingTimeWindows ? (
+                  <div className="flex items-center justify-center py-8 gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#D0B078]" />
+                    <span className="text-sm text-[#5E698F]">
+                      {locale === "es" ? "Cargando horarios..." : "Loading time slots..."}
+                    </span>
+                  </div>
+                ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                  {timeWindows.map((window) => {
+                    const isSelected = tempSelectedWindow?.slot === window.slot;
+                    const isAvailable = isTimeWindowAvailable(window);
+                    const label = locale === "es" ? window.labelEs : window.label;
+
+                    return (
+                      <button
+                        key={window.slot}
+                        onClick={() => handleWindowSelect(window)}
+                        disabled={!isAvailable}
+                        className={`
+                          p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group
+                          ${!isAvailable
+                            ? "border-[#2C355E] bg-transparent opacity-40 cursor-not-allowed"
+                            : isSelected
+                              ? "border-[#D0B078] bg-[#D0B078]/10 ring-1 ring-[#D0B078]"
+                              : "border-[#2C355E] bg-white/5 hover:bg-white/10 hover:border-[#D0B078]/30"
+                          }
+                        `}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 bg-[#D0B078] rounded-full flex items-center justify-center">
+                              <svg className="w-3 h-3 text-[#131835]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="text-center mt-2 mb-1">
+                          <p className={`font-bold text-lg mb-1 transition-colors ${isSelected ? 'text-[#D0B078]' : 'text-white'}`}>{label}</p>
+                          <p className={`text-xs flex justify-center items-center gap-1 opacity-80 ${!isAvailable ? 'text-[#5E698F]' : isSelected ? 'text-[#D0B078]' : 'text-[#5E698F] group-hover:text-green-400'}`}>
+                            {!isAvailable
+                              ? (locale === "es" ? "Pasado" : "Passed")
+                              : (locale === "es" ? "Disponible" : "Available")}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                )}
               </Card>
             )}
 
-            {/* ZIP Code Input */}
-            <Card className="p-5 sm:p-8 !bg-[#1A2142] !border-[#2C355E]">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </div>
-                {locale === "es" ? "Código Postal" : "ZIP Code"}
-              </h3>
-
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={zipCode}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "").slice(0, 5);
-                    setZipCode(value);
-                    setZipError("");
-                  }}
-                  placeholder={locale === "es" ? "Ej: 33101" : "e.g. 33101"}
-                  className={`
-                    w-full px-5 py-4 text-lg bg-white/5 border rounded-xl placeholder-[#5E698F]
-                    focus:outline-none focus:ring-2 focus:ring-[#D0B078] transition-all duration-300
-                    ${zipError
-                      ? "border-red-500/50 bg-red-500/5"
-                      : isValid
-                        ? "border-green-500/50 bg-green-500/5 focus:border-[#D0B078]"
-                        : "border-[#2C355E] hover:border-white/20"
-                    }
-                  `}
-                  style={{ color: '#FFFFFF', fontSize: '16px' }}
-                  inputMode="numeric"
-                  maxLength={5}
-                />
-
-                {isValidating && (
-                  <div className="flex items-center gap-2 text-sm text-[#5E698F] animate-fade-in">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#D0B078]"></div>
-                    {locale === "es" ? "Verificando área de servicio..." : "Checking service area..."}
-                  </div>
-                )}
-
-                {zipError && (
-                  <div className="flex items-center gap-2 text-sm text-red-400 animate-fade-in">
-                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                    {zipError}
-                  </div>
-                )}
-
-                {isValid && !isValidating && (
-                  <div className="flex items-center gap-2 text-sm text-green-400 animate-fade-in">
-                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            {/* Selection Summary */}
+            {(tempSelectedDate && tempSelectedWindow) && (
+              <Card className="p-6 !bg-[#D0B078]/5 !border-[#D0B078]/30 animate-fade-in-up">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#D0B078]/20 flex-shrink-0 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#D0B078]" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    {locale === "es"
-                      ? "¡Área de servicio confirmada!"
-                      : "Service area confirmed!"}
                   </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Address Input (only show if ZIP is valid) */}
-            {isValid && (
-              <Card className="p-5 sm:p-8 animate-fade-in-up !bg-[#1A2142] !border-[#2C355E]">
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#D0B078]/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-[#D0B078]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    </svg>
+                  <div>
+                    <p className="font-semibold text-white mb-1">
+                      {locale === "es" ? "Tu Cita" : "Your Appointment"}
+                    </p>
+                    <p className="text-white font-medium text-lg">
+                      {tempSelectedDate.toLocaleDateString(locale, {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        timeZone: "America/New_York",
+                      })}
+                    </p>
+                    <p className="text-[#D0B078]">
+                      {locale === "es" ? tempSelectedWindow.labelEs : tempSelectedWindow.label}
+                    </p>
                   </div>
-                  {locale === "es" ? "Dirección del Servicio" : "Service Address"}
-                </h3>
-
-                <div className="space-y-4">
-                  <MapboxAddressInput
-                    onAddressSelect={handleAddressSelect}
-                    initialValue={address}
-                    placeholder={
-                      locale === "es"
-                        ? "Ingresa tu dirección completa"
-                        : "Enter your full address"
-                    }
-                    locale={locale}
-                    zipCode={zipCode}
-                  />
-
-                  {addressError && (
-                    <div className="flex items-center gap-2 text-sm text-red-400 animate-fade-in">
-                      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      {addressError}
-                    </div>
-                  )}
-
-                  {address && (
-                    <div className="mt-4 space-y-3 animate-fade-in">
-                      <div className="p-5 bg-[#D0B078]/5 border border-[#D0B078]/30 rounded-xl">
-                        <p className="text-sm font-semibold text-[#D0B078] mb-1">
-                          {locale === "es" ? "Dirección Seleccionada:" : "Selected Address:"}
-                        </p>
-                        <p className="text-white">{address}</p>
-                      </div>
-
-                      {/* Save address option — only show if not already saved */}
-                      {user && !savedAddresses.some(s => s.address === address) && (
-                        <div className="flex gap-2 items-center">
-                          <input
-                            type="text"
-                            value={saveLabel}
-                            onChange={e => setSaveLabel(e.target.value)}
-                            placeholder={locale === "es" ? "Guardar como (Casa, Trabajo…)" : "Save as (Home, Work…)"}
-                            className="flex-1 px-3 py-2 text-sm bg-white/5 border border-[#2C355E] rounded-lg text-white placeholder-[#5E698F] focus:outline-none focus:border-[#D0B078]"
-                          />
-                          <button
-                            onClick={handleSaveAddress}
-                            disabled={!saveLabel.trim() || saving}
-                            className="px-4 py-2 text-sm font-semibold text-[#D0B078] bg-[#D0B078]/10 border border-[#D0B078]/30 rounded-lg hover:bg-[#D0B078]/20 disabled:opacity-40 transition-all"
-                          >
-                            {saving ? "…" : (locale === "es" ? "Guardar" : "Save")}
-                          </button>
-                        </div>
-                      )}
-                      {user && savedAddresses.some(s => s.address === address) && (
-                        <p className="text-xs text-green-400">✓ {locale === "es" ? "Dirección guardada" : "Address saved"}</p>
-                      )}
-                    </div>
-                  )}
                 </div>
               </Card>
             )}
-
-            {/* Info Box */}
-            <Card className="p-6 !bg-[#1A2142]/50 !border-[#2C355E]">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#D0B078]/10 flex-shrink-0 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#D0B078]" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-bold text-white mb-1">
-                    {locale === "es" ? "Servicio Móvil" : "Mobile Service"}
-                  </p>
-                  <p className="text-[#A5B0D1] leading-relaxed">
-                    {locale === "es"
-                      ? "Nuestros detalladores profesionales llegarán con todo el equipo necesario para ofrecer un servicio premium en tu ubicación."
-                      : "Our professional detailers will arrive fully equipped to provide a premium service at your location."}
-                  </p>
-                </div>
-              </div>
-            </Card>
           </div>
 
           {/* Right column: Summary (sticky) */}
@@ -479,10 +504,10 @@ export default function LocationPage({ params }: LocationPageProps) {
                   fullWidth
                   variant="primary"
                   onClick={handleContinue}
-                  disabled={!isValid || !address}
-                  className={(!isValid || !address) ? 'opacity-50 cursor-not-allowed' : ''}
+                  disabled={!tempSelectedDate || !tempSelectedWindow}
+                  className={(!tempSelectedDate || !tempSelectedWindow) ? 'opacity-50 cursor-not-allowed' : ''}
                 >
-                  {locale === "es" ? "Continuar a Horario" : "Continue to Schedule"}
+                  {locale === "es" ? "Continuar a Revisar" : "Continue to Review"}
                   <svg
                     className="inline-block ml-2 w-5 h-5"
                     fill="none"
@@ -516,7 +541,7 @@ export default function LocationPage({ params }: LocationPageProps) {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  {locale === "es" ? "Volver a Servicio" : "Back to Service"}
+                  {locale === "es" ? "Volver a Ubicación" : "Back to Location"}
                 </Button>
               </div>
             </div>
