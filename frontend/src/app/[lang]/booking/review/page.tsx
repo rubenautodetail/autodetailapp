@@ -497,17 +497,17 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 {/* Service */}
                 <div className="flex justify-between items-start border-b border-[#2C355E] pb-6">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center justify-between mb-1">
                       <p className="text-sm font-medium text-[#8994B8] uppercase tracking-wider">
                         {locale === "es" ? "Servicio" : "Service"}
                       </p>
                       <button
-                      type="button"
-                      onClick={() => router.push(`/${locale}/booking/select`)}
-                      className="text-xs font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
-                    >
-                      {locale === "es" ? "Editar" : "Edit"}
-                    </button>
+                        type="button"
+                        onClick={() => router.push(`/${locale}/booking/select`)}
+                        className="text-sm font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
+                      >
+                        {locale === "es" ? "Editar" : "Edit"}
+                      </button>
                     </div>
                     <p className="text-lg font-bold text-white">
                       {bookingServiceLabel(locale) || selectedService.name}
@@ -579,7 +579,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     <button
                       type="button"
                       onClick={() => router.push(`/${locale}/booking/location`)}
-                      className="text-xs font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
+                      className="text-sm font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
                     >
                       {locale === "es" ? "Editar" : "Edit"}
                     </button>
@@ -608,7 +608,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                     <button
                       type="button"
                       onClick={() => router.push(`/${locale}/booking/schedule`)}
-                      className="text-xs font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
+                      className="text-sm font-semibold text-[#D0B078] hover:text-[#dcc08d] transition-colors"
                     >
                       {locale === "es" ? "Editar" : "Edit"}
                     </button>
@@ -743,8 +743,8 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                 </div>
               )}
 
-              {/* Authoritative per-vehicle pricing */}
-              {bookingVehicles.length > 0 && (
+              {/* Authoritative per-vehicle pricing — only useful once there's more than one vehicle to compare */}
+              {bookingVehicles.length > 1 && (
                 <div className="mt-4 bg-[#D0B078]/5 border border-[#D0B078]/20 rounded-xl p-3" aria-live="polite">
                   <div className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-[#D0B078] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
