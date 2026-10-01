@@ -199,9 +199,11 @@ export default function MapboxAddressInput({
               onMouseDown={() => handleSelect(f)}
               className="px-4 py-3.5 cursor-pointer border-b border-white/5 last:border-0 hover:bg-white/10 active:bg-white/15 transition-colors"
             >
-              <span className="font-medium text-white text-sm">{f.text}</span>
+              <span className="font-medium text-white text-sm">
+                {f.place_name.split(",")[0]}
+              </span>
               <span className="text-[#5E698F] text-sm ml-1">
-                {f.place_name.replace(f.text ?? "", "").replace(/^,\s*/, "")}
+                {f.place_name.split(",").slice(1).join(",").replace(/^\s*/, "")}
               </span>
             </li>
           ))}
