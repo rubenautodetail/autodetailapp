@@ -494,7 +494,7 @@ export default function ServiceSelectionForm({
                                 </button>
                                 <div
                                     ref={serviceCarouselRef}
-                                    className="flex max-h-[420px] flex-col gap-2.5 overflow-y-auto scroll-pt-2 snap-y snap-mandatory pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                    className="flex max-h-[420px] flex-col gap-2.5 overflow-y-auto scroll-pt-2 snap-y snap-mandatory pr-2 gold-scrollbar"
                                 >
                                 {services.map((service) => {
                                     const preview = servicePricePreviews[getServicePricePreviewKey(service)];

@@ -202,6 +202,11 @@ h6 {
 body:has([data-booking-shell]) {
   background-color: #131835;
 }
+.gold-scrollbar {
+    /* Firefox uses these standard properties instead of ::-webkit-scrollbar. */
+    scrollbar-width: thin;
+    scrollbar-color: #D0B078 transparent;
+}
 .gold-scrollbar::-webkit-scrollbar {
     width: 4px;
 }
