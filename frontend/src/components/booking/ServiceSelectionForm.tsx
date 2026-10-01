@@ -766,7 +766,7 @@ export default function ServiceSelectionForm({
 
             {/* Floating Cart (Appears when service is selected) */}
             {selectedService && (
-                <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 md:left-auto md:right-8 z-40 animate-fade-in-up md:w-96 shadow-2xl">
+                <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 md:left-auto md:right-8 z-40 animate-fade-in-up md:w-96 shadow-2xl lg:hidden">
                     <div className="bg-[#1A2142] border border-[#D0B078]/50 rounded-2xl p-3 md:p-4 flex items-center justify-between gap-3 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
                         <div className="min-w-0">
                             <p className="truncate text-xs font-semibold text-white md:text-sm">
