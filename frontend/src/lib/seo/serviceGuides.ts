@@ -531,6 +531,279 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
             es: "Mantenimiento regular de un auto que solo necesita un repaso",
         },
     },
+    "mobile-car-detailing": {
+        seoTitle: {
+            en: "Mobile Car Detailing Miami: We Come to You",
+            es: "Detallado de Autos a Domicilio en Miami: Vamos a Ti",
+        },
+        metaDescription: {
+            en: "Mobile car detailing in Miami-Dade at your home or office. A complete interior and exterior clean in {duration}: what it covers and who it suits. From {price}.",
+            es: "Detallado de autos a domicilio en Miami-Dade, en tu casa u oficina. Una limpieza completa por dentro y por fuera en {duration}: qué cubre y para quién es. Desde {price}.",
+        },
+        heroSub: {
+            en: "A full interior and exterior clean, done wherever your car already is. No drop-off, no waiting room — just a careful, complete detail at your door.",
+            es: "Una limpieza completa por dentro y por fuera, donde ya está tu auto. Sin dejarlo en un taller, sin sala de espera — un detallado completo y cuidadoso en tu puerta.",
+        },
+        quickAnswer: {
+            en: "Mobile car detailing is a complete interior and exterior clean performed at your home or office instead of a shop. It covers a hand wash, wheel and tire clean, interior vacuum and wipe-down, window cleaning and spray wax protection, all in {duration}, so you don't have to drive anywhere or wait around.",
+            es: "El detallado de autos a domicilio es una limpieza completa por dentro y por fuera, hecha en tu casa u oficina en vez de en un taller. Incluye lavado a mano, limpieza de rines y llantas, aspirado e interior, limpieza de vidrios y protección con cera en spray, todo en {duration}, sin que tengas que manejar a ningún lado ni esperar.",
+        },
+        scienceTitle: { en: "What is mobile car detailing?", es: "¿Qué es el detallado de autos a domicilio?" },
+        science: [
+            {
+                en: "A car wash cleans the outside quickly, usually with machines. A detail is slower and more hands-on, reaching places a wash skips — door jambs, wheel wells, interior seams and small surfaces that collect dust and grime over time.",
+                es: "Un lavado limpia el exterior rápido, casi siempre con máquinas. Un detallado es más lento y manual, y llega a lugares que un lavado no toca — los marcos de las puertas, las zonas de las llantas, las costuras del interior y superficies pequeñas que acumulan polvo y mugre con el tiempo.",
+            },
+            {
+                en: "Making it mobile just moves that same careful process to your location. Our team brings its own water and equipment, so the car gets the same hand wash, vacuum and wipe-down it would get at a shop — you just don't have to drive there or sit in a waiting room while it happens.",
+                es: "Hacerlo a domicilio solo mueve ese mismo proceso cuidadoso a tu ubicación. Nuestro equipo llega con su propia agua y equipo, así que el auto recibe el mismo lavado a mano, aspirado y limpieza que tendría en un taller — solo que tú no tienes que manejar hasta allá ni esperar sentado mientras se hace.",
+            },
+        ],
+        keywords: [
+            { en: "Mobile car detailing Miami", es: "Detallado de autos a domicilio en Miami" },
+            { en: "At-home car detail", es: "Detallado de autos en casa" },
+            { en: "Mobile auto detailing near me", es: "Detallado de autos móvil cerca de mí" },
+            { en: "Car wash and detail at your door", es: "Lavado y detallado en tu puerta" },
+            { en: "Office car detailing", es: "Detallado de autos en la oficina" },
+        ],
+        limits: {
+            canTitle: { en: "What mobile detailing covers", es: "Qué cubre el detallado a domicilio" },
+            can: [
+                { en: "A full interior vacuum, wipe-down and window cleaning", es: "Aspirado completo, limpieza y vidrios por dentro" },
+                { en: "A hand wash, wheel and tire clean, and spray wax protection outside", es: "Lavado a mano, limpieza de rines y llantas, y cera en spray por fuera" },
+                { en: "Regular upkeep for a daily driver or a weekend car", es: "Mantenimiento regular para un auto de uso diario o de fin de semana" },
+            ],
+            cannotTitle: { en: "What needs a different service", es: "Lo que necesita otro servicio" },
+            cannot: [
+                { en: "Deep stains, odors or heavy buildup inside (a full detail goes deeper)", es: "Manchas profundas, olores o mucha acumulación por dentro (el detallado completo llega más a fondo)" },
+                { en: "Swirl marks or dull paint (paint enhancement corrects this)", es: "Marcas de remolino o pintura opaca (el pulido de un paso corrige esto)" },
+                { en: "Long-term paint protection (ceramic coating is built for that)", es: "Protección de pintura a largo plazo (para eso está el recubrimiento cerámico)" },
+            ],
+        },
+        benefitsTitle: { en: "Why book mobile car detailing", es: "Por qué reservar el detallado a domicilio" },
+        benefitsIntro: {
+            en: "One visit, inside and out, without leaving your home or office.",
+            es: "Una sola visita, por dentro y por fuera, sin salir de tu casa u oficina.",
+        },
+        benefits: [
+            benefitHome,
+            {
+                icon: "sparkle",
+                t: { en: "Inside and outside, together", es: "Por dentro y por fuera" },
+                d: {
+                    en: "One visit covers the wash, wheels, windows and interior — not just one side of the car.",
+                    es: "Una sola visita cubre el lavado, los rines, los vidrios y el interior — no solo un lado del auto.",
+                },
+            },
+            {
+                icon: "shield",
+                t: { en: "Zero risk", es: "Cero riesgo" },
+                d: {
+                    en: "You inspect the work first. We only charge your card after you approve it.",
+                    es: "Tú revisas el trabajo primero. Solo cobramos tu tarjeta después de que lo apruebes.",
+                },
+            },
+            {
+                icon: "clock",
+                t: { en: "Fits your day", es: "Se ajusta a tu día" },
+                d: {
+                    en: "Done in {duration}, while you work, rest or run errands nearby.",
+                    es: "Se hace en {duration}, mientras trabajas, descansas o haces mandados cerca.",
+                },
+            },
+            {
+                icon: "wallet",
+                t: { en: "Starting price", es: "Precio desde" },
+                d: {
+                    en: "From {price}, with the final price shown before you confirm.",
+                    es: "Desde {price}, con el precio final visible antes de confirmar.",
+                },
+            },
+            {
+                icon: "car",
+                t: { en: "Any daily car", es: "Cualquier auto del día a día" },
+                d: {
+                    en: "Built for the car you drive every day, not just special occasions.",
+                    es: "Pensado para el auto que usas todos los días, no solo para ocasiones especiales.",
+                },
+            },
+        ],
+        careTitle: { en: "Keep it clean between visits", es: "Mantenlo limpio entre visitas" },
+        careIntro: {
+            en: "A few habits make the clean last longer.",
+            es: "Algunos hábitos hacen que la limpieza dure más.",
+        },
+        care: [
+            { en: "Remove trash and loose items after every drive.", es: "Saca la basura y los objetos sueltos después de cada viaje." },
+            { en: "Wipe up spills right away, before they set into the upholstery.", es: "Limpia los derrames de inmediato, antes de que se fijen en la tapicería." },
+            { en: "Park in the shade when you can to protect the paint and interior from the sun.", es: "Estaciona a la sombra cuando puedas para cuidar la pintura y el interior del sol." },
+            { en: "Rinse off salt air or beach sand as soon as possible.", es: "Enjuaga el aire salado o la arena de playa lo antes posible." },
+            { en: "Book your next visit on a regular schedule, so dirt never gets the chance to build up.", es: "Reserva tu próxima visita con regularidad, para que la suciedad nunca llegue a acumularse." },
+        ],
+        faqs: [
+            faqCost({ en: "mobile car detailing", es: "el detallado de autos a domicilio" }),
+            faqTime,
+            faqHome,
+            {
+                q: { en: "What's the difference between this and a full detail?", es: "¿Cuál es la diferencia con el detallado completo?" },
+                a: {
+                    en: "Mobile car detailing covers the essentials inside and out. A full detail goes deeper — shampooing carpets and seats, deeper paint care — and takes longer.",
+                    es: "El detallado a domicilio cubre lo esencial por dentro y por fuera. El detallado completo llega más a fondo — shampoo de alfombras y asientos, más cuidado de pintura — y toma más tiempo.",
+                },
+            },
+            faqCharge,
+        ],
+        bestFor: {
+            en: "A complete interior and exterior clean, wherever you are",
+            es: "Una limpieza completa por dentro y por fuera, donde tú estés",
+        },
+    },
+    "ceramic-coating": {
+        seoTitle: {
+            en: "Ceramic Coating Miami: Long-Term Paint Protection",
+            es: "Recubrimiento Cerámico en Miami: Protección de Pintura a Largo Plazo",
+        },
+        metaDescription: {
+            en: "Professional ceramic coating in Miami. Hydrophobic, UV-resistant protection and a deep gloss finish that lasts years. What it covers and what it can't do. From {price}.",
+            es: "Recubrimiento cerámico profesional en Miami. Protección hidrofóbica, resistente a UV y un brillo profundo que dura años. Qué cubre y qué no hace. Desde {price}.",
+        },
+        heroSub: {
+            en: "A liquid polymer that bonds to your paint and protects it for years — hydrophobic, UV-resistant, and finished with a deep, mirror-like gloss.",
+            es: "Un polímero líquido que se une a tu pintura y la protege por años — hidrofóbico, resistente a UV, y con un brillo profundo como espejo.",
+        },
+        quickAnswer: {
+            en: "Ceramic coating is a liquid polymer applied to your car's paint that chemically bonds to the surface, creating a hard, hydrophobic layer that protects against UV rays, light scratches and everyday grime for years — far longer than wax. It takes {duration} and starts at {price}.",
+            es: "El recubrimiento cerámico es un polímero líquido que se aplica a la pintura y se une químicamente a la superficie, creando una capa dura e hidrofóbica que protege contra rayos UV, rayones leves y suciedad del día a día por años — mucho más que la cera. Toma {duration} y empieza en {price}.",
+        },
+        scienceTitle: { en: "What is ceramic coating?", es: "¿Qué es el recubrimiento cerámico?" },
+        science: [
+            {
+                en: "Wax sits on top of the paint and wears off in weeks. Ceramic coating is different: it's a liquid polymer that chemically bonds to the clear coat, forming a hard, glass-like layer that becomes part of the surface instead of just sitting on it.",
+                es: "La cera queda sobre la pintura y se desgasta en semanas. El recubrimiento cerámico es distinto: es un polímero líquido que se une químicamente al barniz, formando una capa dura, como de vidrio, que pasa a ser parte de la superficie en vez de solo quedar encima.",
+            },
+            {
+                en: "That bond is what makes it hydrophobic — water beads up and rolls off instead of sitting on the paint, taking dirt with it. It also blocks UV rays that fade paint over time and adds a layer of resistance against the light swirl marks that build up from regular washing.",
+                es: "Esa unión es lo que lo hace hidrofóbico — el agua forma gotas y resbala en vez de quedarse sobre la pintura, llevándose la suciedad con ella. También bloquea los rayos UV que desgastan la pintura con el tiempo y agrega resistencia contra las marcas de remolino que se acumulan con los lavados normales.",
+            },
+        ],
+        keywords: [
+            { en: "Ceramic coating Miami", es: "Recubrimiento cerámico en Miami" },
+            { en: "Paint protection coating", es: "Recubrimiento de protección de pintura" },
+            { en: "Hydrophobic car coating", es: "Recubrimiento hidrofóbico para autos" },
+            { en: "Car paint sealant", es: "Sellador de pintura para autos" },
+            { en: "Ceramic pro coating", es: "Recubrimiento cerámico profesional" },
+        ],
+        limits: {
+            canTitle: { en: "What ceramic coating does", es: "Qué hace el recubrimiento cerámico" },
+            can: [
+                { en: "Protects paint from UV fading and everyday grime for years", es: "Protege la pintura contra el desgaste del sol y la suciedad del día a día por años" },
+                { en: "Makes the car hydrophobic and easier to keep clean", es: "Hace el auto hidrofóbico y más fácil de mantener limpio" },
+                { en: "Adds resistance against light swirl marks from washing", es: "Agrega resistencia contra marcas de remolino leves de los lavados" },
+            ],
+            cannotTitle: { en: "What it doesn't do", es: "Lo que no hace" },
+            cannot: [
+                { en: "Make paint scratch-proof — it's scratch-resistant, not immune", es: "No vuelve la pintura a prueba de rayones — es resistente, no inmune" },
+                { en: "Remove existing swirl marks or deep scratches (paint enhancement does that first)", es: "No quita marcas de remolino o rayones profundos existentes (el pulido de un paso hace eso primero)" },
+                { en: "Replace regular washing — the coating still needs care to last", es: "No reemplaza el lavado regular — el recubrimiento igual necesita cuidado para durar" },
+            ],
+        },
+        benefitsTitle: { en: "Why ceramic coating is worth it", es: "Por qué vale la pena el recubrimiento cerámico" },
+        benefitsIntro: {
+            en: "A one-time service that protects your paint for years, not weeks.",
+            es: "Un servicio de una sola vez que protege tu pintura por años, no semanas.",
+        },
+        benefits: [
+            {
+                icon: "shield",
+                t: { en: "Years of protection", es: "Años de protección" },
+                d: {
+                    en: "Unlike wax, a professional coating lasts years, not weeks.",
+                    es: "A diferencia de la cera, un recubrimiento profesional dura años, no semanas.",
+                },
+            },
+            {
+                icon: "droplets",
+                t: { en: "Hydrophobic finish", es: "Acabado hidrofóbico" },
+                d: {
+                    en: "Water and dirt slide off instead of sticking to the paint.",
+                    es: "El agua y la suciedad resbalan en vez de pegarse a la pintura.",
+                },
+            },
+            {
+                icon: "sun",
+                t: { en: "UV protection", es: "Protección UV" },
+                d: {
+                    en: "Blocks the sun damage that fades and dulls paint over time, built for Miami's sun.",
+                    es: "Bloquea el daño del sol que desgasta y opaca la pintura con el tiempo, pensado para el sol de Miami.",
+                },
+            },
+            {
+                icon: "sparkle",
+                t: { en: "Deep, mirror gloss", es: "Brillo profundo de espejo" },
+                d: {
+                    en: "A glass-like shine that goes beyond what wax can achieve.",
+                    es: "Un brillo como de vidrio que va más allá de lo que logra la cera.",
+                },
+            },
+            {
+                icon: "clock",
+                t: { en: "Easier upkeep", es: "Mantenimiento más fácil" },
+                d: {
+                    en: "A coated car stays cleaner longer and washes off faster.",
+                    es: "Un auto recubierto se mantiene limpio más tiempo y se lava más rápido.",
+                },
+            },
+            {
+                icon: "home",
+                t: { en: "Done at our facility", es: "Se hace en nuestro taller" },
+                d: {
+                    en: "This one service is done at our Doral facility, where the application and cure get the controlled space they need.",
+                    es: "Este servicio se hace en nuestro taller en Doral, donde la aplicación y el curado tienen el espacio controlado que necesitan.",
+                },
+            },
+        ],
+        careTitle: { en: "Keep the coating performing", es: "Mantén el recubrimiento funcionando" },
+        careIntro: {
+            en: "A coated car still needs the right kind of care.",
+            es: "Un auto recubierto igual necesita el cuidado correcto.",
+        },
+        care: [
+            { en: "Wash with a pH-neutral soap made for coated paint.", es: "Lava con un jabón de pH neutro hecho para pintura recubierta." },
+            { en: "Avoid automatic brush car washes, which can leave fine scratches over time.", es: "Evita los lavados automáticos con cepillos, que pueden dejar rayones finos con el tiempo." },
+            { en: "Rinse off bird droppings, sap and bug splatter as soon as you can.", es: "Enjuaga el excremento de aves, la savia y los insectos lo antes posible." },
+            { en: "A quick rinse or spray detailer between washes keeps the hydrophobic effect strong.", es: "Un enjuague rápido o un spray detallador entre lavados mantiene fuerte el efecto hidrofóbico." },
+            { en: "Most coatings benefit from an inspection and top-up after a year or two.", es: "La mayoría de los recubrimientos se benefician de una revisión y retoque después de uno o dos años." },
+        ],
+        faqs: [
+            faqCost({ en: "ceramic coating", es: "el recubrimiento cerámico" }),
+            {
+                q: { en: "How long does ceramic coating last?", es: "¿Cuánto dura el recubrimiento cerámico?" },
+                a: {
+                    en: "A professional-grade coating typically lasts two to five years with the right care, far longer than wax or sealant.",
+                    es: "Un recubrimiento de grado profesional suele durar de dos a cinco años con el cuidado correcto, mucho más que la cera o el sellador.",
+                },
+            },
+            {
+                q: { en: "Does ceramic coating make my car scratch-proof?", es: "¿El recubrimiento vuelve mi auto a prueba de rayones?" },
+                a: {
+                    en: "No. It adds resistance against light swirl marks, but it won't prevent deeper scratches from keys, debris or careless washing.",
+                    es: "No. Agrega resistencia contra marcas de remolino leves, pero no evita rayones más profundos por llaves, escombros o lavados descuidados.",
+                },
+            },
+            {
+                q: { en: "Do I still need to wash my car after it's coated?", es: "¿Sigo necesitando lavar mi auto después de recubrirlo?" },
+                a: {
+                    en: "Yes. The coating makes washing easier and less frequent, but regular gentle washing is still what keeps it performing well.",
+                    es: "Sí. El recubrimiento hace el lavado más fácil y menos frecuente, pero lavarlo con regularidad y cuidado es lo que lo mantiene funcionando bien.",
+                },
+            },
+            faqCharge,
+        ],
+        bestFor: {
+            en: "Long-term paint protection and a deep, lasting shine",
+            es: "Protección de pintura a largo plazo y un brillo profundo y duradero",
+        },
+    },
     "interior-detail": {
         seoTitle: {
             en: "Interior Car Detailing Miami: Deep Clean Seats & Carpets",

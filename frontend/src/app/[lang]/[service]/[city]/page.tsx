@@ -6,11 +6,11 @@ import { i18n, type Locale } from '@/i18n-config';
 import { getDictionary } from '@/lib/dictionaries';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
-import { MapPin } from 'lucide-react';
+import { Check, MapPin, X } from 'lucide-react';
 import { getAllLandingParams, resolveLanding } from '@/lib/seo/landing';
 import { SERVICES, t } from '@/lib/seo/services';
 import { NEIGHBORHOODS, getNearbyNeighborhoods } from '@/lib/seo/locations';
-import { SERVICE_GUIDES } from '@/lib/seo/serviceGuides';
+import { SERVICE_GUIDES, type L } from '@/lib/seo/serviceGuides';
 import {
     getCityServiceBusinessSchema,
     getFaqSchema,
@@ -29,6 +29,14 @@ function formatDuration(minutes: number, locale: Locale): string {
     const hourLabel = locale === 'es' ? 'h' : 'hr';
     if (hours === 0) return `${rest} min`;
     return rest === 0 ? `${hours} ${hourLabel}` : `${hours} ${hourLabel} ${rest} min`;
+}
+
+function durationPhrase(minutes: number, locale: Locale): string {
+    return locale === 'es' ? `aproximadamente ${formatDuration(minutes, locale)}` : `about ${formatDuration(minutes, locale)}`;
+}
+
+function fill(text: string, vars: { price: string; duration: string }): string {
+    return text.split('{price}').join(vars.price).split('{duration}').join(vars.duration);
 }
 
 function normalize(lang: string): Locale {
@@ -89,7 +97,18 @@ export default async function ServiceCityPage({
     const waHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${waText}` : null;
 
     const otherServices = SERVICES.filter((s) => s.id !== service.id);
-    const showBestFor = SERVICES.every((s) => SERVICE_GUIDES[s.slug.en]);
+    // The city catalog and the educational guides were named independently, so a
+    // couple of ids differ even though they're the same service — map those here
+    // rather than renaming either catalog (renaming would change live URLs).
+    const GUIDE_KEY_BY_SERVICE_ID: Record<string, string> = {
+        'interior-detailing': 'interior-detail',
+        'exterior-detailing': 'exterior-detail',
+    };
+    const guideKeyFor = (id: string, slugEn: string) => GUIDE_KEY_BY_SERVICE_ID[id] ?? slugEn;
+    const showBestFor = SERVICES.every((s) => SERVICE_GUIDES[guideKeyFor(s.id, s.slug.en)]);
+    const guide = SERVICE_GUIDES[guideKeyFor(service.id, service.slug.en)];
+    const guideVars = { price: `$${service.priceFrom}`, duration: durationPhrase(service.durationMin, locale) };
+    const tg = (text: L): string => fill(text[locale], guideVars);
     const gallery = content.imageUrls && content.imageUrls.length > 1 ? content.imageUrls : [content.imageUrl];
     const steps = es
         ? [
@@ -239,6 +258,38 @@ export default async function ServiceCityPage({
                     <p className="text-lg leading-relaxed text-white/85">{content.quickAnswer}</p>
                 </div>
             </section>
+
+            {/* ── What it is + what it can and can't fix (only for services with a full guide) ── */}
+            {guide && (
+                <section className="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1.2fr_1fr]">
+                    <div>
+                        <h2 className="text-2xl font-semibold sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
+                            {tg(guide.scienceTitle)}
+                        </h2>
+                        <div className="mt-5 max-w-prose space-y-4 text-white/80">
+                            {guide.science.map((p, i) => <p key={i}>{tg(p)}</p>)}
+                        </div>
+                    </div>
+                    <div className="space-y-6 self-start rounded-2xl border border-[#2C355E] bg-[#151B3A] p-6">
+                        <div>
+                            <h3 className="font-semibold text-[#D0B078]">{tg(guide.limits.canTitle)}</h3>
+                            <ul className="mt-3 space-y-2.5 text-white/80">
+                                {guide.limits.can.map((item, i) => (
+                                    <li key={i} className="flex gap-3"><Check aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-[#D0B078]" /><span>{tg(item)}</span></li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold">{tg(guide.limits.cannotTitle)}</h3>
+                            <ul className="mt-3 space-y-2.5 text-white/70">
+                                {guide.limits.cannot.map((item, i) => (
+                                    <li key={i} className="flex gap-3"><X aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-white/50" /><span>{tg(item)}</span></li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* ── Local intro copy ────────────────────────────────────── */}
             <section className="px-6 py-14 sm:py-20">
@@ -407,7 +458,7 @@ export default async function ServiceCityPage({
                         <tbody>
                             {SERVICES.map((s) => {
                                 const isCurrent = s.id === service.id;
-                                const rowGuide = SERVICE_GUIDES[s.slug.en];
+                                const rowGuide = SERVICE_GUIDES[guideKeyFor(s.id, s.slug.en)];
                                 return (
                                     <tr key={s.id} className={`border-t border-[#2C355E] ${isCurrent ? 'bg-[#D0B078]/10' : ''}`}>
                                         <th scope="row" className="px-4 py-3 font-medium">
