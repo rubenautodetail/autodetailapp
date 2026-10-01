@@ -518,7 +518,7 @@ export default function ServiceSelectionForm({
                                         <div
                                             key={service.id}
                                             className={`shrink-0 snap-start transition-all duration-300 ${
-                                                isSelected ? 'w-64 sm:w-72' : 'w-40 sm:w-48'
+                                                isSelected ? 'w-[22rem] sm:w-[26rem]' : 'w-24 sm:w-28'
                                             }`}
                                         >
                                             <ServiceCard
