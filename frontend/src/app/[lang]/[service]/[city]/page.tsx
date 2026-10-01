@@ -81,6 +81,17 @@ export default async function ServiceCityPage({
 
     const otherServices = SERVICES.filter((s) => s.id !== service.id);
     const gallery = content.imageUrls && content.imageUrls.length > 1 ? content.imageUrls : [content.imageUrl];
+    const steps = es
+        ? [
+            { title: 'Reserva en 60 segundos', text: `Elige tu servicio y confirma tu dirección en ${neighborhood.name}.` },
+            { title: 'Llegamos a tu puerta', text: 'Nuestro equipo llega con todo el equipo necesario — tú no mueves nada.' },
+            { title: 'Revisa y aprueba', text: 'Solo pagas cuando apruebas el trabajo terminado.' },
+        ]
+        : [
+            { title: 'Book in 60 seconds', text: `Pick your service and confirm your address in ${neighborhood.name}.` },
+            { title: 'We come to your door', text: "Our team arrives fully equipped — you don't lift a finger." },
+            { title: 'Review and approve', text: 'You only pay once you approve the finished job.' },
+        ];
     const nearby = getNearbyNeighborhoods(neighborhood.slug, 5);
 
     const breadcrumbs = getBreadcrumbSchema(
@@ -185,6 +196,26 @@ export default async function ServiceCityPage({
                                     priority={i === 0}
                                     className="object-cover"
                                 />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── How it works ─────────────────────────────────────────── */}
+            <section className="border-y border-white/5 bg-white/[0.015] px-6 py-14 sm:py-20">
+                <div className="mx-auto max-w-4xl">
+                    <h2 className="mb-10 text-center text-3xl font-bold sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
+                        {es ? 'Cómo funciona' : 'How it works'}
+                    </h2>
+                    <div className="grid gap-8 sm:grid-cols-3">
+                        {steps.map((s, i) => (
+                            <div key={s.title} className="text-center">
+                                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#D0B078] text-sm font-bold text-[#131835]">
+                                    {i + 1}
+                                </div>
+                                <h3 className="mb-1.5 text-base font-semibold">{s.title}</h3>
+                                <p className="text-sm leading-relaxed text-white/60">{s.text}</p>
                             </div>
                         ))}
                     </div>
