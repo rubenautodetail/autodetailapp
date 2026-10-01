@@ -204,11 +204,11 @@ body:has([data-booking-shell]) {
 }
 .gold-scrollbar {
     /* Firefox uses these standard properties instead of ::-webkit-scrollbar. */
-    scrollbar-width: thin;
+    scrollbar-width: auto;
     scrollbar-color: #D0B078 transparent;
 }
 .gold-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
 }
 .gold-scrollbar::-webkit-scrollbar-track {
     background: transparent;
