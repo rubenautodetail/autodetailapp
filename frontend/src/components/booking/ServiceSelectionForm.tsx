@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { useBooking, useBookingStatus, Service, AddOn } from "@/contexts";
 import { AddOnSelector, PricingSummary, ProgressIndicator } from "@/components/booking";
 import { ServiceCard } from "@/components/booking/ServiceCard";
@@ -91,7 +91,7 @@ export default function ServiceSelectionForm({
         const el = serviceCarouselRef.current;
         if (!el) return;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        el.scrollBy({ left: direction * el.clientWidth * 0.6, behavior: reduceMotion ? 'auto' : 'smooth' });
+        el.scrollBy({ top: direction * el.clientHeight * 0.6, behavior: reduceMotion ? 'auto' : 'smooth' });
     };
     // Shown when the customer tries to continue with only a body-style pick
     // (chosen just to preview pricing) instead of a real, fully-detailed vehicle.
@@ -480,21 +480,21 @@ export default function ServiceSelectionForm({
                                     type="button"
                                     onClick={() => scrollServiceCarousel(-1)}
                                     aria-label={locale === "es" ? "Servicio anterior" : "Previous service"}
-                                    className="absolute left-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 -translate-x-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
+                                    className="absolute left-1/2 top-0 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
                                 >
-                                    <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+                                    <ChevronUp aria-hidden="true" className="h-5 w-5" />
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => scrollServiceCarousel(1)}
                                     aria-label={locale === "es" ? "Siguiente servicio" : "Next service"}
-                                    className="absolute right-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
+                                    className="absolute left-1/2 bottom-0 z-10 hidden h-9 w-9 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-[#0f1430]/90 text-white backdrop-blur transition-colors hover:border-[#D0B078] hover:text-[#D0B078] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] sm:flex"
                                 >
-                                    <ChevronRight aria-hidden="true" className="h-5 w-5" />
+                                    <ChevronDown aria-hidden="true" className="h-5 w-5" />
                                 </button>
                                 <div
                                     ref={serviceCarouselRef}
-                                    className="flex gap-2.5 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                    className="flex max-h-[420px] flex-col gap-2.5 overflow-y-auto scroll-pt-2 snap-y snap-mandatory pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                                 >
                                 {services.map((service) => {
                                     const preview = servicePricePreviews[getServicePricePreviewKey(service)];
@@ -517,9 +517,7 @@ export default function ServiceSelectionForm({
                                     return (
                                         <div
                                             key={service.id}
-                                            className={`shrink-0 snap-start transition-all duration-300 ${
-                                                isSelected ? 'w-[22rem] sm:w-[26rem]' : 'w-24 sm:w-28'
-                                            }`}
+                                            className="w-full shrink-0 snap-start"
                                         >
                                             <ServiceCard
                                                 service={service}
