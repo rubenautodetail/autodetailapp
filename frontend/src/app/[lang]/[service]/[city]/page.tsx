@@ -9,7 +9,8 @@ import JsonLd from '@/components/seo/JsonLd';
 import { MapPin } from 'lucide-react';
 import { getAllLandingParams, resolveLanding } from '@/lib/seo/landing';
 import { SERVICES, t } from '@/lib/seo/services';
-import { getNearbyNeighborhoods } from '@/lib/seo/locations';
+import { NEIGHBORHOODS, getNearbyNeighborhoods } from '@/lib/seo/locations';
+import { SERVICE_GUIDES } from '@/lib/seo/serviceGuides';
 import {
     getCityServiceBusinessSchema,
     getFaqSchema,
@@ -20,6 +21,14 @@ export const dynamicParams = false;
 
 export function generateStaticParams() {
     return getAllLandingParams();
+}
+
+function formatDuration(minutes: number, locale: Locale): string {
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    const hourLabel = locale === 'es' ? 'h' : 'hr';
+    if (hours === 0) return `${rest} min`;
+    return rest === 0 ? `${hours} ${hourLabel}` : `${hours} ${hourLabel} ${rest} min`;
 }
 
 function normalize(lang: string): Locale {
@@ -80,6 +89,7 @@ export default async function ServiceCityPage({
     const waHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${waText}` : null;
 
     const otherServices = SERVICES.filter((s) => s.id !== service.id);
+    const showBestFor = SERVICES.every((s) => SERVICE_GUIDES[s.slug.en]);
     const gallery = content.imageUrls && content.imageUrls.length > 1 ? content.imageUrls : [content.imageUrl];
     const steps = es
         ? [
@@ -348,6 +358,75 @@ export default async function ServiceCityPage({
                             ))}
                         </ul>
                     </div>
+                </div>
+            </section>
+
+            {/* ── Areas we serve: every neighborhood, for this same service ── */}
+            <section className="mx-auto max-w-5xl px-6 py-12">
+                <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
+                    {es ? 'Zonas donde trabajamos' : 'Areas we serve'}
+                </h2>
+                <p className="mt-3 max-w-xl text-white/70">
+                    {es
+                        ? 'Reserva este servicio en cualquier zona de Miami-Dade. Elige la tuya para ver los detalles de tu vecindario.'
+                        : 'Book this service anywhere in Miami-Dade. Pick your area to see details for your neighborhood.'}
+                </p>
+                <ul className="mt-6 flex flex-wrap gap-2">
+                    {NEIGHBORHOODS.map((n) => (
+                        <li key={n.slug}>
+                            <Link
+                                href={`/${locale}/${service.slug[locale]}/${n.slug}`}
+                                className={`inline-block rounded-full border px-4 py-2 text-sm transition-colors hover:border-[#D0B078]/60 hover:text-white ${n.slug === neighborhood.slug ? 'border-[#D0B078] text-[#D0B078]' : 'border-[#2C355E] text-white/85'}`}
+                            >
+                                {n.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+
+            {/* ── Compare services ─────────────────────────────────────── */}
+            <section className="mx-auto max-w-5xl px-6 py-12">
+                <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
+                    {es ? '¿Qué servicio es para ti?' : 'Which service fits you?'}
+                </h2>
+                <p className="mt-3 max-w-xl text-white/70">
+                    {es ? 'Compara el tiempo y el precio de cada servicio.' : 'Compare the time and starting price of each service.'}
+                </p>
+                <div className="mt-6 overflow-x-auto rounded-2xl border border-[#2C355E]">
+                    <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+                        <caption className="sr-only">{es ? 'Comparación de servicios' : 'Service comparison'}</caption>
+                        <thead className="bg-[#0f1430] text-white/70">
+                            <tr>
+                                <th scope="col" className="px-4 py-3 font-medium">{es ? 'Servicio' : 'Service'}</th>
+                                <th scope="col" className="px-4 py-3 font-medium">{es ? 'Tiempo' : 'Time'}</th>
+                                <th scope="col" className="px-4 py-3 font-medium">{es ? 'Desde' : 'From'}</th>
+                                {showBestFor && <th scope="col" className="px-4 py-3 font-medium">{es ? 'Ideal para' : 'Best for'}</th>}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {SERVICES.map((s) => {
+                                const isCurrent = s.id === service.id;
+                                const rowGuide = SERVICE_GUIDES[s.slug.en];
+                                return (
+                                    <tr key={s.id} className={`border-t border-[#2C355E] ${isCurrent ? 'bg-[#D0B078]/10' : ''}`}>
+                                        <th scope="row" className="px-4 py-3 font-medium">
+                                            {isCurrent ? (
+                                                <span className="text-[#D0B078]">{t(s.name, locale)}<span className="sr-only">{es ? ' (página actual)' : ' (current page)'}</span></span>
+                                            ) : (
+                                                <Link href={`/${locale}/${s.slug[locale]}/${neighborhood.slug}`} className="rounded underline-offset-4 hover:underline">
+                                                    {t(s.name, locale)}
+                                                </Link>
+                                            )}
+                                        </th>
+                                        <td className="px-4 py-3 text-white/80">{formatDuration(s.durationMin, locale)}</td>
+                                        <td className="px-4 py-3 text-white/80">${s.priceFrom}</td>
+                                        {showBestFor && <td className="px-4 py-3 text-white/70">{rowGuide ? rowGuide.bestFor[locale] : ''}</td>}
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
