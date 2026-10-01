@@ -6,8 +6,7 @@ import { i18n, type Locale } from '@/i18n-config';
 import { getDictionary } from '@/lib/dictionaries';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
-import ImagePlaceholder from '@/components/landing/programmatic/ImagePlaceholder';
-import ServiceImageCarousel from '@/components/ServiceImageCarousel';
+import { MapPin } from 'lucide-react';
 import { getAllLandingParams, resolveLanding } from '@/lib/seo/landing';
 import { SERVICES, t } from '@/lib/seo/services';
 import { getNearbyNeighborhoods } from '@/lib/seo/locations';
@@ -81,6 +80,7 @@ export default async function ServiceCityPage({
     const waHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${waText}` : null;
 
     const otherServices = SERVICES.filter((s) => s.id !== service.id);
+    const gallery = content.imageUrls && content.imageUrls.length > 1 ? content.imageUrls : [content.imageUrl];
     const nearby = getNearbyNeighborhoods(neighborhood.slug, 5);
 
     const breadcrumbs = getBreadcrumbSchema(
@@ -137,71 +137,56 @@ export default async function ServiceCityPage({
                 </div>
             </header>
 
-            {/* ── Hero ───────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden px-6 pt-14 pb-16 sm:pt-20 sm:pb-24">
+            {/* ── Hero: centered local-landing style ──────────────────── */}
+            <section className="relative overflow-hidden px-6 pt-14 pb-10 sm:pt-20">
                 <div className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_90%_at_50%_-10%,rgba(208,176,120,0.14),transparent_60%)]" />
-                <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
-                    <div className="space-y-7">
-                        <div className="dtw-rise inline-flex items-center gap-2 rounded-full border border-[#D0B078]/30 bg-[#D0B078]/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#D0B078]" style={{ animationDelay: '0ms' }}>
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D0B078]" />
-                            {content.heroEyebrow}
-                        </div>
-                        <h1 className="dtw-rise text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl" style={{ fontFamily: 'var(--font-display)', animationDelay: '80ms' }}>
-                            {content.h1.split(' ').map((w, i, a) =>
-                                i >= a.length - 1 ? <span key={i} className="text-gold-gradient">{w}</span> : <span key={i}>{w} </span>
-                            )}
-                        </h1>
-                        <p className="dtw-rise max-w-md text-lg font-light leading-relaxed text-white/75" style={{ animationDelay: '140ms' }}>
-                            {content.heroSub}
-                        </p>
-                        <div className="dtw-rise flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/60" style={{ animationDelay: '180ms' }}>
-                            <span className="text-[#D0B078]">★ 5.0</span>
-                            <span>· {es ? '90+ detalles' : '90+ details'}</span>
-                            <span>· {es ? 'Detalladores verificados' : 'Vetted detailers'}</span>
-                            <span>· {es ? 'Asegurados' : 'Insured'}</span>
-                        </div>
+                <div className="relative mx-auto max-w-5xl text-center">
+                    <div className="dtw-rise mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-[#D0B078]/30 bg-[#D0B078]/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#D0B078]" style={{ animationDelay: '0ms' }}>
+                        <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
+                        {es ? `Ahora sirviendo ${neighborhood.name}` : `Now serving ${neighborhood.name}`}
+                    </div>
+                    <h1 className="dtw-rise text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl" style={{ fontFamily: 'var(--font-display)', animationDelay: '80ms' }}>
+                        {content.h1}
+                    </h1>
+                    <p className="dtw-rise mx-auto mt-4 max-w-xl text-lg font-light leading-relaxed text-white/75" style={{ animationDelay: '140ms' }}>
+                        {content.heroSub}
+                    </p>
 
-                        {/* Locale-aware CTA — ES leads with WhatsApp/price per research */}
-                        <div className="dtw-rise space-y-3 pt-1" style={{ animationDelay: '220ms' }}>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <span className="text-2xl font-bold text-white">{content.priceLabel}</span>
-                                <span className="text-sm text-white/50">· {content.durationLabel}</span>
-                            </div>
-                            <div className="flex flex-col gap-3 sm:flex-row">
-                                {waHref ? (
-                                    <>
-                                        <a href={waHref} className="rounded-full bg-[#25D366] px-6 py-3 text-center text-sm font-semibold text-white transition-transform hover:scale-[1.03]">
-                                            WhatsApp
-                                        </a>
-                                        <Link href={bookHref} className="rounded-full border border-[#D0B078]/40 bg-[#D0B078]/10 px-6 py-3 text-center text-sm font-semibold text-[#D0B078] transition-colors hover:bg-[#D0B078]/20">
-                                            {es ? 'Reservar en línea' : 'Book online'}
-                                        </Link>
-                                    </>
-                                ) : (
-                                    <Link href={bookHref} className="rounded-full bg-[#D0B078] px-7 py-3 text-center text-sm font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.03]">
-                                        {es ? 'Reservar en línea' : 'Book in 60 seconds'}
-                                    </Link>
-                                )}
-                            </div>
+                    <div className="dtw-rise mx-auto mt-8 flex max-w-lg flex-col items-center justify-between gap-4 rounded-2xl border border-[#D0B078]/25 bg-white/[0.03] px-6 py-5 sm:flex-row" style={{ animationDelay: '200ms' }}>
+                        <div className="text-left">
+                            <p className="text-xs uppercase tracking-widest text-[#D0B078]">{es ? `Precio en ${neighborhood.name}` : `${neighborhood.name} pricing`}</p>
+                            <p className="text-2xl font-bold">{content.priceLabel} <span className="text-sm font-normal text-white/50">· {content.durationLabel}</span></p>
+                        </div>
+                        <div className="flex gap-2">
+                            {waHref && (
+                                <a href={waHref} className="rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.03]">WhatsApp</a>
+                            )}
+                            <Link href={bookHref} className="rounded-full bg-[#D0B078] px-5 py-2.5 text-sm font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.03]">
+                                {es ? 'Reservar' : 'Book now'}
+                            </Link>
                         </div>
                     </div>
+                </div>
+            </section>
 
-                    <div className="dtw-rise" style={{ animationDelay: '120ms' }}>
-                        {content.imageUrls && content.imageUrls.length > 1 ? (
-                            <ServiceImageCarousel
-                                images={content.imageUrls}
-                                alt={es ? `${service.name.es} en ${neighborhood.name}` : `${service.name.en} in ${neighborhood.name}`}
-                                aspect="aspect-[4/5]"
-                            />
-                        ) : (
-                            <ImagePlaceholder
-                                src={content.imageUrl}
-                                alt={es ? `${service.name.es} en ${neighborhood.name}` : `${service.name.en} in ${neighborhood.name}`}
-                                prompt={`Premium cinematic photo of a professional mobile car detailer working on a luxury car in ${neighborhood.name}, Miami. Deep navy and champagne-gold color grade, golden-hour light, glossy wet paint reflections, Lux branded van softly blurred in background. Editorial, high-end, shallow depth of field.`}
-                                aspect="aspect-[4/5]"
-                                priority
-                            />
-                        )}
+            {/* ── Photo gallery: local proof, dedicated strip ─────────── */}
+            <section className="px-6 pb-4">
+                <div className="mx-auto max-w-5xl">
+                    <p className="mb-4 text-center text-xs uppercase tracking-widest text-[#D0B078]">
+                        {es ? `Trabajo reciente en ${neighborhood.name}` : `Recent work in ${neighborhood.name}`}
+                    </p>
+                    <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 gold-scrollbar">
+                        {gallery.map((src, i) => (
+                            <div key={src} className="relative aspect-[4/3] w-64 shrink-0 snap-start overflow-hidden rounded-2xl sm:w-80">
+                                <Image
+                                    src={src}
+                                    alt={es ? `${service.name.es} en ${neighborhood.name} ${i + 1}` : `${service.name.en} in ${neighborhood.name} ${i + 1}`}
+                                    fill
+                                    priority={i === 0}
+                                    className="object-cover"
+                                />
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
