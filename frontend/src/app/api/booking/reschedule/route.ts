@@ -55,13 +55,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cannot reschedule this booking" }, { status: 400 });
     }
 
-    // 2-hour restriction
+    // 1-hour restriction
     const bookingDate = new Date(booking.date);
     const now = new Date();
     const hoursUntilBooking = (bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    if (hoursUntilBooking < 2) {
+    if (hoursUntilBooking < 1) {
       return NextResponse.json(
-        { error: "Rescheduling must be done at least 2 hours before the appointment" },
+        { error: "Rescheduling must be done at least 1 hour before the appointment" },
         { status: 400 }
       );
     }

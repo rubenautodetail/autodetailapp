@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Cannot cancel this booking" }, { status: 400 });
   }
 
-  // Determine if cancellation is within 4 hours (25% penalty applies)
+  // Determine if cancellation is within 3 hours (25% penalty applies)
   // Combine date + time_window for accurate comparison in Eastern time
   const now = new Date();
   const nowET = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     appointmentET = new Date(new Date(booking.date).toLocaleString("en-US", { timeZone: "America/New_York" }));
   }
   const hoursUntilBooking = (appointmentET.getTime() - nowET.getTime()) / (1000 * 60 * 60);
-  const isLateCancellation = hoursUntilBooking < 4 &&
+  const isLateCancellation = hoursUntilBooking < 3 &&
     booking.status !== "pending_payment" && booking.status !== "pending";
 
   // Process Stripe cancellation / refund (best-effort — never block the cancellation)

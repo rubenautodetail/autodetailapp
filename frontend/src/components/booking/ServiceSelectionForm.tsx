@@ -574,7 +574,7 @@ export default function ServiceSelectionForm({
                                         </svg>
                                     </div>
                                     <p className="font-semibold text-white text-sm">
-                                        {locale === "es" ? "Cancelación 24h" : "Cancel 24h Before"}
+                                        {locale === "es" ? "Cancela gratis hasta 3h antes" : "Cancel free up to 3h before"}
                                     </p>
                                 </div>
 

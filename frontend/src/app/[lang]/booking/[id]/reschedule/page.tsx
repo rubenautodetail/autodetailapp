@@ -180,20 +180,20 @@ export default function ReschedulePage() {
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <p className="text-red-300 text-sm">
             {isEs
-              ? "No puedes reprogramar con menos de 2 horas de anticipación."
-              : "You cannot reschedule less than 2 hours before your appointment."}
+              ? "No puedes reprogramar con menos de 1 hora de anticipación."
+              : "You cannot reschedule less than 1 hour before your appointment."}
           </p>
         </div>
       ) : (
         <>
-          {/* Contextual warning when within 24h */}
-          {booking && (new Date(booking.date).getTime() - Date.now()) / (1000 * 60 * 60) < 4 && (
+          {/* Contextual warning when within 3h */}
+          {booking && (new Date(booking.date).getTime() - Date.now()) / (1000 * 60 * 60) < 3 && (
             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex gap-2 mb-4">
               <CalendarClock className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
               <p className="text-green-300 text-xs">
                 {isEs
-                  ? "Tu cita es en menos de 4 horas. Reprogramar es gratis, pero cancelar aplicaría un cargo del 25%."
-                  : "Your appointment is less than 4 hours away. Rescheduling is free, but cancelling would incur a 25% fee."}
+                  ? "Tu cita es en menos de 3 horas. Reprogramar es gratis, pero cancelar aplicaría un cargo del 25%."
+                  : "Your appointment is less than 3 hours away. Rescheduling is free, but cancelling would incur a 25% fee."}
               </p>
             </div>
           )}
@@ -214,16 +214,16 @@ export default function ReschedulePage() {
                   <CalendarClock className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                   <p>
                     {isEs
-                      ? "Reprogramación gratuita hasta 2 horas antes de la cita. No se permite reprogramar con menos de 2 horas de anticipación."
-                      : "Free rescheduling up to 2 hours before your appointment. Rescheduling is not available less than 2 hours before."}
+                      ? "Reprogramación gratuita hasta 1 hora antes de la cita. No se permite reprogramar con menos de 1 hora de anticipación."
+                      : "Free rescheduling up to 1 hour before your appointment. Rescheduling is not available less than 1 hour before."}
                   </p>
                 </div>
                 <div className="flex items-start gap-2">
                   <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                   <p>
                     {isEs
-                      ? "Cancelación gratuita hasta 4 horas antes de la cita. Cancelaciones con menos de 4 horas incurren un cargo del 25% del servicio."
-                      : "Free cancellation up to 4 hours before your appointment. Cancellations within 4 hours incur a 25% service fee."}
+                      ? "Cancelación gratuita hasta 3 horas antes de la cita. Cancelaciones con menos de 3 horas incurren un cargo del 25% del servicio."
+                      : "Free cancellation up to 3 hours before your appointment. Cancellations within 3 hours incur a 25% service fee."}
                   </p>
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function ReschedulePage() {
                 const dateStr = `${y}-${m}-${d}`;
                 const isPast = dateObj < today;
                 const hoursAway = (dateObj.getTime() - Date.now()) / (1000 * 60 * 60);
-                const isDisabled = isPast || hoursAway < 2;
+                const isDisabled = isPast || hoursAway < 1;
                 const isSelected = selectedDate === dateStr;
 
                 return (

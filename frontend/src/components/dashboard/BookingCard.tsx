@@ -122,8 +122,8 @@ export function BookingCard({
     const safePrice = Number.isFinite(price) ? price : 0;
 
     const hoursUntil = hoursFromNow(date, time);
-    const within4h = hoursUntil < 4;
-    const within2h = hoursUntil < 2;
+    const within3h = hoursUntil < 3;
+    const within1h = hoursUntil < 1;
     const isPast = hoursUntil < 0;
 
     const displayTime = formatTimeWindow(time, isEs);
@@ -153,9 +153,9 @@ export function BookingCard({
 
     // Statuses where cancel/reschedule are available
     const canCancel = ['pending_payment', 'pending', 'pending_assignment', 'confirmed'].includes(status) && !isPast;
-    const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within2h && !isPast;
+    const canReschedule = ['pending', 'pending_assignment', 'confirmed'].includes(status) && !within1h && !isPast;
     // Late cancellation (<4h) incurs 25% penalty, but is always allowed
-    const hasLatePenalty = status !== 'pending_payment' && status !== 'pending' && within4h && !isPast;
+    const hasLatePenalty = status !== 'pending_payment' && status !== 'pending' && within3h && !isPast;
 
     return (
         <motion.div
@@ -287,16 +287,16 @@ export function BookingCard({
                                                 <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                                                 <p>
                                                     {isEs
-                                                        ? 'Cancelación gratuita hasta 4 horas antes de la cita. Cancelaciones con menos de 4 horas incurren un cargo del 25% del servicio.'
-                                                        : 'Free cancellation up to 4 hours before your appointment. Cancellations within 4 hours incur a 25% service fee.'}
+                                                        ? 'Cancelación gratuita hasta 3 horas antes de la cita. Cancelaciones con menos de 3 horas incurren un cargo del 25% del servicio.'
+                                                        : 'Free cancellation up to 3 hours before your appointment. Cancellations within 3 hours incur a 25% service fee.'}
                                                 </p>
                                             </div>
                                             <div className="flex items-start gap-2">
                                                 <CalendarClock className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                                                 <p>
                                                     {isEs
-                                                        ? 'Reprogramación gratuita hasta 2 horas antes de la cita. No se permite reprogramar con menos de 2 horas de anticipación.'
-                                                        : 'Free rescheduling up to 2 hours before your appointment. Rescheduling is not available less than 2 hours before.'}
+                                                        ? 'Reprogramación gratuita hasta 1 hora antes de la cita. No se permite reprogramar con menos de 1 hora de anticipación.'
+                                                        : 'Free rescheduling up to 1 hour before your appointment. Rescheduling is not available less than 1 hour before.'}
                                                 </p>
                                             </div>
                                         </div>
@@ -377,8 +377,8 @@ export function BookingCard({
                                             </div>
                                             <p className="text-xs text-red-300/90">
                                                 {isEs
-                                                    ? `Se te cobrará $${(safePrice * 0.25).toFixed(2)} (25% de $${safePrice.toFixed(2)}) por cancelar con menos de 4 horas de anticipación. Se reembolsará el 75% restante.`
-                                                    : `You will be charged $${(safePrice * 0.25).toFixed(2)} (25% of $${safePrice.toFixed(2)}) for cancelling less than 4 hours before your appointment. The remaining 75% will be refunded.`}
+                                                    ? `Se te cobrará $${(safePrice * 0.25).toFixed(2)} (25% de $${safePrice.toFixed(2)}) por cancelar con menos de 3 horas de anticipación. Se reembolsará el 75% restante.`
+                                                    : `You will be charged $${(safePrice * 0.25).toFixed(2)} (25% of $${safePrice.toFixed(2)}) for cancelling less than 3 hours before your appointment. The remaining 75% will be refunded.`}
                                             </p>
                                         </>
                                     ) : (
