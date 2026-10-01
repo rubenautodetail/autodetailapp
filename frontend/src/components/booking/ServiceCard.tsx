@@ -14,7 +14,6 @@
 import React, { useState } from 'react';
 import { Service } from '@/contexts';
 import { Card } from '@/components/ui/Card';
-import { Check } from 'lucide-react';
 
 const DESCRIPTION_TRUNCATE_LENGTH = 110;
 
@@ -73,13 +72,9 @@ export function ServiceCard({
                 }
             }}
         >
-            {isSelected && (
-                <div className="absolute top-3 right-3 hidden bg-[#D0B078] text-[#131835] p-1 rounded-full shadow-md sm:block">
-                    <Check className="w-4 h-4" />
-                </div>
-            )}
-
-            <div className="flex items-center justify-between gap-3 sm:mb-3 sm:block sm:pr-6">
+            {/* Desktop top row: service name, centered meta caption, and View details
+                where the selected checkmark used to sit. */}
+            <div className="flex items-center justify-between gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-baseline sm:gap-3">
                 <div className="min-w-0">
                     <h3 className={`text-sm sm:text-base font-bold leading-tight break-words ${isSelected ? 'text-[#D0B078]' : 'text-[#FFFFFF]'}`}>
                         {service.name}
@@ -90,26 +85,29 @@ export function ServiceCard({
                         {service.duration} {isEs ? 'min' : 'mins'}
                         {metaCaption ? ` · ${metaCaption}` : ''}
                     </p>
-
-                    {/* Desktop price block */}
-                    <div className="mt-1 hidden w-full sm:flex sm:items-start sm:justify-between sm:gap-2" aria-live="polite">
-                        {/* Re-keyed on the amount so the flash replays each time the price moves. */}
-                        <span key={`${visiblePrice}-${isEstimate}`} className="price-changed shrink-0">
-                            {isEstimate && (
-                                <span className="mr-1 text-sm font-semibold text-[#8994B8]">
-                                    {isEs ? 'Desde' : 'From'}
-                                </span>
-                            )}
-                            <span className="text-[#A5B0D1] text-sm font-semibold">$</span>
-                            <span className={`text-xl font-bold ml-0.5 ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
-                                {(Number(visiblePrice) || 0).toFixed(2)}
-                            </span>
-                        </span>
-                        <p className="min-w-0 flex-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[#D0B078]">
-                            {metaCaption}
-                        </p>
-                    </div>
                 </div>
+
+                {metaCaption && (
+                    <p className="hidden whitespace-nowrap text-sm sm:block sm:text-base font-bold uppercase tracking-wide text-[#D0B078]">
+                        {metaCaption}
+                    </p>
+                )}
+
+                {description && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsExpanded((prev) => !prev);
+                        }}
+                        aria-expanded={isExpanded}
+                        className="hidden whitespace-nowrap text-right text-sm sm:block sm:text-base font-bold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors"
+                    >
+                        {isExpanded
+                            ? isEs ? 'Ocultar detalles' : 'Hide details'
+                            : isEs ? 'Ver detalles' : 'View details'}
+                    </button>
+                )}
 
                 {/* Mobile right edge: price plus selection circle. */}
                 <div className="flex shrink-0 items-center gap-2.5 sm:hidden" aria-live="polite">
@@ -136,6 +134,21 @@ export function ServiceCard({
                 </div>
             </div>
 
+            {/* Desktop price row */}
+            <div className="mt-1 hidden sm:block" aria-live="polite">
+                <span key={`${visiblePrice}-${isEstimate}`} className="price-changed">
+                    {isEstimate && (
+                        <span className="mr-1 text-sm font-semibold text-[#8994B8]">
+                            {isEs ? 'Desde' : 'From'}
+                        </span>
+                    )}
+                    <span className="text-[#A5B0D1] text-sm font-semibold">$</span>
+                    <span className={`text-xl font-bold ml-0.5 ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
+                        {(Number(visiblePrice) || 0).toFixed(2)}
+                    </span>
+                </span>
+            </div>
+
             {/* Mobile disclosure: the description is on demand, not in the way. */}
             {description && (
                 <button
@@ -145,7 +158,7 @@ export function ServiceCard({
                         setIsExpanded((prev) => !prev);
                     }}
                     aria-expanded={isExpanded}
-                    className="mt-1 self-start text-[11px] sm:text-xs font-semibold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors"                >
+                    className="mt-1 self-start text-[11px] font-semibold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors sm:hidden"                >
                     {isExpanded
                         ? isEs ? 'Ocultar detalles' : 'Hide details'
                         : isEs ? 'Ver detalles' : 'View details'}
