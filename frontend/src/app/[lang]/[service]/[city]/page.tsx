@@ -104,9 +104,9 @@ export default async function ServiceCityPage({
         'interior-detailing': 'interior-detail',
         'exterior-detailing': 'exterior-detail',
     };
-    const guideKeyFor = (id: string, slugEn: string) => GUIDE_KEY_BY_SERVICE_ID[id] ?? slugEn;
-    const showBestFor = SERVICES.every((s) => SERVICE_GUIDES[guideKeyFor(s.id, s.slug.en)]);
-    const guide = SERVICE_GUIDES[guideKeyFor(service.id, service.slug.en)];
+    const guideKeyFor = (id: string) => GUIDE_KEY_BY_SERVICE_ID[id] ?? id;
+    const showBestFor = SERVICES.every((s) => SERVICE_GUIDES[guideKeyFor(s.id)]);
+    const guide = SERVICE_GUIDES[guideKeyFor(service.id)];
     const guideVars = { price: `$${service.priceFrom}`, duration: durationPhrase(service.durationMin, locale) };
     const tg = (text: L): string => fill(text[locale], guideVars);
     const gallery = content.imageUrls && content.imageUrls.length > 1 ? content.imageUrls : [content.imageUrl];
@@ -458,7 +458,7 @@ export default async function ServiceCityPage({
                         <tbody>
                             {SERVICES.map((s) => {
                                 const isCurrent = s.id === service.id;
-                                const rowGuide = SERVICE_GUIDES[guideKeyFor(s.id, s.slug.en)];
+                                const rowGuide = SERVICE_GUIDES[guideKeyFor(s.id)];
                                 return (
                                     <tr key={s.id} className={`border-t border-[#2C355E] ${isCurrent ? 'bg-[#D0B078]/10' : ''}`}>
                                         <th scope="row" className="px-4 py-3 font-medium">
