@@ -317,8 +317,8 @@ export default function CustomerDashboardPage() {
                             {reschedulable.length === 0 ? (
                                 <p className="text-text-secondary text-sm leading-relaxed">
                                     {isEs
-                                        ? 'No tienes citas disponibles para reprogramar. Solo se puede reprogramar con 2+ horas de anticipación.'
-                                        : 'No upcoming appointments available to reschedule. Rescheduling requires 2+ hours notice.'}
+                                        ? 'No tienes citas disponibles para reprogramar. Solo se puede reprogramar con 1+ hora de anticipación.'
+                                        : 'No upcoming appointments available to reschedule. Rescheduling requires 1+ hour notice.'}
                                 </p>
                             ) : (
                                 <div className="space-y-2">
