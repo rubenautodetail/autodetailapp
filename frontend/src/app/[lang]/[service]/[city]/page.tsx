@@ -251,6 +251,41 @@ export default async function ServiceCityPage({
                 </div>
             </section>
 
+            {/* ── Also in this city: quick links to the other 5 services, as a moving strip ── */}
+            <section
+                className="overflow-hidden border-b border-white/5 bg-white/[0.01] py-10 sm:py-12"
+                aria-labelledby="also-in-city-heading"
+            >
+                <div className="mb-7 space-y-2 px-6 text-center">
+                    <p id="also-in-city-heading" className="text-xs font-medium uppercase tracking-widest text-[#D0B078]">
+                        {es ? `Más servicios en ${neighborhood.name}` : `More services in ${neighborhood.name}`}
+                    </p>
+                </div>
+                <div className="[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+                    <div className="flex w-max animate-brand-marquee hover:[animation-play-state:paused] motion-reduce:w-full motion-reduce:animate-none motion-reduce:justify-center">
+                        {[0, 1].map((groupIndex) => (
+                            <ul
+                                key={groupIndex}
+                                className={`flex shrink-0 items-center gap-10 pr-10 sm:gap-14 sm:pr-14 motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:gap-6 motion-reduce:pr-0 ${groupIndex === 1 ? 'motion-reduce:hidden' : ''}`}
+                                aria-hidden={groupIndex === 1 ? true : undefined}
+                            >
+                                {otherServices.map((s) => (
+                                    <li key={`${groupIndex}-${s.id}`} className="shrink-0">
+                                        <Link
+                                            href={`/${locale}/${s.slug[locale]}/${neighborhood.slug}`}
+                                            className="whitespace-nowrap text-sm font-medium text-white/60 transition-colors hover:text-[#D0B078]"
+                                            tabIndex={groupIndex === 1 ? -1 : undefined}
+                                        >
+                                            {t(s.name, locale)}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ── Quick answer (featured-snippet / AI answer) ─────────── */}
             <section className="px-6">
                 <div className="mx-auto max-w-3xl rounded-2xl border border-[#D0B078]/20 bg-white/[0.02] p-6 sm:p-8">
