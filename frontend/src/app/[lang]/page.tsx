@@ -9,7 +9,7 @@ import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
 import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
 import { NavMenu } from '@/components/landing/NavMenu';
-import { getLocalBusinessSchema, getServiceCatalogSchema } from '@/lib/seo/schema';
+import { getLocalBusinessSchema, getServiceCatalogSchema, getBreadcrumbSchema } from '@/lib/seo/schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -133,6 +133,7 @@ export default async function LandingPage({
                         services.map((s) => ({ name: s.title, description: s.desc })),
                         locale
                     ),
+                    getBreadcrumbSchema([{ name: locale === 'es' ? 'Inicio' : 'Home', path: '' }], locale),
                 ]}
             />
             {/* ─── Hero ──────────────────────────────────────────────────────── */}
@@ -563,9 +564,15 @@ export default async function LandingPage({
                         <p>
                             <span className="text-white/45 font-medium">Lux Auto Detail Services</span>
                         </p>
-                        <a href="mailto:support@dtailwash.com" className="hover:text-white/60 transition-colors">
-                            support@dtailwash.com
-                        </a>
+                        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-start">
+                            <a href="mailto:support@dtailwash.com" className="hover:text-white/60 transition-colors">
+                                support@dtailwash.com
+                            </a>
+                            <span aria-hidden="true">·</span>
+                            <a href="tel:+13059884449" className="hover:text-white/60 transition-colors">
+                                (305) 988-4449
+                            </a>
+                        </div>
                     </div>
                     <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">
                         <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
