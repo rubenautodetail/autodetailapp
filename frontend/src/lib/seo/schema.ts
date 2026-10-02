@@ -67,8 +67,20 @@ export function getLocalBusinessSchema(
         currenciesAccepted: 'USD',
         paymentAccepted: 'Credit Card',
         image: `${APP_URL}/opengraph-image`,
+        telephone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || undefined,
         areaServed: AREAS_SERVED.map((name) => ({ '@type': 'City', name })),
         knowsLanguage: ['en', 'es'],
+        openingHoursSpecification: {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            opens: '09:00',
+            closes: '18:00',
+        },
+        aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '5',
+            reviewCount: '8',
+        },
     };
 }
 

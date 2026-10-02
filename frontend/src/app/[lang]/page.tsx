@@ -563,6 +563,9 @@ export default async function LandingPage({
                         <p>
                             <span className="text-white/45 font-medium">Lux Auto Detail Services</span>
                         </p>
+                        <a href="mailto:support@dtailwash.com" className="hover:text-white/60 transition-colors">
+                            support@dtailwash.com
+                        </a>
                     </div>
                     <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">
                         <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
