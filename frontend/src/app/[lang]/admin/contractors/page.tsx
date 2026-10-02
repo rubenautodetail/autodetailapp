@@ -558,16 +558,21 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                     )}
                                 </div>
 
-                                {(!detailModal.service_type_ids || detailModal.service_type_ids.length === 0) ? (
+                                {catalogServices.length === 0 ? (
                                     <p className="text-sm text-gray-400 italic">{t.skillsNoRequest}</p>
                                 ) : (
                                     <>
-                                        <p className="text-xs text-gray-400 mb-2">{t.skillsRequested}</p>
+                                        <p className="text-xs text-gray-400 mb-2">
+                                            {isEs
+                                                ? "Marca cualquier servicio para asignarlo — no tiene que haberlo pedido el contratista."
+                                                : "Check any service to assign it — the contractor doesn't have to have requested it."}
+                                        </p>
                                         <div className="space-y-1.5">
-                                            {(detailModal.service_type_ids ?? []).map((svcId) => {
-                                                const svc = catalogServices.find((s) => s.id === svcId);
-                                                const svcName = svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${svcId}`;
+                                            {catalogServices.map((svc) => {
+                                                const svcId = svc.id;
+                                                const svcName = isEs && svc.name_es ? svc.name_es : svc.name;
                                                 const isChecked = skillVerifyIds.includes(svcId);
+                                                const wasRequested = (detailModal.service_type_ids ?? []).includes(svcId);
                                                 return (
                                                     <label key={svcId} className="flex items-center gap-2 cursor-pointer group">
                                                         <input
@@ -585,6 +590,11 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                         <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
                                                             {svcName}
                                                         </span>
+                                                        {wasRequested ? (
+                                                            <span className="text-xs text-gray-400">{isEs ? "(solicitado)" : "(requested)"}</span>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400">{isEs ? "(no solicitado)" : "(not requested)"}</span>
+                                                        )}
                                                         {(detailModal.verified_service_type_ids ?? []).includes(svcId) && !detailModal.skills_pending_review && (
                                                             <span className="text-xs text-green-600 font-medium">✓ verified</span>
                                                         )}
