@@ -9,6 +9,7 @@
  * Side-effects:
  *   - Sets `verified_service_type_ids` on the profile.
  *   - Clears `skills_pending_review` flag.
+ *   - Clears `skills_removed_ids` (the admin has now seen what the contractor removed).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -62,6 +63,7 @@ export async function PATCH(
             .update({
                 verified_service_type_ids,
                 skills_pending_review: false,
+                skills_removed_ids: [],
             })
             .eq('id', id)
             .select('id, full_name, service_type_ids, verified_service_type_ids, skills_pending_review')

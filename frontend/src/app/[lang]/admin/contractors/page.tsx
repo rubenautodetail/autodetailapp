@@ -37,6 +37,8 @@ interface Contractor {
     service_type_ids: number[] | null;
     verified_service_type_ids: number[] | null;
     skills_pending_review: boolean | null;
+    // Previously-approved services the contractor removed since the last admin review
+    skills_removed_ids: number[] | null;
 }
 
 type FilterStatus = "all" | "pending" | "active" | "rejected";
@@ -265,7 +267,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
             if (res.ok) {
                 // Optimistically update the detail modal
                 setDetailModal((prev) =>
-                    prev ? { ...prev, verified_service_type_ids: verifiedIds, skills_pending_review: false } : prev
+                    prev ? { ...prev, verified_service_type_ids: verifiedIds, skills_pending_review: false, skills_removed_ids: [] } : prev
                 );
                 // Refresh list so badge in table updates
                 await fetchContractors();
@@ -379,27 +381,46 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    {c.service_type_ids && c.service_type_ids.length > 0 ? (
-                                                        <div className="grid grid-cols-2 gap-1 max-h-[110px] overflow-y-auto p-1 border border-gray-200 rounded-lg">
-                                                            {c.service_type_ids.map((svcId) => {
-                                                                const svc = catalogServices.find((s) => s.id === svcId);
-                                                                const name = svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${svcId}`;
-                                                                const isVerified = (c.verified_service_type_ids ?? []).includes(svcId);
-                                                                return (
-                                                                    <span key={svcId} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold ${c.skills_pending_review
-                                                                            ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                                                                            : isVerified
-                                                                                ? "bg-green-50 text-green-700 border border-green-200"
-                                                                                : "bg-gray-100 text-gray-500"
-                                                                        }`}>
-                                                                        {isVerified && !c.skills_pending_review ? "✓ " : c.skills_pending_review ? "⚡ " : ""}{name}
-                                                                    </span>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-xs text-gray-400">—</span>
-                                                    )}
+                                                    {(() => {
+                                                        const claimed = c.service_type_ids ?? [];
+                                                        const verified = c.verified_service_type_ids ?? [];
+                                                        // What the contractor chose, what the admin has approved (including skills
+                                                        // the admin assigned that the contractor never claimed), and what the
+                                                        // contractor removed since the last review.
+                                                        type ChipKind = "verified" | "added" | "unverified" | "removed";
+                                                        const chips: { id: number; kind: ChipKind }[] = [
+                                                            ...claimed.map((id): { id: number; kind: ChipKind } => ({
+                                                                id,
+                                                                kind: verified.includes(id) ? "verified" : c.skills_pending_review ? "added" : "unverified",
+                                                            })),
+                                                            ...verified
+                                                                .filter((id) => !claimed.includes(id))
+                                                                .map((id): { id: number; kind: ChipKind } => ({ id, kind: "verified" })),
+                                                            ...(c.skills_removed_ids ?? [])
+                                                                .filter((id) => !claimed.includes(id))
+                                                                .map((id): { id: number; kind: ChipKind } => ({ id, kind: "removed" })),
+                                                        ];
+                                                        if (chips.length === 0) return <span className="text-xs text-gray-400">—</span>;
+                                                        return (
+                                                            <div className="grid grid-cols-2 gap-1 max-h-[110px] overflow-y-auto p-1 border border-gray-200 rounded-lg">
+                                                                {chips.map(({ id, kind }) => {
+                                                                    const svc = catalogServices.find((s) => s.id === id);
+                                                                    const name = svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${id}`;
+                                                                    const style =
+                                                                        kind === "verified" ? "bg-green-50 text-green-700 border border-green-200"
+                                                                        : kind === "added" ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                                                                        : kind === "removed" ? "bg-red-50 text-red-600 border border-red-200 line-through"
+                                                                        : "bg-gray-100 text-gray-500";
+                                                                    const mark = kind === "verified" ? "✓ " : kind === "added" ? "+ " : kind === "removed" ? "− " : "";
+                                                                    return (
+                                                                        <span key={`${kind}-${id}`} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold ${style}`}>
+                                                                            {mark}{name}
+                                                                        </span>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
                                                     {fmtDate(c.created_at, locale)}
@@ -562,6 +583,37 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                     <p className="text-sm text-gray-400 italic">{t.skillsNoRequest}</p>
                                 ) : (
                                     <>
+                                        {(() => {
+                                            const removedIds = detailModal.skills_removed_ids ?? [];
+                                            const verifiedNow = detailModal.verified_service_type_ids ?? [];
+                                            const addedIds = detailModal.skills_pending_review
+                                                ? (detailModal.service_type_ids ?? []).filter((id) => !verifiedNow.includes(id))
+                                                : [];
+                                            if (removedIds.length === 0 && addedIds.length === 0) return null;
+                                            const nameOf = (id: number) => {
+                                                const svc = catalogServices.find((s) => s.id === id);
+                                                return svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${id}`;
+                                            };
+                                            return (
+                                                <div className="mb-3 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs space-y-1">
+                                                    <p className="font-semibold text-yellow-700">
+                                                        {isEs ? "Cambios del técnico" : "Contractor's changes"}
+                                                    </p>
+                                                    {removedIds.length > 0 && (
+                                                        <p className="text-red-600">
+                                                            {isEs ? "Quitó: " : "Removed: "}
+                                                            {removedIds.map(nameOf).join(", ")}
+                                                        </p>
+                                                    )}
+                                                    {addedIds.length > 0 && (
+                                                        <p className="text-yellow-700">
+                                                            {isEs ? "Pidió agregar (necesita tu aprobación): " : "Asked to add (needs your approval): "}
+                                                            {addedIds.map(nameOf).join(", ")}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                         <p className="text-xs text-gray-400 mb-2">
                                             {isEs
                                                 ? "Marca cualquier servicio para asignarlo — no tiene que haberlo pedido el contratista."

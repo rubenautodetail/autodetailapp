@@ -155,14 +155,28 @@ export async function PATCH(req: NextRequest) {
             updates.bank_account_type = body.bank_account_type.trim() || null;
         }
         // Skills: contractor updates their service type selections
-        // Sets skills_pending_review=true so admin knows to review.
-        // verified_service_type_ids is NOT touched here — only admin can set that.
+        // Sets skills_pending_review=true so admin knows to review any newly
+        // added ones. Adding a skill still needs admin verification — but if
+        // the contractor removes one they previously had verified, that
+        // removal takes effect immediately (no reason to require admin
+        // approval just to stop being matched for a service they no longer
+        // want). So verified_service_type_ids is pruned down to only the IDs
+        // still present in the new selection; it's never added to here.
         if (body.service_type_ids !== undefined) {
             if (!Array.isArray(body.service_type_ids) || body.service_type_ids.some((v) => typeof v !== 'number')) {
                 return NextResponse.json({ error: 'service_type_ids must be an array of numbers' }, { status: 400 });
             }
             updates.service_type_ids = body.service_type_ids;
             updates.skills_pending_review = true;
+
+            const { data: current } = await supabase
+                .from('profiles')
+                .select('verified_service_type_ids')
+                .eq('id', user.id)
+                .single<{ verified_service_type_ids: number[] | null }>();
+            const stillClaimed = new Set(body.service_type_ids);
+            updates.verified_service_type_ids =
+                (current?.verified_service_type_ids ?? []).filter((id) => stillClaimed.has(id));
         }
 
         if (Object.keys(updates).length === 0) {
