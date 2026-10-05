@@ -520,7 +520,15 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const handleSaveSkills = async () => {
         setSavingSkills(true);
         try {
-            await patchProfile({ service_type_ids: selectedServiceIds });
+            const result = (await patchProfile({ service_type_ids: selectedServiceIds })) as {
+                profile?: { verified_service_type_ids?: number[] | null };
+            };
+            // The server drops approval for anything just unchecked and never adds any
+            // here — keep the green checks in step with what is actually still approved.
+            setVerifiedServiceIds(
+                result?.profile?.verified_service_type_ids ??
+                    verifiedServiceIds.filter((id) => selectedServiceIds.includes(id))
+            );
             setSkillsPendingReview(true);
             toast.success(labels.skillsSaved);
         } catch {
@@ -772,7 +780,7 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                             )}
                                         </span>
                                         <span className="text-sm font-medium flex-1">{svc.name}</span>
-                                        {isVerified && !skillsPendingReview && (
+                                        {isVerified && isSelected && (
                                             <span className="text-[9px] font-bold uppercase text-green-400 border border-green-400/30 rounded-full px-1.5 py-0.5">✓</span>
                                         )}
                                     </button>
