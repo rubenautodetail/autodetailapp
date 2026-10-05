@@ -443,7 +443,13 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
             setIsAvailable(p.is_available ?? true);
 
             // Skills
-            setSelectedServiceIds(p.service_type_ids ?? []);
+            // Show everything the contractor is approved for as selected — including
+            // services the admin assigned that they never picked themselves — so what
+            // they see matches what they will actually be matched for. Unchecking one
+            // of these opts them out of it (see PATCH /api/contractors/profile).
+            setSelectedServiceIds(
+                Array.from(new Set([...(p.service_type_ids ?? []), ...(p.verified_service_type_ids ?? [])]))
+            );
             setVerifiedServiceIds(p.verified_service_type_ids ?? []);
             setSkillsPendingReview(p.skills_pending_review ?? false);
 

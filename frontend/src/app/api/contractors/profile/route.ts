@@ -158,13 +158,18 @@ export async function PATCH(req: NextRequest) {
         // Sets skills_pending_review=true so admin knows to review.
         //
         // Adding a skill still needs admin verification (it is never added to
-        // verified_service_type_ids here). Removing one the contractor had
-        // approved takes effect right away — there is no reason to make them
+        // verified_service_type_ids here). Removing one the contractor was
+        // approved for takes effect right away — there is no reason to make them
         // wait for admin approval to stop being matched for work they no longer
         // want — and it is recorded in skills_removed_ids so the admin can see
-        // exactly what was removed. Only skills the contractor themself
-        // un-selected are touched: skills the admin assigned that the
-        // contractor never claimed are left alone.
+        // exactly what was removed.
+        //
+        // The settings screen shows every approved service as selected (including
+        // ones the admin assigned that the contractor never picked), so an approved
+        // service that is missing from the submitted selection was unchecked by the
+        // contractor. Caveat: a settings page left open from before the admin
+        // approved something will not include it and will drop it on save — that
+        // shows up to the admin as a removal.
         if (body.service_type_ids !== undefined) {
             if (!Array.isArray(body.service_type_ids) || body.service_type_ids.some((v) => typeof v !== 'number')) {
                 return NextResponse.json({ error: 'service_type_ids must be an array of numbers' }, { status: 400 });
@@ -174,10 +179,9 @@ export async function PATCH(req: NextRequest) {
 
             const { data: current } = await supabase
                 .from('profiles')
-                .select('service_type_ids, verified_service_type_ids, skills_removed_ids')
+                .select('verified_service_type_ids, skills_removed_ids')
                 .eq('id', user.id)
                 .single<{
-                    service_type_ids: number[] | null;
                     verified_service_type_ids: number[] | null;
                     skills_removed_ids: number[] | null;
                 }>();
@@ -186,11 +190,10 @@ export async function PATCH(req: NextRequest) {
             // rather than risk wiping it.
             if (current) {
                 const newlyClaimed = new Set(body.service_type_ids);
-                const unselected = (current.service_type_ids ?? []).filter((id) => !newlyClaimed.has(id));
                 const verified = current.verified_service_type_ids ?? [];
-                const removedVerified = unselected.filter((id) => verified.includes(id));
+                const removedVerified = verified.filter((id) => !newlyClaimed.has(id));
 
-                updates.verified_service_type_ids = verified.filter((id) => !unselected.includes(id));
+                updates.verified_service_type_ids = verified.filter((id) => newlyClaimed.has(id));
                 // Keep earlier unseen removals, drop any the contractor has re-selected.
                 updates.skills_removed_ids = Array.from(
                     new Set([...(current.skills_removed_ids ?? []), ...removedVerified])
