@@ -229,6 +229,14 @@ export default async function ServiceCityPage({
                             </div>
                         ))}
                     </div>
+                    <p className="mt-3 text-center">
+                        <Link
+                            href={`/${locale}/gallery`}
+                            className="text-sm text-[#D0B078] underline-offset-4 transition-colors hover:text-[#dcc08d] hover:underline"
+                        >
+                            {es ? 'Ver más de nuestro trabajo →' : 'See more of our work →'}
+                        </Link>
+                    </p>
                 </div>
             </section>
 
