@@ -575,6 +575,9 @@ export default async function LandingPage({
                         </div>
                     </div>
                     <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">
+                        <Link href={`/${locale}/gallery`} className="hover:text-white/60 transition-colors">
+                            {locale === 'es' ? 'Galería' : 'Gallery'}
+                        </Link>
                         <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Términos' : 'Terms'}
                         </Link>

@@ -56,6 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...urls('', 'weekly', 1.0),
         // Booking flow
         ...urls('/booking/select', 'weekly', 0.9),
+        // Gallery of real jobs
+        ...urls('/gallery', 'monthly', 0.6),
         // Contractor landing
         ...urls('/contractors', 'monthly', 0.8),
         // Auth

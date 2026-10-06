@@ -222,6 +222,7 @@ export default async function ServiceCityPage({
                                     src={src}
                                     alt={es ? `${service.name.es} en ${neighborhood.name} ${i + 1}` : `${service.name.en} in ${neighborhood.name} ${i + 1}`}
                                     fill
+                                    sizes="(min-width: 640px) 320px, 256px"
                                     priority={i === 0}
                                     className="object-cover"
                                 />
