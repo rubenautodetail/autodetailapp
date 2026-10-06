@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import { getAllLandingParams } from '@/lib/seo/landing';
 import { createServiceClient } from '@/lib/supabase/server';
 import { servicePath } from '@/lib/seo/serviceNames';
+import { galleryPath } from '@/lib/gallery';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 const LOCALES = ['en', 'es'] as const;
@@ -57,7 +58,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // Booking flow
         ...urls('/booking/select', 'weekly', 0.9),
         // Gallery of real jobs
-        ...urls('/gallery', 'monthly', 0.6),
+        ...LOCALES.map((locale) => ({
+            url: `${APP_URL}${galleryPath(locale)}`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as ChangeFreq,
+            priority: 0.6,
+        })),
         // Contractor landing
         ...urls('/contractors', 'monthly', 0.8),
         // Auth

@@ -11,6 +11,7 @@ import { getAllLandingParams, resolveLanding } from '@/lib/seo/landing';
 import { SERVICES, t } from '@/lib/seo/services';
 import { NEIGHBORHOODS, getNearbyNeighborhoods } from '@/lib/seo/locations';
 import { SERVICE_GUIDES, type L } from '@/lib/seo/serviceGuides';
+import { galleryPath } from '@/lib/gallery';
 import {
     getCityServiceBusinessSchema,
     getFaqSchema,
@@ -231,7 +232,7 @@ export default async function ServiceCityPage({
                     </div>
                     <p className="mt-3 text-center">
                         <Link
-                            href={`/${locale}/gallery`}
+                            href={galleryPath(locale)}
                             className="text-sm text-[#D0B078] underline-offset-4 transition-colors hover:text-[#dcc08d] hover:underline"
                         >
                             {es ? 'Ver más de nuestro trabajo →' : 'See more of our work →'}

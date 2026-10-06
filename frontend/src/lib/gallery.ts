@@ -15,6 +15,11 @@ const PHOTO_SETS = [
     { id: 'exterior-detailing', prefix: 'exterior-detailing', count: 5 },
 ] as const;
 
+/** The gallery's address in each language (Spanish uses a Spanish word, like the rest of the site). */
+export function galleryPath(locale: Locale): string {
+    return locale === 'es' ? '/es/galeria' : '/en/gallery';
+}
+
 export interface GalleryPhoto {
     src: string;
     category: string;

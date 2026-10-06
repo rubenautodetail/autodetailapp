@@ -7,6 +7,7 @@ import { createServiceClient, createClient } from '@/lib/supabase/server';
 import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
+import { galleryPath } from '@/lib/gallery';
 import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
 import { NavMenu } from '@/components/landing/NavMenu';
 import { getLocalBusinessSchema, getServiceCatalogSchema, getBreadcrumbSchema } from '@/lib/seo/schema';
@@ -575,7 +576,7 @@ export default async function LandingPage({
                         </div>
                     </div>
                     <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-2">
-                        <Link href={`/${locale}/gallery`} className="hover:text-white/60 transition-colors">
+                        <Link href={galleryPath(locale)} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Galería' : 'Gallery'}
                         </Link>
                         <Link href={`/${locale}/terms`} className="hover:text-white/60 transition-colors">
