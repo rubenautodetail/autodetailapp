@@ -210,7 +210,7 @@ export const SERVICES: DetailService[] = [
             en: 'Restore cloudy, yellowed headlights to like-new clarity — better visibility, better looks, in under 2 hours. This is a small fix that makes a big difference every time you drive at night. ZERO RISK — inspect first, then authorize the payment.',
             es: 'Restaura tus faros opacos y amarillentos a una claridad como nueva — mejor visibilidad, mejor apariencia, en menos de 2 horas. Es un arreglo pequeño que hace una gran diferencia cada vez que manejas de noche. CERO RIESGO — primero revisa, después autorizas el pago.',
         },
-        priceFrom: 120,
+        priceFrom: 100,
         durationMin: 120,
         includes: [
             { en: 'Deep cleaning to remove dirt, debris & contaminants', es: 'Limpieza profunda para eliminar suciedad, residuos y contaminantes' },

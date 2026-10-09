@@ -66,9 +66,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })),
         // Contractor landing
         ...urls('/contractors', 'monthly', 0.8),
-        // Auth
-        ...urls('/login', 'monthly', 0.5),
-        ...urls('/register', 'monthly', 0.5),
         // Legal
         ...urls('/privacy', 'yearly', 0.3),
         ...urls('/terms', 'yearly', 0.3),
