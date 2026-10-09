@@ -2,6 +2,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { headers } from 'next/headers';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import Script from 'next/script';
+import ContactClickTracker from '@/components/analytics/ContactClickTracker';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -46,6 +47,7 @@ export default async function RootLayout({
           {children}
         </Providers>
         {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
+        {GA_MEASUREMENT_ID && <ContactClickTracker />}
         {CLARITY_PROJECT_ID && (
           <Script id="microsoft-clarity" strategy="afterInteractive">
             {`(function(c,l,a,r,i,t,y){
