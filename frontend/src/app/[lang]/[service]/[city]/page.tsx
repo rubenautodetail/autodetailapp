@@ -6,7 +6,8 @@ import { i18n, type Locale } from '@/i18n-config';
 import { getDictionary } from '@/lib/dictionaries';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
-import { Check, MapPin, X } from 'lucide-react';
+import { Check, MapPin, Phone, X } from 'lucide-react';
+import { CITY_PACKAGES, PACKAGE_SERVICE_IDS } from '@/lib/seo/cityHero';
 import { getAllLandingParams, resolveLanding } from '@/lib/seo/landing';
 import { SERVICES, t } from '@/lib/seo/services';
 import { NEIGHBORHOODS, getNearbyNeighborhoods } from '@/lib/seo/locations';
@@ -74,6 +75,7 @@ export async function generateMetadata({
 }
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER; // digits only, e.g. 13055551234
+const PHONE = (process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+13059884449').trim();
 
 export default async function ServiceCityPage({
     params,
@@ -96,6 +98,8 @@ export default async function ServiceCityPage({
             : `Hi, I'd like ${service.name.en} in ${neighborhood.name}.`
     );
     const waHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${waText}` : null;
+    const isShop = service.id === 'ceramic-coating';
+    const showPackages = PACKAGE_SERVICE_IDS.includes(service.id);
 
     const otherServices = SERVICES.filter((s) => s.id !== service.id);
     // The city catalog and the educational guides were named independently, so a
@@ -193,19 +197,76 @@ export default async function ServiceCityPage({
                         {content.heroSub}
                     </p>
 
-                    <div className="dtw-rise mx-auto mt-8 flex max-w-lg flex-col items-center justify-between gap-4 rounded-2xl border border-[#D0B078]/25 bg-white/[0.03] px-6 py-5 sm:flex-row" style={{ animationDelay: '200ms' }}>
-                        <div className="text-left">
-                            <p className="text-xs uppercase tracking-widest text-[#D0B078]">{es ? `Precio en ${neighborhood.name}` : `${neighborhood.name} pricing`}</p>
-                            <p className="text-2xl font-bold">{content.priceLabel} <span className="text-sm font-normal text-white/50">· {content.durationLabel}</span></p>
-                        </div>
-                        <div className="flex gap-2">
-                            {waHref && (
-                                <a href={waHref} className="rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.03]">WhatsApp</a>
-                            )}
-                            <Link href={bookHref} className="rounded-full bg-[#D0B078] px-5 py-2.5 text-sm font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.03]">
-                                {es ? 'Reservar' : 'Book now'}
-                            </Link>
-                        </div>
+                    <div className="dtw-rise mx-auto mt-6 grid max-w-md grid-cols-2 gap-2" style={{ animationDelay: '200ms' }}>
+                        <a
+                            href={`tel:${PHONE}`}
+                            className={`flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-base font-semibold text-[#131835] transition-transform hover:scale-[1.02] ${waHref ? '' : 'col-span-2'}`}
+                        >
+                            <Phone aria-hidden="true" className="h-4 w-4" />
+                            {es ? 'Llamar' : 'Call'}
+                        </a>
+                        {waHref && (
+                            <a href={waHref} className="flex items-center justify-center rounded-xl bg-[#25D366] px-4 py-3 text-base font-semibold text-white transition-transform hover:scale-[1.02]">
+                                WhatsApp
+                            </a>
+                        )}
+                        <Link
+                            href={bookHref}
+                            className="col-span-2 rounded-xl bg-[#D0B078] px-4 py-3.5 text-base font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.02]"
+                        >
+                            {es ? 'Reserva en línea en 60 seg →' : 'Book online in 60 sec →'}
+                        </Link>
+                    </div>
+                    <p className="mt-3 text-sm text-white/55">
+                        <span className="font-semibold text-[#7BE3A4]">{es ? '✓ Pagas después de aprobar' : '✓ Pay after you approve'}</span>
+                        {es ? ' · Español / English' : ' · English / Español'}
+                    </p>
+
+                    <div className="mx-auto mt-8 max-w-md text-left">
+                        <p className="text-xs uppercase tracking-widest text-[#D0B078]">
+                            {es ? `Precios en ${neighborhood.name}` : `${neighborhood.name} prices`}
+                        </p>
+                        {showPackages ? (
+                            <ul className="mt-3 space-y-3">
+                                {CITY_PACKAGES.map((p) => (
+                                    <li key={p.key}>
+                                        <Link
+                                            href={bookHref}
+                                            className={`relative flex items-center justify-between gap-4 rounded-2xl border bg-white/[0.03] px-4 py-3.5 transition-colors hover:border-[#D0B078]/60 ${p.recommended ? 'border-[#D0B078]' : 'border-white/10'}`}
+                                        >
+                                            {p.recommended && (
+                                                <span className="absolute -top-2.5 right-3 rounded-md bg-[#D0B078] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#131835]">
+                                                    {es ? 'RECOMENDADO' : 'RECOMMENDED'}
+                                                </span>
+                                            )}
+                                            <span>
+                                                <span className="block font-semibold">{p.name[locale]}</span>
+                                                <span className="mt-0.5 block text-sm text-white/55">{p.desc[locale]}</span>
+                                            </span>
+                                            <span className="shrink-0 text-right">
+                                                <span className="block text-[11px] text-white/50">{es ? 'desde' : 'from'}</span>
+                                                <span className="text-xl font-bold">${p.price}</span>
+                                            </span>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className="mt-3 flex items-center justify-between gap-4 rounded-2xl border border-[#D0B078] bg-white/[0.03] px-4 py-3.5">
+                                <span>
+                                    <span className="block font-semibold">{t(service.name, locale)}</span>
+                                    <span className="mt-0.5 block text-sm text-white/55">
+                                        {isShop
+                                            ? (es ? 'En nuestro taller · Doral, FL' : 'In-shop · Doral, FL')
+                                            : (es ? `A domicilio · ${content.durationLabel}` : `At your location · ${content.durationLabel}`)}
+                                    </span>
+                                </span>
+                                <span className="shrink-0 text-right">
+                                    <span className="block text-[11px] text-white/50">{es ? 'desde' : 'from'}</span>
+                                    <span className="text-xl font-bold">${service.priceFrom}</span>
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>
