@@ -13,7 +13,7 @@ export const CONTENT_SECURITY_POLICY = [
     "https://*.supabase.co wss://*.supabase.co",
     "https://api.mapbox.com https://events.mapbox.com",
     "https://api-us-west-2.hygraph.com",
-    "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
+    "https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com",
     "https://*.clarity.ms https://c.bing.com",
   ].join(" "),
   "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com https://images.unsplash.com https://images.hygraph.com https://*.graphassets.com https://*.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com",
