@@ -38,19 +38,20 @@ export default function NavMenuClient({ locale, services }: NavMenuClientProps) 
                     {locale === 'es' ? 'Servicios' : 'Services'}
                     <span className="text-[10px] text-white/50">▾</span>
                 </button>
-                {servicesOpen && (
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-64 rounded-2xl border border-white/10 bg-[#151B3A] shadow-xl p-2 z-30">
-                        {services.map((service) => (
-                            <Link
-                                key={service.href}
-                                href={service.href}
-                                className="block px-4 py-2.5 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
-                            >
-                                {service.name}
-                            </Link>
-                        ))}
-                    </div>
-                )}
+                {/* Always in the HTML so Google can follow the links; only shown on hover. */}
+                <div
+                    className={`${servicesOpen ? 'block' : 'hidden'} absolute left-1/2 -translate-x-1/2 top-full mt-3 w-64 rounded-2xl border border-white/10 bg-[#151B3A] shadow-xl p-2 z-30`}
+                >
+                    {services.map((service) => (
+                        <Link
+                            key={service.href}
+                            href={service.href}
+                            className="block px-4 py-2.5 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                            {service.name}
+                        </Link>
+                    ))}
+                </div>
             </div>
 
             <Link href={`/${locale}/locations`} className={navLinkClass}>
