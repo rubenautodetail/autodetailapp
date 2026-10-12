@@ -85,14 +85,14 @@ export const NEIGHBORHOODS: Neighborhood[] = [
     },
     {
         slug: 'miami-beach',
-        name: 'Miami Beach',
+        name: 'Miami Beach, FL',
         zips: ['33139', '33140', '33141', '33154'],
         label: { en: 'Miami Beach, FL', es: 'Miami Beach, FL' },
         blurb: {
-            en: 'Salt air and sand are hard on paint. We come to your condo or rental in Miami Beach to wash, decontaminate, and protect before the damage sets in.',
-            es: 'La sal y la arena dañan la pintura. Vamos a tu condominio o renta en Miami Beach para lavar, descontaminar y proteger antes de que aparezca el daño.',
+            en: 'Salt air, sand and strong sun are hard on paint and interiors. We detail cars across Miami Beach — South Beach, Mid-Beach and North Beach — in condo garages, vacation rentals, office parking lots and home driveways. We bring our own water and equipment, so all you need to do is give us access to your car.',
+            es: 'La sal, la arena y el sol fuerte dañan la pintura y el interior. Detallamos autos en todo Miami Beach — South Beach, Mid-Beach y North Beach — en garajes de condominios, rentas vacacionales, parqueos de oficinas y entradas de casas. Llevamos nuestra propia agua y equipo, así que solo necesitas darnos acceso a tu auto.',
         },
-        landmarks: ['Ocean Drive', 'Lincoln Road', 'South Pointe Park'],
+        landmarks: ['Ocean Drive', 'Lincoln Road', 'South Pointe Park', 'Mid-Beach', 'North Beach'],
         spanishFirst: false,
         priority: 0.85,
     },
