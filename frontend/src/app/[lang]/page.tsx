@@ -10,6 +10,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import { galleryPath } from '@/lib/gallery';
 import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
 import { NavMenu } from '@/components/landing/NavMenu';
+import HalloweenEffect from '@/components/seasonal/HalloweenEffect';
 import { getLocalBusinessSchema, getServiceCatalogSchema, getBreadcrumbSchema } from '@/lib/seo/schema';
 
 export const dynamic = 'force-dynamic';
@@ -127,6 +128,7 @@ export default async function LandingPage({
 
     return (
         <div className="min-h-screen bg-[#131835] text-white overflow-x-hidden">
+            <HalloweenEffect />
             <JsonLd
                 data={[
                     getLocalBusinessSchema(dict.common.siteName, dict.common.tagline, locale),
