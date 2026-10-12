@@ -73,13 +73,8 @@ export function getLocalBusinessSchema(
         openingHoursSpecification: {
             '@type': 'OpeningHoursSpecification',
             dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            opens: '09:00',
+            opens: '08:00',
             closes: '18:00',
-        },
-        aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: '5',
-            reviewCount: '8',
         },
     };
 }
@@ -130,7 +125,7 @@ export function getCityServiceBusinessSchema(
         currenciesAccepted: 'USD',
         paymentAccepted: 'Credit Card',
         telephone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || undefined,
-        areaServed: { '@type': 'City', name: `${cityName}, FL` },
+        areaServed: { '@type': 'City', name: cityName.endsWith(', FL') ? cityName : `${cityName}, FL` },
         knowsLanguage: ['en', 'es'],
         provider: { '@id': `${APP_URL}/#organization` },
         offers: {
@@ -142,11 +137,6 @@ export function getCityServiceBusinessSchema(
                 minPrice: priceFrom,
                 priceCurrency: 'USD',
             },
-        },
-        aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: '5',
-            reviewCount: '8',
         },
     };
 }
