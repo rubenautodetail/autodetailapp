@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { servicePath } from '@/lib/seo/serviceNames';
 import { MapPin, Truck, Coffee } from 'lucide-react';
 import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
@@ -124,12 +125,13 @@ export default async function LandingPage({
             price: `From $${Math.round(s.base_price)}`,
             icon: SERVICE_ICONS[s.name] ?? SERVICE_ICONS[Object.keys(SERVICE_ICONS).find(k => s.name.toLowerCase().includes(k.toLowerCase())) ?? ''] ?? ['\u26a1', '\ud83e\udea1', '\u2728', '\ud83c\udfc6'][i] ?? '\u2728',
             image: serviceImages[i]?.imageUrl,
+            href: servicePath(s, locale) as string | undefined,
         }))
         : [
-            { ...dict.home.services.express, icon: '\u26a1', image: serviceImages[0]?.imageUrl || '/images/services/mobile-car-detailing.png' },
-            { ...dict.home.services.interior, icon: '\ud83e\udea1', image: serviceImages[1]?.imageUrl || '/images/services/interior-car-detailing.png' },
-            { ...dict.home.services.exterior, icon: '\u2728', image: serviceImages[2]?.imageUrl || '/images/services/exterior-car-detailing.png' },
-            { ...dict.home.services.full, icon: '\ud83c\udfc6', image: serviceImages[3]?.imageUrl || '/images/services/ceramic-coating.png' },
+            { ...dict.home.services.express, icon: '\u26a1', image: serviceImages[0]?.imageUrl || '/images/services/mobile-car-detailing.png', href: undefined as string | undefined },
+            { ...dict.home.services.interior, icon: '\ud83e\udea1', image: serviceImages[1]?.imageUrl || '/images/services/interior-car-detailing.png', href: undefined as string | undefined },
+            { ...dict.home.services.exterior, icon: '\u2728', image: serviceImages[2]?.imageUrl || '/images/services/exterior-car-detailing.png', href: undefined as string | undefined },
+            { ...dict.home.services.full, icon: '\ud83c\udfc6', image: serviceImages[3]?.imageUrl || '/images/services/ceramic-coating.png', href: undefined as string | undefined },
         ];
 
     const steps = [
@@ -404,6 +406,14 @@ export default async function LandingPage({
                                                 })}
 
                                         </ul>
+                                        {service.href && (
+                                            <Link
+                                                href={service.href}
+                                                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#D0B078] hover:underline"
+                                            >
+                                                {locale === 'es' ? 'Ver servicio completo' : 'See full service'} <span aria-hidden="true">→</span>
+                                            </Link>
+                                        )}
                                     </div>
                                     <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-auto">
                                         <span className="text-[#D0B078] font-bold text-base">{service.price}</span>
