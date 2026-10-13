@@ -14,6 +14,7 @@
 import React, { useState } from 'react';
 import { Service } from '@/contexts';
 import { Card } from '@/components/ui/Card';
+import { slugify, toDisplayName } from '@/lib/seo/serviceNames';
 
 const DESCRIPTION_TRUNCATE_LENGTH = 110;
 
@@ -44,6 +45,9 @@ export function ServiceCard({
     const description = service.description ?? '';
     const displayDescription = description;
     const visiblePrice = displayPrice ?? service.basePrice;
+    // service.name already comes in the customer's language, so this matches the
+    // address of the full service page (/en/services/express-detail, /es/services/detallado-express).
+    const fullServiceHref = `/${locale}/services/${slugify(toDisplayName(service.name))}`;
     const metaCaption = isPriceLoading
         ? isEs ? 'Actualizando precio…' : 'Updating price…'
         : priceCaption;
@@ -191,6 +195,17 @@ export function ServiceCard({
                             );
                         })}
                 </ul>
+                {/* Opens in a new tab so the customer keeps their booking progress. */}
+                <a
+                    href={fullServiceHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#D0B078] hover:underline"
+                >
+                    {isEs ? 'Ver servicio completo' : 'See full service'} <span aria-hidden="true">→</span>
+                </a>
             </div>
 
             <div className="hidden items-center justify-between mt-auto pt-3 border-t border-[#2C355E] gap-2 sm:flex">
