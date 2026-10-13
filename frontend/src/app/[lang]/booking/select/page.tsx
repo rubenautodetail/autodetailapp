@@ -92,8 +92,12 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const locale = (lang === 'es' || lang === 'en') ? lang : 'en';
 
   return {
-    title: locale === 'es' ? 'Seleccionar Servicio | DetailWash' : 'Select Service | DetailWash',
+    title: locale === 'es' ? 'Reservar Detallado a Domicilio' : 'Book Mobile Car Detailing',
     description: locale === 'es' ? 'Elige el paquete de detallado perfecto para tu vehículo.' : 'Choose the perfect detailing package for your vehicle.',
+    alternates: {
+      canonical: `/${locale}/booking/select`,
+      languages: { en: '/en/booking/select', es: '/es/booking/select' },
+    },
   };
 }
 

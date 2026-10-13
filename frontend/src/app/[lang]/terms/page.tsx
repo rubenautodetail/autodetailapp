@@ -13,6 +13,10 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
         description: isEs
             ? 'Términos y condiciones de uso de Lux Auto Detail Services en Miami-Dade.'
             : 'Terms and conditions for using Lux Auto Detail Services in Miami-Dade.',
+        alternates: {
+            canonical: `/${lang}/terms`,
+            languages: { en: '/en/terms', es: '/es/terms' },
+        },
     };
 }
 export default async function TermsPage({

@@ -31,10 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
         },
         description,
         metadataBase: new URL(APP_URL),
-        alternates: {
-            canonical: `/${validLang}`,
-            languages: { en: '/en', es: '/es' },
-        },
+        // canonical/hreflang are set by each page (here they would be inherited by every page)
         openGraph: {
             type: 'website',
             siteName,

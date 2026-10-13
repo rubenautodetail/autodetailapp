@@ -15,6 +15,10 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
         description: isEs
             ? 'Únete como contratista de detallado de autos en Miami-Dade. Más clientes, tu propio horario, pagos rápidos.'
             : 'Join as a mobile car detailing contractor in Miami-Dade. More clients, your own schedule, fast payouts.',
+        alternates: {
+            canonical: `/${lang}/contractors`,
+            languages: { en: '/en/contractors', es: '/es/contractors' },
+        },
     };
 }
 

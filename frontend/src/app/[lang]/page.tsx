@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MapPin, Truck, Coffee } from 'lucide-react';
 import Image from 'next/image';
@@ -48,6 +49,17 @@ async function getIsLoggedIn() {
     const { data: { user } } = await supabase.auth.getUser();
     return !!user;
 }
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
+    const { lang } = await params;
+    const locale = lang === 'es' ? 'es' : 'en';
+    return {
+        alternates: {
+            canonical: `/${locale}`,
+            languages: { en: '/en', es: '/es', 'x-default': '/en' },
+        },
+    };
+}
+
 export default async function LandingPage({
     params,
 }: {

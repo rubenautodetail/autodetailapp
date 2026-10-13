@@ -14,6 +14,10 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
         description: isEs
             ? 'Política de privacidad de Lux Auto Detail Services en Miami-Dade.'
             : 'Privacy policy for Lux Auto Detail Services in Miami-Dade.',
+        alternates: {
+            canonical: `/${lang}/privacy`,
+            languages: { en: '/en/privacy', es: '/es/privacy' },
+        },
     };
 }
 export default async function PrivacyPage({
