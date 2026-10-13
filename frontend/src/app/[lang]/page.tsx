@@ -339,7 +339,7 @@ export default async function LandingPage({
             </section >
 
             {/* ─── Services ───────────────────────────────────────────────────── */}
-            < section className="py-14 sm:py-24 px-6 bg-white/[0.015]" >
+            < section id="services" className="py-14 sm:py-24 px-6 bg-white/[0.015] scroll-mt-24" >
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-10 sm:mb-16 space-y-3">
                         <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">

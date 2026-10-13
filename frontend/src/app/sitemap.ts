@@ -55,8 +55,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [
         // Home
         ...urls('', 'weekly', 1.0),
-        // Booking flow
-        ...urls('/booking/select', 'weekly', 0.9),
+        // Service areas + about
+        ...urls('/locations', 'monthly', 0.8),
+        ...urls('/about', 'yearly', 0.5),
         // Gallery of real jobs
         ...LOCALES.map((locale) => ({
             url: `${APP_URL}${galleryPath(locale)}`,

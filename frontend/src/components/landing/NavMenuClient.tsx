@@ -57,7 +57,7 @@ export default function NavMenuClient({ locale, services }: NavMenuClientProps) 
             <Link href={`/${locale}/locations`} className={navLinkClass}>
                 {locale === 'es' ? 'Ciudades' : 'Locations'}
             </Link>
-            <Link href={`/${locale}/pricing`} className={navLinkClass}>
+            <Link href={`/${locale}#services`} className={navLinkClass}>
                 {locale === 'es' ? 'Precios' : 'Pricing'}
             </Link>
             <Link href={locale === 'es' ? '/es/galeria' : '/en/gallery'} className={navLinkClass}>
