@@ -388,6 +388,11 @@ export function jobAcceptedTemplate(booking: BookingEmailData): string {
   });
 }
 
+/**
+ * Sent to the contractor who accepted a job. It must NOT carry the customer's street address
+ * or phone number: email can't be taken back, so those stay in the contractor dashboard only.
+ * The ZIP code is enough to plan the day.
+ */
 export function contractorJobConfirmationTemplate(booking: BookingEmailData): string {
   const { service, location, customer } = booking;
   const body = `
@@ -398,12 +403,13 @@ export function contractorJobConfirmationTemplate(booking: BookingEmailData): st
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Service:</span><span>${service.name}</span></div>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Date:</span><span>${fmtDate(booking.scheduledDate)}</span></div>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Time:</span><span>${fmtTime(booking.scheduledTime)}</span></div>
-      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Location:</span><span>${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
-      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Customer:</span><span>${customer.firstName} ${customer.lastName}</span></div>
-      <div class="detail-row" style="padding:8px 0;"><span style="font-weight:600;color:#065f46;">Contact:</span><span>${customer.phone}</span></div>
+      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Area:</span><span>ZIP ${location.zipCode}</span></div>
+      <div class="detail-row" style="padding:8px 0;"><span style="font-weight:600;color:#065f46;">Customer:</span><span>${customer.firstName} ${customer.lastName}</span></div>
     </div>
+    <p style="background:#fffbeb;border:1px solid #fcd34d;padding:12px 16px;border-radius:8px;color:#92400e;">For the customer's privacy, the full address and phone number are only shown in your contractor dashboard: <a href="${APP_URL}/en/contractor/jobs/${booking.id}" style="color:#065f46;font-weight:600;">view this job in your dashboard</a>.</p>
     <h3>Next Steps:</h3>
     <ul>
+      <li><a href="${APP_URL}/en/contractor/jobs/${booking.id}" style="color:#065f46;font-weight:600;">Open the job in your dashboard</a> to see the full address and contact details</li>
       <li>Prepare your equipment and supplies</li>
       <li>Arrive on time and provide excellent service!</li>
     </ul>
