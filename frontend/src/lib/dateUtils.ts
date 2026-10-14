@@ -65,10 +65,10 @@ export function formatTimeWindow(tw: string | null | undefined, locale: string =
     // HH:MM format — convert to localized 12h string
     const match = key.match(/^(\d{1,2}):(\d{2})$/);
     if (match) {
+        // Plain arithmetic: building a Date and forcing a time zone shifted the hour
+        // (a 2:00 PM job showed as 5:00 PM on a phone set to Pacific time).
         const h = parseInt(match[1], 10);
-        const m = parseInt(match[2], 10);
-        const d = new Date(2000, 0, 1, h, m);
-        return d.toLocaleTimeString(isEs ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
+        return `${h % 12 === 0 ? 12 : h % 12}:${match[2]} ${h < 12 ? "AM" : "PM"}`;
     }
     // Already a display string (e.g. "9:00 AM") — return as-is
     return tw;

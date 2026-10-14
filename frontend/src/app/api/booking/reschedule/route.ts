@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notify } from "@/lib/notifications";
+import { hoursFromNow } from "@/lib/dateUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -56,9 +57,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 1-hour restriction
-    const bookingDate = new Date(booking.date);
-    const now = new Date();
-    const hoursUntilBooking = (bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    // Counted to the real appointment time (date + time window) in Eastern time.
+    // The old check measured to midnight UTC of that date, which is 8 PM Eastern the night
+    // before, so a customer could not reschedule a next-day job after 8 PM.
+    const hoursUntilBooking = hoursFromNow(booking.date, booking.time_window);
     if (hoursUntilBooking < 1) {
       return NextResponse.json(
         { error: "Rescheduling must be done at least 1 hour before the appointment" },

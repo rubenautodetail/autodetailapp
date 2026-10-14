@@ -53,8 +53,33 @@ function baseLayout(opts: {
 </html>`;
 }
 
+/**
+ * Booking dates are stored as plain YYYY-MM-DD. new Date('2026-10-14') means midnight UTC,
+ * which is still October 13 in New York, so the email said "Tuesday" for a Wednesday job.
+ * Anchoring a date-only value at noon UTC keeps it on the same calendar day in Eastern time.
+ */
+function noonUtc(date: string): string {
+  return date.length === 10 ? `${date}T12:00:00Z` : date;
+}
+
+/** "14:00" -> "2:00 PM". Plain arithmetic, so it never depends on the server's time zone. */
+function fmtTime(value: string, isEs = false): string {
+  const raw = (value ?? '').trim();
+  const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+  if (m) {
+    const h = parseInt(m[1], 10);
+    return `${h % 12 === 0 ? 12 : h % 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+  }
+  const legacy: Record<string, { en: string; es: string }> = {
+    morning: { en: 'Morning', es: 'Mañana' },
+    afternoon: { en: 'Afternoon', es: 'Tarde' },
+    evening: { en: 'Evening', es: 'Noche' },
+  };
+  return legacy[raw.toLowerCase()]?.[isEs ? 'es' : 'en'] ?? raw;
+}
+
 function fmtDate(date: string, locale = 'en-US'): string {
-  return new Date(date).toLocaleDateString(locale, {
+  return new Date(noonUtc(date)).toLocaleDateString(locale, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     timeZone: 'America/New_York',
   });
@@ -156,7 +181,7 @@ export function bookingConfirmationTemplate(booking: BookingEmailData): string {
       <div class="detail-row"><span class="lbl">${isEs ? 'Código de Confirmación' : 'Confirmation Code'}:</span><span class="val"><strong>${booking.confirmationCode}</strong></span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Servicio' : 'Service'}:</span><span class="val">${service.name}</span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Fecha' : 'Date'}:</span><span class="val">${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</span></div>
-      <div class="detail-row"><span class="lbl">${isEs ? 'Hora' : 'Time'}:</span><span class="val">${booking.scheduledTime}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Hora' : 'Time'}:</span><span class="val">${fmtTime(booking.scheduledTime, isEs)}</span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Ubicación' : 'Location'}:</span><span class="val">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
       ${vehicleRow}
       <div class="detail-row"><span class="lbl">${isEs ? 'Monto Total' : 'Total Amount'}:</span><span class="val"><strong>$${booking.totalAmount.toFixed(2)}</strong></span></div>
@@ -189,7 +214,7 @@ export function newJobContractorTemplate(booking: BookingEmailData): string {
       <h3 style="margin-top:0;color:#065f46;">Job Overview</h3>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span class="lbl" style="color:#065f46;">Service:</span><span class="val">${service.name}</span></div>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span class="lbl" style="color:#065f46;">Date:</span><span class="val">${fmtDate(booking.scheduledDate)}</span></div>
-      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span class="lbl" style="color:#065f46;">Time:</span><span class="val">${booking.scheduledTime}</span></div>
+      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span class="lbl" style="color:#065f46;">Time:</span><span class="val">${fmtTime(booking.scheduledTime)}</span></div>
       <div class="detail-row" style="padding:8px 0;"><span class="lbl" style="color:#065f46;">Area:</span><span class="val">ZIP ${location.zipCode}</span></div>
     </div>
     <p>Log in to your contractor dashboard to view the full details and accept this job. First come, first served!</p>
@@ -372,7 +397,7 @@ export function contractorJobConfirmationTemplate(booking: BookingEmailData): st
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Confirmation Code:</span><span><strong>${booking.confirmationCode}</strong></span></div>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Service:</span><span>${service.name}</span></div>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Date:</span><span>${fmtDate(booking.scheduledDate)}</span></div>
-      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Time:</span><span>${booking.scheduledTime}</span></div>
+      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Time:</span><span>${fmtTime(booking.scheduledTime)}</span></div>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Location:</span><span>${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
       <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span style="font-weight:600;color:#065f46;">Customer:</span><span>${customer.firstName} ${customer.lastName}</span></div>
       <div class="detail-row" style="padding:8px 0;"><span style="font-weight:600;color:#065f46;">Contact:</span><span>${customer.phone}</span></div>
@@ -397,7 +422,7 @@ export function jobRejectedAdminTemplate(booking: BookingEmailData): string {
     <p>A contractor has rejected an assigned job. Reassignment may be required.</p>
     <p><strong>Booking Code:</strong> ${booking.confirmationCode}</p>
     <p><strong>Customer:</strong> ${booking.customer.firstName} ${booking.customer.lastName}</p>
-    <p><strong>Scheduled:</strong> ${new Date(booking.scheduledDate).toLocaleDateString('en-US', { timeZone: 'America/New_York' })} at ${booking.scheduledTime}</p>
+    <p><strong>Scheduled:</strong> ${new Date(noonUtc(booking.scheduledDate)).toLocaleDateString('en-US', { timeZone: 'America/New_York' })} at ${fmtTime(booking.scheduledTime)}</p>
     <p style="text-align:center;"><a href="${APP_URL}/en/admin/bookings" class="btn" style="background:#dc2626;color:white;">View Admin Dashboard</a></p>`;
 
   return baseLayout({
@@ -528,7 +553,7 @@ export function jobStartedTemplate(booking: BookingEmailData): string {
       <p><strong>${isEs ? 'Reserva' : 'Booking'}:</strong> ${booking.confirmationCode}</p>
       <p><strong>${isEs ? 'Servicio' : 'Service'}:</strong> ${booking.service.name}</p>
       <p><strong>${isEs ? 'Fecha' : 'Date'}:</strong> ${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</p>
-      <p><strong>${isEs ? 'Hora' : 'Time'}:</strong> ${booking.scheduledTime}</p>
+      <p><strong>${isEs ? 'Hora' : 'Time'}:</strong> ${fmtTime(booking.scheduledTime, isEs)}</p>
     </div>
     <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#f97316;color:white;">${isEs ? 'Ver Detalles de la Reserva' : 'View Booking Details'}</a></p>`;
 
@@ -553,7 +578,7 @@ export function enRouteTemplate(booking: BookingEmailData): string {
       <p><strong>${isEs ? 'Reserva' : 'Booking'}:</strong> ${booking.confirmationCode}</p>
       <p><strong>${isEs ? 'Servicio' : 'Service'}:</strong> ${booking.service.name}</p>
       <p><strong>${isEs ? 'Fecha' : 'Date'}:</strong> ${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</p>
-      <p><strong>${isEs ? 'Hora' : 'Time'}:</strong> ${booking.scheduledTime}</p>
+      <p><strong>${isEs ? 'Hora' : 'Time'}:</strong> ${fmtTime(booking.scheduledTime, isEs)}</p>
       <p><strong>${isEs ? 'Dirección' : 'Address'}:</strong> ${booking.location.address}, ${booking.location.city}, ${booking.location.state} ${booking.location.zipCode}</p>
     </div>
     <p>${isEs
@@ -708,7 +733,7 @@ export function paymentReminderTemplate(
     ${c.urgency ? `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;margin:16px 0;border-radius:4px;font-size:14px;">${c.urgency}</div>` : ''}
     <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;">
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Service</span><strong>${service.name}</strong></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Date</span><strong>${new Date(booking.scheduledDate).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'America/New_York'})}</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Date</span><strong>${new Date(noonUtc(booking.scheduledDate)).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'America/New_York'})}</strong></div>
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;"><span>Amount</span><strong>$${Number(booking.totalAmount).toFixed(2)}</strong></div>
       <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;"><span>Confirmation</span><strong>${booking.confirmationCode}</strong></div>
     </div>

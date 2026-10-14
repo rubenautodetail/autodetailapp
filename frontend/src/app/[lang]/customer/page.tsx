@@ -26,9 +26,7 @@ function formatTimeWindow(tw: string, locale: string): string {
     const match = key.match(/^(\d{1,2}):(\d{2})$/);
     if (match) {
         const h = parseInt(match[1], 10);
-        const m = parseInt(match[2], 10);
-        const d = new Date(2000, 0, 1, h, m);
-        return d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+        return `${h % 12 === 0 ? 12 : h % 12}:${match[2]} ${h < 12 ? 'AM' : 'PM'}`;
     }
     return tw;
 }
@@ -209,7 +207,7 @@ export default function CustomerDashboardPage() {
                                                             {b.serviceName}
                                                         </p>
                                                         <p className="text-xs text-text-muted mt-0.5">
-                                                            {(() => { const d = new Date(b.date); return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }); })()}
+                                                            {(() => { const d = new Date(b.date.length === 10 ? `${b.date}T12:00:00Z` : b.date); return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }); })()}
                                                             {b.time ? ` · ${formatTimeWindow(b.time, lang)}` : ''}
                                                         </p>
                                                         <p className={`text-sm font-bold mt-1 ${isCancelled ? 'text-text-muted' : 'text-accent-gold'}`}>

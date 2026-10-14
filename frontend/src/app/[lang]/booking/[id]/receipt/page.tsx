@@ -78,7 +78,7 @@ export default function ReceiptPage() {
     const serviceName = booking.services?.name || booking.service_name || 'Detailing Service';
     const contractorName = booking.profiles?.full_name || '—';
     const formattedDate = booking.date
-        ? new Date(booking.date).toLocaleDateString(isEs ? 'es-US' : 'en-US', {
+        ? new Date(String(booking.date).length === 10 ? `${booking.date}T12:00:00Z` : booking.date).toLocaleDateString(isEs ? 'es-US' : 'en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',

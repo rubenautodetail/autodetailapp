@@ -89,7 +89,7 @@ export default function MyOrdersPage() {
     const past = bookings.filter(b => ['completed', 'cancelled'].includes(b.status));
 
     const formatDate = (d: string) => {
-        const parsed = new Date(d);
+        const parsed = new Date(d.length === 10 ? `${d}T12:00:00Z` : d);
         if (isNaN(parsed.getTime())) return '—';
         return parsed.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
     };
