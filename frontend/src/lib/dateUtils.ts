@@ -122,3 +122,9 @@ export function easternToday(): string {
     const d = easternNow();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
+
+/**
+ * How many hours before the appointment a contractor may press "On My Way"
+ * (or start the job). The customer's phone is only revealed after that.
+ */
+export const ON_MY_WAY_WINDOW_HOURS = 2;

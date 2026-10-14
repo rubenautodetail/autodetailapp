@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
+import { hoursFromNow, ON_MY_WAY_WINDOW_HOURS } from '@/lib/dateUtils';
 
 interface ApprovalCheck {
     approval_status: string | null;
@@ -80,6 +81,31 @@ export async function POST(req: NextRequest) {
             }
 
             contractorId = booking.contractor_id ?? undefined;
+        }
+
+        // Logged-in contractors must press "On My Way" first (status en_route);
+        // this keeps the customer's phone and the 2-hour rule from being bypassed.
+        // Legacy code-link access keeps the 2-hour check only.
+        const { data: timing } = await supabase
+            .from('bookings')
+            .select('status, date, time_window')
+            .eq('id', safeId)
+            .single();
+        if (token && timing && timing.status !== 'en_route') {
+            return NextResponse.json(
+                { error: 'must_be_en_route', message: "Press 'On My Way' before starting the job." },
+                { status: 409 }
+            );
+        }
+        if (
+            timing &&
+            timing.status === 'confirmed' &&
+            hoursFromNow(timing.date, timing.time_window) > ON_MY_WAY_WINDOW_HOURS
+        ) {
+            return NextResponse.json(
+                { error: 'too_early', message: `Jobs can only be started ${ON_MY_WAY_WINDOW_HOURS} hours before the appointment.` },
+                { status: 403 }
+            );
         }
 
         const updateQuery = supabase

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import * as contractorApi from "@/lib/api/contractor";
-import { formatTimeWindow } from "@/lib/dateUtils";
+import { formatTimeWindow, hoursFromNow, ON_MY_WAY_WINDOW_HOURS } from "@/lib/dateUtils";
 
 interface JobDetailsProps {
     params: Promise<{
@@ -57,6 +57,8 @@ const translations = {
         onMyWay: "On My Way",
         sendingEnRoute: "Sending...",
         enRouteError: "Failed to send en-route notification. Please try again.",
+        enRouteTooEarly: "'On My Way' unlocks 2 hours before the appointment",
+        phoneAfterOnMyWay: "The customer's phone number is shown after you press 'On My Way'.",
         startJob: "Start Job",
         starting: "Starting...",
         completeService: "Complete Service",
@@ -103,6 +105,8 @@ const translations = {
         onMyWay: "Estoy en camino",
         sendingEnRoute: "Enviando...",
         enRouteError: "Error al enviar notificación. Por favor intenta de nuevo.",
+        enRouteTooEarly: "'Estoy en camino' se activa 2 horas antes de la cita",
+        phoneAfterOnMyWay: "El teléfono del cliente se muestra después de presionar 'Estoy en camino'.",
         startJob: "Iniciar Trabajo",
         starting: "Iniciando...",
         completeService: "Completar Servicio",
@@ -184,6 +188,12 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     const [error, setError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [completionNotes, setCompletionNotes] = useState("");
+    // re-evaluates the 2-hour 'On My Way' window every minute
+    const [, setTick] = useState(0);
+    useEffect(() => {
+        const timer = setInterval(() => setTick((n) => n + 1), 60000);
+        return () => clearInterval(timer);
+    }, []);
 
     // ---------------------------------------------------------------
     // Load job on mount
@@ -207,7 +217,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             const supabase = createClient();
             const { data, error: fetchError } = await supabase
                 .from("bookings")
-                .select("id, status, service_name, time_window, address, city, zip_code, date, contractor_id, customer_name, customer_phone, special_instructions, confirmation_code, document_id, vehicle_make, vehicle_model, vehicle_year, vehicle_color, selected_add_ons, total_amount")
+                .select("id, status, service_name, time_window, address, city, zip_code, date, contractor_id, customer_name, special_instructions, confirmation_code, document_id, vehicle_make, vehicle_model, vehicle_year, vehicle_color, selected_add_ons, total_amount")
                 .eq('id', id)
                 .eq("confirmation_code", code)
                 .single();
@@ -425,6 +435,22 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
         job.status
     );
 
+    // Phone is only available once the contractor pressed "On My Way"
+    const phoneUnlocked = ["en_route", "in_progress"].includes(job.status);
+
+    // "On My Way" unlocks ON_MY_WAY_WINDOW_HOURS before the appointment
+    const apptDate = job.date || job.scheduled_date;
+    const apptTime = job.timeWindow || job.time_window || null;
+    const canPressOnMyWay =
+        !apptDate || hoursFromNow(apptDate, apptTime) <= ON_MY_WAY_WINDOW_HOURS;
+    const unlockTimeLabel = (() => {
+        const m = apptTime?.match(/^(\d{1,2}):(\d{2})$/);
+        const mins = (m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : 12 * 60) - ON_MY_WAY_WINDOW_HOURS * 60;
+        const h = Math.floor(((mins % 1440) + 1440) % 1440 / 60);
+        const mm = String(((mins % 60) + 60) % 60).padStart(2, "0");
+        return `${h % 12 === 0 ? 12 : h % 12}:${mm} ${h < 12 ? "AM" : "PM"}`;
+    })();
+
     const displayAddress = showFullAddress
         ? job.location?.address || job.address || "N/A"
         : job.location?.zipCode
@@ -551,8 +577,8 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                             </div>
                         )}
 
-                        {/* Customer phone — only visible once accepted */}
-                        {showFullAddress && job.customer_phone && (
+                        {/* Customer phone — only visible after 'On My Way' */}
+                        {phoneUnlocked && job.customer_phone && (
                             <div className="sm:col-span-2">
                                 <p className="text-[#A5B0D1] text-xs font-medium uppercase tracking-wide mb-1">{t.customerPhone}</p>
                                 <a
@@ -623,7 +649,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                         {t.navigate}
                     </button>
 
-                    {showFullAddress && job.customer_phone ? (
+                    {phoneUnlocked && job.customer_phone ? (
                         <a
                             href={`tel:${job.customer_phone}`}
                             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142] border border-[#2A3155] rounded-xl text-[#A5B0D1] hover:text-white hover:border-[#D0B078]/50 transition-colors text-sm font-medium"
@@ -658,7 +684,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                     <div className="mb-3">
                         <button
                             onClick={handleEnRoute}
-                            disabled={enRouting}
+                            disabled={enRouting || !canPressOnMyWay}
                             className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base"
                         >
                             {enRouting ? (
@@ -679,16 +705,23 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                                 </>
                             )}
                         </button>
+                        {!canPressOnMyWay ? (
+                            <p className="text-[#A5B0D1] text-xs text-center mt-2">
+                                {t.enRouteTooEarly} ({lang === "es" ? "desde las" : "from"} {unlockTimeLabel})
+                            </p>
+                        ) : (
+                            <p className="text-[#A5B0D1] text-xs text-center mt-2">{t.phoneAfterOnMyWay}</p>
+                        )}
                     </div>
                 )}
 
                 {/* ── START JOB — only when status = confirmed or en_route ── */}
-                {(job.status === "confirmed" || job.status === "en_route") && (
+                {(job.status === "en_route" || (codeParam && job.status === "confirmed")) && (
                     <div className="bg-[#1A2142] border border-[#2A3155] rounded-2xl p-6 mb-4">
                         <p className="text-[#A5B0D1] text-sm mb-4">
                             {lang === "es"
-                                ? "Cuando estés en camino o hayas llegado al lugar, presiona el botón para iniciar el trabajo."
-                                : "When you are en route or have arrived, press the button to start the job."}
+                                ? "Cuando hayas llegado al lugar, presiona el botón para iniciar el trabajo."
+                                : "When you have arrived, press the button to start the job."}
                         </p>
                         <button
                             onClick={handleStartJob}

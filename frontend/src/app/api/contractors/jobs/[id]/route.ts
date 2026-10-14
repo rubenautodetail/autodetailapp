@@ -6,7 +6,7 @@
  *   job.scheduled_date  — alias for date
  *   job.timeWindow      — alias for time_window
  *   job.customer_name   — customer's name
- *   job.customer_phone  — customer's phone (revealed once job is active)
+ *   job.customer_phone  — customer's phone (revealed only at en_route / in_progress)
  *   job.location        — { address, zipCode }
  *   job.specialInstructions — alias for special_instructions
  */
@@ -98,7 +98,11 @@ export async function GET(
             zip_code: data.zip_code,
             contractor_id: data.contractor_id,
             customer_name: data.customer_name,
-            customer_phone: data.customer_phone,
+            // Phone is only revealed to the assigned contractor once they press "On My Way"
+            customer_phone:
+                isAssignedToContractor && ['en_route', 'in_progress'].includes(data.status)
+                    ? data.customer_phone
+                    : null,
             special_instructions: data.special_instructions,
             confirmation_code: data.confirmation_code,
             document_id: data.document_id,

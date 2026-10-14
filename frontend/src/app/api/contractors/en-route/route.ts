@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
+import { hoursFromNow, ON_MY_WAY_WINDOW_HOURS } from '@/lib/dateUtils';
 
 export async function POST(req: NextRequest) {
     try {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
         // Verify booking exists, belongs to this contractor, and is in 'confirmed' status
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
-            .select('id, contractor_id, user_id, status')
+            .select('id, contractor_id, user_id, status, date, time_window')
             .eq('id', safeId)
             .single();
 
@@ -53,6 +54,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 { error: `Cannot mark en_route from status '${booking.status}'` },
                 { status: 409 }
+            );
+        }
+
+        // "On My Way" is only allowed within 2 hours of the appointment
+        if (hoursFromNow(booking.date, booking.time_window) > ON_MY_WAY_WINDOW_HOURS) {
+            return NextResponse.json(
+                { error: 'too_early', message: `On My Way is only available ${ON_MY_WAY_WINDOW_HOURS} hours before the appointment.` },
+                { status: 403 }
             );
         }
 
