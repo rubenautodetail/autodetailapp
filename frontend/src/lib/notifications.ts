@@ -95,8 +95,8 @@ function mapBookingData(rawBooking: any, contractor?: any): BookingEmailData {
         notes: rawBooking.completion_notes || undefined,
         locale: rawBooking.locale || 'en',
         contractor: contractor ? {
-            firstName: contractor.full_name?.split(' ')[0] || contractor.firstName,
-            lastName: contractor.full_name?.split(' ').slice(1).join(' ') || contractor.lastName,
+            firstName: contractor.full_name?.split(' ')[0] || contractor.firstName || '',
+            lastName: contractor.full_name?.split(' ').slice(1).join(' ') || contractor.lastName || '',
         } : undefined
     };
 }

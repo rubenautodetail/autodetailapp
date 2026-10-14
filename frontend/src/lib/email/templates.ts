@@ -233,7 +233,7 @@ export function paymentReceiptTemplate(booking: BookingEmailData): string {
   const locale = booking.locale || 'en';
   const isEs = locale === 'es';
   const contractorName = contractor
-    ? `${contractor.firstName} ${contractor.lastName}`
+    ? [contractor.firstName, contractor.lastName].filter(Boolean).join(' ').trim() || (isEs ? 'Tu Detallador' : 'Your Detailer')
     : (isEs ? 'Tu Detallador' : 'Your Detailer');
 
   const body = `
@@ -369,8 +369,18 @@ export function jobAcceptedTemplate(booking: BookingEmailData): string {
   const locale = booking.locale || 'en';
   const isEs = locale === 'es';
   const contractorName = booking.contractor
-    ? `${booking.contractor.firstName} ${booking.contractor.lastName}`
+    ? [booking.contractor.firstName, booking.contractor.lastName].filter(Boolean).join(' ').trim() ||
+      (isEs ? 'Alguien de nuestro equipo' : 'Someone from our team')
     : (isEs ? 'Alguien de nuestro equipo' : 'Someone from our team');
+  const { customer, service, location } = booking;
+  const vehicleRow =
+    booking.vehicle && (booking.vehicle.make || booking.vehicle.model)
+      ? `<div class="detail-row"><span class="lbl">${isEs ? 'Vehículo' : 'Vehicle'}:</span><span class="val">${[booking.vehicle.year, booking.vehicle.make, booking.vehicle.model].filter(Boolean).join(' ')}${booking.vehicle.color ? ' - ' + booking.vehicle.color : ''}</span></div>`
+      : '';
+  const customerName = [customer.firstName, customer.lastName].filter(Boolean).join(' ');
+  const phoneRow = customer.phone
+    ? `<div class="detail-row"><span class="lbl">${isEs ? 'Teléfono' : 'Phone'}:</span><span class="val">${customer.phone}</span></div>`
+    : '';
 
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
@@ -379,7 +389,20 @@ export function jobAcceptedTemplate(booking: BookingEmailData): string {
       : `Great news! <strong>${contractorName}</strong> has been assigned to your booking (${booking.confirmationCode}) and will be arriving at the scheduled time.`}</p>
     <p>${isEs
       ? 'Si necesitas contactar a nuestro equipo antes de que llegue o hacer cambios a tu cita, visita tu panel de control.'
-      : 'If you need to contact our team before they arrive or make any changes to your appointment, please visit your dashboard.'}</p>`;
+      : 'If you need to contact our team before they arrive or make any changes to your appointment, please visit your dashboard.'}</p>
+    <div class="detail-box">
+      <h3 style="margin-top:0;color:#667eea;">${isEs ? 'Detalles de la Reserva' : 'Booking Details'}</h3>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Código de Confirmación' : 'Confirmation Code'}:</span><span class="val"><strong>${booking.confirmationCode}</strong></span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Servicio' : 'Service'}:</span><span class="val">${service.name}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Fecha' : 'Date'}:</span><span class="val">${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Hora' : 'Time'}:</span><span class="val">${fmtTime(booking.scheduledTime, isEs)}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Ubicación' : 'Location'}:</span><span class="val">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
+      ${vehicleRow}
+      ${customerName ? `<div class="detail-row"><span class="lbl">${isEs ? 'Cliente' : 'Customer'}:</span><span class="val">${customerName}</span></div>` : ''}
+      ${phoneRow}
+      <div class="detail-row"><span class="lbl">${isEs ? 'Monto Total' : 'Total Amount'}:</span><span class="val"><strong>$${booking.totalAmount.toFixed(2)}</strong></span></div>
+    </div>
+    <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#10b981;color:white;">${isEs ? 'Ver Detalles de la Reserva' : 'View Booking Details'}</a></p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)',
