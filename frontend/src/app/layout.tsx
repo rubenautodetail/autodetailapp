@@ -41,6 +41,7 @@ export default async function RootLayout({
         {BING_VERIFICATION && (
           <meta name="msvalidate.01" content={BING_VERIFICATION} />
         )}
+        <meta name="p:domain_verify" content="1a4e30075f1f40a53a175fccf1361202" />
       </head>
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
         <Providers>

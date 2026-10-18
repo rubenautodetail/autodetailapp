@@ -43,6 +43,17 @@ export async function GET(req: NextRequest) {
     };
   });
 
+  // Which payouts are already marked as paid (a job counts as paid only then)
+  const payoutIds = [...new Set(bList.map((b) => b.payout_id).filter((x) => x != null))] as number[];
+  const paidPayouts = new Set<number>();
+  if (payoutIds.length > 0) {
+    const { data: payouts } = await db.from("payouts").select("id, status").in("id", payoutIds);
+    (payouts ?? []).forEach((p) => {
+      const pp = p as Record<string, unknown>;
+      if (pp.status === "paid") paidPayouts.add(pp.id as number);
+    });
+  }
+
   const jobs = bList.map((b) => {
     const contractorId = b.contractor_id as string;
     const profile = profileMap[contractorId] ?? { name: "Unknown", phone: "—" };
@@ -56,6 +67,7 @@ export async function GET(req: NextRequest) {
       totalAmount: b.total_amount ? parseFloat(String(b.total_amount)) : 0,
       paymentStatus: (b.payment_status as string) ?? "—",
       confirmationCode: (b.confirmation_code as string) ?? "",
+      isPaidToContractor: b.payout_id != null && paidPayouts.has(b.payout_id as number),
     };
   });
 

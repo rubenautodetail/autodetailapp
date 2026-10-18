@@ -18,6 +18,7 @@ interface CompletedJob {
   totalAmount: number;
   paymentStatus: string;
   confirmationCode: string;
+  isPaidToContractor: boolean;
 }
 
 interface ContractorSummary {
@@ -28,6 +29,8 @@ interface ContractorSummary {
   grossRevenue: number;
   platformFee: number;
   contractorPayout: number;
+  paidAmount: number;
+  pendingAmount: number;
   jobs: CompletedJob[];
 }
 
@@ -75,6 +78,8 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
               grossRevenue: 0,
               platformFee: 0,
               contractorPayout: 0,
+              paidAmount: 0,
+              pendingAmount: 0,
               jobs: [],
             };
           }
@@ -83,6 +88,9 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
           s.grossRevenue += j.totalAmount;
           s.platformFee = s.grossRevenue * PLATFORM_FEE_RATE;
           s.contractorPayout = s.grossRevenue - s.platformFee;
+          const share = j.totalAmount * (1 - PLATFORM_FEE_RATE);
+          if (j.isPaidToContractor) s.paidAmount += share;
+          else s.pendingAmount += share;
           s.jobs.push(j);
         });
 
@@ -98,7 +106,16 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
 
   const totalGross = summaries.reduce((s, c) => s + c.grossRevenue, 0);
   const totalPlatformFee = totalGross * PLATFORM_FEE_RATE;
-  const totalPayouts = totalGross - totalPlatformFee;
+  const totalPaid = summaries.reduce((s, c) => s + c.paidAmount, 0);
+  const totalPending = summaries.reduce((s, c) => s + c.pendingAmount, 0);
+
+  const payoutBadge = (paid: boolean) => (
+    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+      paid ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+    }`}>
+      {paid ? (locale === "es" ? "Pagado" : "Paid") : (locale === "es" ? "Pendiente" : "Pending")}
+    </span>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,7 +133,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Totals */}
         {!loading && summaries.length > 0 && (
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <p className="text-xs text-gray-500 mb-1">{locale === "es" ? "Total Facturado" : "Total Billed"}</p>
               <p className="text-2xl font-bold text-gray-900">${totalGross.toFixed(2)}</p>
@@ -126,8 +143,12 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
               <p className="text-2xl font-bold text-purple-700">${totalPlatformFee.toFixed(2)}</p>
             </div>
             <div className="bg-green-50 rounded-xl border border-green-200 p-5">
-              <p className="text-xs text-green-600 mb-1">{locale === "es" ? "Pago Total Técnicos (70%)" : "Total Technician Payouts (70%)"}</p>
-              <p className="text-2xl font-bold text-green-700">${totalPayouts.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mb-1">{locale === "es" ? "Pagado a Técnicos" : "Paid to Technicians"}</p>
+              <p className="text-2xl font-bold text-green-700">${totalPaid.toFixed(2)}</p>
+            </div>
+            <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-5">
+              <p className="text-xs text-yellow-700 mb-1">{locale === "es" ? "Pendiente por Pagar" : "Pending to Pay"}</p>
+              <p className="text-2xl font-bold text-yellow-700">${totalPending.toFixed(2)}</p>
             </div>
           </div>
         )}
@@ -178,8 +199,12 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                         <p className="text-sm font-medium text-purple-700">${c.platformFee.toFixed(2)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-green-500">{locale === "es" ? "A pagar" : "Owed"}</p>
-                        <p className="text-sm font-bold text-green-700">${c.contractorPayout.toFixed(2)}</p>
+                        <p className="text-xs text-green-500">{locale === "es" ? "Pagado" : "Paid"}</p>
+                        <p className="text-sm font-bold text-green-700">${c.paidAmount.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-yellow-600">{locale === "es" ? "Pendiente" : "Pending"}</p>
+                        <p className="text-sm font-bold text-yellow-700">${c.pendingAmount.toFixed(2)}</p>
                       </div>
                       <span className="text-gray-400 text-sm">{expanded === c.contractorId ? "▲" : "▼"}</span>
                     </div>
@@ -210,6 +235,9 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                           <th className="text-left px-6 py-2 text-xs text-gray-500 font-medium">
                             {locale === "es" ? "Pago" : "Payment"}
                           </th>
+                          <th className="text-left px-6 py-2 text-xs text-gray-500 font-medium">
+                            {locale === "es" ? "Pago al técnico" : "Tech payout"}
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -238,6 +266,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                                 {j.paymentStatus}
                               </span>
                             </td>
+                            <td className="px-6 py-3">{payoutBadge(j.isPaidToContractor)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -272,6 +301,9 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                     <th className="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {locale === "es" ? "Pago técnico" : "Tech Payout"}
                     </th>
+                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {locale === "es" ? "Estado" : "Status"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -297,6 +329,7 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                       <td className="px-5 py-4 text-sm font-semibold text-green-700 text-right">
                         ${(j.totalAmount * (1 - PLATFORM_FEE_RATE)).toFixed(2)}
                       </td>
+                      <td className="px-5 py-4">{payoutBadge(j.isPaidToContractor)}</td>
                     </tr>
                   ))}
                 </tbody>
