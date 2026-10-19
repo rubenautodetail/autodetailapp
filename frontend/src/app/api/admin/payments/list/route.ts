@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
   const { data: profiles } = await db
     .from("profiles")
-    .select("id, full_name, phone_number")
+    .select("id, full_name, phone, phone_number")
     .in("id", contractorIds);
 
   const profileMap: Record<string, { name: string; phone: string }> = {};
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     const pp = p as Record<string, unknown>;
     profileMap[pp.id as string] = {
       name: (pp.full_name as string) ?? "Unknown",
-      phone: (pp.phone_number as string) ?? "—",
+      phone: ((pp.phone_number as string) || (pp.phone as string)) ?? "—",
     };
   });
 

@@ -100,6 +100,19 @@ function AdminContractorsContent({ locale }: { locale: string }) {
     const [terminateModal, setTerminateModal] = useState<{ id: string; name: string } | null>(null);
     const [detailModal, setDetailModal] = useState<Contractor | null>(null);
 
+    // Edit mode (basic contact / business data)
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [editError, setEditError] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState({
+        full_name: "",
+        phone: "",
+        business_name: "",
+        address: "",
+        zips: "",
+        zelle_contact: "",
+    });
+
     // Skills verification state
     const [catalogServices, setCatalogServices] = useState<CatalogSvc[]>([]);
     const [skillVerifyIds, setSkillVerifyIds] = useState<number[]>([]);
@@ -161,6 +174,15 @@ function AdminContractorsContent({ locale }: { locale: string }) {
         skillsPending: isEs ? "Revisión pendiente" : "Pending review",
         skillsVerified: isEs ? "Verificado" : "Verified",
         skillsNoRequest: isEs ? "Sin solicitud" : "No skills requested",
+        edit: isEs ? "Editar" : "Edit",
+        save: isEs ? "Guardar" : "Save",
+        saving: isEs ? "Guardando..." : "Saving...",
+        emailLocked: isEs ? "No editable" : "Not editable",
+        zelleWarning: isEs
+            ? "Cambiar el Zelle cambia a dónde se envían los pagos. Verifica el dato."
+            : "Changing Zelle changes where payments are sent. Double-check it.",
+        zipsHint: isEs ? "Separados por coma, 5 dígitos cada uno" : "Comma-separated, 5 digits each",
+        saveError: isEs ? "No se pudo guardar" : "Could not save",
     };
 
     const STATUS_FILTERS: { key: FilterStatus; label: string }[] = [
@@ -203,6 +225,67 @@ function AdminContractorsContent({ locale }: { locale: string }) {
             setSkillVerifyIds(detailModal.verified_service_type_ids ?? []);
         }
     }, [detailModal]);
+
+    // Leave edit mode whenever a different contractor (or none) is opened
+    useEffect(() => {
+        setEditing(false);
+        setEditError(null);
+    }, [detailModal?.id]);
+
+    const startEditing = () => {
+        if (!detailModal) return;
+        setEditForm({
+            full_name: detailModal.full_name ?? "",
+            phone: detailModal.phone ?? "",
+            business_name: detailModal.business_name ?? "",
+            address: detailModal.address ?? "",
+            zips: (detailModal.service_area_zips ?? []).join(", "),
+            zelle_contact: detailModal.zelle_contact ?? "",
+        });
+        setEditError(null);
+        setEditing(true);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!detailModal) return;
+        setSaving(true);
+        setEditError(null);
+        try {
+            const zips = editForm.zips.split(/[\s,]+/).map((z) => z.trim()).filter(Boolean);
+            const res = await adminFetch(`/api/admin/contractors/${detailModal.id}`, {
+                method: "PATCH",
+                body: JSON.stringify({
+                    full_name: editForm.full_name,
+                    phone: editForm.phone,
+                    business_name: editForm.business_name,
+                    address: editForm.address,
+                    service_area_zips: zips,
+                    zelle_contact: editForm.zelle_contact,
+                }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setEditError(json.error || t.saveError);
+                return;
+            }
+            const updated: Contractor = {
+                ...detailModal,
+                full_name: editForm.full_name.trim(),
+                phone: editForm.phone.trim(),
+                business_name: editForm.business_name.trim() || null,
+                address: editForm.address.trim() || null,
+                service_area_zips: [...new Set(zips)],
+                zelle_contact: editForm.zelle_contact.trim() || null,
+            };
+            setDetailModal(updated);
+            setEditing(false);
+            await fetchContractors();
+        } catch {
+            setEditError(t.saveError);
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const handleApprove = async (id: string) => {
         setActionLoading(id);
@@ -491,6 +574,14 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                     </span>
                                 </p>
                             </div>
+                            {!editing && (
+                                <button
+                                    onClick={startEditing}
+                                    className="ml-auto mr-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                                >
+                                    ✎ {t.edit}
+                                </button>
+                            )}
                             <button
                                 onClick={() => setDetailModal(null)}
                                 className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
@@ -503,15 +594,50 @@ function AdminContractorsContent({ locale }: { locale: string }) {
 
                         {/* Modal body */}
                         <div className="overflow-y-auto flex-1 px-6 py-4">
-                            <DetailRow label={t.fullName} value={detailModal.full_name} />
-                            <DetailRow label={t.emailLabel} value={detailModal.email} />
-                            <DetailRow label={t.phoneLabel} value={detailModal.phone} />
-                            <DetailRow label={t.businessName} value={detailModal.business_name} />
-                            <DetailRow label={t.addressLabel} value={detailModal.address} />
-                            <DetailRow
-                                label={t.serviceZips}
-                                value={detailModal.service_area_zips?.join(", ") || null}
-                            />
+                            {editing ? (
+                                <div className="space-y-3 pb-3 border-b border-gray-100">
+                                    {([
+                                        ["full_name", t.fullName],
+                                        ["phone", t.phoneLabel],
+                                        ["business_name", t.businessName],
+                                        ["address", t.addressLabel],
+                                        ["zips", t.serviceZips],
+                                        ["zelle_contact", t.zelleContact],
+                                    ] as const).map(([key, label]) => (
+                                        <div key={key}>
+                                            <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{label}</label>
+                                            <input
+                                                type="text"
+                                                value={editForm[key]}
+                                                onChange={(e) => setEditForm((f) => ({ ...f, [key]: e.target.value }))}
+                                                className="w-full bg-white px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            {key === "zips" && <p className="text-xs text-gray-400 mt-1">{t.zipsHint}</p>}
+                                            {key === "zelle_contact" && editForm.zelle_contact.trim() !== (detailModal.zelle_contact ?? "") && (
+                                                <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mt-2">⚠ {t.zelleWarning}</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <div className="text-xs text-gray-400">
+                                        {t.emailLabel}: <span className="text-gray-500">{detailModal.email}</span> · 🔒 {t.emailLocked}
+                                    </div>
+                                    {editError && (
+                                        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{editError}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <>
+                                    <DetailRow label={t.fullName} value={detailModal.full_name} />
+                                    <DetailRow label={t.emailLabel} value={detailModal.email} />
+                                    <DetailRow label={t.phoneLabel} value={detailModal.phone} />
+                                    <DetailRow label={t.businessName} value={detailModal.business_name} />
+                                    <DetailRow label={t.addressLabel} value={detailModal.address} />
+                                    <DetailRow
+                                        label={t.serviceZips}
+                                        value={detailModal.service_area_zips?.join(", ") || null}
+                                    />
+                                </>
+                            )}
                             <DetailRow
                                 label={t.paymentPref}
                                 value={
@@ -524,7 +650,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                 }
                             />
                             {/* Zelle details */}
-                            {detailModal.payment_preference === "zelle" && (
+                            {!editing && detailModal.payment_preference === "zelle" && (
                                 <DetailRow label={t.zelleContact} value={detailModal.zelle_contact} />
                             )}
                             {/* Bank account details */}
@@ -679,6 +805,24 @@ function AdminContractorsContent({ locale }: { locale: string }) {
 
                         {/* Modal footer — action buttons */}
                         <div className="border-t border-gray-200 px-6 py-4 flex flex-wrap gap-2 justify-end">
+                            {editing ? (
+                                <>
+                                    <button
+                                        onClick={handleSaveEdit}
+                                        disabled={saving}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                    >
+                                        {saving ? t.saving : t.save}
+                                    </button>
+                                    <button
+                                        onClick={() => { setEditing(false); setEditError(null); }}
+                                        disabled={saving}
+                                        className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    >
+                                        {t.cancel}
+                                    </button>
+                                </>
+                            ) : (<>
                             {detailModal.approval_status === "pending" && (
                                 <>
                                     <button
@@ -712,6 +856,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                             >
                                 {t.cancel}
                             </button>
+                            </>)}
                         </div>
                     </div>
                 </div>

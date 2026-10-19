@@ -48,7 +48,16 @@ export async function PATCH(
 
     const { id } = await params;
 
-    let body: { availability?: { days: string[]; start_hour: number; end_hour: number }; is_available?: boolean };
+    let body: {
+        availability?: { days: string[]; start_hour: number; end_hour: number };
+        is_available?: boolean;
+        full_name?: string;
+        phone?: string;
+        address?: string;
+        business_name?: string;
+        service_area_zips?: string[];
+        zelle_contact?: string;
+    };
     try {
         body = await req.json();
     } catch {
@@ -69,6 +78,56 @@ export async function PATCH(
 
     if (body.is_available !== undefined) {
         updates.is_available = Boolean(body.is_available);
+    }
+
+    // ── Basic contact / business fields (admin edit) ──
+    if (body.full_name !== undefined) {
+        const v = String(body.full_name).trim();
+        if (v.length < 2 || v.length > 100) {
+            return NextResponse.json({ error: 'Name must be 2-100 characters' }, { status: 400 });
+        }
+        updates.full_name = v;
+    }
+    if (body.phone !== undefined) {
+        const v = String(body.phone).trim();
+        const digits = v.replace(/\D/g, '');
+        if (digits.length < 10 || digits.length > 11 || v.length > 20) {
+            return NextResponse.json({ error: 'Enter a valid phone number' }, { status: 400 });
+        }
+        // The phone lives in two columns; different screens read different ones.
+        updates.phone = v;
+        updates.phone_number = v;
+    }
+    if (body.address !== undefined) {
+        const v = String(body.address).trim();
+        if (v.length > 200) {
+            return NextResponse.json({ error: 'Address is too long' }, { status: 400 });
+        }
+        updates.address = v || null;
+    }
+    if (body.business_name !== undefined) {
+        const v = String(body.business_name).trim();
+        if (v.length > 100) {
+            return NextResponse.json({ error: 'Business name is too long' }, { status: 400 });
+        }
+        updates.business_name = v || null;
+    }
+    if (body.service_area_zips !== undefined) {
+        if (!Array.isArray(body.service_area_zips)) {
+            return NextResponse.json({ error: 'Invalid ZIP codes' }, { status: 400 });
+        }
+        const zips = [...new Set(body.service_area_zips.map((z) => String(z).trim()).filter(Boolean))];
+        if (zips.length === 0 || zips.some((z) => !/^\d{5}$/.test(z))) {
+            return NextResponse.json({ error: 'ZIP codes must be 5 digits' }, { status: 400 });
+        }
+        updates.service_area_zips = zips;
+    }
+    if (body.zelle_contact !== undefined) {
+        const v = String(body.zelle_contact).trim();
+        if (v.length > 100) {
+            return NextResponse.json({ error: 'Zelle contact is too long' }, { status: 400 });
+        }
+        updates.zelle_contact = v || null;
     }
 
     if (Object.keys(updates).length === 0) {
