@@ -75,6 +75,15 @@ function toISODate(d: Date): string {
     return d.toISOString().slice(0, 10);
 }
 
+// Local-calendar date (YYYY-MM-DD). toISODate() converts to UTC first, which after
+// ~8 PM Eastern pushes the date to the next day and shifts the selected week.
+function toLocalISO(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
 export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
     const { lang } = use(params);
     const isEs = lang === "es";
@@ -130,7 +139,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
     const [paying, setPaying] = useState(false);
 
     // History state
-    const [selectedWeek, setSelectedWeek] = useState<string>(toISODate(getMondayOfWeek(today)));
+    const [selectedWeek, setSelectedWeek] = useState<string>(toLocalISO(getMondayOfWeek(today)));
     const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
     const [payouts, setPayouts] = useState<Payout[]>([]);
     const [histLoading, setHistLoading] = useState(false);
@@ -285,7 +294,7 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
     for (let i = 0; i < 12; i++) {
         const d = new Date(today);
         d.setDate(d.getDate() - i * 7);
-        weekOptions.push(toISODate(getMondayOfWeek(d)));
+        weekOptions.push(toLocalISO(getMondayOfWeek(d)));
     }
 
     return (
