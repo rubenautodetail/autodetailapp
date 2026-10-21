@@ -44,6 +44,7 @@ interface Payout {
     paid_at: string | null;
     notes: string | null;
     contractor: ContractorInfo | null;
+    bookings?: { id: number; confirmation_code: string | null }[];
 }
 
 type PaymentMethod = "ach" | "zelle" | "check" | "cash";
@@ -502,7 +503,22 @@ export default function AdminPayoutsPage({ params }: AdminPayoutsProps) {
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-4 text-gray-900">{p.total_bookings}</td>
+                                                    <td className="px-4 py-4">
+                                                        <p className="text-gray-900">{p.total_bookings}</p>
+                                                        {p.bookings && p.bookings.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                                {p.bookings.map((b) => (
+                                                                    <Link
+                                                                        key={b.id}
+                                                                        href={`/${lang}/admin/bookings/${b.id}`}
+                                                                        className="font-mono text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded hover:underline"
+                                                                    >
+                                                                        {b.confirmation_code || `#${b.id}`}
+                                                                    </Link>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </td>
                                                     <td className="px-4 py-4 text-gray-900">${Number(p.gross_amount).toFixed(2)}</td>
                                                     <td className="px-4 py-4 text-red-600">−${Number(p.platform_fee).toFixed(2)}</td>
                                                     <td className="px-4 py-4 text-green-700 font-semibold">${Number(p.contractor_amount).toFixed(2)}</td>

@@ -42,7 +42,26 @@ export async function GET(req: NextRequest) {
         const { data, error } = await query;
         if (error) throw error;
 
-        return NextResponse.json({ data: data ?? [] });
+        // Attach the bookings (id + order code) covered by each payout
+        const rows = (data ?? []) as Array<Record<string, unknown>>;
+        const payoutIds = rows.map((r) => r.id as number);
+        const byPayout = new Map<number, { id: number; confirmation_code: string | null }[]>();
+        if (payoutIds.length > 0) {
+            const { data: bks } = await supabase
+                .from('bookings')
+                .select('id, confirmation_code, payout_id')
+                .in('payout_id', payoutIds)
+                .order('date', { ascending: true });
+            (bks ?? []).forEach((b) => {
+                const pid = b.payout_id as number;
+                const list = byPayout.get(pid) ?? [];
+                list.push({ id: b.id as number, confirmation_code: (b.confirmation_code as string | null) ?? null });
+                byPayout.set(pid, list);
+            });
+        }
+        const withBookings = rows.map((r) => ({ ...r, bookings: byPayout.get(r.id as number) ?? [] }));
+
+        return NextResponse.json({ data: withBookings });
     } catch (err) {
         console.error('[admin/payouts GET]', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
