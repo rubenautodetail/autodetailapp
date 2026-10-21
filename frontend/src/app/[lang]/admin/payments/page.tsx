@@ -18,6 +18,7 @@ interface CompletedJob {
   totalAmount: number;
   paymentStatus: string;
   confirmationCode: string;
+  customerName: string;
   isPaidToContractor: boolean;
 }
 
@@ -221,6 +222,9 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                             {locale === "es" ? "Reserva" : "Booking"}
                           </th>
                           <th className="text-left px-6 py-2 text-xs text-gray-500 font-medium">
+                            {locale === "es" ? "Cliente" : "Customer"}
+                          </th>
+                          <th className="text-left px-6 py-2 text-xs text-gray-500 font-medium">
                             {locale === "es" ? "Servicio" : "Service"}
                           </th>
                           <th className="text-left px-6 py-2 text-xs text-gray-500 font-medium">
@@ -248,9 +252,10 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                                 href={`/${locale}/admin/bookings/${j.bookingId}`}
                                 className="text-sm text-blue-600 hover:underline font-mono"
                               >
-                                #{j.bookingId}
+                                {j.confirmationCode || `#${j.bookingId}`}
                               </Link>
                             </td>
+                            <td className="px-6 py-3 text-sm text-gray-700">{j.customerName}</td>
                             <td className="px-6 py-3 text-sm text-gray-700">{j.serviceName}</td>
                             <td className="px-6 py-3 text-sm text-gray-500">
                               {j.scheduledDate ? new Date(j.scheduledDate.length === 10 ? `${j.scheduledDate}T12:00:00Z` : j.scheduledDate).toLocaleDateString(locale, { timeZone: "America/New_York" }) : "—"}
@@ -290,6 +295,9 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                       {locale === "es" ? "Técnico" : "Technician"}
                     </th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {locale === "es" ? "Cliente" : "Customer"}
+                    </th>
+                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {locale === "es" ? "Servicio" : "Service"}
                     </th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -314,13 +322,14 @@ export default function AdminPaymentsPage({ params }: AdminPaymentsProps) {
                           href={`/${locale}/admin/bookings/${j.bookingId}`}
                           className="text-sm text-blue-600 hover:underline font-mono"
                         >
-                          #{j.bookingId}
+                          {j.confirmationCode || `#${j.bookingId}`}
                         </Link>
                       </td>
                       <td className="px-5 py-4">
                         <div className="text-sm font-medium text-gray-900">{j.contractorName}</div>
                         <div className="text-xs text-gray-400">{j.contractorPhone}</div>
                       </td>
+                      <td className="px-5 py-4 text-sm text-gray-700">{j.customerName}</td>
                       <td className="px-5 py-4 text-sm text-gray-700">{j.serviceName}</td>
                       <td className="px-5 py-4 text-sm text-gray-500">
                         {j.scheduledDate ? new Date(j.scheduledDate.length === 10 ? `${j.scheduledDate}T12:00:00Z` : j.scheduledDate).toLocaleDateString(locale, { timeZone: "America/New_York" }) : "—"}

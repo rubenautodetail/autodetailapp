@@ -67,6 +67,7 @@ export async function GET(req: NextRequest) {
       totalAmount: b.total_amount ? parseFloat(String(b.total_amount)) : 0,
       paymentStatus: (b.payment_status as string) ?? "—",
       confirmationCode: (b.confirmation_code as string) ?? "",
+      customerName: (b.customer_name as string) ?? "—",
       isPaidToContractor: b.payout_id != null && paidPayouts.has(b.payout_id as number),
     };
   });
