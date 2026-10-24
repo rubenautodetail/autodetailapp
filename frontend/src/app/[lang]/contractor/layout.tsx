@@ -117,7 +117,7 @@ export default function ContractorLayout({
             <Toaster position="top-center" />
             <NotificationToast notifications={notifications.filter(n => !n.is_read)} onDismiss={dismissToast} />
 
-            <div className="min-h-screen bg-[#131835]">
+            <div className="min-h-screen bg-[#131835]" data-clarity-mask="True">
                 {/* Top Navigation Bar */}
                 <nav className="bg-[#0d1128] border-b border-white/10 sticky top-0 z-50">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

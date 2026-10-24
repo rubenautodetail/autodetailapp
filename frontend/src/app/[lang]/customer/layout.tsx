@@ -85,7 +85,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
     return (
         <ErrorBoundary lang={lang}>
             <BookingStatusProvider>
-                <div className="min-h-screen bg-bg-primary">
+                <div className="min-h-screen bg-bg-primary" data-clarity-mask="True">
                     <Sidebar lang={lang} />
                     <main className="lg:pl-64 min-h-screen pb-20 lg:pb-0 transition-all duration-300">
                         {children}
