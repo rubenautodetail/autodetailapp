@@ -200,7 +200,7 @@ export default async function LandingPage({
 
                 {/* Nav bar */}
                 <div className={`absolute left-6 z-20 transition-all ${hygraph.promotionalBanner?.isActive ? 'top-24 sm:top-[64px]' : 'top-5'}`}>
-                    <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
+                    <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} sizes="160px" className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
                 </div>
 
                 <div className={`absolute left-1/2 -translate-x-1/2 z-20 transition-all ${hygraph.promotionalBanner?.isActive ? 'top-24 sm:top-[64px]' : 'top-6'}`}>
@@ -584,7 +584,7 @@ export default async function LandingPage({
             <footer className="border-t border-white/5 py-8 px-6">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
                     <div className="flex flex-col items-center sm:items-start gap-3">
-                        <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
+                        <Image src="/dtailwash_logo_final.png" alt={dict.common.siteName} width={1942} height={809} sizes="120px" className="w-auto h-9 sm:h-10 opacity-70" />
                         <p>© {new Date().getFullYear()}</p>
                         <p>
                             <span className="text-white/45 font-medium">Lux Auto Detail Services</span>

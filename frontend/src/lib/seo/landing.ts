@@ -102,7 +102,7 @@ export function resolveLanding(
             title: `${name} en ${place} | Lux — Desde ${price}`,
             metaDescription: isShopBased
                 ? `${name} en nuestro taller en Doral. Trae tu auto para un acabado profesional. Atendemos a clientes de ${place} y todo Miami-Dade. Desde ${price}.`
-                : `${name} a domicilio en ${place}, Miami-Dade. Nuestro equipo llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
+                : `${name.toLowerCase().includes('a domicilio') ? name : `${name} a domicilio`} en ${place}, Miami-Dade. Nuestro equipo llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
             h1: `${name} en ${place}`,
             heroEyebrow: isShopBased
                 ? `En taller · Doral, FL`
