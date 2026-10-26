@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    // Menos tamanos de foto y cache de 31 dias: menos escrituras en Vercel
+    deviceSizes: [640, 828, 1200, 1920],
+    imageSizes: [96, 256, 384],
+    minimumCacheTTL: 2678400,
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'images.hygraph.com' },
