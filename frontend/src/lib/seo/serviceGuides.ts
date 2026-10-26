@@ -126,7 +126,7 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     "headlight-restoration": {
         seoTitle: {
             en: "Headlight Restoration Miami: Fix Cloudy & Yellow Headlights",
-            es: "Restauración de Faros en Miami: Faros Opacos y Amarillos",
+            es: "Pulido de Faros a Domicilio en Miami: Faros Opacos y Amarillos",
         },
         metaDescription: {
             en: "Mobile headlight restoration in Miami-Dade. Why headlights turn yellow and cloudy, what restoration fixes, and how we clear them at your door. From {price}.",
@@ -371,8 +371,8 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     },
     "express-detail": {
         seoTitle: {
-            en: "Express Car Detail Miami: Quick Mobile Detailing",
-            es: "Detallado Express en Miami: Limpieza Rápida a Domicilio",
+            en: "Express Detail Miami: Quick Mobile Car Wash at Your Home",
+            es: "Lavado Express de Autos a Domicilio en Miami",
         },
         metaDescription: {
             en: "Express car detail in Miami-Dade at your home or office. A quick refresh in {duration}: what it covers, who it suits and what it can't do. From {price}.",
@@ -806,8 +806,8 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     },
     "interior-detail": {
         seoTitle: {
-            en: "Interior Car Detailing Miami: Deep Clean Seats & Carpets",
-            es: "Detallado Interior en Miami: Limpieza Profunda del Auto",
+            en: "Interior Car Detailing & Cleaning Miami: Seats & Carpets",
+            es: "Limpieza de Carros por Dentro a Domicilio en Miami",
         },
         metaDescription: {
             en: "Interior car detailing in Miami-Dade at your home or office. What a deep interior clean covers, what it can't fix and how to keep it fresh. From {price}.",
@@ -978,8 +978,8 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     },
     "exterior-detail": {
         seoTitle: {
-            en: "Exterior Car Detailing Miami: Mobile Deep Clean",
-            es: "Detallado Exterior en Miami: Limpieza Profunda a Domicilio",
+            en: "Mobile Hand Car Wash & Wax Miami: Exterior Detail",
+            es: "Lavado y Encerado de Carros a Domicilio en Miami",
         },
         metaDescription: {
             en: "Exterior car detailing in Miami-Dade at your home or office. What a deep exterior clean covers, what it can't fix and how to keep the shine. From {price}.",
@@ -1147,8 +1147,8 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     },
     "full-detail": {
         seoTitle: {
-            en: "Full Car Detail Miami: Mobile Interior & Exterior Detailing",
-            es: "Detallado Completo en Miami: Interior y Exterior a Domicilio",
+            en: "Full Detail Miami: Mobile Interior & Exterior Car Detailing",
+            es: "Lavado Completo de Carros a Domicilio en Miami",
         },
         metaDescription: {
             en: "Full car detail in Miami-Dade at your home or office: a deep clean inside and out in one visit. What it covers, who it's for and what to expect. From {price}.",
@@ -1323,8 +1323,8 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     },
     "paint-enhancement": {
         seoTitle: {
-            en: "Paint Enhancement Miami: One-Step Polish for Dull Paint",
-            es: "Pulido de Un Paso en Miami: Devuelve el Brillo a tu Pintura",
+            en: "1-Step Paint Correction Miami: Mobile Polish for Dull Paint",
+            es: "Pulido de Pintura de Carros a Domicilio en Miami",
         },
         metaDescription: {
             en: "Paint enhancement in Miami-Dade at your home or office: a one-step polish for dull, lightly swirled paint. What it can and can't fix. From {price}.",

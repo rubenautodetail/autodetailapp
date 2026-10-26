@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { servicePath } from '@/lib/seo/serviceNames';
+import { serviceName, servicePath } from '@/lib/seo/serviceNames';
 import { MapPin, Truck, Coffee } from 'lucide-react';
 import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
@@ -120,7 +120,7 @@ export default async function LandingPage({
 
     const services = dbServices.length > 0
         ? dbServices.map((s, i) => ({
-            title: locale === 'es' ? (s.name_es ?? s.name) : s.name,
+            title: serviceName(s, locale),
             desc: locale === 'es' ? (s.description_es ?? s.description ?? '') : (s.description ?? ''),
             price: `From $${Math.round(s.base_price)}`,
             icon: SERVICE_ICONS[s.name] ?? SERVICE_ICONS[Object.keys(SERVICE_ICONS).find(k => s.name.toLowerCase().includes(k.toLowerCase())) ?? ''] ?? ['\u26a1', '\ud83e\udea1', '\u2728', '\ud83c\udfc6'][i] ?? '\u2728',

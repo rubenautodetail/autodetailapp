@@ -37,14 +37,46 @@ export function toDisplayName(name: string): string {
     });
 }
 
-/** Name to show for a service in the given language (falls back to English). */
-export function serviceName(s: ServiceNameFields, locale: Locale): string {
+/**
+ * Names shown to customers, chosen from what people actually search on Google
+ * (keyword research, October 2026). The key is the page address of the service.
+ * Supabase keeps the original names, so page addresses, prices and bookings do not change.
+ * Services not listed here keep the name stored in Supabase.
+ */
+const CUSTOMER_NAMES: Record<Locale, Record<string, string>> = {
+    en: {
+        "exterior-detail": "Exterior Hand Wash & Wax",
+        "paint-enhancement": "1-Step Paint Correction",
+    },
+    es: {
+        "detallado-express": "Lavado Express",
+        "detallado-interior": "Limpieza Interior",
+        "detallado-exterior": "Lavado Exterior y Encerado",
+        "detallado-completo": "Lavado Completo",
+        "pulido": "Pulido de Pintura",
+        "restauracion-de-faros": "Pulido de Faros",
+    },
+};
+
+/** Name exactly as stored in Supabase, in the given language (falls back to English). */
+function storedName(s: ServiceNameFields, locale: Locale): string {
     return toDisplayName(locale === "es" ? (s.name_es ?? s.name) : s.name);
 }
 
-/** URL slug of a service in the given language. */
+/** Customer-facing name for a name that already comes in the customer's language (e.g. the booking catalog). */
+export function customerName(name: string, locale: Locale): string {
+    const display = toDisplayName(name);
+    return CUSTOMER_NAMES[locale][slugify(display)] ?? display;
+}
+
+/** Name to show for a service in the given language. */
+export function serviceName(s: ServiceNameFields, locale: Locale): string {
+    return customerName(storedName(s, locale), locale);
+}
+
+/** URL slug of a service in the given language. Always built from the stored name, so a new name on screen never moves a page. */
 export function serviceSlug(s: ServiceNameFields, locale: Locale): string {
-    return slugify(serviceName(s, locale));
+    return slugify(storedName(s, locale));
 }
 
 /** Address of a service's page. */
