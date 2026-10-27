@@ -53,7 +53,14 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                 createPortal(
                 <div role="dialog" aria-modal="true" aria-label={es ? 'Menú' : 'Menu'} className="fixed inset-0 z-[100] overflow-y-auto bg-[#131835]">
                     <div className="mx-auto flex max-w-md flex-col px-6 pb-10 pt-5">
-                        <div className="mb-6 flex justify-end">
+                        <div className="mb-6 flex items-center justify-between gap-3">
+                            <Link
+                                href={accountHref}
+                                onClick={close}
+                                className="flex h-11 items-center rounded-full border-2 border-[#D0B078] px-5 text-base font-semibold text-[#D0B078]"
+                            >
+                                {accountLabel}
+                            </Link>
                             <button
                                 type="button"
                                 onClick={close}
@@ -86,9 +93,6 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                         </Link>
                         <Link href={`/${locale}/about`} onClick={close} className={rowClass}>
                             {es ? 'Nosotros' : 'About'}
-                        </Link>
-                        <Link href={accountHref} onClick={close} className="block border-t border-white/10 py-4 text-2xl font-semibold text-[#D0B078]">
-                            {accountLabel}
                         </Link>
 
                         <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-8">
