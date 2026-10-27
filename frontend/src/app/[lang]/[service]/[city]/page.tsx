@@ -221,10 +221,6 @@ export default async function ServiceCityPage({
                             {es ? 'Reserva en línea →' : 'Book online →'}
                         </Link>
                     </div>
-                    <p className={`mt-3 text-sm text-white/55${hp('order-4 lg:col-start-2 lg:row-start-5')}`}>
-                        <span className="font-semibold text-[#7BE3A4]">{es ? '✓ Pagas después de aprobar' : '✓ Pay after you approve'}</span>
-                        {es ? ' · Español / English' : ' · English / Español'}
-                    </p>
 
                     {pair && (
                         <>
@@ -247,10 +243,10 @@ export default async function ServiceCityPage({
                                     />
                                 ))}
                             </div>
-                            <p className="order-6 mt-3 text-sm lg:col-start-2 lg:row-start-6">
+                            <p className="order-6 mt-5 lg:col-start-2 lg:row-start-6">
                                 <Link
                                     href={galleryPath(locale)}
-                                    className="text-[#D0B078] underline-offset-4 transition-colors hover:text-[#dcc08d] hover:underline"
+                                    className="inline-flex items-center rounded-full border-2 border-[#D0B078] bg-[#D0B078]/10 px-6 py-3 text-base font-semibold text-[#D0B078] transition-colors hover:bg-[#D0B078] hover:text-black"
                                 >
                                     {es ? 'Ver más trabajos realizados →' : 'See more of our work →'}
                                 </Link>
@@ -331,7 +327,7 @@ export default async function ServiceCityPage({
                     <p className="mt-3 text-center">
                         <Link
                             href={galleryPath(locale)}
-                            className="text-sm text-[#D0B078] underline-offset-4 transition-colors hover:text-[#dcc08d] hover:underline"
+                            className="inline-flex items-center rounded-full border-2 border-[#D0B078] bg-[#D0B078]/10 px-6 py-3 text-base font-semibold text-[#D0B078] transition-colors hover:bg-[#D0B078] hover:text-black"
                         >
                             {es ? 'Ver más de nuestro trabajo →' : 'See more of our work →'}
                         </Link>
