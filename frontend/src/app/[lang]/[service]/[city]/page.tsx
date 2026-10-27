@@ -88,6 +88,9 @@ export default async function ServiceCityPage({
     if (!content) notFound();
 
     const { service, neighborhood } = content;
+    const pair = service.heroPair;
+    /** Extra classes only when this service has a before/after pair (mobile order + desktop side photos). */
+    const hp = (cls: string) => (pair ? ` ${cls}` : '');
     const dict = await getDictionary(locale);
     const es = locale === 'es';
 
@@ -117,12 +120,12 @@ export default async function ServiceCityPage({
     const gallery = content.imageUrls && content.imageUrls.length > 1 ? content.imageUrls : [content.imageUrl];
     const steps = es
         ? [
-            { title: 'Reserva en 60 segundos', text: `Elige tu servicio y confirma tu dirección en ${neighborhood.name}.` },
+            { title: 'Reserva en línea', text: `Elige tu servicio y confirma tu dirección en ${neighborhood.name}.` },
             { title: 'Llegamos a tu puerta', text: 'Nuestro equipo llega con todo el equipo necesario — tú no mueves nada.' },
             { title: 'Revisa y aprueba', text: 'Solo pagas cuando apruebas el trabajo terminado.' },
         ]
         : [
-            { title: 'Book in 60 seconds', text: `Pick your service and confirm your address in ${neighborhood.name}.` },
+            { title: 'Book online', text: `Pick your service and confirm your address in ${neighborhood.name}.` },
             { title: 'We come to your door', text: "Our team arrives fully equipped — you don't lift a finger." },
             { title: 'Review and approve', text: 'You only pay once you approve the finished job.' },
         ];
@@ -185,19 +188,19 @@ export default async function ServiceCityPage({
             {/* ── Hero: centered local-landing style ──────────────────── */}
             <section className="relative overflow-hidden px-6 pt-14 pb-10 sm:pt-20">
                 <div className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_90%_at_50%_-10%,rgba(208,176,120,0.14),transparent_60%)]" />
-                <div className="relative mx-auto max-w-5xl text-center">
-                    <div className="dtw-rise mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-[#D0B078]/30 bg-[#D0B078]/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#D0B078]" style={{ animationDelay: '0ms' }}>
+                <div className={`relative mx-auto max-w-5xl text-center${hp('flex flex-col lg:grid lg:grid-cols-[11rem_minmax(0,1fr)_11rem] xl:grid-cols-[13rem_minmax(0,1fr)_13rem] lg:gap-x-6')}`}>
+                    <div className={`dtw-rise mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-[#D0B078]/30 bg-[#D0B078]/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#D0B078]${hp('order-1 lg:col-span-3')}`} style={{ animationDelay: '0ms' }}>
                         <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
                         {es ? `Ahora sirviendo ${neighborhood.name}` : `Now serving ${neighborhood.name}`}
                     </div>
-                    <h1 className="dtw-rise text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl" style={{ fontFamily: 'var(--font-display)', animationDelay: '80ms' }}>
+                    <h1 className={`dtw-rise text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl${hp('order-2 lg:col-span-3')}`} style={{ fontFamily: 'var(--font-display)', animationDelay: '80ms' }}>
                         {content.h1}
                     </h1>
-                    <p className="dtw-rise mx-auto mt-4 max-w-xl text-lg font-light leading-relaxed text-white/75" style={{ animationDelay: '140ms' }}>
+                    <p className={`dtw-rise mx-auto mt-4 max-w-xl text-lg font-light leading-relaxed text-white/75${hp('order-7 w-full lg:order-none lg:col-start-2 lg:row-start-3')}`} style={{ animationDelay: '140ms' }}>
                         {content.heroSub}
                     </p>
 
-                    <div className="dtw-rise mx-auto mt-6 grid max-w-md grid-cols-2 gap-2" style={{ animationDelay: '200ms' }}>
+                    <div className={`dtw-rise mx-auto mt-6 grid max-w-md grid-cols-2 gap-2${hp('order-3 w-full lg:col-start-2 lg:row-start-4')}`} style={{ animationDelay: '200ms' }}>
                         <a
                             href={`tel:${PHONE}`}
                             className={`flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-base font-semibold text-[#131835] transition-transform hover:scale-[1.02] ${waHref ? '' : 'col-span-2'}`}
@@ -214,15 +217,51 @@ export default async function ServiceCityPage({
                             href={bookHref}
                             className="col-span-2 rounded-xl bg-[#D0B078] px-4 py-3.5 text-base font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.02]"
                         >
-                            {es ? 'Reserva en línea en 60 seg →' : 'Book online in 60 sec →'}
+                            {es ? 'Reserva en línea →' : 'Book online →'}
                         </Link>
                     </div>
-                    <p className="mt-3 text-sm text-white/55">
+                    <p className={`mt-3 text-sm text-white/55${hp('order-4 lg:col-start-2 lg:row-start-5')}`}>
                         <span className="font-semibold text-[#7BE3A4]">{es ? '✓ Pagas después de aprobar' : '✓ Pay after you approve'}</span>
                         {es ? ' · Español / English' : ' · English / Español'}
                     </p>
 
-                    <div className="mx-auto mt-8 max-w-md text-left">
+                    {pair && (
+                        <>
+                            {/* Before / after: side by side under the buttons on phones, on both sides of the text on wide screens */}
+                            <div className="order-5 mx-auto mt-6 grid w-full max-w-md grid-cols-2 gap-3 lg:contents">
+                                {[
+                                    { src: pair.before, alt: pair.beforeAlt[locale], label: es ? 'Antes' : 'Before', chip: 'bg-[#7a2d2d]/90', place: 'lg:col-start-1' },
+                                    { src: pair.after, alt: pair.afterAlt[locale], label: es ? 'Después' : 'After', chip: 'bg-[#1e8250]/90', place: 'lg:col-start-3' },
+                                ].map((ph) => (
+                                    <div
+                                        key={ph.src}
+                                        className={`relative aspect-[3/4] overflow-hidden rounded-2xl border border-white/10 lg:row-span-5 lg:row-start-3 lg:mt-6 lg:self-start ${ph.place}`}
+                                    >
+                                        <Image
+                                            src={ph.src}
+                                            alt={ph.alt}
+                                            fill
+                                            sizes="(min-width: 1280px) 208px, (min-width: 1024px) 176px, 45vw"
+                                            className="object-cover"
+                                        />
+                                        <span className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white ${ph.chip}`}>
+                                            {ph.label}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="order-6 mt-3 text-sm lg:col-start-2 lg:row-start-6">
+                                <Link
+                                    href={galleryPath(locale)}
+                                    className="text-[#D0B078] underline-offset-4 transition-colors hover:text-[#dcc08d] hover:underline"
+                                >
+                                    {es ? 'Ver más trabajos realizados →' : 'See more of our work →'}
+                                </Link>
+                            </p>
+                        </>
+                    )}
+
+                    <div className={`mx-auto mt-8 max-w-md text-left${hp('order-8 w-full lg:col-start-2 lg:row-start-7')}`}>
                         <p className="text-xs uppercase tracking-widest text-[#D0B078]">
                             {es ? `Precios en ${neighborhood.name}` : `${neighborhood.name} prices`}
                         </p>
@@ -272,10 +311,11 @@ export default async function ServiceCityPage({
             </section>
 
             {/* ── Photo gallery: local proof, dedicated strip ─────────── */}
+            {!pair && (
             <section className="px-6 pb-4">
                 <div className="mx-auto max-w-5xl">
                     <p className="mb-4 text-center text-xs uppercase tracking-widest text-[#D0B078]">
-                        {es ? `Trabajo reciente en ${neighborhood.name}` : `Recent work in ${neighborhood.name}`}
+                        {es ? 'Nuestro trabajo' : 'Our work'}
                     </p>
                     <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 gold-scrollbar">
                         {gallery.map((src, i) => (
@@ -301,6 +341,7 @@ export default async function ServiceCityPage({
                     </p>
                 </div>
             </section>
+            )}
 
             {/* ── How it works ─────────────────────────────────────────── */}
             <section className="border-y border-white/5 bg-white/[0.015] px-6 py-14 sm:py-20">

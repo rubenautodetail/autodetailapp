@@ -42,6 +42,13 @@ export interface DetailService {
     /** path to local image asset */
     imageUrl: string;
     imageUrls?: string[];
+    /** Real before/after photos shown next to the hero. Services without one keep the plain hero. */
+    heroPair?: {
+        before: string;
+        after: string;
+        beforeAlt: LocalizedText;
+        afterAlt: LocalizedText;
+    };
 }
 
 export const SERVICES: DetailService[] = [
@@ -230,6 +237,18 @@ export const SERVICES: DetailService[] = [
             '/images/services/headlight-restoration-05.jpg',
             '/images/services/headlight-restoration-06.jpg',
         ],
+        heroPair: {
+            before: '/images/services/headlight-before.jpg',
+            after: '/images/services/headlight-after.jpg',
+            beforeAlt: {
+                en: 'Cloudy, oxidized headlight before restoration',
+                es: 'Faro opaco y oxidado antes del pulido',
+            },
+            afterAlt: {
+                en: 'Clear headlight after mobile headlight restoration',
+                es: 'Faro claro después del pulido de faros a domicilio',
+            },
+        },
     },
 ];
 export function getServiceBySlug(slug: string, locale: Locale): DetailService | undefined {
