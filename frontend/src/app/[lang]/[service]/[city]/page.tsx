@@ -6,6 +6,7 @@ import { i18n, type Locale } from '@/i18n-config';
 import { getDictionary } from '@/lib/dictionaries';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
+import HeroPhoto from '@/components/seo/HeroPhoto';
 import { Check, MapPin, Phone, X } from 'lucide-react';
 import { CITY_PACKAGES, PACKAGE_SERVICE_IDS } from '@/lib/seo/cityHero';
 import { getAllLandingParams, resolveLanding } from '@/lib/seo/landing';
@@ -188,7 +189,7 @@ export default async function ServiceCityPage({
             {/* ── Hero: centered local-landing style ──────────────────── */}
             <section className="relative overflow-hidden px-6 pt-14 pb-10 sm:pt-20">
                 <div className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_90%_at_50%_-10%,rgba(208,176,120,0.14),transparent_60%)]" />
-                <div className={`relative mx-auto max-w-5xl text-center${hp('flex flex-col lg:grid lg:grid-cols-[11rem_minmax(0,1fr)_11rem] xl:grid-cols-[13rem_minmax(0,1fr)_13rem] lg:gap-x-6')}`}>
+                <div className={`relative mx-auto text-center ${pair ? 'max-w-6xl flex flex-col lg:grid lg:grid-cols-[14rem_minmax(0,1fr)_14rem] xl:grid-cols-[18rem_minmax(0,1fr)_18rem] lg:gap-x-8' : 'max-w-5xl'}`}>
                     <div className={`dtw-rise mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-[#D0B078]/30 bg-[#D0B078]/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#D0B078]${hp('order-1 lg:col-span-3')}`} style={{ animationDelay: '0ms' }}>
                         <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
                         {es ? `Ahora sirviendo ${neighborhood.name}` : `Now serving ${neighborhood.name}`}
@@ -233,21 +234,17 @@ export default async function ServiceCityPage({
                                     { src: pair.before, alt: pair.beforeAlt[locale], label: es ? 'Antes' : 'Before', chip: 'bg-[#7a2d2d]/90', place: 'lg:col-start-1' },
                                     { src: pair.after, alt: pair.afterAlt[locale], label: es ? 'Después' : 'After', chip: 'bg-[#1e8250]/90', place: 'lg:col-start-3' },
                                 ].map((ph) => (
-                                    <div
+                                    <HeroPhoto
                                         key={ph.src}
-                                        className={`relative aspect-[3/4] overflow-hidden rounded-2xl border border-white/10 lg:row-span-5 lg:row-start-3 lg:mt-6 lg:self-start ${ph.place}`}
-                                    >
-                                        <Image
-                                            src={ph.src}
-                                            alt={ph.alt}
-                                            fill
-                                            sizes="(min-width: 1280px) 208px, (min-width: 1024px) 176px, 45vw"
-                                            className="object-cover"
-                                        />
-                                        <span className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white ${ph.chip}`}>
-                                            {ph.label}
-                                        </span>
-                                    </div>
+                                        src={ph.src}
+                                        alt={ph.alt}
+                                        label={ph.label}
+                                        chip={ph.chip}
+                                        className={`aspect-[3/4] rounded-2xl border border-white/10 lg:row-span-5 lg:row-start-3 lg:mt-6 lg:self-start ${ph.place}`}
+                                        sizes="(min-width: 1280px) 288px, (min-width: 1024px) 224px, 45vw"
+                                        closeLabel={es ? 'Cerrar' : 'Close'}
+                                        zoomLabel={es ? 'Ampliar foto' : 'Enlarge photo'}
+                                    />
                                 ))}
                             </div>
                             <p className="order-6 mt-3 text-sm lg:col-start-2 lg:row-start-6">
@@ -319,16 +316,16 @@ export default async function ServiceCityPage({
                     </p>
                     <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 gold-scrollbar">
                         {gallery.map((src, i) => (
-                            <div key={src} className="relative aspect-[4/3] w-64 shrink-0 snap-start overflow-hidden rounded-2xl sm:w-80">
-                                <Image
-                                    src={src}
-                                    alt={es ? `${service.name.es} en ${neighborhood.name} ${i + 1}` : `${service.name.en} in ${neighborhood.name} ${i + 1}`}
-                                    fill
-                                    sizes="(min-width: 640px) 320px, 256px"
-                                    priority={i === 0}
-                                    className="object-cover"
-                                />
-                            </div>
+                            <HeroPhoto
+                                key={src}
+                                src={src}
+                                alt={es ? `${service.name.es} en ${neighborhood.name} ${i + 1}` : `${service.name.en} in ${neighborhood.name} ${i + 1}`}
+                                sizes="(min-width: 640px) 320px, 256px"
+                                priority={i === 0}
+                                className="aspect-[4/3] w-64 shrink-0 snap-start rounded-2xl sm:w-80"
+                                closeLabel={es ? 'Cerrar' : 'Close'}
+                                zoomLabel={es ? 'Ampliar foto' : 'Enlarge photo'}
+                            />
                         ))}
                     </div>
                     <p className="mt-3 text-center">
