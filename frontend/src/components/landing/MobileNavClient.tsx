@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ChevronDown, Menu, X } from 'lucide-react';
 import type { NavService } from './NavMenuClient';
@@ -48,7 +49,8 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                 <Menu className="h-6 w-6" aria-hidden="true" />
             </button>
 
-            {open && (
+            {open &&
+                createPortal(
                 <div role="dialog" aria-modal="true" aria-label={es ? 'Menú' : 'Menu'} className="fixed inset-0 z-[100] overflow-y-auto bg-[#131835]">
                     <div className="mx-auto flex max-w-md flex-col px-6 pb-10 pt-5">
                         <div className="mb-6 flex justify-end">
@@ -85,7 +87,7 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                         <Link href={`/${locale}/about`} onClick={close} className={rowClass}>
                             {es ? 'Nosotros' : 'About'}
                         </Link>
-                        <Link href={accountHref} onClick={close} className={`${rowClass} text-[#D0B078]`}>
+                        <Link href={accountHref} onClick={close} className="block border-t border-white/10 py-4 text-2xl font-semibold text-[#D0B078]">
                             {accountLabel}
                         </Link>
 
@@ -103,8 +105,9 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                             </a>
                         </div>
                     </div>
-                </div>
-            )}
+                </div>,
+                    document.body
+                )}
         </div>
     );
 }
