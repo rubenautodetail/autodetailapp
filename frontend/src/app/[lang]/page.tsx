@@ -217,16 +217,23 @@ export default async function LandingPage({
                                 WhatsApp
                             </a>
                         )}
-                        <Link
-                            href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
-                            className="btn-primary text-sm px-6 py-2.5"
-                        >
+                        <div className="hidden lg:block">
+                            <Link
+                                href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
+                                className="btn-primary text-sm px-6 py-2.5"
+                            >
 
-                            {isLoggedIn
-                                ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
-                                : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
-                        </Link>
-                        <MobileNav locale={locale} waHref={waHref} />
+                                {isLoggedIn
+                                    ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
+                                    : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
+                            </Link>
+                        </div>
+                        <MobileNav
+                            locale={locale}
+                            waHref={waHref}
+                            accountHref={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
+                            accountLabel={isLoggedIn ? (locale === 'es' ? 'Mi Cuenta' : 'My Account') : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
+                        />
                     </div>
                 </div>
 
@@ -259,19 +266,6 @@ export default async function LandingPage({
                     {/* ZIP Checker */}
                     <div className="w-full max-w-lg mx-auto">
                         <ZipChecker dict={dict.zipChecker} lang={locale} />
-                    </div>
-
-                    {/* Auth links */}
-                    <div className="flex items-center justify-center gap-4 pt-2">
-                        <span className="text-white/60 text-sm">{locale === 'es' ? '¿Ya tienes cuenta?' : 'Already a member?'}</span>
-                        <Link
-                            href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
-                            className="text-sm text-white/60 hover:text-white transition-colors underline underline-offset-4"
-                        >
-                            {isLoggedIn
-                                ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
-                                : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
-                        </Link>
                     </div>
                 </div>
 

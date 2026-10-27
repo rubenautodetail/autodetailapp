@@ -53,7 +53,7 @@ export async function NavMenu({ locale }: NavMenuProps) {
 }
 
 /** Phone-only hamburger menu: same links as the desktop menu above. */
-export async function MobileNav({ locale, waHref }: { locale: 'en' | 'es'; waHref: string | null }) {
+export async function MobileNav({ locale, waHref, accountHref, accountLabel }: { locale: 'en' | 'es'; waHref: string | null; accountHref: string; accountLabel: string }) {
     const services = await getNavServices(locale);
-    return <MobileNavClient locale={locale} services={services} waHref={waHref} />;
+    return <MobileNavClient locale={locale} services={services} waHref={waHref} accountHref={accountHref} accountLabel={accountLabel} />;
 }

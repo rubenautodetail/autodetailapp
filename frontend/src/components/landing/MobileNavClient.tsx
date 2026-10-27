@@ -9,10 +9,12 @@ interface MobileNavClientProps {
     locale: 'en' | 'es';
     services: NavService[];
     waHref: string | null;
+    accountHref: string;
+    accountLabel: string;
 }
 
 /** Hamburger menu for phones and tablets (the desktop menu takes over from lg up). */
-export default function MobileNavClient({ locale, services, waHref }: MobileNavClientProps) {
+export default function MobileNavClient({ locale, services, waHref, accountHref, accountLabel }: MobileNavClientProps) {
     const es = locale === 'es';
     const [open, setOpen] = useState(false);
     const [servicesOpen, setServicesOpen] = useState(true);
@@ -82,6 +84,9 @@ export default function MobileNavClient({ locale, services, waHref }: MobileNavC
                         </Link>
                         <Link href={`/${locale}/about`} onClick={close} className={rowClass}>
                             {es ? 'Nosotros' : 'About'}
+                        </Link>
+                        <Link href={accountHref} onClick={close} className={`${rowClass} text-[#D0B078]`}>
+                            {accountLabel}
                         </Link>
 
                         <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-8">
