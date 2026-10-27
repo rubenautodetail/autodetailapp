@@ -1,3 +1,4 @@
+import FloatingWhatsApp from '@/components/landing/FloatingWhatsApp';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -656,6 +657,7 @@ export default async function ServiceCityPage({
                     </div>
                 </div>
             </footer>
+            <FloatingWhatsApp href={waHref} label={es ? 'Escríbenos por WhatsApp' : 'Message us on WhatsApp'} />
         </main>
     );
 }

@@ -1,3 +1,4 @@
+import FloatingWhatsApp from '@/components/landing/FloatingWhatsApp';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { serviceName, servicePath } from '@/lib/seo/serviceNames';
@@ -11,7 +12,7 @@ import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
 import { galleryPath } from '@/lib/gallery';
 import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
-import { NavMenu } from '@/components/landing/NavMenu';
+import { NavMenu, MobileNav } from '@/components/landing/NavMenu';
 import HalloweenEffect from '@/components/seasonal/HalloweenEffect';
 import { getLocalBusinessSchema, getServiceCatalogSchema, getBreadcrumbSchema } from '@/lib/seo/schema';
 
@@ -225,6 +226,7 @@ export default async function LandingPage({
                                 ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
                                 : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
                         </Link>
+                        <MobileNav locale={locale} waHref={waHref} />
                     </div>
                 </div>
 
@@ -623,6 +625,7 @@ export default async function LandingPage({
                     </div>
                 </div>
             </footer>
+            <FloatingWhatsApp href={waHref} label={locale === 'es' ? 'Escríbenos por WhatsApp' : 'Message us on WhatsApp'} />
         </div >
     );
 }

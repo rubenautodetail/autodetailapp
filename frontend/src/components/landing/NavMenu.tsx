@@ -1,7 +1,9 @@
+import { cache } from 'react';
 import { createServiceClient } from '@/lib/supabase/server';
 import { SERVICES } from '@/lib/seo/services';
 import { serviceName, servicePath } from '@/lib/seo/serviceNames';
 import NavMenuClient, { type NavService } from './NavMenuClient';
+import MobileNavClient from './MobileNavClient';
 
 interface NavMenuProps {
     locale: 'en' | 'es';
@@ -15,7 +17,7 @@ type DbNavService = { id: number; name: string; name_es: string | null };
  * to /{lang}/services/{slug}. If the table can't be read, it falls back to the SEO
  * catalog so the menu is never empty.
  */
-export async function NavMenu({ locale }: NavMenuProps) {
+export const getNavServices = cache(async (locale: 'en' | 'es'): Promise<NavService[]> => {
     let services: NavService[] = [];
 
     try {
@@ -42,5 +44,16 @@ export async function NavMenu({ locale }: NavMenuProps) {
         }));
     }
 
+    return services;
+});
+
+export async function NavMenu({ locale }: NavMenuProps) {
+    const services = await getNavServices(locale);
     return <NavMenuClient locale={locale} services={services} />;
+}
+
+/** Phone-only hamburger menu: same links as the desktop menu above. */
+export async function MobileNav({ locale, waHref }: { locale: 'en' | 'es'; waHref: string | null }) {
+    const services = await getNavServices(locale);
+    return <MobileNavClient locale={locale} services={services} waHref={waHref} />;
 }
