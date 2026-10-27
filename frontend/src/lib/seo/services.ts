@@ -107,6 +107,18 @@ export const SERVICES: DetailService[] = [
         priority: 0.9,
         icon: '🪑',
         imageUrl: '/images/services/interior-car-detailing.png',
+        heroPair: {
+            before: '/images/services/interior-1.jpg',
+            after: '/images/services/interior-2.jpg',
+            beforeAlt: {
+                en: 'Dirty front car seat before interior cleaning',
+                es: 'Asiento delantero sucio antes de la limpieza interior',
+            },
+            afterAlt: {
+                en: 'Clean rear car seat after mobile interior cleaning',
+                es: 'Asiento trasero limpio después de la limpieza interior a domicilio',
+            },
+        },
     },
     {
         id: 'exterior-detailing',
