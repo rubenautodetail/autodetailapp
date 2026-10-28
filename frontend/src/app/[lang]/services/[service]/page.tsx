@@ -30,6 +30,7 @@ import { getBreadcrumbSchema, getFaqSchema } from "@/lib/seo/schema";
 import { NEIGHBORHOODS } from "@/lib/seo/locations";
 import JsonLd from "@/components/seo/JsonLd";
 import PhotoCarousel from "@/components/landing/PhotoCarousel";
+import LanguageSwitch from "@/components/landing/LanguageSwitch";
 import { serviceName, serviceSlug } from "@/lib/seo/serviceNames";
 
 /**
@@ -318,7 +319,8 @@ export default async function ServicePage({ params }: PageProps) {
                             className="h-11 w-auto sm:h-14"
                         />
                     </Link>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <LanguageSwitch locale={locale} href={`/${isEs ? "en" : "es"}/services/${slugOf(svc, isEs ? "en" : "es")}`} />
                         {waHref && (
                             <a
                                 href={waHref}

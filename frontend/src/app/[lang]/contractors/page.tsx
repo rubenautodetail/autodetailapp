@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import LanguageSwitch from '@/components/landing/LanguageSwitch';
 import Image from 'next/image';
 import { i18n } from '@/i18n-config';
 import { getContractorLandingContent } from '@/lib/hygraph';
@@ -88,6 +89,7 @@ export default async function ContractorsPage({
                         <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
                     </Link>
                     <div className="flex items-center gap-4">
+                        <LanguageSwitch locale={locale} href={`/${locale === 'es' ? 'en' : 'es'}/contractors`} />
                         <Link
                             href={`/${locale}/contractor/login`}
                             className="text-sm text-white/50 hover:text-white transition-colors"

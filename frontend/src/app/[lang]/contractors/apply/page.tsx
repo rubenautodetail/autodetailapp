@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import LanguageSwitch from "@/components/landing/LanguageSwitch";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Field {
@@ -207,9 +208,12 @@ export default function ContractorApplyPage() {
                 <Link href={`/${lang}/contractors`} className="text-white/40 hover:text-white text-sm transition-colors">
                     ← {isEs ? "Volver" : "Back"}
                 </Link>
-                <span className="text-xs text-white/60">
-                    {isEs ? "Solicitud de contratista" : "Contractor application"}
-                </span>
+                <div className="flex items-center gap-3">
+                    <span className="hidden text-xs text-white/60 sm:inline">
+                        {isEs ? "Solicitud de contratista" : "Contractor application"}
+                    </span>
+                    <LanguageSwitch locale={isEs ? "es" : "en"} href={`/${isEs ? "en" : "es"}/contractors/apply`} />
+                </div>
             </div>
 
             <div className="max-w-xl mx-auto">

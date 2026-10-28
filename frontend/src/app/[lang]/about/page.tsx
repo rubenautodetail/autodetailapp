@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import LanguageSwitch from '@/components/landing/LanguageSwitch';
 import { i18n, type Locale } from '@/i18n-config';
 import { galleryPath } from '@/lib/gallery';
 import JsonLd from '@/components/seo/JsonLd';
@@ -70,9 +71,12 @@ export default async function AboutPage({ params }: { params: Promise<{ lang: st
                     <Link href={`/${locale}`} className="text-sm text-white/65 hover:text-white/90 transition-colors">
                         ← {es ? 'Volver al inicio' : 'Back to home'}
                     </Link>
-                    <Link href={`/${locale}/booking/select`} className="text-sm text-[#D0B078] hover:underline">
-                        {es ? 'Reservar' : 'Book now'} →
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <LanguageSwitch locale={locale} href={`/${locale === 'es' ? 'en' : 'es'}/about`} />
+                        <Link href={`/${locale}/booking/select`} className="text-sm text-[#D0B078] hover:underline">
+                            {es ? 'Reservar' : 'Book now'} →
+                        </Link>
+                    </div>
                 </div>
             </div>
 

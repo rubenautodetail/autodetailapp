@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import LanguageSwitch from '@/components/landing/LanguageSwitch';
 import { i18n } from '@/i18n-config';
 
 export async function generateStaticParams() {
@@ -136,12 +137,15 @@ export default async function TermsPage({
                     >
                         ← {es ? 'Volver al inicio' : 'Back to home'}
                     </Link>
-                    <Link
-                        href={`/${lang}/privacy`}
-                        className="text-sm text-white/65 hover:text-white/90 transition-colors"
-                    >
-                        {es ? 'Política de Privacidad' : 'Privacy Policy'} →
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <LanguageSwitch locale={es ? 'es' : 'en'} href={`/${es ? 'en' : 'es'}/terms`} />
+                        <Link
+                            href={`/${lang}/privacy`}
+                            className="text-sm text-white/65 hover:text-white/90 transition-colors"
+                        >
+                            {es ? 'Política de Privacidad' : 'Privacy Policy'} →
+                        </Link>
+                    </div>
                 </div>
             </div>
 
