@@ -71,6 +71,15 @@ const CreateWithPaymentSchema = z.object({
     bodyStyle: bodyStyleSchema.optional(),
     currency: z.literal('usd').optional().default('usd'),
     locale: z.enum(['en', 'es']).optional().default('en'),
+    attribution: z.object({
+        utm_source: z.string().max(200).optional(),
+        utm_medium: z.string().max(200).optional(),
+        utm_campaign: z.string().max(200).optional(),
+        utm_term: z.string().max(200).optional(),
+        utm_content: z.string().max(200).optional(),
+        gclid: z.string().max(200).optional(),
+        landing_page: z.string().max(300).optional(),
+    }).optional(),
 }).refine((value) => value.serviceId !== undefined || value.serviceName !== undefined, {
     message: 'Service ID or service name is required',
     path: ['serviceId'],
@@ -120,6 +129,7 @@ export async function POST(req: NextRequest) {
         vehicleMake, vehicleModel, vehicleYear, vehicleColor,
         currency, pricingRevision, bodyStyle,
         locale,
+        attribution,
     } = parsed.data;
 
     // Build vehicles array — backwards compat: if no vehicles array, use single vehicle fields
@@ -243,6 +253,13 @@ export async function POST(req: NextRequest) {
         vehicle_model: v.model || null,
         vehicle_year: v.year || null,
         vehicle_color: v.color || null,
+        utm_source: attribution?.utm_source ?? null,
+        utm_medium: attribution?.utm_medium ?? null,
+        utm_campaign: attribution?.utm_campaign ?? null,
+        utm_term: attribution?.utm_term ?? null,
+        utm_content: attribution?.utm_content ?? null,
+        gclid: attribution?.gclid ?? null,
+        landing_page: attribution?.landing_page ?? null,
         ...(bookingGroupId ? { booking_group_id: bookingGroupId } : {}),
     }));
 

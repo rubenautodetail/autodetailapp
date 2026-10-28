@@ -25,6 +25,10 @@ interface BookingDetail {
   payment_intent_id: string | null;
   special_instructions: string | null;
   confirmation_code: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  gclid?: string | null;
   contractor_id: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -116,6 +120,7 @@ export async function GET(req: NextRequest) {
     paymentIntentId: b.payment_intent_id ?? "",
     specialInstructions: b.special_instructions ?? "—",
     confirmationCode: b.confirmation_code ?? "—",
+    source: [b.utm_source, b.utm_medium, b.utm_campaign].filter(Boolean).join(" / ") || (b.gclid ? "google / cpc" : "—"),
     contractorId: b.contractor_id ?? null,
     createdAt: b.created_at ?? null,
     updatedAt: b.updated_at ?? null,

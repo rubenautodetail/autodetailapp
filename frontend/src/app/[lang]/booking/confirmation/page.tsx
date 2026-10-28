@@ -4,6 +4,7 @@ import { use, Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts";
+import { sendGAEvent } from "@next/third-parties/google";
 
 interface ConfirmationPageProps {
   params: Promise<{
@@ -28,6 +29,26 @@ function ConfirmationContent({ locale }: { locale: string }) {
 
   // Show guest prompt if not signed in and hasn't dismissed it
   const showGuestPrompt = !isLoading && !isAuthenticated && !guestDismissed;
+
+  // GA4 key event for Google Ads: sent once per confirmation code (a page refresh doesn't count twice).
+  useEffect(() => {
+    if (confirmationCode === "RBN-UNKNOWN") return;
+    if (redirectStatus && !["succeeded", "requires_capture", "processing"].includes(redirectStatus)) return;
+    const key = `lux_booking_tracked_${confirmationCode}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+    } catch {
+      // storage blocked: still send the event once for this page view
+    }
+    sendGAEvent("event", "booking_confirmed", {
+      transaction_id: confirmationCode,
+      value: Number(totalAmount) || 0,
+      currency: "USD",
+      service_name: serviceName,
+      vehicles: vehicleCount,
+    });
+  }, [confirmationCode, redirectStatus, totalAmount, serviceName, vehicleCount]);
 
   // Fallback: if Stripe redirected here with a payment_intent param, verify the
   // payment status and ensure the booking transitions out of pending_payment even

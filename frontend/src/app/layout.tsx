@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import Script from 'next/script';
 import ContactClickTracker from '@/components/analytics/ContactClickTracker';
+import AttributionCapture from '@/components/analytics/AttributionCapture';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -49,6 +50,7 @@ export default async function RootLayout({
         </Providers>
         {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
         {GA_MEASUREMENT_ID && <ContactClickTracker />}
+        <AttributionCapture />
         {CLARITY_PROJECT_ID && (
           <Script id="microsoft-clarity" strategy="afterInteractive">
             {`(function(c,l,a,r,i,t,y){

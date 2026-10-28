@@ -32,6 +32,7 @@ interface BookingDetail {
   paymentIntentId: string;
   specialInstructions: string;
   confirmationCode: string;
+  source: string;
   contractorId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -370,6 +371,7 @@ export default function AdminBookingDetailPage({ params }: PageProps) {
           <Field label={locale === "es" ? "Nombre" : "Name"} value={booking.customerName} />
           <Field label={locale === "es" ? "Email" : "Email"} value={booking.customerEmail} />
           <Field label={locale === "es" ? "Teléfono" : "Phone"} value={booking.customerPhone} />
+          <Field label={locale === "es" ? "Origen" : "Source"} value={booking.source} />
           {booking.specialInstructions && booking.specialInstructions !== "—" && (
             <Field label={locale === "es" ? "Notas" : "Notes"} value={booking.specialInstructions} />
           )}

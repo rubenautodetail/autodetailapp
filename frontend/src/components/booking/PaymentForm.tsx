@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/Button";
 import type { BookingPriceQuote, VehiclePriceLine } from "@/contexts/BookingContext";
 import { normalizeVehicleBodyStyle } from "@/types/vehicle";
 import { getStableCatalogRef } from "@/lib/pricing/servicePricePreviews";
+import { readAttribution } from "@/lib/analytics/attribution";
 
 interface PaymentFormProps {
   locale: "en" | "es";
@@ -308,6 +309,7 @@ export default function PaymentForm({ locale }: PaymentFormProps) {
           vehicleColor: vehicles[0]?.color,
           currency: "usd",
           locale,
+          attribution: readAttribution(),
         }),
       });
 
