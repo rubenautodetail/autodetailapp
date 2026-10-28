@@ -1,3 +1,4 @@
+import LanguageSwitch from '@/components/landing/LanguageSwitch';
 import FloatingWhatsApp from '@/components/landing/FloatingWhatsApp';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -208,7 +209,8 @@ export default async function LandingPage({
                     <NavMenu locale={locale} />
                 </div>
                 <div className={`absolute right-6 z-20 transition-all ${hygraph.promotionalBanner?.isActive ? 'top-24 sm:top-[64px]' : 'top-5'}`}>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
+                        <LanguageSwitch locale={locale} href={`/${locale === 'es' ? 'en' : 'es'}`} />
                         {waHref && (
                             <a
                                 href={waHref}
