@@ -28,6 +28,12 @@ export interface Neighborhood {
     spanishFirst: boolean;
     /** sitemap priority weight */
     priority: number;
+    /** Extra local paragraphs shown after the intro (only where we want a stronger page). */
+    extraIntro?: LocalizedText[];
+    /** Extra local FAQs added after the standard ones. */
+    extraFaqs?: { q: LocalizedText; a: LocalizedText }[];
+    /** Custom Google title / description per service id (overrides the template). {price} = starting price. */
+    seoOverrides?: Record<string, { title?: Partial<LocalizedText>; description?: Partial<LocalizedText> }>;
 }
 
 export const NEIGHBORHOODS: Neighborhood[] = [
@@ -134,6 +140,41 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         landmarks: ['Wynwood Walls', 'Bayside', 'Museum Park', 'Coconut Grove', 'Design District'],
         spanishFirst: false,
         priority: 0.9,
+        extraIntro: [
+            {
+                en: 'Searching for a mobile car wash or mobile car detailing in Miami? We do both: a careful hand wash when you just need the car clean, or a complete inside-and-out detail when it needs a reset. You see the full price before you confirm, and you pay only after you approve the work.',
+                es: '¿Buscas lavado de autos a domicilio o un detallado completo en Miami? Hacemos las dos cosas: un lavado a mano cuidadoso cuando solo necesitas el carro limpio, o un detallado completo por dentro y por fuera cuando necesita quedar como nuevo. Ves el precio completo antes de confirmar y pagas solo cuando apruebas el trabajo.',
+            },
+            {
+                en: 'Booking from a condo or an office building? Add your building, gate or parking instructions in the notes and our team will follow them. Between summer rain, road dust and the salt air near Biscayne Bay, a regular hand wash keeps water spots and grime from setting into the paint.',
+                es: '¿Reservas desde un condominio o un edificio de oficinas? Escribe en las notas las instrucciones del edificio, el portón o el parqueo, y nuestro equipo las sigue. Entre la lluvia de verano, el polvo de la calle y el aire salado cerca de la Bahía de Biscayne, un lavado a mano regular evita que las manchas de agua y la suciedad se peguen a la pintura.',
+            },
+        ],
+        extraFaqs: [
+            {
+                q: { en: 'Is mobile car detailing the same as a mobile car wash?', es: '¿El detallado a domicilio es lo mismo que un lavado de autos a domicilio?' },
+                a: {
+                    en: 'A mobile car wash is mainly the outside hand wash. Mobile car detailing goes further: wheels, interior vacuum, wipe-down and windows, up to a full interior and exterior detail. In Miami we offer both.',
+                    es: 'El lavado a domicilio es sobre todo el lavado a mano por fuera. El detallado va más allá: rines, aspirado, limpieza del interior y vidrios, hasta un detallado completo por dentro y por fuera. En Miami ofrecemos los dos.',
+                },
+            },
+            {
+                q: { en: 'Can you detail my car in a condo garage in Miami?', es: '¿Pueden lavar mi carro en el garaje de mi condominio en Miami?' },
+                a: {
+                    en: 'Yes, as long as your building allows it. We bring our own water and equipment. Add the garage level, spot number or gate instructions when you book.',
+                    es: 'Sí, siempre que el edificio lo permita. Llevamos nuestra propia agua y equipo. Al reservar, escribe el piso del garaje, el número de parqueo o las instrucciones del portón.',
+                },
+            },
+        ],
+        seoOverrides: {
+            'mobile-car-detailing': {
+                title: { en: 'Mobile Car Detailing & Car Wash in Miami, FL | Lux — From {price}' },
+                description: {
+                    en: 'Mobile car detailing and hand car wash in Miami, FL. We come to your home, condo garage or office in Downtown, Edgewater, Wynwood and more. Pay only after you approve. From {price}.',
+                    es: 'Lavado de autos a domicilio en Miami, FL. Vamos a tu casa, al garaje de tu condominio o a tu oficina en Downtown, Edgewater, Wynwood y más. Pagas solo cuando apruebas. Desde {price}.',
+                },
+            },
+        },
     },
     // ── Phase 2 additions (2026-07) — remaining priority areas from research ──
     {

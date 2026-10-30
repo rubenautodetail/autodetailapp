@@ -5,6 +5,16 @@ type SchemaObject = Record<string, unknown>;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 
 // Miami-Dade neighborhoods matching SERVICE_ZIP_CODES coverage.
+// Other names people use for the business, and its official profiles — helps Google
+// tie the brand together and not confuse it with other "Lux" businesses.
+const ALTERNATE_NAMES = ['Lux Auto Detail', 'Lux Auto Detailing', 'dtailwash'];
+const SAME_AS = [
+    'https://www.facebook.com/luxautodetailservices',
+    'https://www.instagram.com/luxautodetailservices',
+    'https://www.pinterest.com/luxautodetailservices',
+    'https://www.linkedin.com/company/146766584',
+];
+
 const AREAS_SERVED = [
     'Miami',
     'Miami Beach',
@@ -21,6 +31,8 @@ export function getOrganizationSchema(siteName: string): SchemaObject {
         '@type': 'Organization',
         '@id': `${APP_URL}/#organization`,
         name: siteName,
+        alternateName: ALTERNATE_NAMES,
+        sameAs: SAME_AS,
         url: APP_URL,
         logo: {
             '@type': 'ImageObject',
@@ -42,6 +54,7 @@ export function getWebsiteSchema(siteName: string): SchemaObject {
         '@type': 'WebSite',
         '@id': `${APP_URL}/#website`,
         name: siteName,
+        alternateName: ALTERNATE_NAMES,
         url: APP_URL,
         publisher: { '@id': `${APP_URL}/#organization` },
         inLanguage: ['en', 'es'],
@@ -61,6 +74,8 @@ export function getLocalBusinessSchema(
         '@type': 'AutoWash',
         '@id': `${APP_URL}/#localbusiness`,
         name: siteName,
+        alternateName: ALTERNATE_NAMES,
+        sameAs: SAME_AS,
         description,
         url: `${APP_URL}/${locale}`,
         priceRange: '$$',

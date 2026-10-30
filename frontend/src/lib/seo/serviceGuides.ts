@@ -534,7 +534,7 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     "mobile-car-detailing": {
         seoTitle: {
             en: "Mobile Car Detailing Miami: We Come to You",
-            es: "Detallado de Autos a Domicilio en Miami: Vamos a Ti",
+            es: "Lavado de Autos a Domicilio en Miami: Vamos a Ti",
         },
         metaDescription: {
             en: "Mobile car detailing in Miami-Dade at your home or office. A complete interior and exterior clean in {duration}: what it covers and who it suits. From {price}.",

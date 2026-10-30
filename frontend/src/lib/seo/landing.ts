@@ -96,13 +96,21 @@ export function resolveLanding(
         es: `${APP_URL}/es/${service.slug.es}/${neighborhood.slug}`,
     };
 
+    // Extra local copy for the zones we want to rank higher (see locations.ts).
+    // Not on in-shop services (ceramic): this copy talks about coming to the customer.
+    const extraIntro = isShopBased ? [] : (neighborhood.extraIntro ?? []).map((p) => p[locale]);
+    const extraFaqs: Faq[] = isShopBased ? [] : (neighborhood.extraFaqs ?? []).map((f) => ({ q: f.q[locale], a: f.a[locale] }));
+    const override = neighborhood.seoOverrides?.[service.id];
+    const overrideTitle = override?.title?.[locale]?.replace('{price}', price);
+    const overrideDescription = override?.description?.[locale]?.replace('{price}', price);
+
     if (locale === 'es') {
         return {
             locale, service, neighborhood, path, alternates,
-            title: `${name} en ${place} | Lux — Desde ${price}`,
-            metaDescription: isShopBased
+            title: overrideTitle ?? `${name} en ${place} | Lux — Desde ${price}`,
+            metaDescription: overrideDescription ?? (isShopBased
                 ? `${name} en nuestro taller en Doral. Trae tu auto para un acabado profesional. Atendemos a clientes de ${place} y todo Miami-Dade. Desde ${price}.`
-                : `${name.toLowerCase().includes('a domicilio') ? name : `${name} a domicilio`} en ${place}, Miami-Dade. Nuestro equipo llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`,
+                : `${name.toLowerCase().includes('a domicilio') ? name : `${name} a domicilio`} en ${place}, Miami-Dade. Nuestro equipo llega a tu casa u oficina. Reserva en línea o por WhatsApp. Desde ${price}.`),
             h1: `${name} en ${place}`,
             heroEyebrow: isShopBased
                 ? `En taller · Doral, FL`
@@ -117,10 +125,11 @@ export function resolveLanding(
             ] : [
                 `¿Buscas ${kw} en ${place}? Lux lleva a nuestro equipo verificado hasta la puerta de los residentes de ${place} — sin manejar hasta un taller ni esperar en fila. ${t(neighborhood.blurb, locale)}`,
                 `Cubrimos los códigos postales ${neighborhood.zips.slice(0, 4).join(', ')} y zonas cercanas como ${neighborhood.landmarks.join(', ')}. Precios transparentes desde ${price}, pago seguro y atención en español. Reserva tu ${name} en línea o por WhatsApp.`,
+                ...extraIntro,
             ],
             priceLabel: `Desde ${price}`,
             durationLabel: `≈ ${hrs}`,
-            faqs: buildFaqsEs(service, neighborhood, price, hrs),
+            faqs: [...buildFaqsEs(service, neighborhood, price, hrs), ...extraFaqs],
             imageUrl: service.imageUrl,
             imageUrls: service.imageUrls,
         };
@@ -128,10 +137,10 @@ export function resolveLanding(
 
     return {
         locale, service, neighborhood, path, alternates,
-        title: `${name} in ${place} | Lux — From ${price}`,
-        metaDescription: isShopBased
+        title: overrideTitle ?? `${name} in ${place} | Lux — From ${price}`,
+        metaDescription: overrideDescription ?? (isShopBased
             ? `${name} at our Doral facility. Bring your car in for a professional finish. Serving clients from ${place} and all of Miami-Dade. Starting at ${price}.`
-            : `${name} in ${place}, Miami-Dade. Our team comes to your home or office — book online or by WhatsApp. Transparent pricing from ${price}.`,
+            : `${name} in ${place}, Miami-Dade. Our team comes to your home or office — book online or by WhatsApp. Transparent pricing from ${price}.`),
         h1: `${name} in ${place}`,
         heroEyebrow: isShopBased
             ? `In-Shop · Doral, FL`
@@ -146,10 +155,11 @@ export function resolveLanding(
         ] : [
             `Looking for ${kw} in ${place}? Lux brings our vetted team to ${place} residents' doors — no driving to a shop, no waiting rooms. ${t(neighborhood.blurb, locale)}`,
             `We cover ZIP codes ${neighborhood.zips.slice(0, 4).join(', ')} and nearby areas like ${neighborhood.landmarks.join(', ')}. Transparent pricing from ${price}, secure online payment, and service in English or Spanish. Book your ${name} online or by WhatsApp.`,
+            ...extraIntro,
         ],
         priceLabel: `From ${price}`,
         durationLabel: `≈ ${hrs}`,
-        faqs: buildFaqsEn(service, neighborhood, price, hrs),
+        faqs: [...buildFaqsEn(service, neighborhood, price, hrs), ...extraFaqs],
         imageUrl: service.imageUrl,
         imageUrls: service.imageUrls,
     };
@@ -189,23 +199,30 @@ function buildFaqsEn(s: DetailService, n: Neighborhood, price: string, hrs: stri
         },
     ];
 }
+/** Spanish article for a service name: "la limpieza interior…" vs "el lavado express…". */
+function esArticle(name: string): { def: string; Def: string; Indef: string } {
+    const feminine = /^(limpieza|restauraci[oó]n)\b/i.test(name.trim());
+    return feminine ? { def: 'la', Def: 'La', Indef: 'Una' } : { def: 'el', Def: 'El', Indef: 'Un' };
+}
+
 function buildFaqsEs(s: DetailService, n: Neighborhood, price: string, hrs: string): Faq[] {
     const name = s.name.es.toLowerCase();
+    const art = esArticle(name);
     const isShop = s.id === 'ceramic-coating';
     return [
         {
-            q: `¿Cuánto cuesta el ${name} en ${n.name}?`,
-            a: `El ${s.name.es.toLowerCase()} en ${n.name} comienza desde ${price}. El precio final depende del tamaño y estado del vehículo — verás el precio claro antes de confirmar, sin cargos ocultos.`,
+            q: `¿Cuánto cuesta ${art.def} ${name} en ${n.name}?`,
+            a: `${art.Def} ${name} en ${n.name} comienza desde ${price}. El precio final depende del tamaño y estado del vehículo — verás el precio claro antes de confirmar, sin cargos ocultos.`,
         },
         {
             q: isShop ? `¿Van hasta mi casa o llevo mi auto?` : `¿Van hasta mi casa u oficina en ${n.name}?`,
             a: isShop
-                ? `El ${name} se hace en nuestro taller en Doral, no a domicilio — traes tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado. Llama o escribe al 305-988-4449 para agendar.`
+                ? `${art.Def} ${name} se hace en nuestro taller en Doral, no a domicilio — traes tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado. Llama o escribe al 305-988-4449 para agendar.`
                 : `Sí. Lux es totalmente a domicilio — nuestro equipo llega a tu casa, oficina o edificio en ${n.name} (códigos ${n.zips.slice(0, 3).join(', ')} y cercanos) con todo lo necesario para hacer el trabajo en el sitio.`,
         },
         {
-            q: `¿Cuánto tiempo toma el ${name}?`,
-            a: `Un ${name} normal toma aproximadamente ${hrs}. Puedes seguir con tu día mientras lo hacemos — sin salas de espera.`,
+            q: `¿Cuánto tiempo toma ${art.def} ${name}?`,
+            a: `${art.Indef} ${name} normal toma aproximadamente ${hrs}. Puedes seguir con tu día mientras lo hacemos — sin salas de espera.`,
         },
         {
             q: isShop ? `¿Por qué el recubrimiento cerámico se hace en taller y no a domicilio?` : `¿Necesito dar agua o electricidad?`,

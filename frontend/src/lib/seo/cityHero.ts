@@ -14,7 +14,7 @@ export const CITY_PACKAGES: {
         key: 'express',
         price: 70,
         recommended: false,
-        name: { en: 'Express Detail', es: 'Detallado Express' },
+        name: { en: 'Express Detail', es: 'Lavado Express' },
         desc: {
             en: 'Hand wash, wheels, quick interior vacuum & wipe-down',
             es: 'Lavado a mano, rines, aspirado y limpieza rápida del interior',
@@ -34,7 +34,7 @@ export const CITY_PACKAGES: {
         key: 'full',
         price: 400,
         recommended: true,
-        name: { en: 'Full Detail', es: 'Detallado Completo' },
+        name: { en: 'Full Detail', es: 'Lavado Completo' },
         desc: {
             en: 'Complete inside & out — the reset for your car',
             es: 'Completo por dentro y por fuera — tu auto como nuevo',
