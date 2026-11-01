@@ -19,10 +19,19 @@ const AREAS_SERVED = [
     'Miami',
     'Miami Beach',
     'Hialeah',
-    'Coral Gables',
+    'Little Havana',
     'Doral',
+    'Brickell',
+    'Coral Gables',
     'Kendall',
+    'Westchester',
+    'Sweetwater',
+    'Aventura',
+    'North Miami',
+    'Miami Gardens',
     'Homestead',
+    'Cutler Bay',
+    'Pinecrest',
 ] as const;
 
 export function getOrganizationSchema(siteName: string): SchemaObject {

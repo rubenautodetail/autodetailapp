@@ -49,6 +49,32 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         landmarks: ['Amelia Earhart Park', 'Westland Mall', 'Hialeah Park'],
         spanishFirst: true,
         priority: 1.0,
+        extraIntro: [
+            {
+                en: 'Hialeah is one of the most Spanish-speaking cities in the U.S., and our team works in Spanish and English. Book online in either language, or message us on WhatsApp at 305-988-4449.',
+                es: 'Hialeah es una de las ciudades con más hispanohablantes de Estados Unidos, y nuestro equipo trabaja en español y en inglés. Reserva en línea en el idioma que prefieras o escríbenos por WhatsApp al 305-988-4449.',
+            },
+            {
+                en: 'We come to homes, apartment complexes and workplaces in Hialeah. Work trucks and family cars get the same careful hand wash. If you park in a shared lot or a gated complex, add the gate instructions and where the car is parked in the booking notes, and you pay only after you approve the work.',
+                es: 'Vamos a casas, complejos de apartamentos y lugares de trabajo en Hialeah. Las camionetas de trabajo y los carros de la familia reciben el mismo lavado a mano cuidadoso. Si parqueas en un lote compartido o en un complejo con portón, escribe en las notas de la reserva las instrucciones del portón y dónde está el carro, y pagas solo cuando apruebas el trabajo.',
+            },
+        ],
+        extraFaqs: [
+            {
+                q: { en: 'Can I book in Spanish?', es: '¿Puedo reservar en español?' },
+                a: {
+                    en: 'Yes. The website and the booking are available in Spanish, and our team speaks Spanish. You can also book by WhatsApp.',
+                    es: 'Sí. La página y la reserva están en español, y nuestro equipo habla español. También puedes reservar por WhatsApp.',
+                },
+            },
+            {
+                q: { en: 'Can you wash my car at my job in Hialeah?', es: '¿Pueden lavar mi carro en mi trabajo en Hialeah?' },
+                a: {
+                    en: 'Yes, if the parking lot allows it. Add the business name and where the car is parked in the booking notes. We bring our own water and equipment.',
+                    es: 'Sí, si el parqueo lo permite. Escribe en las notas de la reserva el nombre del negocio y dónde está parqueado el carro. Llevamos nuestra propia agua y equipo.',
+                },
+            },
+        ],
     },
     {
         slug: 'little-havana',
@@ -101,6 +127,32 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         landmarks: ['Ocean Drive', 'Lincoln Road', 'South Pointe Park', 'Mid-Beach', 'North Beach'],
         spanishFirst: false,
         priority: 0.85,
+        extraIntro: [
+            {
+                en: 'On Miami Beach, sand and salt end up everywhere: in the carpets, in the door jambs and on the paint. A hand wash outside and a vacuum inside take care of both, without moving your car from the building garage, a rental parking lot or your driveway in South Beach, Mid-Beach or North Beach.',
+                es: 'En Miami Beach, la arena y la sal terminan en todas partes: en las alfombras, en los marcos de las puertas y en la pintura. Un lavado a mano por fuera y un aspirado por dentro se encargan de las dos cosas, sin sacar tu carro del garaje del edificio, del parqueo de tu renta o de la entrada de tu casa en South Beach, Mid-Beach o North Beach.',
+            },
+            {
+                en: 'Parking on the beach is tight, and many buildings have rules about work in the garage. When you book, write the building name, garage level, spot number and any front-desk or access instructions in the notes. You see the full price before you confirm, and you pay only after you approve the work.',
+                es: 'En la playa el parqueo es limitado y muchos edificios tienen reglas para trabajar en el garaje. Al reservar, escribe en las notas el nombre del edificio, el piso del garaje, el número de parqueo y las instrucciones de la recepción o del acceso. Ves el precio completo antes de confirmar y pagas solo cuando apruebas el trabajo.',
+            },
+        ],
+        extraFaqs: [
+            {
+                q: { en: 'Can you wash my car in a Miami Beach condo garage?', es: '¿Pueden lavar mi carro en el garaje de un condominio en Miami Beach?' },
+                a: {
+                    en: 'Yes, if the building allows it. We bring our own water and equipment and work in your parking spot. Add the garage level, spot number and any front-desk instructions when you book.',
+                    es: 'Sí, si el edificio lo permite. Llevamos nuestra propia agua y equipo y trabajamos en tu parqueo. Al reservar, escribe el piso del garaje, el número de parqueo y las instrucciones de la recepción.',
+                },
+            },
+            {
+                q: { en: 'How often should I wash my car near the beach?', es: '¿Cada cuánto debo lavar mi carro si vivo cerca de la playa?' },
+                a: {
+                    en: 'Near the ocean, salt and sand settle on the paint faster than inland. A regular hand wash every few weeks, plus a coat of wax or sealant, helps protect the finish.',
+                    es: 'Cerca del mar, la sal y la arena se pegan a la pintura más rápido que tierra adentro. Un lavado a mano regular cada pocas semanas, más una capa de cera o sellador, ayuda a proteger la pintura.',
+                },
+            },
+        ],
     },
     {
         slug: 'coral-gables',
@@ -127,6 +179,32 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         landmarks: ['Dadeland Mall', 'Baptist Hospital', 'The Falls'],
         spanishFirst: true,
         priority: 0.8,
+        extraIntro: [
+            {
+                en: 'In Kendall, the Express Detail is a practical way to keep the family car clean week to week: a hand wash, wheels, and a quick interior vacuum and wipe-down. When the inside needs more, with car seats, crumbs from the school run, beach sand or pet hair, our interior detail adds steam cleaning of seats and carpets, plus pet-hair and odor removal.',
+                es: 'En Kendall, el Lavado Express es una forma práctica de mantener limpio el carro de la familia semana a semana: lavado a mano, rines y un aspirado y limpieza rápida del interior. Cuando el interior necesita más, con sillas de bebé, migajas del camino a la escuela, arena de la playa o pelo de mascota, nuestra limpieza interior agrega limpieza a vapor de asientos y alfombras, y eliminación de pelo de mascota y olores.',
+            },
+            {
+                en: 'We work right where the car is parked, in your driveway or your building parking lot, so you do not have to go anywhere. If there is a gate or a visitor-parking rule, add it in the booking notes. You see the full price before you confirm, and you pay only after you approve the work.',
+                es: 'Trabajamos justo donde está parqueado el carro, en la entrada de tu casa o en el parqueo de tu edificio, así que no tienes que ir a ninguna parte. Si hay un portón o una regla de parqueo de visitas, escríbelo en las notas de la reserva. Ves el precio completo antes de confirmar y pagas solo cuando apruebas el trabajo.',
+            },
+        ],
+        extraFaqs: [
+            {
+                q: { en: 'Which service is best for a family car in Kendall?', es: '¿Qué servicio conviene para el carro de la familia en Kendall?' },
+                a: {
+                    en: 'For regular upkeep, the Express Detail: a hand wash, wheels, and a quick interior vacuum and wipe-down at your home. For pet hair, spills or stains, the interior detail adds steam cleaning and odor removal.',
+                    es: 'Para el mantenimiento regular, el Lavado Express: lavado a mano, rines y un aspirado y limpieza rápida del interior en tu casa. Para pelo de mascota, derrames o manchas, la limpieza interior agrega limpieza a vapor y eliminación de olores.',
+                },
+            },
+            {
+                q: { en: 'Does an SUV or minivan cost more?', es: '¿Una camioneta o minivan cuesta más?' },
+                a: {
+                    en: 'The price depends on the size and condition of the vehicle. You see the full price for your SUV or minivan before you confirm, with no surprises.',
+                    es: 'El precio depende del tamaño y el estado del vehículo. Ves el precio completo de tu camioneta o minivan antes de confirmar, sin sorpresas.',
+                },
+            },
+        ],
     },
     {
         slug: 'miami',
