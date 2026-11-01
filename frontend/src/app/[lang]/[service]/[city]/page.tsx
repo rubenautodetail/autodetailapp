@@ -467,7 +467,7 @@ export default async function ServiceCityPage({
                     <div className="mb-10 space-y-3 text-center">
                         <p className="text-xs uppercase tracking-widest text-[#D0B078]">{es ? 'Por qué Lux' : 'Why Lux'}</p>
                         <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
-                            {es ? 'Detallado sin complicaciones' : 'Detailing without the hassle'}
+                            {es ? 'Lavado de autos sin complicaciones' : 'Detailing without the hassle'}
                         </h2>
                     </div>
                     <div className="grid gap-6 md:grid-cols-3">
@@ -649,7 +649,7 @@ export default async function ServiceCityPage({
             {/* ── Footer ──────────────────────────────────────────────── */}
             <footer className="border-t border-white/5 px-6 py-10">
                 <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-white/40 sm:flex-row">
-                    <span>© {new Date().getFullYear()} Lux Auto Detail Services · {es ? 'Detallado móvil en Miami-Dade' : 'Mobile detailing in Miami-Dade'}</span>
+                    <span>© {new Date().getFullYear()} Lux Auto Detail Services · {es ? 'Lavado de autos a domicilio en Miami-Dade' : 'Mobile detailing in Miami-Dade'}</span>
                     <div className="flex gap-4">
                         <Link href={`/${locale}`} className="hover:text-white">{es ? 'Inicio' : 'Home'}</Link>
                         <Link href={`/${locale}/contractors`} className="hover:text-white">{es ? 'Detalladores' : 'For detailers'}</Link>

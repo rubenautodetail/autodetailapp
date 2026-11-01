@@ -246,7 +246,7 @@ export const NEIGHBORHOODS: Neighborhood[] = [
         ],
         seoOverrides: {
             'mobile-car-detailing': {
-                title: { en: 'Mobile Car Detailing & Car Wash in Miami, FL | Lux — From {price}' },
+                title: { en: 'Mobile Car Detailing & Car Wash in Miami, FL | From {price}' },
                 description: {
                     en: 'Mobile car detailing and hand car wash in Miami, FL. We come to your home, condo garage or office in Downtown, Edgewater, Wynwood and more. Pay only after you approve. From {price}.',
                     es: 'Lavado de autos a domicilio en Miami, FL. Vamos a tu casa, al garaje de tu condominio o a tu oficina en Downtown, Edgewater, Wynwood y más. Pagas solo cuando apruebas. Desde {price}.',
