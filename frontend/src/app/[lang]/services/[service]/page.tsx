@@ -236,6 +236,18 @@ export default async function ServicePage({ params }: PageProps) {
     const t = (text: L): string => fill(text[locale], vars);
     const others = services.filter((s) => s.id !== svc.id);
 
+    // "Shampoo or Interior Detail?" box: needs both services to exist in Supabase.
+    const compare = guide?.compare;
+    const compareLeft = compare ? services.find((s) => slugOf(s, "en") === compare.leftSlug) : undefined;
+    const compareRight = compare ? services.find((s) => slugOf(s, "en") === compare.rightSlug) : undefined;
+    const compareCards =
+        compareLeft && compareRight
+            ? [
+                  { svc: compareLeft, side: "left" as const, isCurrent: compareLeft.id === svc.id },
+                  { svc: compareRight, side: "right" as const, isCurrent: compareRight.id === svc.id },
+              ]
+            : null;
+
     // Photos: real ones for the services that have them, generic cover otherwise.
     const seo = SERVICES.find((x) => x.id === SEO_ID_BY_SLUG[slugOf(svc, "en")]);
     const gallery = (seo?.imageUrls ?? []).slice(0, 6);
@@ -463,6 +475,54 @@ export default async function ServicePage({ params }: PageProps) {
                             </div>
                         </section>
 
+                        {/* Which one should I choose? (only when both services exist) */}
+                        {compareCards && compare && (
+                            <section className="mx-auto max-w-5xl px-6 pb-12">
+                                <h2 className={h2Class} style={displayFont}>
+                                    {t(compare.title)}
+                                </h2>
+                                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                                    {compareCards.map((card) => (
+                                        <div
+                                            key={card.svc.id}
+                                            className={`flex flex-col rounded-2xl border p-6 ${
+                                                card.isCurrent
+                                                    ? "border-[#D0B078]/50 bg-[#D0B078]/5"
+                                                    : "border-[#2C355E] bg-[#151B3A]"
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <h3 className="font-semibold text-[#D0B078]">{nameOf(card.svc, locale)}</h3>
+                                                {card.isCurrent && (
+                                                    <span className="rounded-full bg-[#D0B078] px-3 py-1 text-xs font-semibold text-[#131835]">
+                                                        {isEs ? "Esta página" : "This page"}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <dl className="mt-4 space-y-3">
+                                                {compare.rows.map((row, i) => (
+                                                    <div key={i}>
+                                                        <dt className="text-xs uppercase tracking-wide text-white/50">
+                                                            {t(row.label)}
+                                                        </dt>
+                                                        <dd className="mt-0.5 text-white/85">{t(card.side === "left" ? row.left : row.right)}</dd>
+                                                    </div>
+                                                ))}
+                                            </dl>
+                                            {!card.isCurrent && (
+                                                <Link
+                                                    href={`/${locale}/services/${slugOf(card.svc, locale)}`}
+                                                    className={`mt-5 inline-block self-start font-semibold text-[#D0B078] hover:underline ${focusRing}`}
+                                                >
+                                                    {isEs ? "Ver" : "See"} {nameOf(card.svc, locale)} →
+                                                </Link>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
                         {/* Before and after photos */}
                         {guide.photos?.beforeAfter && guide.photos.beforeAfterTitle && guide.photos.beforeAfter.length > 0 && (
                             <section className="mx-auto max-w-5xl px-6 pb-12">
@@ -472,7 +532,11 @@ export default async function ServicePage({ params }: PageProps) {
                                 {guide.photos.beforeAfterIntro && (
                                     <p className="mt-3 max-w-xl text-white/70">{t(guide.photos.beforeAfterIntro)}</p>
                                 )}
-                                <div className="mt-8 grid items-start gap-8 lg:grid-cols-2">
+                                <div
+                                    className={`mt-8 grid items-start gap-8 ${
+                                        guide.photos.beforeAfter.length > 1 ? "lg:grid-cols-2" : "max-w-xl"
+                                    }`}
+                                >
                                     {guide.photos.beforeAfter.map((pair, i) => (
                                         <figure key={i}>
                                             <div className="grid grid-cols-2 gap-2">

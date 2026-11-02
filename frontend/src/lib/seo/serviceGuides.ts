@@ -49,6 +49,14 @@ export interface ServicePhotos {
     beforeAfter?: BeforeAfterPair[];
 }
 
+export interface ServiceCompare {
+    title: L;
+    /** English slugs of the two services, left card first. The box is hidden if either one doesn't exist yet. */
+    leftSlug: string;
+    rightSlug: string;
+    rows: { label: L; left: L; right: L }[];
+}
+
 export interface ServiceGuide {
     /** <title> (used as-is, without the site-name suffix). Keep it near 60 characters. */
     seoTitle: L;
@@ -72,6 +80,8 @@ export interface ServiceGuide {
     bestFor: L;
     /** Optional photos that go with the text. When present, the plain gallery is not shown. */
     photos?: ServicePhotos;
+    /** Optional box that helps the customer choose between two similar services. */
+    compare?: ServiceCompare;
 }
 
 type Pair = { q: L; a: L };
@@ -121,6 +131,36 @@ const benefitHome: Benefit = {
     },
 };
 
+
+/** Shown on both the Car Interior Shampoo page and the Interior Detail page. */
+const SHAMPOO_VS_INTERIOR: ServiceCompare = {
+    title: { en: "Shampoo or Interior Detail?", es: "¿Shampoo o Limpieza Interior?" },
+    leftSlug: "car-interior-shampoo",
+    rightSlug: "interior-detail",
+    rows: [
+        {
+            label: { en: "Best for", es: "Ideal para" },
+            left: { en: "Stains, odors and dirty fabric", es: "Manchas, olores y tela sucia" },
+            right: { en: "General upkeep", es: "Mantenimiento general" },
+        },
+        {
+            label: { en: "What it does", es: "Qué hace" },
+            left: { en: "Shampoo, steam and extraction", es: "Shampoo, vapor y extracción" },
+            right: {
+                en: "Vacuum, dashboard, console and vents",
+                es: "Aspirado, tablero, consola y rejillas",
+            },
+        },
+        {
+            label: { en: "Where", es: "Dónde" },
+            left: {
+                en: "Seats, carpets, headliner and trunk",
+                es: "Asientos, alfombras, techo y maletero",
+            },
+            right: { en: "The whole interior, leather included", es: "Todo el interior, incluido el cuero" },
+        },
+    ],
+};
 
 export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
     "headlight-restoration": {
@@ -975,6 +1015,215 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
             en: "Cars whose seats, carpets and cabin need a deep clean",
             es: "Autos cuyos asientos, alfombras y cabina necesitan limpieza profunda",
         },
+        compare: SHAMPOO_VS_INTERIOR,
+    },
+    "car-interior-shampoo": {
+        seoTitle: {
+            en: "Car Interior Shampoo Miami: Seats, Carpets & Headliner",
+            es: "Limpieza de Tapicería de Carro en Miami | Desde {price}",
+        },
+        metaDescription: {
+            en: "Car interior shampoo in Miami-Dade at your home or office. Steam and extraction for stained seats, carpets, headliner and trunk. From {price}.",
+            es: "Limpieza de tapicería y alfombras en Miami-Dade en tu casa u oficina. Vapor y extracción para manchas y olores en asientos, techo y maletero. Desde {price}.",
+        },
+        heroSub: {
+            en: "Spilled drinks, kids, pets and Miami humidity leave stains and odors deep in the fabric. A shampoo with steam and extraction pulls them out of the seats, carpets, headliner and trunk.",
+            es: "Los derrames, los niños, las mascotas y la humedad de Miami dejan manchas y olores en lo profundo de la tela. Un shampoo con vapor y extracción los saca de los asientos, las alfombras, el techo y el maletero.",
+        },
+        quickAnswer: {
+            en: "A car interior shampoo is a deep clean for fabric: seats, carpets, floor mats, headliner and trunk. We apply a cleaner, loosen the dirt with steam and a brush, and pull the dirty water out with an extractor. It targets stains and odors, takes {duration} and starts at {price}. For general upkeep of the whole cabin, an interior detail is the better fit.",
+            es: "La limpieza de tapicería es una limpieza profunda para tela: asientos, alfombras, tapetes, techo y maletero. Aplicamos un limpiador, soltamos la suciedad con vapor y cepillo, y sacamos el agua sucia con una máquina de extracción. Va dirigida a manchas y olores, toma {duration} y empieza en {price}. Para el mantenimiento general de toda la cabina, conviene más una limpieza interior.",
+        },
+        scienceTitle: {
+            en: "What is a car interior shampoo?",
+            es: "¿Qué es la limpieza de tapicería y alfombras?",
+        },
+        science: [
+            {
+                en: "Fabric seats and carpet act like a sponge. Spills, sweat, food and dust soak in below the surface, where a vacuum can't reach. That's where stains and odors come from, and wiping the top doesn't remove them.",
+                es: "Los asientos de tela y la alfombra funcionan como una esponja. Los derrames, el sudor, la comida y el polvo se meten debajo de la superficie, donde la aspiradora no llega. De ahí salen las manchas y los olores, y pasar un trapo por encima no los quita.",
+            },
+            {
+                en: "A shampoo goes after that hidden dirt. The cleaner breaks it down, steam and a soft brush loosen it from the fibers, and the extractor pulls the dirty water out instead of leaving it in the fabric. Less moisture stays behind, so the fabric dries faster and the dirt leaves with the water.",
+                es: "El shampoo va a buscar esa suciedad escondida. El limpiador la descompone, el vapor y un cepillo suave la sueltan de las fibras, y la máquina de extracción saca el agua sucia en vez de dejarla en la tela. Queda menos humedad, la tela seca más rápido y la suciedad se va con el agua.",
+            },
+        ],
+        keywords: [
+            { en: "Car interior shampoo", es: "Shampoo de interiores de carro" },
+            { en: "Car upholstery cleaning", es: "Limpieza de tapicería de carro" },
+            { en: "Car seat stain removal", es: "Quitar manchas de asientos de carro" },
+            { en: "Car carpet cleaning", es: "Limpieza de alfombras de carro" },
+            { en: "Car odor removal", es: "Eliminar olores del carro" },
+        ],
+        limits: {
+            canTitle: { en: "What a shampoo can do", es: "Lo que puede hacer un shampoo" },
+            can: [
+                {
+                    en: "Lift everyday stains like coffee, juice, food and mud from fabric",
+                    es: "Sacar manchas comunes como café, jugo, comida y lodo de la tela",
+                },
+                {
+                    en: "Freshen seats and carpets that smell from spills or dirt",
+                    es: "Refrescar asientos y alfombras que huelen por derrames o suciedad",
+                },
+                {
+                    en: "Clean areas a vacuum can't, like headliner and trunk",
+                    es: "Limpiar zonas donde la aspiradora no sirve, como el techo y el maletero",
+                },
+            ],
+            cannotTitle: { en: "What it can't fix", es: "Lo que no corrige" },
+            cannot: [
+                {
+                    en: "Burns, rips or cracks in upholstery",
+                    es: "Quemaduras, rasgaduras o grietas en la tapicería",
+                },
+                {
+                    en: "Permanent dye stains or sun-faded fabric",
+                    es: "Manchas de tinte permanentes o tela descolorida por el sol",
+                },
+                {
+                    en: "Mold or damage from flooding or long-term moisture",
+                    es: "Moho o daño por inundación o por humedad de mucho tiempo",
+                },
+            ],
+        },
+        benefitsTitle: { en: "Why get a car interior shampoo", es: "Por qué hacer una limpieza de tapicería" },
+        benefitsIntro: {
+            en: "It's the right call when the fabric looks dirty or smells, not just dusty.",
+            es: "Es lo indicado cuando la tela se ve sucia o huele, no solo cuando tiene polvo.",
+        },
+        benefits: [
+            {
+                icon: "droplets",
+                t: { en: "Stains out of the fabric", es: "Manchas fuera de la tela" },
+                d: {
+                    en: "Steam and extraction reach the dirt a wipe or a vacuum leaves behind.",
+                    es: "El vapor y la extracción llegan a la suciedad que un trapo o una aspiradora dejan.",
+                },
+            },
+            {
+                icon: "wind",
+                t: { en: "Fewer odors", es: "Menos olores" },
+                d: {
+                    en: "Taking out the spilled drink or dirt that causes a smell often takes the smell with it.",
+                    es: "Sacar el líquido derramado o la suciedad que causa el olor muchas veces se lleva también el olor.",
+                },
+            },
+            {
+                icon: "armchair",
+                t: { en: "Seats that look cared for", es: "Asientos que se ven cuidados" },
+                d: {
+                    en: "Clean fabric looks lighter and more even, almost like a different seat.",
+                    es: "La tela limpia se ve más clara y pareja, casi como otro asiento.",
+                },
+            },
+            {
+                icon: "car",
+                t: { en: "Good before selling", es: "Ideal antes de vender" },
+                d: {
+                    en: "Stained seats are one of the first things a buyer notices.",
+                    es: "Los asientos manchados son de lo primero que nota un comprador.",
+                },
+            },
+            {
+                icon: "shield",
+                t: { en: "Safer for families", es: "Mejor para la familia" },
+                d: {
+                    en: "A cleaner cabin is nicer for kids, pets and passengers.",
+                    es: "Una cabina más limpia es mejor para niños, mascotas y pasajeros.",
+                },
+            },
+            benefitHome,
+        ],
+        careTitle: { en: "Keep the fabric clean longer", es: "Mantén la tela limpia por más tiempo" },
+        careIntro: {
+            en: "A few habits make the result last.",
+            es: "Unos pocos hábitos hacen que el resultado dure.",
+        },
+        care: [
+            {
+                en: "Blot spills right away with a clean cloth. Press, don't rub, so the liquid doesn't spread.",
+                es: "Seca los derrames de inmediato con un paño limpio. Presiona, no frotes, para que el líquido no se extienda.",
+            },
+            {
+                en: "Vacuum seats and carpets regularly so dirt doesn't grind into the fibers.",
+                es: "Aspira asientos y alfombras con regularidad para que la suciedad no se incruste en las fibras.",
+            },
+            {
+                en: "Let the car air out after the service, with the windows open or in the shade, so the fabric dries fully.",
+                es: "Deja ventilar el auto después del servicio, con las ventanas abiertas o a la sombra, para que la tela seque por completo.",
+            },
+            {
+                en: "Keep food and drinks to a minimum, and choose cups with lids.",
+                es: "Reduce la comida y las bebidas dentro del auto, y usa vasos con tapa.",
+            },
+            {
+                en: "Use a sunshade to protect fabric from sun fading.",
+                es: "Usa un parasol para proteger la tela de la decoloración por el sol.",
+            },
+        ],
+        faqs: [
+            faqCost({ en: "a car interior shampoo", es: "una limpieza de tapicería de carro" }),
+            faqTime,
+            {
+                q: {
+                    en: "What's the difference between a shampoo and an interior detail?",
+                    es: "¿Cuál es la diferencia entre el shampoo y la limpieza interior?",
+                },
+                a: {
+                    en: "The shampoo focuses on fabric: steam, cleaner and extraction for stains and odors in seats, carpets, headliner and trunk. The interior detail is general upkeep of the whole cabin: vacuuming, dashboard, console, vents and more, including leather. If your fabric is stained or smells, choose the shampoo. If it's mostly dusty, choose the interior detail.",
+                    es: "El shampoo se enfoca en la tela: vapor, limpiador y extracción para manchas y olores en asientos, alfombras, techo y maletero. La limpieza interior es el mantenimiento general de toda la cabina: aspirado, tablero, consola, rejillas y más, incluido el cuero. Si tu tela está manchada o huele, elige el shampoo. Si solo está empolvada, elige la limpieza interior.",
+                },
+            },
+            {
+                q: { en: "Will it remove every stain?", es: "¿Quita todas las manchas?" },
+                a: {
+                    en: "Many everyday stains come out, such as coffee, juice, food and mud. Some don't: dye transfer, burns, sun-faded fabric and very old stains can stay partly visible. The result depends on the fabric and how long the stain has been there, and we'll tell you what to expect.",
+                    es: "Muchas manchas del día a día salen, como café, jugo, comida y lodo. Otras no: la transferencia de tinte, las quemaduras, la tela descolorida por el sol y las manchas muy viejas pueden quedar parcialmente visibles. El resultado depende de la tela y del tiempo que lleve la mancha, y te decimos qué esperar.",
+                },
+            },
+            {
+                q: { en: "How long until the seats are dry?", es: "¿Cuánto tardan en secar los asientos?" },
+                a: {
+                    en: "The extractor removes most of the water, so the fabric ends up damp, not soaked. Drying time depends on the weather and the fabric. With the windows open or the car in the shade, it usually dries in a few hours. Avoid sitting on damp seats and leave the windows cracked while it dries.",
+                    es: "La máquina de extracción saca la mayor parte del agua, así que la tela queda húmeda, no empapada. El tiempo de secado depende del clima y de la tela. Con las ventanas abiertas o el auto a la sombra, normalmente seca en unas horas. Evita sentarte en asientos húmedos y deja las ventanas entreabiertas mientras seca.",
+                },
+            },
+            {
+                q: { en: "Can it get rid of odors?", es: "¿Puede quitar los olores?" },
+                a: {
+                    en: "Often, yes, when the odor comes from a spill or dirt in the fabric, because we remove the source. Deep odors such as cigarette smoke or mold may need more than one visit, and mold from long-term moisture isn't something a shampoo can fix.",
+                    es: "Muchas veces sí, cuando el olor viene de un derrame o de suciedad en la tela, porque quitamos la fuente. Los olores profundos, como el humo de cigarro o el moho, pueden necesitar más de una visita, y el moho por humedad de mucho tiempo no es algo que un shampoo pueda arreglar.",
+                },
+            },
+            faqHome,
+            faqCharge,
+        ],
+        bestFor: {
+            en: "Stained or smelly seats, carpets, headliner and trunk",
+            es: "Asientos, alfombras, techo y maletero manchados o con olor",
+        },
+        photos: {
+            cover: "/images/services/car-interior-shampoo-after.jpg",
+            coverPosition: "50% 35%",
+            beforeAfterTitle: { en: "Before and after", es: "Antes y después" },
+            beforeAfterIntro: {
+                en: "A rear seat with spilled-drink stains, cleaned with a brush, steam and extraction.",
+                es: "Un asiento trasero con manchas de líquido derramado, limpiado con cepillo, vapor y extracción.",
+            },
+            beforeAfter: [
+                {
+                    before: "/images/services/car-interior-shampoo-before.jpg",
+                    after: "/images/services/car-interior-shampoo-after.jpg",
+                    orientation: "portrait",
+                    caption: {
+                        en: "Rear fabric seat, stained and then cleaned",
+                        es: "Asiento trasero de tela, manchado y luego limpio",
+                    },
+                },
+            ],
+        },
+        compare: SHAMPOO_VS_INTERIOR,
     },
     "exterior-detail": {
         seoTitle: {
