@@ -166,7 +166,7 @@ async function getServices(): Promise<DbService[]> {
             .select("id, name, name_es, description, description_es, base_price, duration_minutes, sort_order")
             .eq("is_active", true)
             .order("sort_order", { ascending: true })
-            .limit(6);
+            .limit(12);
         if (error) {
             console.error("[ServicePage] services query error:", error.message);
             return [];

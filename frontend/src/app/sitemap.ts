@@ -30,7 +30,7 @@ async function getServicePages(): Promise<MetadataRoute.Sitemap> {
             .select('name, name_es')
             .eq('is_active', true)
             .order('sort_order', { ascending: true })
-            .limit(6);
+            .limit(12);
         if (error) {
             console.error('[sitemap] services query error:', error.message);
             return [];

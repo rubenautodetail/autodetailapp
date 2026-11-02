@@ -27,7 +27,7 @@ export const getNavServices = cache(async (locale: 'en' | 'es'): Promise<NavServ
             .select('id, name, name_es, sort_order')
             .eq('is_active', true)
             .order('sort_order', { ascending: true })
-            .limit(6);
+            .limit(12);
         if (error) console.error('[NavMenu] services query error:', error.message);
         services = ((data ?? []) as unknown as DbNavService[]).map((s) => ({
             name: serviceName(s, locale),

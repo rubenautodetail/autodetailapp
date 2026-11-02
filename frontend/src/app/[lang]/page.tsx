@@ -107,7 +107,7 @@ export default async function LandingPage({
             .select('id, name, name_es, description, description_es, base_price, sort_order')
             .eq('is_active', true)
             .order('sort_order', { ascending: true })
-            .limit(6);
+            .limit(12);
         if (error) console.error('[LandingPage] services query error:', error.message);
         dbServices = data ?? [];
     } catch (e) { console.error('[LandingPage] services fetch failed:', e); }

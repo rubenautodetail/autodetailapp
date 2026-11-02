@@ -1024,7 +1024,7 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
         },
         metaDescription: {
             en: "Car interior shampoo in Miami-Dade at your home or office. Steam and extraction for stained seats, carpets, headliner and trunk. From {price}.",
-            es: "Limpieza de tapicería y alfombras en Miami-Dade en tu casa u oficina. Vapor y extracción para manchas y olores en asientos, techo y maletero. Desde {price}.",
+            es: "Lavado de asientos y alfombras en Miami-Dade en tu casa u oficina. Vapor y extracción para manchas y olores en asientos, techo y maletero. Desde {price}.",
         },
         heroSub: {
             en: "Spilled drinks, kids, pets and Miami humidity leave stains and odors deep in the fabric. A shampoo with steam and extraction pulls them out of the seats, carpets, headliner and trunk.",
@@ -1032,11 +1032,11 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
         },
         quickAnswer: {
             en: "A car interior shampoo is a deep clean for fabric: seats, carpets, floor mats, headliner and trunk. We apply a cleaner, loosen the dirt with steam and a brush, and pull the dirty water out with an extractor. It targets stains and odors, takes {duration} and starts at {price}. For general upkeep of the whole cabin, an interior detail is the better fit.",
-            es: "La limpieza de tapicería es una limpieza profunda para tela: asientos, alfombras, tapetes, techo y maletero. Aplicamos un limpiador, soltamos la suciedad con vapor y cepillo, y sacamos el agua sucia con una máquina de extracción. Va dirigida a manchas y olores, toma {duration} y empieza en {price}. Para el mantenimiento general de toda la cabina, conviene más una limpieza interior.",
+            es: "El lavado de asientos y alfombras es una limpieza profunda de la tapicería de tela: asientos, alfombras, tapetes, techo y maletero. Aplicamos un limpiador, soltamos la suciedad con vapor y cepillo, y sacamos el agua sucia con una máquina de extracción. Va dirigida a manchas y olores, toma {duration} y empieza en {price}. Para el mantenimiento general de toda la cabina, conviene más una limpieza interior.",
         },
         scienceTitle: {
             en: "What is a car interior shampoo?",
-            es: "¿Qué es la limpieza de tapicería y alfombras?",
+            es: "¿Qué es el lavado de asientos y alfombras?",
         },
         science: [
             {
@@ -1087,7 +1087,7 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
                 },
             ],
         },
-        benefitsTitle: { en: "Why get a car interior shampoo", es: "Por qué hacer una limpieza de tapicería" },
+        benefitsTitle: { en: "Why get a car interior shampoo", es: "Por qué hacer un lavado de asientos y alfombras" },
         benefitsIntro: {
             en: "It's the right call when the fabric looks dirty or smells, not just dusty.",
             es: "Es lo indicado cuando la tela se ve sucia o huele, no solo cuando tiene polvo.",
@@ -1163,7 +1163,7 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
             },
         ],
         faqs: [
-            faqCost({ en: "a car interior shampoo", es: "una limpieza de tapicería de carro" }),
+            faqCost({ en: "a car interior shampoo", es: "un lavado de asientos y alfombras" }),
             faqTime,
             {
                 q: {
