@@ -48,64 +48,68 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Cannot create payment intent for temporary booking. Please create the booking first.' }, { status: 400 });
         }
 
-        let customerId = 'guest';
-        let verifiedAmount = amount;
-
-        // Look up the booking to validate amount and get customer email.
-        if (safeBookingId) {
-            try {
-                const supabase = createServiceClient();
-                const { data: booking } = await supabase
-                    .from('bookings')
-                    .select('customer_email, total_amount')
-                    .eq('id', safeBookingId)
-                    .single();
-
-                if (booking?.customer_email) {
-                    customerId = booking.customer_email;
-                }
-
-                // Server-side amount validation: use the booking's total, not client-provided amount
-                if (booking?.total_amount) {
-                    const dbAmount = Math.round(Number(booking.total_amount) * 100); // cents
-                    if (Math.abs(dbAmount - amount) > 1) {
-                        return NextResponse.json(
-                            { error: 'Amount mismatch. Please refresh and try again.' },
-                            { status: 400 }
-                        );
-                    }
-                    verifiedAmount = dbAmount;
-                }
-            } catch {
-                // Non-fatal: continue with client-provided amount for temp bookings
-            }
+        // A real, persisted booking is required: the amount always comes from the database.
+        if (!safeBookingId) {
+            return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
         }
+
+        const supabase = createServiceClient();
+        const { data: booking } = await supabase
+            .from('bookings')
+            .select('customer_email, user_id, total_amount, status')
+            .eq('id', safeBookingId)
+            .single();
+
+        if (!booking) {
+            return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+        }
+
+        // Ownership: only the customer who owns this booking can create a payment for it.
+        const isOwner =
+            (!!booking.customer_email && booking.customer_email.toLowerCase() === (user.email ?? '').toLowerCase()) ||
+            (!!booking.user_id && booking.user_id === user.id);
+        if (!isOwner) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        // Only bookings still waiting for payment can get a new payment intent
+        // (prevents overwriting the payment of an already paid booking).
+        if (booking.status !== 'pending_payment') {
+            return NextResponse.json({ error: 'This booking is not awaiting payment.' }, { status: 400 });
+        }
+
+        const customerId = booking.customer_email || user.email || 'guest';
+
+        // Server-side amount: use the booking's total, never trust the client amount.
+        const dbAmount = Math.round(Number(booking.total_amount) * 100); // cents
+        if (!dbAmount || dbAmount <= 0) {
+            return NextResponse.json({ error: 'Invalid booking amount' }, { status: 400 });
+        }
+        if (Math.abs(dbAmount - amount) > 1) {
+            return NextResponse.json(
+                { error: 'Amount mismatch. Please refresh and try again.' },
+                { status: 400 }
+            );
+        }
+        const verifiedAmount = dbAmount;
 
         // Create Stripe PaymentIntent (idempotent — safe to retry).
         const paymentIntent = await createPaymentIntent({
             amount: verifiedAmount,
-            bookingId: safeBookingId || 'test_booking',
+            bookingId: safeBookingId,
             customerId,
             currency,
         });
 
         // Persist payment intent ID on the booking.
-        if (safeBookingId) {
-            try {
-                const supabase = createServiceClient();
-                await supabase
-                    .from('bookings')
-                    .update({
-                        payment_intent_id: paymentIntent.paymentIntentId,
-                        // Do NOT set payment_status here — the intent is created but not yet
-                        // authorized by the bank. The webhook sets payment_status='authorized'
-                        // after stripe confirms the charge.
-                    })
-                    .eq('id', safeBookingId);
-            } catch (err) {
-                console.error('Failed to update booking with payment intent:', err);
-                // Non-fatal: PaymentIntent was created; the booking record is out of sync but recoverable via webhook.
-            }
+        // payment_status is NOT set here — the webhook sets 'authorized' once Stripe confirms the charge.
+        const { error: updateError } = await supabase
+            .from('bookings')
+            .update({ payment_intent_id: paymentIntent.paymentIntentId })
+            .eq('id', safeBookingId);
+        if (updateError) {
+            // Non-fatal: the PaymentIntent exists; the webhook can reconcile the booking.
+            console.error('Failed to update booking with payment intent:', updateError);
         }
 
         return NextResponse.json({

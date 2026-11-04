@@ -10,8 +10,26 @@ import { capturePaymentIntent } from '@/lib/stripe/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notify } from '@/lib/notifications';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
+import { rateLimit } from '@/lib/rateLimit';
+import { timingSafeEqual } from 'crypto';
+
+const TOO_MANY = 'Too many attempts. Please try again later. / Demasiados intentos. Intenta de nuevo más tarde.';
+
+/** Compares two strings without leaking, through response time, how close the guess was. */
+function safeEqual(a: unknown, b: unknown): boolean {
+    if (typeof a !== 'string' || typeof b !== 'string') return false;
+    const ba = Buffer.from(a);
+    const bb = Buffer.from(b);
+    if (ba.length !== bb.length) return false;
+    return timingSafeEqual(ba, bb);
+}
 
 export async function POST(req: NextRequest) {
+    // Layer 1: limit per IP — stops anyone hammering the endpoint from one connection.
+    if (await rateLimit(req, { maxRequests: 10, windowMs: 60_000, keyPrefix: 'booking-approve-ip' })) {
+        return NextResponse.json({ error: TOO_MANY }, { status: 429 });
+    }
+
     try {
         let body: { bookingId?: string; confirmationCode?: string };
         try {
@@ -36,6 +54,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Confirmation code is required' }, { status: 400 });
         }
 
+        // Layer 2: limit per booking regardless of IP — stops code guessing from many IPs.
+        // A real customer approves once, so 8 attempts per hour per booking is plenty.
+        // (Fixed identifier instead of the caller IP, so the counter is shared by all IPs.)
+        const sharedKey = { headers: { get: () => 'booking' } };
+        if (await rateLimit(sharedKey, { maxRequests: 8, windowMs: 60 * 60_000, keyPrefix: 'booking-approve-id', identifier: safeBookingId })) {
+            return NextResponse.json({ error: TOO_MANY }, { status: 429 });
+        }
+
         const supabase = createServiceClient();
 
         // Look up booking to get payment intent ID, current status, and confirmation code
@@ -50,7 +76,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Verify confirmation code matches — prevents unauthorized payment captures
-        if (booking.confirmation_code !== confirmationCode) {
+        if (!safeEqual(booking.confirmation_code, confirmationCode)) {
             return NextResponse.json({ error: 'Invalid confirmation code' }, { status: 403 });
         }
 
