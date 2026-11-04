@@ -15,10 +15,9 @@
     "hygraph:seed:vehicle-artwork": "node --env-file=.env.local scripts/hygraph/seed-vehicle-body-style-artwork.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
     "@next/third-parties": "^16.2.10",
     "@react-google-maps/api": "^2.20.8",
-    "@sentry/nextjs": "^10.43.0",
+    "@sentry/nextjs": "^10.78.0",
     "@stripe/react-stripe-js": "^5.6.0",
     "@stripe/stripe-js": "^8.7.0",
     "@supabase/ssr": "^0.8.0",
@@ -29,14 +28,14 @@
     "framer-motion": "^12.34.0",
     "googleapis": "^173.0.0",
     "lucide-react": "^0.564.0",
-    "next": "16.1.4",
+    "next": "16.4.5",
     "postgres": "^3.4.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",
-    "resend": "^6.9.3",
+    "resend": "^6.37.0",
     "stripe": "^20.3.1",
-    "zod": "^4.3.6"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@hygraph/management-sdk": "^1.6.0",
@@ -48,7 +47,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.4",
+    "eslint-config-next": "16.4.5",
     "jest": "^30.3.0",
     "jest-environment-node": "^30.3.0",
     "postcss": "^8.5.8",
