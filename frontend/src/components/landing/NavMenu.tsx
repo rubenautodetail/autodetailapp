@@ -4,6 +4,7 @@ import { SERVICES } from '@/lib/seo/services';
 import { serviceName, servicePath } from '@/lib/seo/serviceNames';
 import NavMenuClient, { type NavService } from './NavMenuClient';
 import MobileNavClient from './MobileNavClient';
+import { hasPosts } from '@/lib/blog/posts';
 
 interface NavMenuProps {
     locale: 'en' | 'es';
@@ -49,11 +50,11 @@ export const getNavServices = cache(async (locale: 'en' | 'es'): Promise<NavServ
 
 export async function NavMenu({ locale }: NavMenuProps) {
     const services = await getNavServices(locale);
-    return <NavMenuClient locale={locale} services={services} />;
+    return <NavMenuClient locale={locale} services={services} showBlog={hasPosts()} />;
 }
 
 /** Phone-only hamburger menu: same links as the desktop menu above. */
 export async function MobileNav({ locale, waHref, accountHref, accountLabel }: { locale: 'en' | 'es'; waHref: string | null; accountHref: string; accountLabel: string }) {
     const services = await getNavServices(locale);
-    return <MobileNavClient locale={locale} services={services} waHref={waHref} accountHref={accountHref} accountLabel={accountLabel} />;
+    return <MobileNavClient locale={locale} services={services} waHref={waHref} accountHref={accountHref} accountLabel={accountLabel} showBlog={hasPosts()} />;
 }

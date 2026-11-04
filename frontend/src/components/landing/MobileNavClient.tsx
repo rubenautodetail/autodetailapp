@@ -12,10 +12,12 @@ interface MobileNavClientProps {
     waHref: string | null;
     accountHref: string;
     accountLabel: string;
+    /** Show the "Blog" link (only when there is at least one article). */
+    showBlog?: boolean;
 }
 
 /** Hamburger menu for phones and tablets (the desktop menu takes over from lg up). */
-export default function MobileNavClient({ locale, services, waHref, accountHref, accountLabel }: MobileNavClientProps) {
+export default function MobileNavClient({ locale, services, waHref, accountHref, accountLabel, showBlog = false }: MobileNavClientProps) {
     const es = locale === 'es';
     const [open, setOpen] = useState(false);
     const [servicesOpen, setServicesOpen] = useState(true);
@@ -91,6 +93,11 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                         <Link href={es ? '/es/galeria' : '/en/gallery'} onClick={close} className={rowClass}>
                             {es ? 'Galería' : 'Gallery'}
                         </Link>
+                        {showBlog && (
+                            <Link href={`/${locale}/blog`} onClick={close} className={rowClass}>
+                                Blog
+                            </Link>
+                        )}
                         <Link href={`/${locale}/about`} onClick={close} className={rowClass}>
                             {es ? 'Nosotros' : 'About'}
                         </Link>

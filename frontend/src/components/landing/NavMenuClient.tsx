@@ -11,9 +11,11 @@ export interface NavService {
 interface NavMenuClientProps {
     locale: 'en' | 'es';
     services: NavService[];
+    /** Show the "Blog" link (only when there is at least one article). */
+    showBlog?: boolean;
 }
 
-export default function NavMenuClient({ locale, services }: NavMenuClientProps) {
+export default function NavMenuClient({ locale, services, showBlog = false }: NavMenuClientProps) {
     const [servicesOpen, setServicesOpen] = useState(false);
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,6 +65,11 @@ export default function NavMenuClient({ locale, services }: NavMenuClientProps) 
             <Link href={locale === 'es' ? '/es/galeria' : '/en/gallery'} className={navLinkClass}>
                 {locale === 'es' ? 'Galería' : 'Gallery'}
             </Link>
+            {showBlog && (
+                <Link href={`/${locale}/blog`} className={navLinkClass}>
+                    Blog
+                </Link>
+            )}
             <Link href={`/${locale}/about`} className={navLinkClass}>
                 {locale === 'es' ? 'Nosotros' : 'About'}
             </Link>

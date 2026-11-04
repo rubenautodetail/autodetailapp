@@ -3,6 +3,7 @@ import { getAllLandingParams } from '@/lib/seo/landing';
 import { createServiceClient } from '@/lib/supabase/server';
 import { servicePath } from '@/lib/seo/serviceNames';
 import { galleryPath } from '@/lib/gallery';
+import { getPublishedPosts, postPath } from '@/lib/blog/posts';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 const LOCALES = ['en', 'es'] as const;
@@ -50,6 +51,23 @@ async function getServicePages(): Promise<MetadataRoute.Sitemap> {
     }
 }
 
+/** Blog index + every published article, in both languages. Empty while there are no articles. */
+function blogPages(): MetadataRoute.Sitemap {
+    const posts = getPublishedPosts();
+    if (posts.length === 0) return [];
+    return [
+        ...urls('/blog', 'weekly', 0.6),
+        ...posts.flatMap((post) =>
+            LOCALES.map((locale) => ({
+                url: `${APP_URL}${postPath(post, locale)}`,
+                lastModified: new Date(post.updated ?? post.published),
+                changeFrequency: 'monthly' as ChangeFreq,
+                priority: 0.6,
+            })),
+        ),
+    ];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const servicePages = await getServicePages();
     return [
@@ -72,6 +90,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...urls('/terms', 'yearly', 0.3),
         // General service pages (educational)
         ...servicePages,
+        // Blog (nothing is listed until there is at least one published article)
+        ...blogPages(),
         // Programmatic [service]/[city] landing pages
         ...getAllLandingParams().map((p) => ({
             url: `${APP_URL}/${p.lang}/${p.service}/${p.city}`,
