@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthClient, createServiceClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rateLimit";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// A role can only be chosen during signup. After this window the account is "old"
+// and this endpoint will never change its role (prevents turning existing users into contractors).
+const SIGNUP_WINDOW_MS = 30 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
+  if (await rateLimit(req, { maxRequests: 10, windowMs: 60_000, keyPrefix: "create-profile" })) {
+    return NextResponse.json({ error: "Too many requests. Please try again in a minute." }, { status: 429 });
+  }
+
   try {
     let body;
     try {
@@ -13,6 +23,9 @@ export async function POST(req: NextRequest) {
 
     if (!userId || !name) {
       return NextResponse.json({ error: "Missing userId or name" }, { status: 400 });
+    }
+    if (typeof userId !== "string" || !UUID_RE.test(userId) || typeof name !== "string" || name.length > 120) {
+      return NextResponse.json({ error: "Invalid userId or name" }, { status: 400 });
     }
 
     // When a Bearer token is present (user has a session), verify it matches the userId.
@@ -30,7 +43,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const assignedRole = role === "contractor" ? "contractor" : "user";
     const supabase = createServiceClient();
 
     // Verify the userId corresponds to a real auth user (prevents abuse)
@@ -39,11 +51,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid user" }, { status: 403 });
     }
 
+    // The role can only be chosen for a brand-new account (signup in progress).
+    // Admin is never assignable here, and old accounts are always treated as plain users.
+    const accountAgeMs = Date.now() - new Date(authUser.created_at).getTime();
+    const isFreshSignup = Number.isFinite(accountAgeMs) && accountAgeMs < SIGNUP_WINDOW_MS;
+    const assignedRole = isFreshSignup && role === "contractor" ? "contractor" : "user";
+
     // Only insert if profile doesn't exist — the Supabase trigger may have already created it
     const { data: existing } = await supabase.from("profiles").select("id, role").eq("id", userId).single();
     if (existing) {
-      // If trigger created it with role='user' but this is a contractor signup, update the role
-      if (assignedRole === "contractor" && existing.role !== "contractor") {
+      // If trigger created it with role='user' but this is a contractor signup, update the role.
+      // Only ever upgrades a plain 'user' (never touches admins or existing contractors).
+      if (assignedRole === "contractor" && existing.role === "user") {
         await supabase.from("profiles").update({ role: assignedRole, updated_at: new Date().toISOString() }).eq("id", userId);
       }
       return NextResponse.json({ ok: true, message: "Profile already exists" });
