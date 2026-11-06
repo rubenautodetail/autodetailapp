@@ -3,6 +3,12 @@ import { withSentryConfig } from "@sentry/nextjs";
 import { CONTENT_SECURITY_POLICY } from "./src/lib/security/contentSecurityPolicy";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // Old address still saved in Google (it got a click and today shows 404).
+      { source: "/es/services/pulido-de-un-paso", destination: "/es/services/pulido", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
