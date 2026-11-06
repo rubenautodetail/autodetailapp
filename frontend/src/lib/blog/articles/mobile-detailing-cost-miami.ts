@@ -80,6 +80,11 @@ export const mobileDetailingCostMiami: BlogPost = {
                     { en: "Water spots and dull paint", es: "Manchas de agua y pintura opaca" },
                 ],
                 [
+                    { en: "[1-Step Paint Correction](/en/services/paint-enhancement)", es: "[Pulido de Pintura](/es/services/pulido)" },
+                    { en: "$300", es: "$300" },
+                    { en: "Swirl marks and dull paint (one-step polish)", es: "Marcas de remolino y pintura opaca (pulido de un paso)" },
+                ],
+                [
                     { en: "[Full Detail](/en/services/full-detail)", es: "[Lavado Completo](/es/services/detallado-completo)" },
                     { en: "$400", es: "$400" },
                     { en: "Inside and outside in one visit", es: "Por dentro y por fuera en una sola visita" },
@@ -132,6 +137,10 @@ export const mobileDetailingCostMiami: BlogPost = {
                 {
                     en: "Your fabric seats or carpets have stains or odors → **Car Interior Shampoo**.",
                     es: "Tus asientos de tela o alfombras tienen manchas u olores → **Lavado de Asientos y Alfombras**.",
+                },
+                {
+                    en: "Your paint looks dull or has swirl marks → **1-Step Paint Correction**.",
+                    es: "Tu pintura se ve opaca o tiene marcas de remolino → **Pulido de Pintura**.",
                 },
                 {
                     en: "You want inside and outside done in one visit → **Full Detail**.",
