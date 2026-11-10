@@ -14,7 +14,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import { galleryPath } from '@/lib/gallery';
 import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
 import { NavMenu, MobileNav } from '@/components/landing/NavMenu';
-import HalloweenEffect from '@/components/seasonal/HalloweenEffect';
+import HolidaySparkles from '@/components/seasonal/HolidaySparkles';
 import { getLocalBusinessSchema, getServiceCatalogSchema, getBreadcrumbSchema } from '@/lib/seo/schema';
 
 export const dynamic = 'force-dynamic';
@@ -144,7 +144,7 @@ export default async function LandingPage({
 
     return (
         <div className="min-h-screen bg-[#131835] text-white overflow-x-hidden">
-            <HalloweenEffect />
+            <HolidaySparkles />
             <JsonLd
                 data={[
                     getLocalBusinessSchema(dict.common.siteName, dict.common.tagline, locale),
@@ -221,20 +221,20 @@ export default async function LandingPage({
                         )}
                         <div className="hidden lg:block">
                             <Link
-                                href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
+                                href={isLoggedIn ? `/${locale}/customer` : `/${locale}/booking/select`}
                                 className="btn-primary text-sm px-6 py-2.5"
                             >
 
                                 {isLoggedIn
                                     ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
-                                    : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
+                                    : (locale === 'es' ? 'Reservar ahora' : 'Book now')}
                             </Link>
                         </div>
                         <MobileNav
                             locale={locale}
                             waHref={waHref}
-                            accountHref={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`}
-                            accountLabel={isLoggedIn ? (locale === 'es' ? 'Mi Cuenta' : 'My Account') : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
+                            accountHref={isLoggedIn ? `/${locale}/customer` : `/${locale}/booking/select`}
+                            accountLabel={isLoggedIn ? (locale === 'es' ? 'Mi Cuenta' : 'My Account') : (locale === 'es' ? 'Reservar ahora' : 'Book now')}
                         />
                     </div>
                 </div>

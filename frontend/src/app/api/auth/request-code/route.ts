@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
-    let body: { email?: unknown; name?: unknown };
+    let body: { email?: unknown; name?: unknown; mode?: unknown };
     try {
         body = await req.json();
     } catch {
@@ -29,8 +29,10 @@ export async function POST(req: NextRequest) {
 
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
     const name = typeof body.name === 'string' ? body.name.trim() : '';
+    // "login": only for existing accounts (never creates one). Default "booking" creates the account if new.
+    const isLogin = body.mode === 'login';
 
-    if (!email || email.length > 254 || !EMAIL_RE.test(email) || !name || name.length > 120) {
+    if (!email || email.length > 254 || !EMAIL_RE.test(email) || name.length > 120 || (!isLogin && !name)) {
         return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
     }
 
@@ -46,11 +48,17 @@ export async function POST(req: NextRequest) {
         const { error } = await supabase.auth.signInWithOtp({
             email,
             options: {
-                shouldCreateUser: true,
+                shouldCreateUser: !isLogin,
                 // Only applied when the account is new.
-                data: { full_name: name },
+                ...(isLogin ? {} : { data: { full_name: name } }),
             },
         });
+
+        if (error && isLogin && (error.status === 422 || error.code === 'otp_disabled' || error.code === 'signup_disabled')) {
+            // No account with that email. Answer the same as success so the form can't be used
+            // to find out which emails are registered.
+            return NextResponse.json({ ok: true });
+        }
 
         if (error) {
             if (error.status === 429) {

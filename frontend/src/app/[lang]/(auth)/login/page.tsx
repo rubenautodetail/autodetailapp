@@ -6,6 +6,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
+import { EmailCodeModal } from "@/components/booking/EmailCodeModal";
 
 const t = {
     en: {
@@ -17,6 +18,9 @@ const t = {
         noAccount: "Don't have an account?",
         register: "Create one",
         forgotPassword: "Forgot password?",
+        codeLogin: "Sign in with an email code",
+        or: "or",
+        needEmail: "Enter your email above first.",
         contractorLink: "Technician? Sign in here",
     },
     es: {
@@ -28,6 +32,9 @@ const t = {
         noAccount: "¿No tienes cuenta?",
         register: "Crear una",
         forgotPassword: "¿Olvidaste tu contraseña?",
+        codeLogin: "Entrar con código por correo",
+        or: "o",
+        needEmail: "Escribe primero tu correo arriba.",
         contractorLink: "¿Técnico? Inicia sesión aquí",
     },
 };
@@ -38,6 +45,7 @@ function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [showCodeModal, setShowCodeModal] = useState(false);
     type LoginAction =
         | { type: 'wrong_role'; role: "contractor" | "admin" }
         | { type: 'dismiss' }
@@ -111,6 +119,16 @@ function LoginForm() {
             }
             dispatch({ type: 'loading', value: false });
         }
+    };
+
+    const handleCodeLogin = () => {
+        const value = email.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            setError(dict.needEmail);
+            return;
+        }
+        setError("");
+        setShowCodeModal(true);
     };
 
     if (isLoading) {
@@ -242,6 +260,20 @@ function LoginForm() {
                         </button>
                     </form>
 
+                    <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-[var(--text-secondary)]">
+                        <span className="h-px flex-1 bg-[var(--divider)]" />
+                        {dict.or}
+                        <span className="h-px flex-1 bg-[var(--divider)]" />
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleCodeLogin}
+                        className="w-full py-3.5 rounded-xl border border-[var(--divider)] text-[var(--text-primary)] font-medium hover:bg-[var(--background)] transition-all"
+                    >
+                        {dict.codeLogin}
+                    </button>
+
                     <div className="mt-5 text-center">
                         <p className="text-sm text-[var(--text-secondary)]">
                             {dict.noAccount}{" "}
@@ -262,6 +294,15 @@ function LoginForm() {
                     </Link>
                 </div>
             </div>
+            {showCodeModal && (
+                <EmailCodeModal
+                    locale={lang}
+                    mode="login"
+                    email={email.trim()}
+                    onClose={() => setShowCodeModal(false)}
+                    onVerified={() => setShowCodeModal(false)}
+                />
+            )}
         </div>
     );
 }

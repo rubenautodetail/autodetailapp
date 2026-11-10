@@ -8,7 +8,10 @@ import { useAuth } from "@/contexts/AuthContext";
 interface EmailCodeModalProps {
   locale: "en" | "es";
   email: string;
-  name: string;
+  /** Required in "booking" mode (used to create the account); ignored in "login" mode. */
+  name?: string;
+  /** "booking": creates the account if new. "login": only signs in an existing account. */
+  mode?: "booking" | "login";
   onVerified: () => void;
   onClose: () => void;
 }
@@ -21,8 +24,9 @@ const RESEND_SECONDS = 60;
  * (creating the account if the email is new), so the booking can move on to payment
  * without a separate sign-up step.
  */
-export function EmailCodeModal({ locale, email, name, onVerified, onClose }: EmailCodeModalProps) {
+export function EmailCodeModal({ locale, email, name = "", mode = "booking", onVerified, onClose }: EmailCodeModalProps) {
   const es = locale === "es";
+  const isLogin = mode === "login";
   const { refreshProfile } = useAuth();
   const supabase = createClient();
 
@@ -36,9 +40,12 @@ export function EmailCodeModal({ locale, email, name, onVerified, onClose }: Ema
   const t = {
     title: es ? "Revisa tu correo" : "Check your email",
     sentTo: es ? "Enviamos un código de 6 dígitos a" : "We sent a 6-digit code to",
-    why: es
-      ? "Con este código creamos tu cuenta y guardamos tu reserva. No necesitas contraseña."
-      : "This code creates your account and saves your booking. No password needed.",
+    why: isLogin
+      ? (es ? "Con este código entras a tu cuenta. No necesitas contraseña." : "This code signs you in to your account. No password needed.")
+      : (es
+        ? "Con este código creamos tu cuenta y guardamos tu reserva. No necesitas contraseña."
+        : "This code creates your account and saves your booking. No password needed."),
+    verifyLogin: es ? "Verificar y entrar" : "Verify and sign in",
     label: es ? "Código" : "Code",
     verify: es ? "Verificar y continuar" : "Verify and continue",
     verifying: es ? "Verificando…" : "Verifying…",
@@ -69,7 +76,7 @@ export function EmailCodeModal({ locale, email, name, onVerified, onClose }: Ema
       const res = await fetch("/api/auth/request-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({ email, name, mode }),
       });
       if (!res.ok) {
         setError(res.status === 429 ? t.rateLimited : t.sendFailed);
@@ -84,7 +91,7 @@ export function EmailCodeModal({ locale, email, name, onVerified, onClose }: Ema
       setStatus("ready");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, name, es]);
+  }, [email, name, mode, es]);
 
   // Send the first code when the window opens (once, even in React strict mode).
   useEffect(() => {
@@ -120,6 +127,13 @@ export function EmailCodeModal({ locale, email, name, onVerified, onClose }: Ema
         return;
       }
 
+      // Login mode: the account already exists, nothing to create.
+      if (isLogin) {
+        await refreshProfile();
+        onVerified();
+        return;
+      }
+
       // Make sure the profile row exists (new accounts). Existing profiles are left untouched.
       try {
         const profileRes = await fetch("/api/auth/create-profile", {
@@ -151,7 +165,7 @@ export function EmailCodeModal({ locale, email, name, onVerified, onClose }: Ema
       onVerified();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [email, name, status, es]
+    [email, name, status, es, isLogin]
   );
 
   const onChange = (raw: string) => {
@@ -216,7 +230,7 @@ export function EmailCodeModal({ locale, email, name, onVerified, onClose }: Ema
           disabled={code.length !== CODE_LENGTH || status !== "ready"}
           className="btn-primary mt-3 inline-flex w-full items-center justify-center rounded-full px-6 py-4 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {status === "verifying" ? t.verifying : t.verify}
+          {status === "verifying" ? t.verifying : isLogin ? t.verifyLogin : t.verify}
         </button>
 
         <div className="mt-4 flex items-center justify-between text-sm">
