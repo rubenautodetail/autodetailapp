@@ -13,6 +13,7 @@
  * behind the translucent MobileBottomNav as well.
  */
 import type { Metadata } from "next";
+import BookingLanguageSwitch from "@/components/booking/BookingLanguageSwitch";
 
 // Booking steps are a transactional flow, not search landing pages.
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
 export default function BookingLayout({ children }: { children: React.ReactNode }) {
     return (
         <div data-booking-shell className="min-h-[100dvh] overflow-x-clip bg-[#131835]">
+            <BookingLanguageSwitch />
             {children}
         </div>
     );
