@@ -84,8 +84,14 @@ export async function updateSession(request: NextRequest) {
         path === '/' ||
         path === ''
 
+    // Booking steps 1-4 (service, location, schedule, "your details") are open to
+    // visitors without an account. The account is created at the end of step 4 with
+    // an email code, right before payment. Payment, confirmation and booking detail
+    // pages (and the booking/payment APIs below) still require a session.
+    const isPublicBookingStep = /\/[a-z]{2}\/booking\/(select|location|schedule|review)\/?$/.test(path)
+
     const isBookingRoute =
-        (/\/[a-z]{2}\/booking(\/|$)/.test(path) && !path.includes('/booking/approve')) ||
+        (/\/[a-z]{2}\/booking(\/|$)/.test(path) && !path.includes('/booking/approve') && !isPublicBookingStep) ||
         path.startsWith('/api/booking/create') ||
         path.startsWith('/api/payments/')
 

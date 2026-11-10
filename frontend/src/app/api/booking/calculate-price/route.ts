@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rateLimit';
 import { PriceCalculateSchema } from '@/lib/validation/booking';
 import {
     centsToDollars,
@@ -13,6 +14,11 @@ import {
 } from '@/lib/pricing';
 
 export async function POST(req: NextRequest) {
+    // Public endpoint (booking steps are open to visitors): cap abuse per IP.
+    if (await rateLimit(req, { maxRequests: 60, windowMs: 60_000, keyPrefix: 'calculate-price' })) {
+        return NextResponse.json({ error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
+    }
+
     try {
         let rawBody;
         try {

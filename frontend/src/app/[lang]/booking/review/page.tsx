@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useBooking, useBookingStatus, type VehicleInfo } from "@/contexts";
 import { useAuth } from "@/contexts/AuthContext";
 import { PricingSummary, ProgressIndicator } from "@/components/booking";
+import { EmailCodeModal } from "@/components/booking/EmailCodeModal";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { X, Plus, Car, Warehouse } from "lucide-react";
@@ -56,7 +57,9 @@ export default function ReviewPage({ params }: ReviewPageProps) {
   } = useBooking();
 
   const { vehicles: garageVehicles, addVehicle } = useBookingStatus();
-  const { user, profile } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
+  // Visitors without a session confirm their email with a code before paying.
+  const [showCodeModal, setShowCodeModal] = useState(false);
 
   const [name, setName] = useState(customerInfo?.name || "");
   const [email, setEmail] = useState(customerInfo?.email || "");
@@ -303,6 +306,16 @@ export default function ReviewPage({ params }: ReviewPageProps) {
       return;
     }
 
+    // No account yet: confirm the email with a code (creates the account), then pay.
+    if (!user) {
+      setShowCodeModal(true);
+      return;
+    }
+
+    goToPayment();
+  };
+
+  const goToPayment = () => {
     nextStep();
     router.push(`/${locale}/booking/payment`);
   };
@@ -817,7 +830,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   fullWidth
                   variant="primary"
                   onClick={handleContinue}
-                  disabled={quoteStatus === "loading" || !allVehiclesAssigned}
+                  disabled={quoteStatus === "loading" || !allVehiclesAssigned || authLoading}
                 >
                   {locale === "es" ? "Continuar al Pago" : "Continue to Payment"}
                   <svg
@@ -862,6 +875,18 @@ export default function ReviewPage({ params }: ReviewPageProps) {
           </div>
         </div>
       </div>
+      {showCodeModal && (
+        <EmailCodeModal
+          locale={locale as "en" | "es"}
+          email={email.trim()}
+          name={name.trim()}
+          onClose={() => setShowCodeModal(false)}
+          onVerified={() => {
+            setShowCodeModal(false);
+            goToPayment();
+          }}
+        />
+      )}
     </div>
   );
 }

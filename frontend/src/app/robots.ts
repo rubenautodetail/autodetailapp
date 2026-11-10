@@ -12,6 +12,8 @@ const PRIVATE_DISALLOW = [
     '/es/dashboard/',
     '/en/customer/',
     '/es/customer/',
+    '/en/booking/',
+    '/es/booking/',
     '/en/login',
     '/es/login',
     '/en/register',
