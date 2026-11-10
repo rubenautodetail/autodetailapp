@@ -151,16 +151,6 @@ export function EmailCodeModal({ locale, email, name = "", mode = "booking", onV
         return;
       }
 
-      // Welcome email only for brand-new accounts (non-blocking).
-      const accountAgeMs = Date.now() - new Date(data.user.created_at).getTime();
-      if (Number.isFinite(accountAgeMs) && accountAgeMs < 10 * 60 * 1000) {
-        fetch("/api/auth/send-welcome", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, userId: data.user.id }),
-        }).catch(() => undefined);
-      }
-
       await refreshProfile();
       onVerified();
     },
@@ -199,7 +189,7 @@ export function EmailCodeModal({ locale, email, name = "", mode = "booking", onV
           {t.title}
         </h2>
         <p className="mt-2 text-sm text-[#A5B0D1]">
-          {t.sentTo} <span className="font-semibold text-white break-all">{email}</span>
+          {t.sentTo} <span className="font-semibold text-white break-words">{email}</span>
         </p>
         <p className="mt-1 text-xs text-[#8994B8]">{t.why}</p>
 
