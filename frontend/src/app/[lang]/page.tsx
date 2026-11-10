@@ -219,22 +219,30 @@ export default async function LandingPage({
                                 WhatsApp
                             </a>
                         )}
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:flex lg:flex-col lg:items-center lg:gap-1">
                             <Link
                                 href={isLoggedIn ? `/${locale}/customer` : `/${locale}/booking/select`}
                                 className="btn-primary text-sm px-6 py-2.5"
                             >
-
                                 {isLoggedIn
                                     ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
                                     : (locale === 'es' ? 'Reservar ahora' : 'Book now')}
                             </Link>
+                            {!isLoggedIn && (
+                                <Link
+                                    href={`/${locale}/login`}
+                                    className="text-xs text-white/80 underline underline-offset-4 hover:text-white"
+                                >
+                                    {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
+                                </Link>
+                            )}
                         </div>
                         <MobileNav
                             locale={locale}
                             waHref={waHref}
                             accountHref={isLoggedIn ? `/${locale}/customer` : `/${locale}/booking/select`}
                             accountLabel={isLoggedIn ? (locale === 'es' ? 'Mi Cuenta' : 'My Account') : (locale === 'es' ? 'Reservar ahora' : 'Book now')}
+                            loginHref={isLoggedIn ? null : `/${locale}/login`}
                         />
                     </div>
                 </div>

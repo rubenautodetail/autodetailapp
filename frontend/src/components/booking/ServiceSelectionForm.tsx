@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { useBooking, useBookingStatus, Service, AddOn } from "@/contexts";
@@ -34,6 +36,12 @@ export default function ServiceSelectionForm({
     preselectedServiceName,
 }: ServiceSelectionFormProps) {
     const router = useRouter();
+    const { user, isLoading: authLoading } = useAuth();
+    // After logging in, come back to exactly this page (keeps ?service=... if there was one).
+    const [loginNext, setLoginNext] = useState(`/${locale}/booking/select`);
+    useEffect(() => {
+        setLoginNext(`${window.location.pathname}${window.location.search}`);
+    }, []);
     const { vehicles: garageVehicles } = useBookingStatus();
     const [previewResult, setPreviewResult] = useState<{
         requestKey: string;
@@ -334,6 +342,20 @@ export default function ServiceSelectionForm({
                             ? "Selecciona el paquete perfecto para tu vehículo"
                             : "Select the perfect detailing package for your vehicle"}
                     </p>
+                    {!authLoading && !user && (
+                        <p className="mt-3 text-sm text-[#A5B0D1]">
+                            {locale === "es" ? "¿Ya tienes cuenta? " : "Already have an account? "}
+                            <Link
+                                href={`/${locale}/login?next=${encodeURIComponent(loginNext)}`}
+                                className="font-semibold text-[#D0B078] underline underline-offset-4"
+                            >
+                                {locale === "es" ? "Inicia sesión" : "Log in"}
+                            </Link>
+                            {locale === "es"
+                                ? " para usar tus carros y direcciones guardados."
+                                : " to use your saved vehicles and addresses."}
+                        </p>
+                    )}
                     {dataSource === "catalog" && (
                         <p className="text-xs text-green-400 mt-2 opacity-60">
                             {locale === "es" ? "Precios en tiempo real" : "Live Pricing Available"}

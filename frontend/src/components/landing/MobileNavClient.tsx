@@ -12,12 +12,14 @@ interface MobileNavClientProps {
     waHref: string | null;
     accountHref: string;
     accountLabel: string;
+    /** Login link shown under the main button when there is no session. */
+    loginHref?: string | null;
     /** Show the "Blog" link (only when there is at least one article). */
     showBlog?: boolean;
 }
 
 /** Hamburger menu for phones and tablets (the desktop menu takes over from lg up). */
-export default function MobileNavClient({ locale, services, waHref, accountHref, accountLabel, showBlog = false }: MobileNavClientProps) {
+export default function MobileNavClient({ locale, services, waHref, accountHref, accountLabel, loginHref = null, showBlog = false }: MobileNavClientProps) {
     const es = locale === 'es';
     const [open, setOpen] = useState(false);
     const [servicesOpen, setServicesOpen] = useState(true);
@@ -56,13 +58,24 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                 <div role="dialog" aria-modal="true" aria-label={es ? 'Menú' : 'Menu'} className="fixed inset-0 z-[100] overflow-y-auto bg-[#131835]">
                     <div className="mx-auto flex max-w-md flex-col px-6 pb-10 pt-5">
                         <div className="mb-6 flex items-center justify-between gap-3">
-                            <Link
-                                href={accountHref}
-                                onClick={close}
-                                className="flex h-11 items-center rounded-full border-2 border-[#D0B078] px-5 text-base font-semibold text-[#D0B078]"
-                            >
-                                {accountLabel}
-                            </Link>
+                            <div className="flex flex-col items-center gap-1.5">
+                                <Link
+                                    href={accountHref}
+                                    onClick={close}
+                                    className="flex h-11 items-center rounded-full border-2 border-[#D0B078] px-5 text-base font-semibold text-[#D0B078]"
+                                >
+                                    {accountLabel}
+                                </Link>
+                                {loginHref && (
+                                    <Link
+                                        href={loginHref}
+                                        onClick={close}
+                                        className="text-sm text-white/80 underline underline-offset-4"
+                                    >
+                                        {es ? 'Iniciar sesión' : 'Log in'}
+                                    </Link>
+                                )}
+                            </div>
                             <button
                                 type="button"
                                 onClick={close}

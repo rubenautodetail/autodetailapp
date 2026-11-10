@@ -54,7 +54,7 @@ export async function NavMenu({ locale }: NavMenuProps) {
 }
 
 /** Phone-only hamburger menu: same links as the desktop menu above. */
-export async function MobileNav({ locale, waHref, accountHref, accountLabel }: { locale: 'en' | 'es'; waHref: string | null; accountHref: string; accountLabel: string }) {
+export async function MobileNav({ locale, waHref, accountHref, accountLabel, loginHref = null }: { locale: 'en' | 'es'; waHref: string | null; accountHref: string; accountLabel: string; loginHref?: string | null }) {
     const services = await getNavServices(locale);
-    return <MobileNavClient locale={locale} services={services} waHref={waHref} accountHref={accountHref} accountLabel={accountLabel} showBlog={hasPosts()} />;
+    return <MobileNavClient locale={locale} services={services} waHref={waHref} accountHref={accountHref} accountLabel={accountLabel} loginHref={loginHref} showBlog={hasPosts()} />;
 }
