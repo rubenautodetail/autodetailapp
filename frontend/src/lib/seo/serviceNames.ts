@@ -46,14 +46,13 @@ export function toDisplayName(name: string): string {
 const CUSTOMER_NAMES: Record<Locale, Record<string, string>> = {
     en: {
         "exterior-detail": "Exterior Hand Wash & Wax",
-        "paint-enhancement": "1-Step Paint Correction",
     },
     es: {
         "detallado-express": "Lavado Express",
         "detallado-interior": "Limpieza Interior",
         "detallado-exterior": "Lavado Exterior y Encerado",
         "detallado-completo": "Lavado Completo",
-        "pulido": "Pulido de Pintura",
+        "pulido-1-paso": "Pulido de Carros de 1 Paso",
         "restauracion-de-faros": "Pulido de Faros",
     },
 };

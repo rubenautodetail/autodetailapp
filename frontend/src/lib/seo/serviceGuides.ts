@@ -1570,13 +1570,13 @@ export const SERVICE_GUIDES: Record<string, ServiceGuide> = {
             coverPosition: "50% 60%",
         },
     },
-    "paint-enhancement": {
+    "1-step-car-polish": {
         seoTitle: {
-            en: "1-Step Paint Correction Miami: Mobile Polish for Dull Paint",
-            es: "Pulido de Pintura de Carros a Domicilio en Miami",
+            en: "1-Step Car Polish in Miami | Mobile Polish for Dull Paint",
+            es: "Pulido de Carros de 1 Paso a Domicilio en Miami",
         },
         metaDescription: {
-            en: "Paint enhancement in Miami-Dade at your home or office: a one-step polish for dull, lightly swirled paint. What it can and can't fix. From {price}.",
+            en: "1-step car polish in Miami-Dade at your home or office: a one-step polish for dull, lightly swirled paint. What it can and can't fix. From {price}.",
             es: "Pulido de un paso en Miami-Dade en tu casa u oficina para pintura opaca o con remolinos ligeros. Qué corrige y qué no. Desde {price}.",
         },
         heroSub: {
