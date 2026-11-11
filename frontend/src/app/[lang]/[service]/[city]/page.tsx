@@ -15,6 +15,8 @@ import { SERVICES, t } from '@/lib/seo/services';
 import { NEIGHBORHOODS, getNearbyNeighborhoods } from '@/lib/seo/locations';
 import { SERVICE_GUIDES, type L } from '@/lib/seo/serviceGuides';
 import { galleryPath } from '@/lib/gallery';
+import { createServiceClient } from '@/lib/supabase/server';
+import { serviceSlug as dbServiceSlug } from '@/lib/seo/serviceNames';
 import {
     getCityServiceBusinessSchema,
     getFaqSchema,
@@ -22,6 +24,45 @@ import {
 } from '@/lib/seo/schema';
 
 export const dynamicParams = false;
+
+// Booking links read the service names from Supabase; refresh them every 5 minutes.
+export const revalidate = 300;
+
+/**
+ * Which service (English URL slug under /services/) each landing page should preselect
+ * in the booking flow. null = general page, the customer picks from the full list.
+ * The ceramic coating is done in the shop and is not a bookable service, so it has none.
+ */
+const BOOKING_SERVICE_SLUG: Record<string, string | null> = {
+    'interior-detailing': 'interior-detail',
+    'exterior-detailing': 'exterior-detail',
+    'express-detail': 'express-detail',
+    'headlight-restoration': 'headlight-restoration',
+    'ceramic-coating': null,
+    'mobile-car-detailing': null,
+};
+
+/** English name (as stored in Supabase) of the service behind a landing page, or null. */
+async function getBookingServiceName(landingServiceId: string): Promise<string | null> {
+    const targetSlug = BOOKING_SERVICE_SLUG[landingServiceId] ?? null;
+    if (!targetSlug) return null;
+    try {
+        const supabase = createServiceClient();
+        const { data, error } = await supabase
+            .from('services')
+            .select('name, name_es')
+            .eq('is_active', true)
+            .limit(12);
+        if (error || !data) return null;
+        const match = (data as { name: string; name_es: string | null }[]).find(
+            (svc) => dbServiceSlug(svc, 'en') === targetSlug
+        );
+        return match?.name ?? null;
+    } catch {
+        // Never break the page: without the service the link works as before.
+        return null;
+    }
+}
 
 export function generateStaticParams() {
     return getAllLandingParams();
@@ -96,7 +137,11 @@ export default async function ServiceCityPage({
     const dict = await getDictionary(locale);
     const es = locale === 'es';
 
-    const bookHref = `/${locale}/booking/select`;
+    // Same link the service pages use: the booking opens with this service already chosen.
+    const bookingServiceName = await getBookingServiceName(service.id);
+    const bookHref = bookingServiceName
+        ? `/${locale}/booking/select?service=${encodeURIComponent(bookingServiceName)}`
+        : `/${locale}/booking/select`;
     const waText = encodeURIComponent(
         es
             ? `Hola, quiero ${service.name.es} en ${neighborhood.name}.`
