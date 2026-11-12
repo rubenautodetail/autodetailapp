@@ -25,7 +25,7 @@ const MILE_M = 1609.344;
 export const APPROX_RADIUS_MILES = 1;
 const MAX_OFFSET_FRACTION = 0.7; // home is at most 0.7 mi from the circle's center
 const CIRCLE_POINTS = 48;
-const MAP_ZOOM = 13;
+const MAP_ZOOM = 11.5; // zoomed out: the 1-mile circle with a wide view of the surroundings
 
 export interface ApproxMap {
     imageUrl: string;
@@ -115,7 +115,7 @@ export async function getApproxMap(parts: AddressParts): Promise<ApproxMap | nul
         const overlay = encodeURIComponent(JSON.stringify(circleFeature(center)));
         const imageUrl =
             `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/geojson(${overlay})/` +
-            `${center.lng.toFixed(5)},${center.lat.toFixed(5)},${MAP_ZOOM}/640x320@2x?access_token=${publicToken}`;
+            `${center.lng.toFixed(5)},${center.lat.toFixed(5)},${MAP_ZOOM}/640x400@2x?access_token=${publicToken}`;
 
         return { imageUrl, radiusMiles: APPROX_RADIUS_MILES };
     } catch {
