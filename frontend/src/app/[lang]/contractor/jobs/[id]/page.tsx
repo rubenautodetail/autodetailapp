@@ -705,7 +705,9 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                         <button
                             onClick={handleEnRoute}
                             disabled={enRouting || !canPressOnMyWay}
-                            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base"
+                            className={canPressOnMyWay
+                                ? "w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-base"
+                                : "w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#1A2142]/50 border border-[#2A3155]/50 text-[#A5B0D1]/40 font-bold rounded-xl cursor-not-allowed text-base"}
                         >
                             {enRouting ? (
                                 <>
