@@ -6,6 +6,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
+import { getApproxMap } from '@/lib/geo/approxLocation';
+
+// Only the first jobs get a map, to keep Mapbox usage small.
+const MAX_INCOMING_MAPS = 3;
 
 export async function GET(req: NextRequest) {
     try {
@@ -45,15 +49,25 @@ export async function GET(req: NextRequest) {
             .eq('status', 'pending_assignment')
             .order('created_at', { ascending: true });
 
-        const incomingJobs = (incomingRaw ?? []).map((b) => ({
+        // Approximate 1-mile map for the first incoming jobs (server-side; the real address never leaves).
+        const incomingMaps = await Promise.all(
+            (incomingRaw ?? []).map((b, i) =>
+                i < MAX_INCOMING_MAPS
+                    ? getApproxMap({ address: b.address, city: b.city, state: b.state, zip: b.zip_code }).catch(() => null)
+                    : Promise.resolve(null)
+            )
+        );
+
+        const incomingJobs = (incomingRaw ?? []).map((b, i) => ({
             id: b.id,
             documentId: b.document_id,
             confirmationCode: b.confirmation_code,
             serviceName: b.service_name || 'Auto Detail',
             timeWindow: b.time_window || 'TBD',
             date: b.date,
-            // Only show ZIP until accepted — hide full address
-            area: b.zip_code || '',
+            // Only city + ZIP until accepted — hide full address
+            area: [b.city, b.zip_code].filter(Boolean).join(', '),
+            approxMap: incomingMaps[i] ?? null,
             totalAmount: (Number(b.total_amount) || 0) * 0.70,
             status: b.status,
         }));

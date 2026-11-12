@@ -34,6 +34,7 @@ const t = {
         reject: "Skip",
         viewJob: "View Job",
         area: "Area",
+        approxMapCaption: "Approximate area (about 1 mile). The exact address is shared after you accept and press On My Way.",
         date: "Date",
         time: "Time",
         payout: "Payout",
@@ -72,6 +73,7 @@ const t = {
         reject: "Omitir",
         viewJob: "Ver Trabajo",
         area: "Área",
+        approxMapCaption: "Zona aproximada (a 1 milla). La dirección exacta se da después de aceptar y presionar Estoy en camino.",
         date: "Fecha",
         time: "Hora",
         payout: "Pago",
@@ -116,6 +118,7 @@ interface DashboardJob {
     date?: string;
     timeWindow?: string;
     area?: string;
+    approxMap?: { imageUrl: string; radiusMiles: number } | null;
     address?: string;
     addressHidden?: boolean;
     totalAmount: number;
@@ -584,6 +587,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                         {incomingJobs.length > 0 ? incomingJobs.map((job) => (
                             <div key={job.id} className="px-6 py-5 hover:bg-white/[0.02] transition-colors">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="min-w-0 flex-1">
                                     <div className="space-y-1.5 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <h3 className="font-semibold text-white text-base truncate">{job.serviceName}</h3>
@@ -611,7 +615,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                         </div>
                                         <p className="text-[#D0B078] font-semibold text-sm">${(Number(job.totalAmount) || 0).toFixed(2)} {labels.payout}</p>
                                     </div>
-                                    <div className="flex gap-2 shrink-0">
+                                    <div className="flex gap-2 shrink-0 mt-4">
                                         <button
                                             onClick={() => handleAcceptJob(job.id)}
                                             disabled={acceptingId === job.id}
@@ -627,6 +631,19 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                             {rejectingId === job.id ? '...' : labels.reject}
                                         </button>
                                     </div>
+                                    </div>
+                                    {job.approxMap?.imageUrl && (
+                                        <div className="sm:w-80 shrink-0">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={job.approxMap.imageUrl}
+                                                alt={labels.approxMapCaption}
+                                                loading="lazy"
+                                                className="w-full h-40 object-cover rounded-xl border border-[#2C355E]"
+                                            />
+                                            <p className="text-[11px] text-[#5E698F] mt-1.5 leading-snug">{labels.approxMapCaption}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )) : (
