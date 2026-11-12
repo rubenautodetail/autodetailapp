@@ -259,6 +259,19 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
         }
     };
 
+    // Silent refresh (no spinner): after a status change the server releases the
+    // address and phone, so the screen must fetch them again.
+    const refreshJob = async () => {
+        if (codeParam) return;
+        try {
+            const accessToken = session?.access_token;
+            const data = await contractorApi.fetchJobDetails(id, accessToken);
+            setJob(data as unknown as JobData);
+        } catch {
+            /* keep the current screen; the status was already updated */
+        }
+    };
+
     const reload = () => {
         if (codeParam) {
             loadJobByCode(codeParam);
@@ -285,6 +298,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             const json = await res.json() as { error?: string };
             if (!res.ok) throw new Error(json.error || "Failed");
             setJob((prev) => prev ? { ...prev, status: "en_route" } : prev);
+            await refreshJob();
         } catch (err: unknown) {
             console.error("En-route error:", err);
             setActionError(t.enRouteError);
@@ -322,6 +336,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             }
             // Optimistically update status without a full reload
             setJob((prev) => prev ? { ...prev, status: "in_progress" } : prev);
+            await refreshJob();
         } catch (err: unknown) {
             console.error("Start job error:", err);
             setActionError(t.startError);
@@ -659,7 +674,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                         onClick={handleNavigate}
                         disabled={!showFullAddress}
                         className={showFullAddress
-                            ? "flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142] border border-[#2A3155] rounded-xl text-[#A5B0D1] hover:text-white hover:border-[#D0B078]/50 transition-colors text-sm font-medium"
+                            ? "flex items-center justify-center gap-2 px-4 py-3 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
                             : "flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142]/50 border border-[#2A3155]/50 rounded-xl text-[#A5B0D1]/40 cursor-not-allowed text-sm font-medium"}
                     >
                         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -672,7 +687,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                     {phoneUnlocked && job.customer_phone ? (
                         <a
                             href={`tel:${job.customer_phone}`}
-                            className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142] border border-[#2A3155] rounded-xl text-[#A5B0D1] hover:text-white hover:border-[#D0B078]/50 transition-colors text-sm font-medium"
+                            className="flex items-center justify-center gap-2 px-4 py-3 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
                         >
                             <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.948V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
