@@ -16,7 +16,7 @@ export const CONTENT_SECURITY_POLICY = [
     "https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com",
     "https://*.clarity.ms https://c.bing.com",
   ].join(" "),
-  "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com https://images.unsplash.com https://images.hygraph.com https://*.graphassets.com https://*.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com",
+  "img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com https://*.stripe.com https://images.unsplash.com https://images.hygraph.com https://*.graphassets.com https://*.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com https://api.mapbox.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://pay.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",

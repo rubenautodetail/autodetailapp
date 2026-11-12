@@ -19,6 +19,7 @@ interface JobData {
     id: string | number;
     status: string;
     service?: { name?: string; name_es?: string; description?: string | null; description_es?: string | null } | null;
+    approxMap?: { imageUrl: string; radiusMiles: number } | null;
     location?: { address?: string | null; city?: string | null; zipCode?: string | null } | null;
     address?: string;
     zip_code?: string;
@@ -48,6 +49,7 @@ const translations = {
         service: "Service",
         address: "Address",
         addressHidden: "Full address appears when you press On My Way",
+        approxMapCaption: "Approximate area, about 1 mile around the customer. The exact address unlocks when you press On My Way.",
         scheduledDate: "Scheduled Date",
         timeWindow: "Time Window",
         status: "Status",
@@ -96,6 +98,7 @@ const translations = {
         service: "Servicio",
         address: "Dirección",
         addressHidden: "La dirección completa aparece al pulsar On My Way",
+        approxMapCaption: "Zona aproximada, a 1 milla a la redonda del cliente. La dirección exacta se desbloquea al pulsar On My Way.",
         scheduledDate: "Fecha Programada",
         timeWindow: "Ventana de Tiempo",
         status: "Estado",
@@ -553,6 +556,19 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                         <div className="sm:col-span-2">
                             <p className="text-[#A5B0D1] text-xs font-medium uppercase tracking-wide mb-1">{t.address}</p>
                             <p className="text-white mb-3">{displayAddress}</p>
+                            {/* Approximate area (1-mile circle) while the exact address is still hidden */}
+                            {!showFullAddress && job.approxMap?.imageUrl && (
+                                <div className="mb-3 overflow-hidden rounded-xl border border-[#2C355E]">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={job.approxMap.imageUrl}
+                                        alt={t.approxMapCaption}
+                                        loading="lazy"
+                                        className="block h-auto w-full"
+                                    />
+                                    <p className="bg-[#131835] px-3 py-2 text-xs text-[#8994B8]">{t.approxMapCaption}</p>
+                                </div>
+                            )}
                             {/* Get Directions — only when job is active and address is revealed */}
                             {(job.status === "confirmed" || job.status === "en_route" || job.status === "in_progress") && showFullAddress && (
                                 <a

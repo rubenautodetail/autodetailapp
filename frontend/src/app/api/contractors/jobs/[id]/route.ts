@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { getApproxMap } from '@/lib/geo/approxLocation';
 
 export async function GET(
     req: NextRequest,
@@ -89,6 +90,13 @@ export async function GET(
             callerRole === 'admin' ||
             (isAssignedToContractor && ['en_route', 'in_progress', 'pending_approval'].includes(data.status));
 
+        // While the street address is hidden, an assigned contractor with a confirmed job gets an
+        // approximate map (1-mile circle, center moved on purpose). Never the real coordinates.
+        const approxMap =
+            !revealAddress && isAssignedToContractor && data.status === 'confirmed'
+                ? await getApproxMap({ address: data.address, city: data.city, state: data.state, zip: data.zip_code })
+                : null;
+
         // Normalize to the shape the job detail page expects
         // IMPORTANT: Do NOT spread `...data` — it would leak `total_amount` at 100%.
         // Contractors receive 70% (CONTRACTOR_SHARE).
@@ -101,6 +109,7 @@ export async function GET(
             time_window: data.time_window,
             address: revealAddress ? data.address : null,
             addressHidden: !revealAddress,
+            approxMap,
             city: data.city,
             state: data.state,
             zip_code: data.zip_code,
