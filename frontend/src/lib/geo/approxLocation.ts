@@ -87,7 +87,7 @@ function circleFeature(center: LngLat) {
     }
     return {
         type: 'Feature',
-        properties: { stroke: '#D0B078', 'stroke-width': 3, fill: '#D0B078', 'fill-opacity': 0.2 },
+        properties: { stroke: '#B8923F', 'stroke-width': 3, fill: '#D0B078', 'fill-opacity': 0.25 },
         geometry: { type: 'Polygon', coordinates: [coords] },
     };
 }
@@ -114,7 +114,7 @@ export async function getApproxMap(parts: AddressParts): Promise<ApproxMap | nul
         const center = blurCenter(real, addressKey, blurSecret);
         const overlay = encodeURIComponent(JSON.stringify(circleFeature(center)));
         const imageUrl =
-            `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/geojson(${overlay})/` +
+            `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/geojson(${overlay})/` +
             `${center.lng.toFixed(5)},${center.lat.toFixed(5)},${MAP_ZOOM}/640x400@2x?access_token=${publicToken}`;
 
         return { imageUrl, radiusMiles: APPROX_RADIUS_MILES };
