@@ -59,7 +59,10 @@ export async function GET(req: NextRequest) {
         }));
 
         // ── Active jobs: assigned to this contractor ──────────────────────────
-        let activeJobs: { id: number; documentId: string | null; confirmationCode: string | null; serviceName: string; timeWindow: string; date: string; address: string; totalAmount: number; status: string; }[] = [];
+        // The street address is only released once the contractor presses "On My Way".
+        // Until then they only see city + ZIP (privacy of the customer).
+        const ADDRESS_REVEALED_STATUSES = ['en_route', 'in_progress', 'pending_approval'];
+        let activeJobs: { id: number; documentId: string | null; confirmationCode: string | null; serviceName: string; timeWindow: string; date: string; address: string; addressHidden: boolean; totalAmount: number; status: string; }[] = [];
         let completedJobs: { id: number; service_name: string | null; date: string; total_amount: string | number; created_at: string; confirmation_code?: string | null; }[] = [];
         const earnings = { thisWeek: 0, total: 0 };
 
@@ -78,7 +81,10 @@ export async function GET(req: NextRequest) {
                 serviceName: b.service_name || 'Auto Detail',
                 timeWindow: b.time_window || 'TBD',
                 date: b.date,
-                address: [b.address, b.city, b.zip_code].filter(Boolean).join(', '),
+                address: ADDRESS_REVEALED_STATUSES.includes(b.status)
+                    ? [b.address, b.city, b.zip_code].filter(Boolean).join(', ')
+                    : [b.city, b.zip_code].filter(Boolean).join(', '),
+                addressHidden: !ADDRESS_REVEALED_STATUSES.includes(b.status),
                 totalAmount: (Number(b.total_amount) || 0) * 0.70,
                 status: b.status,
             }));

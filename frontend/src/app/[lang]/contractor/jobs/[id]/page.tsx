@@ -19,7 +19,7 @@ interface JobData {
     id: string | number;
     status: string;
     service?: { name?: string; name_es?: string; description?: string | null; description_es?: string | null } | null;
-    location?: { address?: string; zipCode?: string } | null;
+    location?: { address?: string | null; city?: string | null; zipCode?: string | null } | null;
     address?: string;
     zip_code?: string;
     date?: string;
@@ -47,7 +47,7 @@ const translations = {
         customerPhone: "Customer Phone",
         service: "Service",
         address: "Address",
-        addressHidden: "Full address revealed after job starts",
+        addressHidden: "Full address appears when you press On My Way",
         scheduledDate: "Scheduled Date",
         timeWindow: "Time Window",
         status: "Status",
@@ -95,7 +95,7 @@ const translations = {
         customerPhone: "Teléfono del Cliente",
         service: "Servicio",
         address: "Dirección",
-        addressHidden: "Dirección completa disponible al iniciar el trabajo",
+        addressHidden: "La dirección completa aparece al pulsar On My Way",
         scheduledDate: "Fecha Programada",
         timeWindow: "Ventana de Tiempo",
         status: "Estado",
@@ -230,7 +230,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                     service: data.service_name ? { name: data.service_name, name_es: data.service_name } : null,
                     timeWindow: data.time_window,
                     specialInstructions: data.special_instructions,
-                    location: { address: data.address, zipCode: data.zip_code },
+                    location: { address: data.address, city: data.city, zipCode: data.zip_code },
                     selected_add_ons: data.selected_add_ons ?? [],
                 });
             }
@@ -431,7 +431,8 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
             ? job.service?.name_es || job.service?.name || "N/A"
             : job.service?.name || "N/A";
 
-    const showFullAddress = ["confirmed", "en_route", "in_progress", "pending_approval", "completed"].includes(
+    // Street address and phone are released at "On My Way" (the server enforces this too).
+    const showFullAddress = ["en_route", "in_progress", "pending_approval"].includes(
         job.status
     );
 
@@ -453,8 +454,8 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
 
     const displayAddress = showFullAddress
         ? job.location?.address || job.address || "N/A"
-        : job.location?.zipCode
-        ? `ZIP ${job.location.zipCode} — ${t.addressHidden}`
+        : [job.location?.city, job.location?.zipCode].filter(Boolean).length
+        ? `${[job.location?.city, job.location?.zipCode].filter(Boolean).join(", ")} — ${t.addressHidden}`
         : t.addressHidden;
 
     // The Supabase column is `date`; `scheduled_date` is the legacy Strapi field name.

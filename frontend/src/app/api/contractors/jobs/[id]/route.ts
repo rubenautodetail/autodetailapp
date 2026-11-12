@@ -82,6 +82,13 @@ export async function GET(
             }
         }
 
+        // The street address is only released once the assigned contractor presses "On My Way".
+        // Before that (and for unaccepted offers, and after completion) only city + ZIP go out.
+        // Admins always see the full address.
+        const revealAddress =
+            callerRole === 'admin' ||
+            (isAssignedToContractor && ['en_route', 'in_progress', 'pending_approval'].includes(data.status));
+
         // Normalize to the shape the job detail page expects
         // IMPORTANT: Do NOT spread `...data` — it would leak `total_amount` at 100%.
         // Contractors receive 70% (CONTRACTOR_SHARE).
@@ -92,7 +99,8 @@ export async function GET(
             service_name: data.service_name,
             date: data.date,
             time_window: data.time_window,
-            address: data.address,
+            address: revealAddress ? data.address : null,
+            addressHidden: !revealAddress,
             city: data.city,
             state: data.state,
             zip_code: data.zip_code,
@@ -122,7 +130,7 @@ export async function GET(
                 : null,
             // Nested location object
             location: {
-                address: data.address ?? null,
+                address: revealAddress ? (data.address ?? null) : null,
                 city: data.city ?? null,
                 state: data.state ?? null,
                 zipCode: data.zip_code ?? null,

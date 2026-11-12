@@ -117,6 +117,7 @@ interface DashboardJob {
     timeWindow?: string;
     area?: string;
     address?: string;
+    addressHidden?: boolean;
     totalAmount: number;
     status: string;
 }
@@ -682,6 +683,11 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                                 {job.address}
                                             </span>
                                         </div>
+                                        {job.addressHidden && (
+                                            <p className="text-xs text-[#8994B8]">
+                                                🔒 {lang === 'es' ? 'La dirección completa aparece al pulsar On My Way' : 'Full address appears when you press On My Way'}
+                                            </p>
+                                        )}
                                         <p className="text-[#D0B078] font-semibold text-sm">${(Number(job.totalAmount) || 0).toFixed(2)}</p>
                                     </div>
                                     <Link
