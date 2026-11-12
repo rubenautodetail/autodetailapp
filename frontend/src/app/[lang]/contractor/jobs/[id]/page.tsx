@@ -641,7 +641,10 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                     <button
                         onClick={handleNavigate}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142] border border-[#2A3155] rounded-xl text-[#A5B0D1] hover:text-white hover:border-[#D0B078]/50 transition-colors text-sm font-medium"
+                        disabled={!showFullAddress}
+                        className={showFullAddress
+                            ? "flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142] border border-[#2A3155] rounded-xl text-[#A5B0D1] hover:text-white hover:border-[#D0B078]/50 transition-colors text-sm font-medium"
+                            : "flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142]/50 border border-[#2A3155]/50 rounded-xl text-[#A5B0D1]/40 cursor-not-allowed text-sm font-medium"}
                     >
                         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
