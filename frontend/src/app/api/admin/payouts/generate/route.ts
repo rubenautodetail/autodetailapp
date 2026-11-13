@@ -3,7 +3,8 @@
  * Body: { week: "2026-03-17" } — ISO date of Monday
  *
  * Groups all completed bookings (without a payout_id) that fall within the
- * given week by contractor, then upserts payout records and links bookings.
+ * given week by contractor and links them to a payout. A payout that is already
+ * paid is never modified: leftover bookings go into a new payout (next batch).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -85,23 +86,58 @@ export async function POST(req: NextRequest) {
             const platformFee = +(gross * (1 - CONTRACTOR_SHARE)).toFixed(2);
             const contractorAmount = +(gross * CONTRACTOR_SHARE).toFixed(2);
 
-            // Upsert payout record
-            const { data: payout, error: upsertErr } = await supabase
+            // Look at the latest payout already generated for this contractor and week.
+            //  - none            -> create payout #1
+            //  - still pending   -> add the new bookings to it
+            //  - already paid    -> NEVER touch it; create a new payout (next batch)
+            const { data: latest, error: latestErr } = await supabase
                 .from('payouts')
-                .upsert({
-                    contractor_id: contractorId,
-                    period_start: periodStart,
-                    period_end: periodEnd,
-                    total_bookings: bookingIds.length,
-                    gross_amount: +gross.toFixed(2),
-                    platform_fee: platformFee,
-                    contractor_amount: contractorAmount,
-                    status: 'pending',
-                }, { onConflict: 'contractor_id,period_start,period_end' })
-                .select('id')
-                .single();
+                .select('id, batch, status, total_bookings, gross_amount')
+                .eq('contractor_id', contractorId)
+                .eq('period_start', periodStart)
+                .eq('period_end', periodEnd)
+                .order('batch', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-            if (upsertErr) throw upsertErr;
+            if (latestErr) throw latestErr;
+
+            let payout: { id: number };
+            if (latest && latest.status === 'pending') {
+                const newGross = +(Number(latest.gross_amount) + gross).toFixed(2);
+                const { data: updated, error: updErr } = await supabase
+                    .from('payouts')
+                    .update({
+                        total_bookings: Number(latest.total_bookings) + bookingIds.length,
+                        gross_amount: newGross,
+                        platform_fee: +(newGross * (1 - CONTRACTOR_SHARE)).toFixed(2),
+                        contractor_amount: +(newGross * CONTRACTOR_SHARE).toFixed(2),
+                    })
+                    .eq('id', latest.id)
+                    .eq('status', 'pending')
+                    .select('id')
+                    .single();
+                if (updErr) throw updErr;
+                payout = updated;
+            } else {
+                const { data: inserted, error: insErr } = await supabase
+                    .from('payouts')
+                    .insert({
+                        contractor_id: contractorId,
+                        period_start: periodStart,
+                        period_end: periodEnd,
+                        batch: latest ? Number(latest.batch) + 1 : 1,
+                        total_bookings: bookingIds.length,
+                        gross_amount: +gross.toFixed(2),
+                        platform_fee: platformFee,
+                        contractor_amount: contractorAmount,
+                        status: 'pending',
+                    })
+                    .select('id')
+                    .single();
+                if (insErr) throw insErr;
+                payout = inserted;
+            }
 
             // Link bookings to this payout
             const { error: linkErr } = await supabase

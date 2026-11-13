@@ -10,6 +10,7 @@ interface EarningsProps {
 
 interface PayoutRecord {
     id: number;
+    batch?: number;
     period_start: string;
     period_end: string;
     total_bookings: number;
@@ -88,6 +89,7 @@ export default function EarningsPage({ params }: EarningsProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [payouts, setPayouts] = useState<PayoutRecord[]>([]);
+    const [bookingPayouts, setBookingPayouts] = useState<Record<string, { status: string; paid_at: string | null; payment_method: string | null }>>({});
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -106,6 +108,7 @@ export default function EarningsPage({ params }: EarningsProps) {
             if (payoutsRes.ok) {
                 const pJson = await payoutsRes.json();
                 setPayouts(pJson.data ?? []);
+                setBookingPayouts(pJson.bookingPayouts ?? {});
             }
         } catch {
             setError(labels.error);
@@ -229,9 +232,26 @@ export default function EarningsPage({ params }: EarningsProps) {
                                                         ${Number(job.total_amount || 0).toFixed(2)}
                                                     </p>
                                                 </div>
-                                                <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-400">
-                                                    {lang === "es" ? "Completado" : "Completed"}
-                                                </span>
+                                                {(() => {
+                                                    const bp = bookingPayouts[String(job.id)];
+                                                    if (bp && bp.status === "paid") {
+                                                        const d = bp.paid_at
+                                                            ? new Date(bp.paid_at).toLocaleDateString(lang === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })
+                                                            : "";
+                                                        const m: Record<string, string> = { ach: "ACH", zelle: "Zelle", check: lang === "es" ? "Cheque" : "Check", cash: lang === "es" ? "Efectivo" : "Cash" };
+                                                        const method = bp.payment_method ? (m[bp.payment_method] ?? bp.payment_method) : "";
+                                                        return (
+                                                            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-400">
+                                                                {lang === "es" ? "Pagado ✓" : "Paid ✓"}{d ? ` ${d}` : ""}{method ? ` · ${method}` : ""}
+                                                            </span>
+                                                        );
+                                                    }
+                                                    return (
+                                                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-400">
+                                                            {lang === "es" ? "Pago pendiente" : "Pending payout"}
+                                                        </span>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     </div>
@@ -269,7 +289,15 @@ export default function EarningsPage({ params }: EarningsProps) {
                                 <div key={p.id} className={`px-6 py-4 hover:bg-white/[0.02] transition-colors ${p.status === "paid" ? "border-l-4 border-green-500" : "border-l-4 border-yellow-500"}`}>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                         <div className="space-y-0.5">
-                                            <p className="font-medium text-white">{startStr} – {endStr}</p>
+                                            <p className="font-medium text-white">
+                                                {startStr} – {endStr}
+                                                {payouts.filter((x) => x.period_start === p.period_start && x.period_end === p.period_end).length > 1 && (
+                                                    <span className="text-[#5E698F] font-normal">
+                                                        {" · "}
+                                                        {lang === "es" ? `${p.batch ?? 1}.º pago` : `${p.batch ?? 1}${(p.batch ?? 1) === 1 ? "st" : (p.batch ?? 1) === 2 ? "nd" : (p.batch ?? 1) === 3 ? "rd" : "th"} payment`}
+                                                    </span>
+                                                )}
+                                            </p>
                                             <p className="text-sm text-[#5E698F]">
                                                 {p.total_bookings} {lang === "es" ? "trabajos" : "jobs"}
                                             </p>
