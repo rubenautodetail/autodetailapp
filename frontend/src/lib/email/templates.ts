@@ -133,6 +133,7 @@ export interface ApprovalReminderData {
   confirmationCode: string;
   service: { name: string };
   customer: { email: string; firstName: string };
+  locale?: 'en' | 'es';
 }
 
 export interface PayoutEmailData {
@@ -518,26 +519,39 @@ export function approvalReminderTemplate(
   booking: ApprovalReminderData,
   minutesRemaining: number,
 ): string {
+  const isEs = booking.locale === 'es';
+  const locale = isEs ? 'es' : 'en';
   const isUrgent = minutesRemaining <= 2;
   const headerGradient = isUrgent
     ? 'linear-gradient(135deg,#ef4444 0%,#dc2626 100%)'
     : 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)';
+  const unit = isEs
+    ? (minutesRemaining === 1 ? 'minuto' : 'minutos')
+    : (minutesRemaining === 1 ? 'minute' : 'minutes');
   const urgencyLine = isUrgent
-    ? `<p style="font-size:15px;font-weight:700;color:#ef4444;">⏰ Auto-approval in ${minutesRemaining} minute${minutesRemaining === 1 ? '' : 's'}!</p>`
-    : `<p style="font-size:15px;font-weight:600;color:#b45309;">⏳ ${minutesRemaining} minute${minutesRemaining === 1 ? '' : 's'} left to inspect your vehicle.</p>`;
+    ? `<p style="font-size:15px;font-weight:700;color:#ef4444;">⏰ ${isEs
+        ? `Tu tarjeta se cobrará automáticamente en ${minutesRemaining} ${unit}.`
+        : `Your card will be charged automatically in ${minutesRemaining} ${unit}.`}</p>`
+    : `<p style="font-size:15px;font-weight:600;color:#b45309;">⏳ ${isEs
+        ? `En ${minutesRemaining} ${unit} se cobrará tu tarjeta automáticamente si no lo has aprobado.`
+        : `In ${minutesRemaining} ${unit} your card will be charged automatically if you haven't approved.`}</p>`;
 
   const body = `
-    <p style="font-size:16px;">Hi ${booking.customer.firstName},</p>
-    <p style="font-size:16px;">Your <strong>${booking.service.name}</strong> is complete and waiting for your inspection.</p>
+    <p style="font-size:16px;">${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
+    <p style="font-size:16px;">${isEs
+      ? `Tu servicio <strong>${booking.service.name}</strong> está completo y esperando tu aprobación.`
+      : `Your <strong>${booking.service.name}</strong> is complete and waiting for your approval.`}</p>
     ${urgencyLine}
-    <p style="font-size:14px;color:#6b7280;">If we don't hear from you, the job will be automatically approved.</p>
+    <p style="font-size:14px;color:#6b7280;">${isEs
+      ? 'Revisa tu vehículo y aprueba el trabajo, o avísanos si algo no está bien.'
+      : "Please inspect your vehicle and approve the work, or let us know if something isn't right."}</p>
     <div style="text-align:center;">
-      <a href="${APP_URL}/en/booking/${booking.id}/approve?code=${booking.confirmationCode}" class="btn" style="background:#8b5cf6;color:white;padding:15px 40px;font-size:16px;font-weight:700;">INSPECT &amp; APPROVE NOW</a>
+      <a href="${APP_URL}/${locale}/booking/${booking.id}/approve?code=${booking.confirmationCode}" class="btn" style="background:#8b5cf6;color:white;padding:15px 40px;font-size:16px;font-weight:700;">${isEs ? 'REVISAR Y APROBAR' : 'REVIEW &amp; APPROVE'}</a>
     </div>`;
 
   return baseLayout({
     headerGradient,
-    headerText: 'Reminder: Your Car is Ready! 🚘',
+    headerText: isEs ? 'Recordatorio: ¡Tu auto está listo! 🚘' : 'Reminder: Your Car is Ready! 🚘',
     body,
   });
 }

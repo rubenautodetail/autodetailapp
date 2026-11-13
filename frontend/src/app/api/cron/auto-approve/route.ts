@@ -19,10 +19,9 @@ import { sendApprovalReminderEmail } from '@/lib/email';
 
 const AUTO_APPROVE_MINUTES = 30;
 
+// A single reminder, halfway through the 30-minute approval window.
 const REMINDERS = [
-    { atMinute: 5,  type: 'approval_reminder_1', minutesRemaining: 25 },
-    { atMinute: 10,  type: 'approval_reminder_2', minutesRemaining: 20 },
-    { atMinute: 15, type: 'approval_reminder_3', minutesRemaining: 15  },
+    { atMinute: 15, type: 'approval_reminder_3', minutesRemaining: 15 },
 ] as const;
 
 async function runAutoApprove(): Promise<NextResponse> {
@@ -85,7 +84,7 @@ async function runAutoApprove(): Promise<NextResponse> {
                 }
                 const elapsedMinutes = (now - new Date(startTs).getTime()) / 60_000;
 
-                // Auto-approve at 15 minutes
+                // Auto-approve after AUTO_APPROVE_MINUTES (30)
                 if (elapsedMinutes >= AUTO_APPROVE_MINUTES) {
                     if (!(booking as any).payment_intent_id) continue;
 
@@ -140,6 +139,7 @@ async function runAutoApprove(): Promise<NextResponse> {
                                 firstName: (booking as any).customer_name || (booking as any).first_name || 'there',
                             },
                             confirmationCode: (booking as any).confirmation_code ?? '',
+                            locale: (booking as any).locale === 'es' ? 'es' : 'en',
                         },
                         rem.minutesRemaining
                     );

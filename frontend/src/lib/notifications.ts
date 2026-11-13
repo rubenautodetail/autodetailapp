@@ -11,7 +11,6 @@ import {
     sendContractorPaidEmail,
     sendJobStartedEmail,
     sendEnRouteEmail,
-    sendReviewRequestEmail,
     BookingEmailData
 } from './email';
 import { createServiceClient } from './supabase/server';
@@ -264,8 +263,8 @@ export async function notify(event: NotificationEvent): Promise<void> {
                     event.booking.user_id,
                     l === 'es' ? 'Contratista Acepto el Trabajo' : 'Contractor Accepted Job',
                     l === 'es'
-                        ? `${event.contractor.full_name || 'Un contratista'} ha aceptado tu reserva y esta en camino.`
-                        : `${event.contractor.full_name || 'A contractor'} has accepted your booking and is on their way.`,
+                        ? `${event.contractor.full_name || 'Un contratista'} ha sido asignado a tu reserva.`
+                        : `${event.contractor.full_name || 'A contractor'} has been assigned to your booking.`,
                     'info',
                     `/${l}/booking/${event.booking.id}/track`
                 );
@@ -300,7 +299,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 break;
 
             case 'booking.review_request':
-                await sendReviewRequestEmail(mapBookingData(event.booking));
+                // No email: customers can leave a review from the receipt, the tracking page or their orders.
                 break;
 
             default:

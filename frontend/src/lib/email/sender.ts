@@ -122,9 +122,15 @@ function resolveSubject(payload: EmailPayload): string {
     }
     case 'approval_reminder': {
       const isUrgent = payload.minutesRemaining <= 2;
-      return isUrgent
-        ? `⏰ Final Reminder: Auto-approval in ${payload.minutesRemaining} min — ${payload.data.service.name}`
-        : `⏳ Reminder: ${payload.minutesRemaining} min left to approve your detail`;
+      const isEs = payload.data.locale === 'es';
+      if (isUrgent) {
+        return isEs
+          ? `⏰ Último aviso: se cobrará tu tarjeta en ${payload.minutesRemaining} min — ${payload.data.service.name}`
+          : `⏰ Final Reminder: your card will be charged in ${payload.minutesRemaining} min — ${payload.data.service.name}`;
+      }
+      return isEs
+        ? `⏳ Recordatorio: se cobrará tu tarjeta en ${payload.minutesRemaining} min si no apruebas`
+        : `⏳ Reminder: your card will be charged in ${payload.minutesRemaining} min unless you approve`;
     }
     case 'chargeback_alert':
       return `⚠️ Chargeback Alert — Booking ${payload.data.bookingId} ($${(payload.data.amount / 100).toFixed(2)})`;
