@@ -61,11 +61,11 @@ const translations = {
         enRouteError: "Failed to send en-route notification. Please try again.",
         enRouteTooEarly: "'On My Way' unlocks 2 hours before the appointment",
         phoneAfterOnMyWay: "The customer's phone number is shown after you press 'On My Way'.",
-        startJob: "I'm here to start the job",
-        starting: "Starting...",
+        startJob: "I've arrived",
+        starting: "Notifying...",
         startConfirmTitle: "Are you at the customer's address?",
-        startConfirmBody: "The customer will be told you have arrived to start working.",
-        startConfirmYes: "Yes, start the job",
+        startConfirmBody: "The customer will be notified that you have arrived. Do a walkaround of the vehicle with them before starting.",
+        startConfirmYes: "Yes, I've arrived",
         startConfirmCancel: "Cancel",
         completeService: "Complete Service",
         completing: "Completing...",
@@ -114,11 +114,11 @@ const translations = {
         enRouteError: "Error al enviar notificación. Por favor intenta de nuevo.",
         enRouteTooEarly: "'Estoy en camino' se activa 2 horas antes de la cita",
         phoneAfterOnMyWay: "El teléfono del cliente se muestra después de presionar 'Estoy en camino'.",
-        startJob: "Ya llegué, iniciar trabajo",
-        starting: "Iniciando...",
+        startJob: "Ya llegué",
+        starting: "Avisando...",
         startConfirmTitle: "¿Estás en la dirección del cliente?",
-        startConfirmBody: "Se le avisará al cliente que llegaste para empezar a trabajar.",
-        startConfirmYes: "Sí, iniciar",
+        startConfirmBody: "Se le avisará al cliente que ya llegaste. Revisa el vehículo junto con él antes de empezar.",
+        startConfirmYes: "Sí, ya llegué",
         startConfirmCancel: "Cancelar",
         completeService: "Completar Servicio",
         completing: "Completando...",
@@ -766,8 +766,8 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                     <div className="bg-[#1A2142] border border-[#2A3155] rounded-2xl p-6 mb-4">
                         <p className="text-[#A5B0D1] text-sm mb-4">
                             {lang === "es"
-                                ? "Cuando hayas llegado al lugar, presiona el botón para iniciar el trabajo."
-                                : "When you have arrived, press the button to start the job."}
+                                ? "Cuando hayas llegado al lugar, presiona el botón para avisar al cliente."
+                                : "When you have arrived, press the button to let the customer know."}
                         </p>
                         <button
                             onClick={() => setConfirmStart(true)}
