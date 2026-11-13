@@ -253,7 +253,9 @@ function ApproveServiceContent() {
                             },
                             {
                                 label: lang === 'es' ? 'Ubicación' : 'Location',
-                                value: [booking.address, booking.city, booking.state, booking.zip_code].filter(Boolean).join(', '),
+                                value: booking.zip_code && booking.address?.includes(booking.zip_code)
+                                    ? booking.address
+                                    : [booking.address, booking.city, booking.state, booking.zip_code].filter(Boolean).join(', '),
                             },
                             {
                                 label: lang === 'es' ? 'Total' : 'Total',
@@ -313,10 +315,10 @@ function ApproveServiceContent() {
                     </button>
                 </div>
 
-                <p className="text-xs text-[#5E698F] text-center">
+                <p className="text-sm text-amber-300/90 text-center">
                     {lang === 'es'
-                        ? 'Si no actúas en 15 minutos, el pago se liberará automáticamente.'
-                        : 'If no action is taken within 15 minutes, payment will be automatically released.'}
+                        ? 'Si no apruebas, se cobrará tu tarjeta automáticamente 30 minutos después de terminado el trabajo.'
+                        : "If you don't approve, your card will be charged automatically 30 minutes after the work is finished."}
                 </p>
             </div>
         </div>
