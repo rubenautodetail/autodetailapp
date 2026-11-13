@@ -17,7 +17,7 @@ import { verifyAdmin } from '@/lib/verifyAdmin';
 import { createServiceClient, createAuthClient } from '@/lib/supabase/server';
 
 const CONTRACTOR_SHARE = 0.70;
-const VALID_METHODS = ['ach', 'zelle', 'check', 'cash'] as const;
+const VALID_METHODS = ['ach', 'zelle'] as const;
 type PaymentMethod = typeof VALID_METHODS[number];
 
 export async function POST(req: NextRequest) {

@@ -316,12 +316,13 @@ export function contractorApplicationReceivedTemplate(data: ContractorApplicatio
   const body = `
     <p>Hi ${data.fullName},</p>
     <p>Thank you for applying to join the <strong>Lux</strong> contractor network!</p>
-    <p>We've received your application and our team will review it within <strong>1–2 business days</strong>.</p>
+    <p>We've received your application and our team will review it within <strong>1–3 days</strong>.</p>
+    <p>We'll contact you to see photos of your equipment: generator, water, machines and products.</p>
     <div style="background:#f9fafb;border-left:4px solid #D0B078;padding:20px;margin:20px 0;border-radius:4px;">
       <p style="margin:0;font-weight:600;color:#4b5563;">What happens next?</p>
       <ul style="margin:10px 0 0 0;padding-left:20px;color:#4b5563;">
         <li>Our team reviews your documents and information</li>
-        <li>You'll receive an approval or follow-up email within 1–2 business days</li>
+        <li>You'll receive an approval or follow-up email within 1–3 days</li>
         <li>Once approved, you can set up your payments and start accepting jobs</li>
       </ul>
     </div>

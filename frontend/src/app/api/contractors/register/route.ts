@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         const serviceZipCodes = Array.isArray(body.serviceZipCodes) ? body.serviceZipCodes as string[] : [];
         const paymentPreference = typeof body.paymentPreference === 'string' ? body.paymentPreference.trim() : '';
 
-        const VALID_PAYMENT = ['direct_deposit', 'zelle', 'check', 'cash'];
+        const VALID_PAYMENT = ['direct_deposit', 'zelle'];
         if (paymentPreference && !VALID_PAYMENT.includes(paymentPreference)) {
             return NextResponse.json({ error: 'Invalid payment preference.' }, { status: 400 });
         }

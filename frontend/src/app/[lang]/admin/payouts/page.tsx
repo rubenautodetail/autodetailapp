@@ -53,8 +53,6 @@ type Tab = "pay-now" | "history";
 const PAYMENT_METHODS: { value: PaymentMethod; en: string; es: string; icon: string }[] = [
     { value: "zelle", en: "Zelle",                icon: "💸", es: "Zelle"                  },
     { value: "ach",   en: "ACH / Direct Deposit", icon: "🏦", es: "ACH / Depósito Directo" },
-    { value: "cash",  en: "Cash",                 icon: "💵", es: "Efectivo"               },
-    { value: "check", en: "Check",                icon: "📄", es: "Cheque"                 },
 ];
 
 function fmtDate(iso: string, locale: string): string {

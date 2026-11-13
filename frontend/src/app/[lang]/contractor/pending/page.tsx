@@ -63,8 +63,13 @@ export default function ContractorPendingPage() {
                         </h1>
                         <p className="text-white/60 mb-2 text-sm leading-relaxed">
                             {isEs
-                                ? "Tu solicitud ha sido recibida. Nuestro equipo la revisará y te notificará por correo en 1–2 días hábiles."
-                                : "Your application has been received. Our team will review it and notify you by email within 1–2 business days."}
+                                ? "Tu solicitud ha sido recibida. Nuestro equipo la revisará y te notificará por correo en 1 a 3 días."
+                                : "Your application has been received. Our team will review it and notify you by email within 1–3 days."}
+                        </p>
+                        <p className="text-white/60 mb-2 text-sm leading-relaxed">
+                            {isEs
+                                ? "Te vamos a contactar para ver fotos de tu equipo."
+                                : "We'll contact you to see photos of your equipment."}
                         </p>
                         <p className="text-yellow-400/80 text-xs mb-6">
                             {isEs

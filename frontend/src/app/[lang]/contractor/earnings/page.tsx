@@ -41,7 +41,7 @@ const t = {
         amount: "Amount",
         yourPayout: "Your Payout",
         total: "Total",
-        payoutHistory: "Weekly Payouts",
+        payoutHistory: "Payout History",
         noPayouts: "No payment records yet",
         noPayoutsDesc: "Payments will appear here once processed.",
         period: "Period",

@@ -34,8 +34,6 @@ const FIELDS: Field[] = [
 const PAYMENT_OPTIONS = [
     { value: "direct_deposit", label: "Direct Deposit (Bank Account)", labelEs: "Depósito Directo (Cuenta Bancaria)" },
     { value: "zelle",          label: "Zelle",                         labelEs: "Zelle" },
-    { value: "check",          label: "Check",                         labelEs: "Cheque" },
-    { value: "cash",           label: "Cash",                          labelEs: "Efectivo" },
 ];
 
 export default function ContractorApplyPage() {
@@ -153,9 +151,11 @@ export default function ContractorApplyPage() {
                         {isEs ? "¡Solicitud enviada!" : "Application submitted!"}
                     </h1>
                     <p className="text-white/60 text-sm leading-relaxed">
-                        {isEs
-                            ? "Nuestro equipo revisará tu solicitud en 1–2 días hábiles."
-                            : "Our team will review your application within 1–2 business days."}
+                        {isEs ? (
+                            <><strong className="text-white/80">Alguien de nuestro equipo te contactará.</strong> Ten listas las fotos de tu equipo de trabajo: generador, agua, máquinas y productos. Sin el equipo no podemos aprobar la solicitud.</>
+                        ) : (
+                            <><strong className="text-white/80">Someone from our team will contact you.</strong> Have photos of your work equipment ready: generator, water, machines and products. We can&apos;t approve the application without the equipment.</>
+                        )}
                     </p>
 
                     <div className="bg-white/5 border border-[#D0B078]/20 rounded-xl p-5 space-y-3 text-left">
@@ -172,8 +172,8 @@ export default function ContractorApplyPage() {
                             <li className="flex items-start gap-2">
                                 <span className="text-[#D0B078] mt-0.5 shrink-0">✓</span>
                                 {isEs
-                                    ? "Recibirás un correo con nuestra decisión en 1–2 días hábiles"
-                                    : "You'll receive an email with our decision within 1–2 business days"}
+                                    ? "Recibirás un correo con nuestra decisión en 1 a 3 días"
+                                    : "You'll receive an email with our decision within 1–3 days"}
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-[#D0B078] mt-0.5 shrink-0">✓</span>
@@ -223,8 +223,8 @@ export default function ContractorApplyPage() {
                     </h1>
                     <p className="text-white/50 text-sm">
                         {isEs
-                            ? "Completa el formulario a continuación. El equipo revisará tu solicitud en 1–2 días hábiles."
-                            : "Fill out the form below. The team will review your application within 1–2 business days."}
+                            ? "Completa el formulario a continuación. El equipo revisará tu solicitud en 1 a 3 días."
+                            : "Fill out the form below. The team will review your application within 1–3 days."}
                     </p>
                 </div>
 

@@ -73,6 +73,9 @@ export default function NavMenuClient({ locale, services, showBlog = false }: Na
             <Link href={`/${locale}/about`} className={navLinkClass}>
                 {locale === 'es' ? 'Nosotros' : 'About'}
             </Link>
+            <Link href={`/${locale}/contractors`} className={navLinkClass}>
+                {locale === 'es' ? 'Trabaja con nosotros' : 'Work with us'}
+            </Link>
         </nav>
     );
 }

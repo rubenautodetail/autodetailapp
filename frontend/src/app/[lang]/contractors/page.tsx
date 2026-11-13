@@ -12,10 +12,10 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     const isEs = lang === 'es';
 
     return {
-        title: isEs ? 'Trabaja con Nosotros' : 'Work With Us',
+        title: isEs ? 'Trabaja como Detallador de Autos Móvil' : 'Mobile Car Detailer Jobs',
         description: isEs
-            ? 'Únete como contratista de detallado de autos en Miami-Dade. Más clientes, tu propio horario, pagos rápidos.'
-            : 'Join as a mobile car detailing contractor in Miami-Dade. More clients, your own schedule, fast payouts.',
+            ? 'Únete a Lux como detallador de autos móvil. Trabajos cerca de ti, tu propio horario y pago 1 a 2 días después de cada trabajo aprobado. Hoy en Florida.'
+            : 'Join Lux as a mobile car detailer. Jobs near you, your own schedule and payment 1–2 days after each approved job. Now in Florida.',
         alternates: {
             canonical: `/${lang}/contractors`,
             languages: { en: '/en/contractors', es: '/es/contractors' },
@@ -36,13 +36,13 @@ const PERKS = [
     },
     {
         icon: '📍',
-        en: { title: 'Jobs Come to You', desc: 'Get notified of new jobs in your service area the moment they are booked.' },
-        es: { title: 'Los Trabajos Llegan a Ti', desc: 'Recibe alertas de nuevos trabajos en tu área en cuanto se reserven.' },
+        en: { title: 'Jobs Come to You', desc: 'You get an email for every new job in your area.' },
+        es: { title: 'Los Trabajos Llegan a Ti', desc: 'Te llega un correo con cada trabajo nuevo en tu área.' },
     },
     {
         icon: '⚡',
-        en: { title: 'Fast Payouts', desc: 'Get paid weekly via Zelle, ACH, or check — fast and reliable.' },
-        es: { title: 'Pagos Rápidos', desc: 'Recibe pagos semanales vía Zelle, ACH o cheque — rápido y confiable.' },
+        en: { title: 'Paid in 1–2 Days', desc: 'By bank transfer or Zelle, after the job is approved.' },
+        es: { title: 'Pago en 1 a 2 Días', desc: 'Por transferencia o Zelle, después de que el trabajo es aprobado.' },
     },
     {
         icon: '🛡️',
@@ -51,8 +51,8 @@ const PERKS = [
     },
     {
         icon: '📈',
-        en: { title: 'Grow Your Business', desc: 'Build reputation through reviews. Top contractors get priority job offers.' },
-        es: { title: 'Haz Crecer Tu Negocio', desc: 'Construye tu reputación con reseñas. Los mejores reciben trabajos prioritarios.' },
+        en: { title: 'Grow Your Business', desc: 'Every customer review adds to your reputation.' },
+        es: { title: 'Haz Crecer Tu Negocio', desc: 'Cada reseña de un cliente suma a tu reputación.' },
     },
 ];
 
@@ -60,8 +60,28 @@ const REQUIREMENTS = [
     { en: "Valid driver's license", es: 'Licencia de conducir válida' },
     { en: 'Proof of vehicle insurance', es: 'Comprobante de seguro vehicular' },
     { en: 'Business or occupational license', es: 'Licencia de negocio u ocupacional' },
-    { en: 'Own detailing equipment & supplies', es: 'Equipo y suministros de detallado propios' },
-    { en: 'Service area in Miami-Dade County', es: 'Área de servicio en Miami-Dade County' },
+    { en: 'Own detailing equipment and supplies, including a generator and water', es: 'Equipo y productos de detallado propios, con generador y agua' },
+    { en: 'Live or work where we operate (now Florida)', es: 'Vivir o trabajar donde operamos (hoy Florida)' },
+    { en: '18 or older', es: 'Mayor de 18 años' },
+];
+
+const FAQS = [
+    {
+        en: { q: 'How do I get jobs?', a: 'You get an email for every new job in your area and you decide whether to take it. No minimums or mandatory hours.' },
+        es: { q: '¿Cómo me llegan los trabajos?', a: 'Te llega un correo con cada trabajo nuevo en tu área y tú decides si lo aceptas. No hay mínimos ni horarios obligatorios.' },
+    },
+    {
+        en: { q: 'When do I get paid?', a: '1–2 days after the job is approved, by bank transfer or Zelle.' },
+        es: { q: '¿Cuándo me pagan?', a: 'Entre 1 y 2 días después de que el trabajo es aprobado, por transferencia o Zelle.' },
+    },
+    {
+        en: { q: 'What equipment do I need?', a: "Your own detailing equipment and products, a generator and water. Our customers don't have to provide anything: we arrive equipped." },
+        es: { q: '¿Qué equipo necesito?', a: 'Tu propio equipo y productos de detallado, generador y agua. Nuestros clientes no tienen que darnos nada: llegamos equipados.' },
+    },
+    {
+        en: { q: 'How long does approval take?', a: "1–3 days. We contact you so you can share photos of your work equipment, then we talk with you by phone. You can apply before you have all the equipment, but we can't approve the application without it." },
+        es: { q: '¿Cuánto tarda la aprobación?', a: 'De 1 a 3 días. Te contactamos para que nos compartas fotos de tu equipo de trabajo y después hablamos contigo por teléfono. Puedes aplicar aunque todavía no tengas todo el equipo, pero sin él no podemos aprobar la solicitud.' },
+    },
 ];
 
 export default async function ContractorsPage({
@@ -78,7 +98,6 @@ export default async function ContractorsPage({
     const heroImage = hygraph.hero?.heroImageUrl ?? null;
     const cmsHeading = hygraph.hero?.heading ?? null;
     const cmsSubheading = hygraph.hero?.subheading ?? null;
-    const galleryImages = hygraph.galleryImages ?? [];
 
     return (
         <div className="min-h-screen bg-[#131835] text-white overflow-x-hidden">
@@ -86,19 +105,19 @@ export default async function ContractorsPage({
             <nav className="border-b border-white/5 px-6 py-4">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <Link href={`/${locale}`} className="flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
+                        <Image src="/dtailwash_logo_final.png" alt="Lux Auto Detail Services" width={1942} height={809} className="w-auto h-11 sm:h-14 opacity-100 drop-shadow-md" />
                     </Link>
                     <div className="flex items-center gap-4">
                         <LanguageSwitch locale={locale} href={`/${locale === 'es' ? 'en' : 'es'}/contractors`} />
                         <Link
                             href={`/${locale}/contractor/login`}
-                            className="text-sm text-white/50 hover:text-white transition-colors"
+                            className="hidden sm:inline text-sm text-white/50 hover:text-white transition-colors whitespace-nowrap"
                         >
                             {isEs ? 'Iniciar sesión' : 'Log in'}
                         </Link>
                         <Link
                             href={`/${locale}/register?next=/${locale}/contractors/apply`}
-                            className="px-4 py-2 text-sm font-semibold bg-[#D0B078] text-black rounded-lg hover:bg-[#c4a068] transition-colors"
+                            className="px-4 py-2 text-sm font-semibold bg-[#D0B078] text-black rounded-lg hover:bg-[#c4a068] transition-colors whitespace-nowrap"
                         >
                             {isEs ? 'Aplicar ahora' : 'Apply now'}
                         </Link>
@@ -112,7 +131,7 @@ export default async function ContractorsPage({
                 {heroImage && (
                     <Image
                         src={heroImage}
-                        alt="Contractor hero"
+                        alt={isEs ? "Equipo Lux trabajando" : "Lux team at work"}
                         fill
                         priority
                         className="object-cover object-center opacity-15"
@@ -159,33 +178,6 @@ export default async function ContractorsPage({
                 </div>
             </section>
 
-            {/* ─── Gallery Strip ────────────────────────────────────────────── */}
-            {galleryImages.length > 0 && (
-                <section className="py-8 px-6 bg-white/[0.015]">
-                    <div className="max-w-5xl mx-auto">
-                        <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium text-center mb-5">
-                            {isEs ? 'Nuestro equipo en acción' : 'Our team in action'}
-                        </p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {galleryImages.map((img) => (
-                                <div key={img.imageUrl} className="relative aspect-[4/3] rounded-xl overflow-hidden group">
-                                    <Image
-                                        src={img.imageUrl}
-                                        alt={img.caption}
-                                        fill
-                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                        sizes="(max-width: 768px) 50vw, 25vw"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                                        <span className="text-white text-xs font-medium">{img.caption}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
             {/* ─── Perks ─────────────────────────────────────────────────────── */}
             <section className="py-12 sm:py-20 px-6 bg-white/[0.015]">
                 <div className="max-w-5xl mx-auto">
@@ -227,18 +219,18 @@ export default async function ContractorsPage({
                         {[
                             {
                                 n: '01',
-                                en: { t: 'Create your account', d: 'Register with your email and password. Takes 60 seconds.' },
-                                es: { t: 'Crea tu cuenta', d: 'Regístrate con tu correo y contraseña. Tarda 60 segundos.' },
+                                en: { t: 'Fill out the form', d: 'Your details, your area and how you want to get paid.' },
+                                es: { t: 'Llena el formulario', d: 'Tus datos, tu zona y cómo quieres cobrar.' },
                             },
                             {
                                 n: '02',
-                                en: { t: 'Submit your application', d: 'Upload your license, insurance, and a few details about your business.' },
-                                es: { t: 'Envía tu solicitud', d: 'Sube tu licencia, seguro y detalles de tu negocio.' },
+                                en: { t: 'We contact you', d: 'Have photos of your equipment ready: generator, water, machines and products.' },
+                                es: { t: 'Te contactamos', d: 'Ten listas las fotos de tu equipo: generador, agua, máquinas y productos.' },
                             },
                             {
                                 n: '03',
-                                en: { t: 'Get approved & start earning', d: 'We review in 1–2 business days. Once approved, set up your profile and start accepting jobs.' },
-                                es: { t: 'Aprobación y a ganar', d: 'Revisamos en 1–2 días hábiles. Una vez aprobado, configura tu perfil y empieza a aceptar trabajos.' },
+                                en: { t: 'Call and approval', d: 'Once we see the photos, we talk with you by phone. Approval in 1–3 days.' },
+                                es: { t: 'Llamada y aprobación', d: 'Con las fotos, hablamos contigo por teléfono. Aprobación en 1 a 3 días.' },
                             },
                         ].map((step) => {
                             const c = isEs ? step.es : step.en;
@@ -280,6 +272,47 @@ export default async function ContractorsPage({
                 </div>
             </section>
 
+            {/* ─── FAQ ───────────────────────────────────────────────────────── */}
+            <section className="py-12 sm:py-20 px-6">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            '@context': 'https://schema.org',
+                            '@type': 'FAQPage',
+                            mainEntity: FAQS.map((f) => {
+                                const c = isEs ? f.es : f.en;
+                                return { '@type': 'Question', name: c.q, acceptedAnswer: { '@type': 'Answer', text: c.a } };
+                            }),
+                        }),
+                    }}
+                />
+                <div className="max-w-2xl mx-auto">
+                    <div className="text-center mb-10 space-y-2">
+                        <p className="text-[#D0B078] text-xs tracking-widest uppercase font-medium">
+                            {isEs ? 'Preguntas frecuentes' : 'FAQ'}
+                        </p>
+                        <h2 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                            {isEs ? 'Lo que suelen preguntar' : 'What detailers ask'}
+                        </h2>
+                    </div>
+                    <div className="space-y-3">
+                        {FAQS.map((f) => {
+                            const c = isEs ? f.es : f.en;
+                            return (
+                                <details key={f.en.q} className="glass-card rounded-2xl p-5 group">
+                                    <summary className="cursor-pointer list-none flex items-center justify-between gap-4 font-semibold text-base">
+                                        {c.q}
+                                        <span className="text-[#D0B078] shrink-0 transition-transform group-open:rotate-45">+</span>
+                                    </summary>
+                                    <p className="text-white/65 text-sm leading-relaxed mt-3">{c.a}</p>
+                                </details>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
             {/* ─── Final CTA ─────────────────────────────────────────────────── */}
             <section className="py-14 sm:py-24 px-6">
                 <div className="max-w-xl mx-auto text-center space-y-6">
@@ -315,11 +348,8 @@ export default async function ContractorsPage({
             <footer className="border-t border-white/5 py-8 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/55 text-xs">
                     <div className="flex flex-col items-center sm:items-start gap-3">
-                        <Image src="/dtailwash_logo_final.png" alt="DetailWash" width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
-                        <p>© {new Date().getFullYear()}</p>
-                        <p>
-                            <span className="text-white/45 font-medium">Lux Auto Detail Services</span>
-                        </p>
+                        <Image src="/dtailwash_logo_final.png" alt="Lux Auto Detail Services" width={1942} height={809} className="w-auto h-9 sm:h-10 opacity-70" />
+                        <p>© {new Date().getFullYear()} Lux Auto Detail Services</p>
                     </div>
                     <div className="flex gap-6">
                         <Link href={`/${locale}`} className="hover:text-white/60 transition-colors">

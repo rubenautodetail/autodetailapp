@@ -114,6 +114,9 @@ export default function MobileNavClient({ locale, services, waHref, accountHref,
                         <Link href={`/${locale}/about`} onClick={close} className={rowClass}>
                             {es ? 'Nosotros' : 'About'}
                         </Link>
+                        <Link href={`/${locale}/contractors`} onClick={close} className={rowClass}>
+                            {es ? 'Trabaja con nosotros' : 'Work with us'}
+                        </Link>
 
                         <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-8">
                             {waHref && (
