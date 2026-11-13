@@ -13,6 +13,7 @@ export default function ContractorHistory({ params }: Props) {
 
     const [earnings, setEarnings] = useState({ thisWeek: 0, total: 0 });
     const [jobs, setJobs] = useState<{ id: number; service_name: string | null; date: string; total_amount: number | string; review_rating?: number | null; review_comment?: string | null; confirmation_code?: string | null }[]>([]);
+    const [bookingPayouts, setBookingPayouts] = useState<Record<string, { status: string; paid_at: string | null; payment_method: string | null }>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
@@ -22,11 +23,17 @@ export default function ContractorHistory({ params }: Props) {
             setLoading(true);
             setError(false);
             try {
-                const res = await fetch('/api/contractors/dashboard', {
-                    headers: session?.access_token
-                        ? { Authorization: `Bearer ${session.access_token}` }
-                        : {},
-                });
+                const headers: Record<string, string> = session?.access_token
+                    ? { Authorization: `Bearer ${session.access_token}` }
+                    : {};
+                const [res, payoutsRes] = await Promise.all([
+                    fetch('/api/contractors/dashboard', { headers }),
+                    fetch('/api/contractor/payouts', { headers }),
+                ]);
+                if (payoutsRes.ok) {
+                    const pJson = await payoutsRes.json();
+                    setBookingPayouts(pJson.bookingPayouts ?? {});
+                }
                 if (res.ok) {
                     const data = await res.json();
                     setEarnings(data.earnings ?? { thisWeek: 0, total: 0 });
@@ -127,7 +134,26 @@ export default function ContractorHistory({ params }: Props) {
                                 </div>
                                 <div className="text-right shrink-0">
                                     <p className="font-bold text-[#D0B078]">${Number(job.total_amount || 0).toFixed(2)}</p>
-                                    <p className="text-xs text-green-400 font-medium">{label.completed}</p>
+                                    {(() => {
+                                        const bp = bookingPayouts[String(job.id)];
+                                        if (bp && bp.status === 'paid') {
+                                            const d = bp.paid_at
+                                                ? new Date(bp.paid_at).toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' })
+                                                : '';
+                                            const m: Record<string, string> = { ach: 'ACH', zelle: 'Zelle', check: lang === 'es' ? 'Cheque' : 'Check', cash: lang === 'es' ? 'Efectivo' : 'Cash' };
+                                            const method = bp.payment_method ? (m[bp.payment_method] ?? bp.payment_method) : '';
+                                            return (
+                                                <p className="text-xs text-green-400 font-medium">
+                                                    {lang === 'es' ? 'Pagado ✓' : 'Paid ✓'}{d ? ` ${d}` : ''}{method ? ` · ${method}` : ''}
+                                                </p>
+                                            );
+                                        }
+                                        return (
+                                            <p className="text-xs text-yellow-400 font-medium">
+                                                {lang === 'es' ? 'Pago pendiente' : 'Pending payout'}
+                                            </p>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )) : (

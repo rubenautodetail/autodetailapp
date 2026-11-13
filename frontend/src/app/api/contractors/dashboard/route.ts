@@ -115,15 +115,18 @@ export async function GET(req: NextRequest) {
                 .order('date', { ascending: false });
 
             const nowEastern = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
-            const weekAgo = new Date(nowEastern);
-            weekAgo.setDate(weekAgo.getDate() - 7);
+            // "This week" = current Mon-Sun week (Eastern), by service date, same weeks as payouts.
+            const dow = nowEastern.getDay(); // 0 = Sun
+            const monday = new Date(nowEastern);
+            monday.setDate(monday.getDate() - (dow === 0 ? 6 : dow - 1));
+            const weekStart = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
 
             const CONTRACTOR_SHARE = 0.70;
             const contractorAmount = (raw: number) => raw * CONTRACTOR_SHARE;
 
             earnings.total = (completed ?? []).reduce((s, b) => s + contractorAmount(Number(b.total_amount) || 0), 0);
             earnings.thisWeek = (completed ?? [])
-                .filter((b) => new Date(b.created_at) >= weekAgo)
+                .filter((b) => String(b.date).slice(0, 10) >= weekStart)
                 .reduce((s, b) => s + contractorAmount(Number(b.total_amount) || 0), 0);
 
             completedJobs = (completed ?? []).map((b) => ({
