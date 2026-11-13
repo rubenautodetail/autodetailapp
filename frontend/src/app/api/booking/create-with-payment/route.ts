@@ -150,6 +150,25 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceClient();
 
+    // Booking window: the card hold lasts about 7 days, so never accept a date beyond the admin-set window.
+    {
+        const { data: sched } = await supabase
+            .from('platform_schedule_settings')
+            .select('booking_window_days')
+            .eq('id', 1)
+            .maybeSingle();
+        const windowDays = Number(sched?.booking_window_days) || 14;
+        const etToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date()); // YYYY-MM-DD
+        const cutoff = new Date(etToday + 'T00:00:00Z');
+        cutoff.setUTCDate(cutoff.getUTCDate() + windowDays);
+        if (String(date).slice(0, 10) > cutoff.toISOString().slice(0, 10)) {
+            return NextResponse.json(
+                { error: `Bookings can only be made up to ${windowDays} days in advance.` },
+                { status: 400 }
+            );
+        }
+    }
+
     // Never trust client-submitted totals. Both quote and charge use this resolver.
     let quote: ResolvedBookingPrice;
     try {

@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
             .from('bookings')
             .select('id, document_id, service_name, time_window, address, city, state, zip_code, date, total_amount, status, confirmation_code')
             .eq('status', 'pending_assignment')
+            .eq('payment_status', 'authorized')
             .order('created_at', { ascending: true });
 
         // Approximate 1-mile map for the first incoming jobs (server-side; the real address never leaves).
@@ -96,7 +97,9 @@ export async function GET(req: NextRequest) {
                 timeWindow: b.time_window || 'TBD',
                 date: b.date,
                 address: ADDRESS_REVEALED_STATUSES.includes(b.status)
-                    ? [b.address, b.city, b.zip_code].filter(Boolean).join(', ')
+                    ? (b.zip_code && b.address?.includes(b.zip_code)
+                        ? b.address
+                        : [b.address, b.city, b.zip_code].filter(Boolean).join(', '))
                     : [b.city, b.zip_code].filter(Boolean).join(', '),
                 addressHidden: !ADDRESS_REVEALED_STATUSES.includes(b.status),
                 totalAmount: (Number(b.total_amount) || 0) * 0.70,

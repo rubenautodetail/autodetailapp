@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
+import { stripe } from '@/lib/stripe/server';
 
 interface ApprovalCheck {
     approval_status: string | null;
@@ -84,6 +85,45 @@ export async function POST(req: NextRequest) {
 
         if (!existingBooking) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+        }
+
+        // Payment must be authorized before anyone can take the job.
+        if (existingBooking.payment_status !== 'authorized' || !existingBooking.payment_intent_id) {
+            return NextResponse.json(
+                { error: 'This job is not available.' },
+                { status: 409 }
+            );
+        }
+
+        // Check with Stripe that the hold on the card is still valid.
+        try {
+            const pi = await stripe.paymentIntents.retrieve(existingBooking.payment_intent_id, {
+                expand: ['latest_charge'],
+            });
+            if (pi.status !== 'requires_capture') {
+                return NextResponse.json(
+                    { error: 'This job is no longer available (payment hold is not active).' },
+                    { status: 409 }
+                );
+            }
+            // The hold must still be valid until the end of the service day (Eastern, with margin).
+            const charge = pi.latest_charge && typeof pi.latest_charge !== 'string' ? pi.latest_charge : null;
+            const captureBefore = (charge as any)?.payment_method_details?.card?.capture_before as number | undefined;
+            if (captureBefore && /^\d{4}-\d{2}-\d{2}/.test(String(existingBooking.date))) {
+                const needBy = Date.parse(String(existingBooking.date).slice(0, 10) + 'T00:00:00Z') + 29 * 3600 * 1000;
+                if (captureBefore * 1000 < needBy) {
+                    return NextResponse.json(
+                        { error: 'This job is no longer available (payment hold expires before the service date).' },
+                        { status: 409 }
+                    );
+                }
+            }
+        } catch (stripeError) {
+            console.error('accept-job: could not verify payment with Stripe:', stripeError);
+            return NextResponse.json(
+                { error: 'Could not verify the payment right now. Please try again in a moment.' },
+                { status: 503 }
+            );
         }
 
         const contractorId = userId;

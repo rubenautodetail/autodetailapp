@@ -505,7 +505,9 @@ export default function TrackBookingPage() {
                                         </p>
                                         {state === 'active' && (
                                             <p className="text-xs text-yellow-500 mt-0.5">
-                                                {isEs ? 'En curso...' : 'In progress...'}
+                                                {step.key === 'complete' && status === 'pending_approval'
+                                                    ? (isEs ? 'Esperando tu aprobación' : 'Waiting for your approval')
+                                                    : (isEs ? 'En curso...' : 'In progress...')}
                                             </p>
                                         )}
                                         {state === 'complete' && (
@@ -603,6 +605,11 @@ export default function TrackBookingPage() {
                                         ? 'Revisa el trabajo y aprueba para completar el pago.'
                                         : 'Review the work and approve to finalize payment.'}
                                 </p>
+                                <p className="text-xs text-yellow-500 mt-1.5">
+                                    {isEs
+                                        ? 'Si no apruebas, se cobrará tu tarjeta automáticamente 30 minutos después de terminado el trabajo.'
+                                        : "If you don't approve, your card will be charged automatically 30 minutes after the work is finished."}
+                                </p>
                             </div>
                         </div>
                         {approveError && (
@@ -692,8 +699,10 @@ export default function TrackBookingPage() {
                     {[
                         {
                             label: isEs ? 'Dirección' : 'Address',
-                            value: [booking.address, booking.city, booking.state, booking.zip_code]
-                                .filter(Boolean).join(', ') || '—',
+                            // Many addresses already come with city and ZIP; don't repeat them.
+                            value: (booking.address && booking.zip_code && String(booking.address).includes(String(booking.zip_code))
+                                ? booking.address
+                                : [booking.address, booking.city, booking.state, booking.zip_code].filter(Boolean).join(', ')) || '—',
                         },
                         {
                             label: isEs ? 'Total' : 'Total',
