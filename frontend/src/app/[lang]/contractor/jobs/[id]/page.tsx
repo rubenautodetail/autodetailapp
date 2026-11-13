@@ -77,7 +77,7 @@ const translations = {
         success: "Service Marked Complete!",
         successSub: "Redirecting to dashboard...",
         pendingApprovalTitle: "Awaiting Customer Approval",
-        pendingApprovalSub: "The customer has been notified to review and approve the completed work.",
+        pendingApprovalSub: "The customer has been notified to review and approve the completed work. If they don't respond, it is approved automatically 30 minutes after you finished and your payout is processed.",
         loading: "Loading...",
         error: "Error loading job details",
         accessDenied: "Access Denied",
@@ -131,7 +131,7 @@ const translations = {
         success: "¡Servicio Marcado como Completo!",
         successSub: "Redirigiendo al panel...",
         pendingApprovalTitle: "Esperando Aprobación del Cliente",
-        pendingApprovalSub: "El cliente ha sido notificado para revisar y aprobar el trabajo completado.",
+        pendingApprovalSub: "El cliente ha sido notificado para revisar y aprobar el trabajo completado. Si no responde, se aprueba automáticamente 30 minutos después de que terminaste y tu pago se procesa.",
         loading: "Cargando...",
         error: "Error al cargar los detalles del trabajo",
         accessDenied: "Acceso Denegado",
@@ -469,8 +469,11 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
         job.status
     );
 
-    // Phone is only available once the contractor pressed "On My Way"
-    const phoneUnlocked = ["en_route", "in_progress"].includes(job.status);
+    // Phone is available from "On My Way" until the customer approves
+    const phoneUnlocked = ["en_route", "in_progress", "pending_approval"].includes(job.status);
+
+    // Navigation is only useful before/while on site; after finishing it is shown in gray
+    const navActive = ["en_route", "in_progress"].includes(job.status);
 
     // "On My Way" unlocks ON_MY_WAY_WINDOW_HOURS before the appointment
     const apptDate = job.date || job.scheduled_date;
@@ -688,8 +691,10 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                     <button
                         onClick={handleNavigate}
                         disabled={!showFullAddress}
-                        className={showFullAddress
+                        className={navActive
                             ? "flex items-center justify-center gap-2 px-4 py-3 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+                            : showFullAddress
+                            ? "flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142] border border-[#2A3155] rounded-xl text-[#A5B0D1] hover:text-white transition-colors text-sm font-medium"
                             : "flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2142]/50 border border-[#2A3155]/50 rounded-xl text-[#A5B0D1]/40 cursor-not-allowed text-sm font-medium"}
                     >
                         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -830,7 +835,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                 )}
 
                 {/* ── NEED HELP — tap to call support (number hidden; job stays assigned) ── */}
-                {(job.status === "confirmed" || job.status === "en_route" || job.status === "in_progress") && (
+                {(job.status === "confirmed" || job.status === "en_route" || job.status === "in_progress" || job.status === "pending_approval") && (
                     <a
                         href={SUPPORT_PHONE_HREF}
                         className="flex items-center justify-center w-full mb-4 px-6 py-3.5 border border-[#3A4480] text-[#C9D1F0] font-semibold rounded-xl hover:text-white hover:border-[#D0B078] transition-colors text-center"
