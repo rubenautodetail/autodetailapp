@@ -443,7 +443,7 @@ export default function TrackBookingPage() {
     const selectedTotal = selectedItems.reduce((s, i) => s + i.price, 0);
 
     return (
-        <div className="min-h-screen bg-[#0F1629] text-white pb-24">
+        <div className="min-h-screen bg-[#0F1629] text-white pb-48 md:pb-24">
             {/* ── Header ──────────────────────────────────────────────────── */}
             <div className="bg-[#131835] border-b border-[#2C355E] px-4 py-5">
                 <div className="max-w-2xl mx-auto">
@@ -754,7 +754,7 @@ export default function TrackBookingPage() {
             </div>
 
             {/* ── Sticky support CTA ──────────────────────────────────────── */}
-            <div className="fixed bottom-0 left-0 right-0 bg-[#0F1629]/95 backdrop-blur border-t border-[#2C355E] px-4 py-4">
+            <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-40 bg-[#0F1629]/95 backdrop-blur border-t border-[#2C355E] px-4 py-4">
                 <div className="max-w-2xl mx-auto">
                     {supportPhone ? (
                         <a
