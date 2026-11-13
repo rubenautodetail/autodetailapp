@@ -63,6 +63,12 @@ function noonUtc(date: string): string {
 }
 
 /** "14:00" -> "2:00 PM". Plain arithmetic, so it never depends on the server's time zone. */
+function fmtLocation(l: { address: string; city: string; state: string; zipCode: string }): string {
+  // Addresses from the map search already include city, state and ZIP: don't repeat them.
+  if (l.zipCode && l.address && l.address.includes(l.zipCode)) return l.address;
+  return `${l.address}, ${l.city}, ${l.state} ${l.zipCode}`;
+}
+
 function fmtTime(value: string, isEs = false): string {
   const raw = (value ?? '').trim();
   const m = raw.match(/^(\d{1,2}):(\d{2})$/);
@@ -183,7 +189,7 @@ export function bookingConfirmationTemplate(booking: BookingEmailData): string {
       <div class="detail-row"><span class="lbl">${isEs ? 'Servicio' : 'Service'}:</span><span class="val">${service.name}</span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Fecha' : 'Date'}:</span><span class="val">${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Hora' : 'Time'}:</span><span class="val">${fmtTime(booking.scheduledTime, isEs)}</span></div>
-      <div class="detail-row"><span class="lbl">${isEs ? 'Ubicación' : 'Location'}:</span><span class="val">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Ubicación' : 'Location'}:</span><span class="val">${fmtLocation(location)}</span></div>
       ${vehicleRow}
       <div class="detail-row"><span class="lbl">${isEs ? 'Monto Total' : 'Total Amount'}:</span><span class="val"><strong>$${booking.totalAmount.toFixed(2)}</strong></span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Estado del Pago' : 'Payment Status'}:</span><span class="val"><span class="highlight">${isEs ? 'Autorizado (se cobra al completar el servicio)' : 'Authorized (charged when service complete)'}</span></span></div>
@@ -191,7 +197,7 @@ export function bookingConfirmationTemplate(booking: BookingEmailData): string {
     <h3>${isEs ? '¿Qué sigue?' : "What's Next?"}</h3>
     <ul>
       <li>${isEs ? 'Estamos asignando a alguien de nuestro equipo a tu cita' : "We're assigning someone from our team to your appointment"}</li>
-      <li>${isEs ? 'Recibirás un correo de presentación en los próximos 30 minutos' : "You'll receive an introduction email within 30 minutes"}</li>
+      <li>${isEs ? 'Te enviaremos un correo en cuanto un detallador acepte tu cita' : "We'll email you as soon as a detailer accepts your appointment"}</li>
       <li>${isEs ? 'Nuestro equipo llegará a la hora programada' : 'Our team will arrive at the scheduled time'}</li>
     </ul>
     <p style="margin-top:30px;"><a href="${APP_URL}/${locale}/booking/${booking.id}/track" class="btn" style="background:#667eea;color:white;">${isEs ? 'Ver Detalles de la Reserva' : 'View Booking Details'}</a></p>
@@ -397,7 +403,7 @@ export function jobAcceptedTemplate(booking: BookingEmailData): string {
       <div class="detail-row"><span class="lbl">${isEs ? 'Servicio' : 'Service'}:</span><span class="val">${service.name}</span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Fecha' : 'Date'}:</span><span class="val">${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</span></div>
       <div class="detail-row"><span class="lbl">${isEs ? 'Hora' : 'Time'}:</span><span class="val">${fmtTime(booking.scheduledTime, isEs)}</span></div>
-      <div class="detail-row"><span class="lbl">${isEs ? 'Ubicación' : 'Location'}:</span><span class="val">${location.address}, ${location.city}, ${location.state} ${location.zipCode}</span></div>
+      <div class="detail-row"><span class="lbl">${isEs ? 'Ubicación' : 'Location'}:</span><span class="val">${fmtLocation(location)}</span></div>
       ${vehicleRow}
       ${customerName ? `<div class="detail-row"><span class="lbl">${isEs ? 'Cliente' : 'Customer'}:</span><span class="val">${customerName}</span></div>` : ''}
       ${phoneRow}
@@ -622,7 +628,7 @@ export function enRouteTemplate(booking: BookingEmailData): string {
       <p><strong>${isEs ? 'Servicio' : 'Service'}:</strong> ${booking.service.name}</p>
       <p><strong>${isEs ? 'Fecha' : 'Date'}:</strong> ${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</p>
       <p><strong>${isEs ? 'Hora' : 'Time'}:</strong> ${fmtTime(booking.scheduledTime, isEs)}</p>
-      <p><strong>${isEs ? 'Dirección' : 'Address'}:</strong> ${booking.location.address}, ${booking.location.city}, ${booking.location.state} ${booking.location.zipCode}</p>
+      <p><strong>${isEs ? 'Dirección' : 'Address'}:</strong> ${fmtLocation(booking.location)}</p>
     </div>
     <p>${isEs
       ? `Si tienes alguna pregunta, contáctanos en <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.`

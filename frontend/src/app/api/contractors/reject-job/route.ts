@@ -76,6 +76,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
         }
 
+        // Only the contractor who holds the job can release it (or nobody, if unassigned).
+        if (existingBooking.contractor_id && existingBooking.contractor_id !== actorId) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         // A contractor rejecting a job means the job goes back into the assignment
         // queue — it is NOT cancelled. We clear the contractor assignment so the
         // auto-assignment logic can pick it up again (or an admin can re-assign).
@@ -90,6 +95,7 @@ export async function POST(req: NextRequest) {
             })
             .eq('id', existingBooking.id)
             .in('status', ['pending_assignment', 'confirmed'])
+            .or(`contractor_id.is.null,contractor_id.eq.${actorId}`)
             .select()
             .single();
 

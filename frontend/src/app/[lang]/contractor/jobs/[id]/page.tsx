@@ -67,6 +67,7 @@ const translations = {
         startConfirmBody: "The customer will be notified that you have arrived. Do a walkaround of the vehicle with them before starting.",
         startConfirmYes: "Yes, I've arrived",
         startConfirmCancel: "Cancel",
+        callSupport: "Need help? Contact support",
         completeService: "Complete Service",
         completing: "Completing...",
         navigate: "Navigate to Location",
@@ -120,6 +121,7 @@ const translations = {
         startConfirmBody: "Se le avisará al cliente que ya llegaste. Revisa el vehículo junto con él antes de empezar.",
         startConfirmYes: "Sí, ya llegué",
         startConfirmCancel: "Cancelar",
+        callSupport: "¿Necesitas ayuda? Contactar a soporte",
         completeService: "Completar Servicio",
         completing: "Completando...",
         navigate: "Navegar a la Ubicación",
@@ -181,6 +183,10 @@ function StatusBadge({ status, t, locale }: { status: string; t: typeof translat
         </span>
     );
 }
+
+// Support phone shown to contractors (emergency line)
+// (the number is not shown on screen; tapping the button dials it)
+const SUPPORT_PHONE_HREF = `tel:${(process.env.NEXT_PUBLIC_SUPPORT_PHONE || "(305) 988-4449").replace(/[^\d+]/g, "")}`;
 
 export default function JobDetailsPage({ params }: JobDetailsProps) {
     const { lang, id } = use(params);
@@ -821,6 +827,16 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                             {completing ? t.completing : t.completeService}
                         </button>
                     </div>
+                )}
+
+                {/* ── NEED HELP — tap to call support (number hidden; job stays assigned) ── */}
+                {(job.status === "confirmed" || job.status === "en_route" || job.status === "in_progress") && (
+                    <a
+                        href={SUPPORT_PHONE_HREF}
+                        className="flex items-center justify-center w-full mb-4 px-6 py-3.5 border border-[#3A4480] text-[#C9D1F0] font-semibold rounded-xl hover:text-white hover:border-[#D0B078] transition-colors text-center"
+                    >
+                        ⚠ {t.callSupport}
+                    </a>
                 )}
 
             </div>
