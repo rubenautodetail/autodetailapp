@@ -777,8 +777,8 @@ export default function TrackBookingPage() {
 
             {/* ── Add Service Modal ────────────────────────────────────────── */}
             {showAddService && catalog && (
-                <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-                    <div className="bg-[#131835] w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl border border-[#2C355E] max-h-[85vh] flex flex-col">
+                <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4">
+                    <div className="bg-[#131835] w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl border border-[#2C355E] max-h-[85dvh] flex flex-col pb-[env(safe-area-inset-bottom)]">
 
                         {/* Modal header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C355E] flex-shrink-0">
