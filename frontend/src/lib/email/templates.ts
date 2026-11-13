@@ -505,6 +505,9 @@ export function jobPendingApprovalTemplate(booking: BookingEmailData): string {
         <li>${isEs ? 'Asegúrate de que todo esté a tu satisfacción.' : 'Make sure everything is to your satisfaction.'}</li>
         <li>${isEs ? 'Haz clic en el botón de abajo para aprobar el trabajo y liberar el pago final.' : 'Click the button below to approve the job and release the final payment.'}</li>
       </ol>
+      <p style="margin:14px 0 0;font-size:14px;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;">${isEs
+        ? 'Si no respondes, se cobrará tu tarjeta automáticamente 30 minutos después de terminado el trabajo.'
+        : "If you don't respond, your card will be charged automatically 30 minutes after the work is finished."}</p>
     </div>
     ${booking.notes ? `<div style="background:#ede9fe;padding:16px 20px;border-radius:8px;margin:20px 0;border:1px solid #c4b5fd;">
       <h3 style="margin-top:0;color:#5b21b6;font-size:14px;">${isEs ? 'Notas del Detallista:' : "Detailer's Notes:"}</h3>
