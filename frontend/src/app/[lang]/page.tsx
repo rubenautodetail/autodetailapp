@@ -523,10 +523,10 @@ export default async function LandingPage({
                         </div>
                         <div className="shrink-0 flex flex-col sm:flex-row gap-3">
                             <Link
-                                href={`/${locale}/register?next=/${locale}/contractors/apply`}
+                                href={`/${locale}/contractors/apply`}
                                 className="btn-primary px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)] whitespace-nowrap text-center"
                             >
-                                {locale === 'es' ? 'Crear cuenta y aplicar →' : 'Create account & apply →'}
+                                {locale === 'es' ? 'Aplicar ahora →' : 'Apply now →'}
                             </Link>
                             <Link
                                 href={`/${locale}/contractor/login`}

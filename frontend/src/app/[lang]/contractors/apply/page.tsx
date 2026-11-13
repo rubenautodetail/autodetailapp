@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import LanguageSwitch from "@/components/landing/LanguageSwitch";
 import { useAuth } from "@/contexts/AuthContext";
+import { EmailCodeModal } from "@/components/booking/EmailCodeModal";
 
 interface Field {
     label: string;
@@ -50,6 +51,7 @@ export default function ContractorApplyPage() {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showCode, setShowCode] = useState(false);
 
     // Fetch the live service catalog
     useEffect(() => {
@@ -65,14 +67,12 @@ export default function ContractorApplyPage() {
 
     useEffect(() => {
         if (isLoading) return;
-        if (!user) {
-            router.replace(`/${lang}/register?next=/${lang}/contractors/apply`);
-        } else if (profile?.role === "contractor" && profile?.approval_status === "approved") {
+        if (profile?.role === "contractor" && profile?.approval_status === "approved") {
             router.replace(`/${lang}/contractor/dashboard`);
         } else if (profile?.approval_status === "pending") {
             router.replace(`/${lang}/contractor/pending`);
         }
-    }, [isLoading, user, profile, lang, router]);
+    }, [isLoading, profile, lang, router]);
 
     function toggleService(id: number) {
         setSelectedServiceIds((prev) =>
@@ -92,6 +92,18 @@ export default function ContractorApplyPage() {
             return;
         }
 
+        // No session yet: confirm the email with a 6-digit code first (creates the account if new),
+        // then the application is sent automatically from onVerified.
+        if (!user) {
+            setShowCode(true);
+            return;
+        }
+
+        await sendApplication();
+    }
+
+    async function sendApplication() {
+        setError(null);
         setSubmitting(true);
 
         try {
@@ -136,7 +148,6 @@ export default function ContractorApplyPage() {
     }
 
     const redirectPending = !isLoading && (
-        !user ||
         (profile?.role === "contractor" && profile?.approval_status === "approved") ||
         (profile?.role === "contractor" && profile?.approval_status === "pending")
     );
@@ -423,6 +434,20 @@ export default function ContractorApplyPage() {
                     </p>
                 </form>
             </div>
+
+            {showCode && (
+                <EmailCodeModal
+                    locale={isEs ? "es" : "en"}
+                    email={(values.email || "").trim()}
+                    name={(values.fullName || "").trim()}
+                    mode="contractor"
+                    onVerified={() => {
+                        setShowCode(false);
+                        void sendApplication();
+                    }}
+                    onClose={() => setShowCode(false)}
+                />
+            )}
         </div>
     );
 }

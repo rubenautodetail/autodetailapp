@@ -87,6 +87,16 @@ export async function POST(req: NextRequest) {
             // non-fatal
         }
 
+        // An admin account must never be turned into a contractor by applying.
+        const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+        if (existingProfile?.role === 'admin') {
+            return NextResponse.json({ error: 'Admin accounts cannot submit a contractor application.' }, { status: 403 });
+        }
+
         // Upsert profile as pending contractor with skills
         const { error: updateError } = await supabase
             .from('profiles')

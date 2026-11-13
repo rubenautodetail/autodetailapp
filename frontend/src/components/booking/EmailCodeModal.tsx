@@ -10,8 +10,8 @@ interface EmailCodeModalProps {
   email: string;
   /** Required in "booking" mode (used to create the account); ignored in "login" mode. */
   name?: string;
-  /** "booking": creates the account if new. "login": only signs in an existing account. */
-  mode?: "booking" | "login";
+  /** "booking": creates the account if new. "login": only signs in an existing account. "contractor": same as booking, with wording for the detailer application. */
+  mode?: "booking" | "login" | "contractor";
   onVerified: () => void;
   onClose: () => void;
 }
@@ -27,6 +27,7 @@ const RESEND_SECONDS = 60;
 export function EmailCodeModal({ locale, email, name = "", mode = "booking", onVerified, onClose }: EmailCodeModalProps) {
   const es = locale === "es";
   const isLogin = mode === "login";
+  const isContractor = mode === "contractor";
   const { refreshProfile } = useAuth();
   const supabase = createClient();
 
@@ -42,12 +43,18 @@ export function EmailCodeModal({ locale, email, name = "", mode = "booking", onV
     sentTo: es ? "Enviamos un código de 6 dígitos a" : "We sent a 6-digit code to",
     why: isLogin
       ? (es ? "Con este código entras a tu cuenta. No necesitas contraseña." : "This code signs you in to your account. No password needed.")
+      : isContractor
+      ? (es
+        ? "Con este código confirmamos tu correo y enviamos tu solicitud. No necesitas contraseña."
+        : "This code confirms your email and sends your application. No password needed.")
       : (es
         ? "Con este código creamos tu cuenta y guardamos tu reserva. No necesitas contraseña."
         : "This code creates your account and saves your booking. No password needed."),
     verifyLogin: es ? "Verificar y entrar" : "Verify and sign in",
     label: es ? "Código" : "Code",
-    verify: es ? "Verificar y continuar" : "Verify and continue",
+    verify: isContractor
+      ? (es ? "Verificar y enviar solicitud" : "Verify and submit application")
+      : (es ? "Verificar y continuar" : "Verify and continue"),
     verifying: es ? "Verificando…" : "Verifying…",
     sending: es ? "Enviando código…" : "Sending code…",
     resend: es ? "Reenviar código" : "Resend code",

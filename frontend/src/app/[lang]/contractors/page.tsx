@@ -116,7 +116,7 @@ export default async function ContractorsPage({
                             {isEs ? 'Iniciar sesión' : 'Log in'}
                         </Link>
                         <Link
-                            href={`/${locale}/register?next=/${locale}/contractors/apply`}
+                            href={`/${locale}/contractors/apply`}
                             className="px-4 py-2 text-sm font-semibold bg-[#D0B078] text-black rounded-lg hover:bg-[#c4a068] transition-colors whitespace-nowrap"
                         >
                             {isEs ? 'Aplicar ahora' : 'Apply now'}
@@ -163,10 +163,10 @@ export default async function ContractorsPage({
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                         <Link
-                            href={`/${locale}/register?next=/${locale}/contractors/apply`}
+                            href={`/${locale}/contractors/apply`}
                             className="btn-primary px-8 py-4 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)]"
                         >
-                            {isEs ? 'Crea tu cuenta y aplica' : 'Create account & apply'}
+                            {isEs ? 'Aplicar ahora' : 'Apply now'}
                         </Link>
                         <Link
                             href={`/${locale}/contractor/login`}
@@ -219,8 +219,8 @@ export default async function ContractorsPage({
                         {[
                             {
                                 n: '01',
-                                en: { t: 'Fill out the form', d: 'Your details, your area and how you want to get paid.' },
-                                es: { t: 'Llena el formulario', d: 'Tus datos, tu zona y cómo quieres cobrar.' },
+                                en: { t: 'Fill out the form', d: 'Your details, your area and how you want to get paid. Confirm your email with a code.' },
+                                es: { t: 'Llena el formulario', d: 'Tus datos, tu zona y cómo quieres cobrar. Confirmas tu correo con un código.' },
                             },
                             {
                                 n: '02',
@@ -326,7 +326,7 @@ export default async function ContractorsPage({
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link
-                            href={`/${locale}/register?next=/${locale}/contractors/apply`}
+                            href={`/${locale}/contractors/apply`}
                             className="btn-primary px-8 py-4 rounded-xl font-semibold text-sm tracking-wide shadow-[var(--shadow-glow)]"
                         >
                             {isEs ? 'Aplicar ahora' : 'Apply now'}
