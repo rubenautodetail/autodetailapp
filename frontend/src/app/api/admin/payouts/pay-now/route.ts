@@ -104,6 +104,18 @@ export async function POST(req: NextRequest) {
             notes || null,
         ].filter(Boolean).join(' — ') || null;
 
+        // A week can have several payouts (e.g. jobs completed after the week was already paid).
+        const { data: lastBatch } = await supabase
+            .from('payouts')
+            .select('batch')
+            .eq('contractor_id', contractor_id)
+            .eq('period_start', periodStart)
+            .eq('period_end', periodEnd)
+            .order('batch', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        const nextBatch = lastBatch ? Number(lastBatch.batch) + 1 : 1;
+
         // Insert payout record already marked as paid
         const { data: payout, error: insertErr } = await supabase
             .from('payouts')
@@ -111,6 +123,7 @@ export async function POST(req: NextRequest) {
                 contractor_id,
                 period_start: periodStart,
                 period_end: periodEnd,
+                batch: nextBatch,
                 total_bookings: bookings.length,
                 gross_amount: +gross.toFixed(2),
                 platform_fee: platformFee,
