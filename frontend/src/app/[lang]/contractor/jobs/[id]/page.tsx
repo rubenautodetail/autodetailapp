@@ -61,8 +61,12 @@ const translations = {
         enRouteError: "Failed to send en-route notification. Please try again.",
         enRouteTooEarly: "'On My Way' unlocks 2 hours before the appointment",
         phoneAfterOnMyWay: "The customer's phone number is shown after you press 'On My Way'.",
-        startJob: "Start Job",
+        startJob: "I'm here to start the job",
         starting: "Starting...",
+        startConfirmTitle: "Are you at the customer's address?",
+        startConfirmBody: "The customer will be told you have arrived to start working.",
+        startConfirmYes: "Yes, start the job",
+        startConfirmCancel: "Cancel",
         completeService: "Complete Service",
         completing: "Completing...",
         navigate: "Navigate to Location",
@@ -110,8 +114,12 @@ const translations = {
         enRouteError: "Error al enviar notificación. Por favor intenta de nuevo.",
         enRouteTooEarly: "'Estoy en camino' se activa 2 horas antes de la cita",
         phoneAfterOnMyWay: "El teléfono del cliente se muestra después de presionar 'Estoy en camino'.",
-        startJob: "Iniciar Trabajo",
+        startJob: "Ya llegué, iniciar trabajo",
         starting: "Iniciando...",
+        startConfirmTitle: "¿Estás en la dirección del cliente?",
+        startConfirmBody: "Se le avisará al cliente que llegaste para empezar a trabajar.",
+        startConfirmYes: "Sí, iniciar",
+        startConfirmCancel: "Cancelar",
         completeService: "Completar Servicio",
         completing: "Completando...",
         navigate: "Navegar a la Ubicación",
@@ -187,6 +195,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     const [loading, setLoading] = useState(true);
     const [enRouting, setEnRouting] = useState(false);
     const [starting, setStarting] = useState(false);
+    const [confirmStart, setConfirmStart] = useState(false);
     const [completing, setCompleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
@@ -761,12 +770,35 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                                 : "When you have arrived, press the button to start the job."}
                         </p>
                         <button
-                            onClick={handleStartJob}
+                            onClick={() => setConfirmStart(true)}
                             disabled={starting}
                             className="w-full px-6 py-4 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-base"
                         >
                             {starting ? t.starting : t.startJob}
                         </button>
+                    </div>
+                )}
+
+                {/* ── Confirm arrival before starting ── */}
+                {confirmStart && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-6">
+                        <div className="w-full max-w-sm bg-[#131835] border border-[#2A3155] rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-white">{t.startConfirmTitle}</h3>
+                            <p className="text-sm text-[#A5B0D1] mt-2">{t.startConfirmBody}</p>
+                            <button
+                                onClick={() => { setConfirmStart(false); handleStartJob(); }}
+                                disabled={starting}
+                                className="w-full mt-5 px-6 py-3.5 bg-[#D0B078] text-[#131835] font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity"
+                            >
+                                {t.startConfirmYes}
+                            </button>
+                            <button
+                                onClick={() => setConfirmStart(false)}
+                                className="w-full mt-3 px-6 py-3 border border-[#2A3155] text-[#A5B0D1] rounded-xl hover:text-white transition-colors"
+                            >
+                                {t.startConfirmCancel}
+                            </button>
+                        </div>
                     </div>
                 )}
 

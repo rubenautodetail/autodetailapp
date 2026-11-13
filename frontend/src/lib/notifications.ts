@@ -1,6 +1,5 @@
 import {
     sendWelcomeEmail,
-    sendBookingPendingEmail,
     sendBookingConfirmation,
     sendBookingCancelledEmail,
     sendJobAcceptedEmail,
@@ -123,7 +122,8 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 break;
 
             case 'booking.created':
-                await sendBookingPendingEmail(mapBookingData(event.booking));
+                // No email here: the "Booking Received - Pending Payment" email was removed because it
+                // confused customers. They get one email when the payment hold succeeds ('booking.confirmed').
                 break;
 
             case 'booking.confirmed': {

@@ -130,7 +130,7 @@ function resolveSubject(payload: EmailPayload): string {
       return `⚠️ Chargeback Alert — Booking ${payload.data.bookingId} ($${(payload.data.amount / 100).toFixed(2)})`;
     case 'job_started': {
       const isEs = (payload.data as BookingEmailData).locale === 'es';
-      return isEs ? '¡Tu detallador ha comenzado a trabajar! 🚿' : 'Your Detailer Has Started Work! 🚿';
+      return isEs ? '¡Tu detallador ha llegado! 🚗' : 'Your Detailer Has Arrived! 🚗';
     }
     case 'en_route': {
       const isEs = (payload.data as BookingEmailData).locale === 'es';

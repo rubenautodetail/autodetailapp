@@ -575,10 +575,10 @@ export function jobStartedTemplate(booking: BookingEmailData): string {
   const body = `
     <p>${isEs ? 'Hola' : 'Hi'} ${booking.customer.firstName},</p>
     <p>${isEs
-      ? 'Nuestro equipo ha llegado y comenzó a trabajar en tu vehículo. Te avisarán cuando terminen.'
-      : "Our team has arrived and started working on your vehicle. They'll update you when they're finished."}</p>
+      ? 'Tu detallador ha llegado a tu ubicación para empezar a trabajar en tu vehículo. Si aún no se ha comunicado contigo, por favor mantente disponible para darle acceso al vehículo. Te avisarán cuando terminen.'
+      : "Your detailer has arrived at your location to start working on your vehicle. If they haven't reached you yet, please be available to give them access to the vehicle. They'll update you when they're finished."}</p>
     <div style="background:#fff7ed;border-left:4px solid #f97316;padding:20px;margin:20px 0;border-radius:4px;">
-      <h3 style="margin-top:0;color:#ea580c;">${isEs ? 'Servicio en Progreso' : 'Service in Progress'}</h3>
+      <h3 style="margin-top:0;color:#ea580c;">${isEs ? 'Tu Detallador Ha Llegado' : 'Your Detailer Has Arrived'}</h3>
       <p><strong>${isEs ? 'Reserva' : 'Booking'}:</strong> ${booking.confirmationCode}</p>
       <p><strong>${isEs ? 'Servicio' : 'Service'}:</strong> ${booking.service.name}</p>
       <p><strong>${isEs ? 'Fecha' : 'Date'}:</strong> ${fmtDate(booking.scheduledDate, isEs ? 'es-US' : 'en-US')}</p>
@@ -588,7 +588,7 @@ export function jobStartedTemplate(booking: BookingEmailData): string {
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#f97316 0%,#ea580c 100%)',
-    headerText: isEs ? '¡El Detallador Ha Comenzado! 🚿' : 'Detailer Has Started Work! 🚿',
+    headerText: isEs ? '¡Tu Detallador Ha Llegado! 🚗' : 'Your Detailer Has Arrived! 🚗',
     body,
     footerLine: isEs ? 'Gracias por elegir Lux' : 'Thank you for choosing Lux',
   });
