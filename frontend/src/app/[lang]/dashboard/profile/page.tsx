@@ -81,7 +81,7 @@ export default function ProfilePage() {
             </button>
 
             <p className="text-center text-xs text-[var(--text-secondary)] mt-8 opacity-50">
-                DetailWash v1.0.0
+                Lux Auto Detail Services
             </p>
         </div>
     );

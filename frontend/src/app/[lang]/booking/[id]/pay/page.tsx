@@ -5,7 +5,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const { lang } = await params;
   const locale = lang === "es" ? "es" : "en";
   return {
-    title: locale === "es" ? "Completar Pago | DetailWash" : "Complete Payment | DetailWash",
+    title: locale === "es" ? "Completar Pago" : "Complete Payment",
     description: locale === "es" ? "Completa el pago de tu reserva pendiente." : "Complete payment for your pending booking.",
   };
 }

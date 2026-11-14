@@ -99,7 +99,7 @@ export default function ReceiptPage() {
                         {isEs ? 'Recibo de Pago' : 'Payment Receipt'}
                     </h1>
                     <p className="text-text-secondary mt-2">
-                        {isEs ? '¡Gracias por elegir DetailWash!' : 'Thank you for choosing DetailWash!'}
+                        {isEs ? '¡Gracias por elegir Lux Auto Detail Services!' : 'Thank you for choosing Lux Auto Detail Services!'}
                     </p>
                     <p className="text-text-muted text-sm mt-1">
                         {isEs ? 'Tu pago ha sido procesado exitosamente.' : 'Your payment has been processed successfully.'}

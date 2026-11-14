@@ -114,7 +114,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
                 await sendWelcomeEmail(event.user);
                 await createInAppNotification(
                     event.user.id,
-                    'Welcome to DetailWash!',
+                    'Welcome to Lux Auto Detail Services!',
                     'We are excited to have you on board. Book your first detail today.',
                     'info'
                 );
