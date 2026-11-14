@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     const isEs = lang === 'es';
 
     return {
-        title: isEs ? 'Trabajo de Detailing en Miami' : 'Mobile Car Detailer Jobs in Miami',
+        title: isEs ? 'Trabajo de Detailing a Domicilio' : 'Car Detailing Jobs Near You',
         description: isEs
             ? 'Únete a Lux como detallador de autos móvil. Trabajos cerca de ti, tu propio horario y pago 1 a 2 días después de cada trabajo aprobado. Hoy en Florida.'
             : 'Join Lux as a mobile car detailer. Jobs near you, your own schedule and payment 1–2 days after each approved job. Now in Florida.',
