@@ -47,6 +47,23 @@ export async function POST(req: NextRequest) {
     if (profile.role === "admin") {
       return NextResponse.json({ error: "Cannot delete admin users" }, { status: 403 });
     }
+    // Safety: never erase payment records. A customer with authorized, paid or disputed
+    // bookings keeps their history (needed for receipts, refunds and Stripe disputes).
+    const { count: paidCount, error: paidErr } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .in("payment_status", ["authorized", "paid", "disputed"]);
+    if (paidErr) {
+      console.error("Delete user: payment check failed:", paidErr);
+      return NextResponse.json({ error: "Could not verify the user's payments" }, { status: 500 });
+    }
+    if ((paidCount ?? 0) > 0) {
+      return NextResponse.json(
+        { error: "User has bookings with payments", code: "HAS_PAID_BOOKINGS", count: paidCount },
+        { status: 409 },
+      );
+    }
 
     // 1. Delete related bookings (as customer or contractor)
     await supabase.from("bookings").delete().eq("user_id", userId);

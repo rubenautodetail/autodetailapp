@@ -30,6 +30,13 @@ export async function POST(req: NextRequest) {
 
     // Service client bypasses RLS so we can update any user's profile
     const supabase = createServiceClient();
+
+    // Safety: an admin's role can't be changed from the panel (the UI already disables it).
+    // This stops a stray call from locking out the admin account.
+    const { data: target } = await supabase.from("profiles").select("role").eq("id", userId).single();
+    if ((target as { role?: string } | null)?.role === "admin") {
+      return NextResponse.json({ error: "Admin roles can't be changed here" }, { status: 403 });
+    }
     const { error } = await supabase
       .from("profiles")
       .update({ role, updated_at: new Date().toISOString() })

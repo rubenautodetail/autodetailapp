@@ -111,7 +111,16 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
         body: JSON.stringify({ userId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
+      if (!res.ok) {
+        if (data.code === "HAS_PAID_BOOKINGS") {
+          throw new Error(
+            locale === "es"
+              ? `Este usuario tiene ${data.count} reserva(s) con pagos. Borrarlo eliminaría los registros de pago, por eso no se permite.`
+              : `This user has ${data.count} booking(s) with payments. Deleting would erase the payment records, so it is not allowed.`,
+          );
+        }
+        throw new Error(data.error || "Failed");
+      }
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       setTotal((prev) => prev - 1);
       setMessage({ type: "success", text: locale === "es" ? "Usuario eliminado." : "User deleted successfully." });
@@ -217,7 +226,20 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
                           <select
                             value={u.role}
                             disabled={updating === u.id || u.role === "admin"}
-                            onChange={(e) => changeRole(u.id, e.target.value as Role)}
+                            onChange={(e) => {
+                              const next = e.target.value as Role;
+                              if (
+                                next === "admin" &&
+                                !window.confirm(
+                                  locale === "es"
+                                    ? `¿Dar acceso de administrador a ${u.name || u.email}? Podrá ver y cambiar todo en el panel.`
+                                    : `Give admin access to ${u.name || u.email}? They will be able to see and change everything in the panel.`,
+                                )
+                              ) {
+                                return;
+                              }
+                              changeRole(u.id, next);
+                            }}
                             className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                           >
                             {ROLE_OPTIONS.map((r) => (
