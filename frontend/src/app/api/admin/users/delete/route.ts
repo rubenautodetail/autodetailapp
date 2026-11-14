@@ -65,6 +65,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Safety: a contractor who completed jobs keeps their history (needed for payouts and records).
+    const { count: jobsCount, error: jobsErr } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("contractor_id", userId)
+      .eq("status", "completed");
+    if (jobsErr) {
+      console.error("Delete user: contractor jobs check failed:", jobsErr);
+      return NextResponse.json({ error: "Could not verify the user's jobs" }, { status: 500 });
+    }
+    if ((jobsCount ?? 0) > 0) {
+      return NextResponse.json(
+        { error: "User has completed jobs as a contractor", code: "HAS_CONTRACTOR_JOBS", count: jobsCount },
+        { status: 409 },
+      );
+    }
+
     // 1. Delete related bookings (as customer or contractor)
     await supabase.from("bookings").delete().eq("user_id", userId);
     await supabase.from("bookings").update({ contractor_id: null }).eq("contractor_id", userId);

@@ -119,6 +119,13 @@ export default function AdminUsersPage({ params }: AdminUsersProps) {
               : `This user has ${data.count} booking(s) with payments. Deleting would erase the payment records, so it is not allowed.`,
           );
         }
+        if (data.code === "HAS_CONTRACTOR_JOBS") {
+          throw new Error(
+            locale === "es"
+              ? `Este técnico tiene ${data.count} trabajo(s) completado(s). Borrarlo eliminaría su historial de trabajos y pagos, por eso no se permite.`
+              : `This contractor has ${data.count} completed job(s). Deleting would erase their job and payout history, so it is not allowed.`,
+          );
+        }
         throw new Error(data.error || "Failed");
       }
       setUsers((prev) => prev.filter((u) => u.id !== userId));

@@ -38,7 +38,23 @@ export async function GET(req: NextRequest) {
         const { data, error } = await query;
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-        return NextResponse.json({ data: data ?? [], total: data?.length ?? 0 });
+        // The stored `total_jobs_completed` counter is never updated, so count the real
+        // completed jobs from the bookings table instead.
+        const rows = data ?? [];
+        const jobCounts: Record<string, number> = {};
+        if (rows.length > 0) {
+            const { data: done } = await supabase
+                .from('bookings')
+                .select('contractor_id')
+                .eq('status', 'completed')
+                .in('contractor_id', rows.map((p) => p.id));
+            for (const b of done ?? []) {
+                if (b.contractor_id) jobCounts[b.contractor_id] = (jobCounts[b.contractor_id] ?? 0) + 1;
+            }
+        }
+        const withJobs = rows.map((p) => ({ ...p, total_jobs_completed: jobCounts[p.id] ?? 0 }));
+
+        return NextResponse.json({ data: withJobs, total: withJobs.length });
     } catch (err) {
         console.error('admin/contractors list error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

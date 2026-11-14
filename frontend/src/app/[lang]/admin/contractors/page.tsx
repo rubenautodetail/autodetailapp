@@ -340,6 +340,46 @@ function AdminContractorsContent({ locale }: { locale: string }) {
         }
     };
 
+    const handleDeleteRejected = async (id: string, name: string) => {
+        if (
+            !window.confirm(
+                isEs
+                    ? `¿Eliminar a ${name} y todos sus datos? No se puede deshacer.`
+                    : `Delete ${name} and all their data? This cannot be undone.`,
+            )
+        ) {
+            return;
+        }
+        setActionLoading(id);
+        try {
+            const res = await adminFetch("/api/admin/users/delete", {
+                method: "POST",
+                body: JSON.stringify({ userId: id }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                setDetailModal(null);
+                await fetchContractors();
+            } else if (data.code === "HAS_CONTRACTOR_JOBS") {
+                window.alert(
+                    isEs
+                        ? `No se puede eliminar: tiene ${data.count} trabajo(s) completado(s) y se perdería su historial.`
+                        : `Can't delete: they have ${data.count} completed job(s) and their history would be lost.`,
+                );
+            } else if (data.code === "HAS_PAID_BOOKINGS") {
+                window.alert(
+                    isEs
+                        ? `No se puede eliminar: tiene ${data.count} reserva(s) con pagos como cliente.`
+                        : `Can't delete: they have ${data.count} booking(s) with payments as a customer.`,
+                );
+            } else {
+                window.alert(data.error || (isEs ? "No se pudo eliminar." : "Could not delete."));
+            }
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     const handleVerifySkills = async (contractorId: string, verifiedIds: number[]) => {
         setSavingSkills(true);
         try {
@@ -403,6 +443,13 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                     ))}
                 </div>
 
+                {/* Skills legend */}
+                <p className="text-xs text-gray-500 mb-3">
+                    {isEs
+                        ? "Habilidades: ✓ verificada · + agregada, falta revisar · − quitada por el técnico · gris = sin verificar"
+                        : "Skills: ✓ verified · + added, needs review · − removed by the contractor · gray = unverified"}
+                </p>
+
                 {/* Table */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     {loading ? (
@@ -440,7 +487,9 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                         <div className="text-xs text-gray-500">{c.business_name}</div>
                                                     )}
                                                     <div className="text-xs text-gray-400 mt-0.5">
-                                                        {c.rating != null && `⭐ ${c.rating.toFixed(1)} · `}
+                                                        {c.rating != null && c.rating > 0
+                                                            ? `⭐ ${c.rating.toFixed(1)} · `
+                                                            : `${isEs ? "Sin reseñas" : "No reviews"} · `}
                                                         {c.total_jobs_completed ?? 0} {isEs ? "trabajos" : "jobs"}
                                                     </div>
                                                 </td>
@@ -485,7 +534,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                         ];
                                                         if (chips.length === 0) return <span className="text-xs text-gray-400">—</span>;
                                                         return (
-                                                            <div className="grid grid-cols-2 gap-1 max-h-[110px] overflow-y-auto p-1 border border-gray-200 rounded-lg">
+                                                            <div className="flex flex-wrap gap-1 min-w-[220px]">
                                                                 {chips.map(({ id, kind }) => {
                                                                     const svc = catalogServices.find((s) => s.id === id);
                                                                     const name = svc ? (isEs && svc.name_es ? svc.name_es : svc.name) : `ID ${id}`;
@@ -496,7 +545,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                                         : "bg-gray-100 text-gray-500";
                                                                     const mark = kind === "verified" ? "✓ " : kind === "added" ? "+ " : kind === "removed" ? "− " : "";
                                                                     return (
-                                                                        <span key={`${kind}-${id}`} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold ${style}`}>
+                                                                        <span key={`${kind}-${id}`} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold whitespace-nowrap ${style}`}>
                                                                             {mark}{name}
                                                                         </span>
                                                                     );
@@ -546,6 +595,17 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                                 className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
                                                             >
                                                                 {actionLoading === c.id ? "..." : t.terminate}
+                                                            </button>
+                                                        )}
+
+                                                        {/* Delete for rejected */}
+                                                        {status === "rejected" && (
+                                                            <button
+                                                                onClick={() => handleDeleteRejected(c.id, c.full_name ?? c.email ?? c.id)}
+                                                                disabled={actionLoading === c.id}
+                                                                className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50 transition-colors"
+                                                            >
+                                                                {actionLoading === c.id ? "..." : isEs ? "Eliminar" : "Delete"}
                                                             </button>
                                                         )}
                                                     </div>
