@@ -11,7 +11,8 @@ interface AdminPageProps {
 interface Stats {
   contractors: { total: number; pending: number; active: number };
   bookings: { total: number; pending: number; completed: number };
-  revenue: { total: number };
+  revenue: { total: number; month: number };
+  attention: { pendingAssignment: number; unpaidPayouts: number };
 }
 
 async function fetchAdminStats(): Promise<Stats> {
@@ -33,6 +34,12 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
       .catch(() => setError("Failed to load stats"))
       .finally(() => setLoading(false));
   }, []);
+
+  const attentionItems = [
+    { count: stats?.attention.pendingAssignment ?? 0, href: `/${locale}/admin/bookings`, label: locale === "es" ? "Reservas por asignar a un contratista" : "Bookings to assign to a contractor" },
+    { count: stats?.attention.unpaidPayouts ?? 0, href: `/${locale}/admin/payouts`, label: locale === "es" ? "Contratistas con pagos por hacer" : "Contractors waiting to be paid" },
+    { count: stats?.contractors.pending ?? 0, href: `/${locale}/admin/contractors?status=pending`, label: locale === "es" ? "Solicitudes de contratistas por aprobar" : "Contractor applications to review" },
+  ].filter((i) => i.count > 0);
 
   const t = {
     title: locale === "es" ? "Panel de Administración" : "Admin Dashboard",
@@ -92,7 +99,7 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.title}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">DetailWash</p>
+          <p className="text-sm text-gray-500 mt-0.5">Lux Auto Detail Services</p>
         </div>
       </div>
 
@@ -103,92 +110,57 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
           </div>
         )}
 
+        {/* Needs attention */}
+        <div>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            {locale === "es" ? "Requiere tu atención" : "Needs your attention"}
+          </h2>
+          {attentionItems.length === 0 ? (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 font-medium">
+              {locale === "es" ? "Todo al día ✓" : "All caught up ✓"}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {attentionItems.map((it) => (
+                <Link key={it.href} href={it.href} className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl hover:bg-yellow-100 transition-colors">
+                  <span className="flex-shrink-0 min-w-[2.25rem] h-9 px-2 rounded-full bg-yellow-200 text-yellow-900 text-sm font-bold flex items-center justify-center">{it.count}</span>
+                  <span className="flex-1 text-sm font-semibold text-yellow-900">{it.label}</span>
+                  <svg className="w-5 h-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <StatCard
-            label={locale === "es" ? "Pendientes" : "Pending"}
-            value={stats?.contractors.pending ?? "—"}
-            color="yellow"
-            icon="⏳"
-          />
-          <StatCard
-            label={locale === "es" ? "Activos" : "Active"}
+            label={locale === "es" ? "Contratistas activos" : "Active contractors"}
             value={stats?.contractors.active ?? "—"}
             color="green"
             icon="✅"
           />
           <StatCard
-            label={locale === "es" ? "Reservas" : "Bookings"}
-            value={stats?.bookings.pending ?? "—"}
+            label={locale === "es" ? "Trabajos completados" : "Completed jobs"}
+            value={stats?.bookings.completed ?? "—"}
             color="blue"
             icon="📅"
           />
           <StatCard
-            label={locale === "es" ? "Ingresos" : "Revenue"}
-            value={stats ? `$${stats.revenue.total.toFixed(0)}` : "—"}
+            label={locale === "es" ? "Ingresos del mes" : "Revenue this month"}
+            value={stats ? `$${stats.revenue.month.toFixed(0)}` : "—"}
             color="purple"
             icon="💰"
           />
+          <StatCard
+            label={locale === "es" ? "Ingresos totales" : "Total revenue"}
+            value={stats ? `$${stats.revenue.total.toFixed(0)}` : "—"}
+            color="yellow"
+            icon="🏦"
+          />
         </div>
-
-        {/* Quick actions — mobile-friendly card grid */}
-        <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-            {t.quickActions}
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <Link href={`/${locale}/admin/contractors`} className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-2xl sm:text-3xl mb-2 opacity-90">🔧</div>
-              <div className="text-sm sm:text-base font-semibold">{t.manageContractors}</div>
-              {(stats?.contractors.pending ?? 0) > 0 && (
-                <span className="absolute top-3 right-3 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
-                  {stats?.contractors.pending}
-                </span>
-              )}
-            </Link>
-            <Link href={`/${locale}/admin/bookings`} className="group rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-2xl sm:text-3xl mb-2 opacity-90">📅</div>
-              <div className="text-sm sm:text-base font-semibold">{t.manageBookings}</div>
-            </Link>
-            <Link href={`/${locale}/admin/schedule`} className="group rounded-xl bg-gradient-to-br from-green-500 to-green-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-2xl sm:text-3xl mb-2 opacity-90">📆</div>
-              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Horarios" : "Schedules"}</div>
-            </Link>
-            <Link href={`/${locale}/admin/users`} className="group rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-2xl sm:text-3xl mb-2 opacity-90">👥</div>
-              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Usuarios" : "Users"}</div>
-            </Link>
-            <Link href={`/${locale}/admin/payments`} className="group rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-2xl sm:text-3xl mb-2 opacity-90">💳</div>
-              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Pagos" : "Payments"}</div>
-            </Link>
-            <Link href={`/${locale}/admin/payouts`} className="group rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 p-4 sm:p-5 text-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-2xl sm:text-3xl mb-2 opacity-90">💰</div>
-              <div className="text-sm sm:text-base font-semibold">{locale === "es" ? "Pagos a Contratistas" : "Contractor Payouts"}</div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Pending contractors alert */}
-        {(stats?.contractors.pending ?? 0) > 0 && (
-          <Link
-            href={`/${locale}/admin/contractors?status=pending`}
-            className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl hover:bg-yellow-100 transition-colors"
-          >
-            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-lg">⚡</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-yellow-900">
-                {stats?.contractors.pending} {t.reviewApplications}
-              </p>
-              <p className="text-xs text-yellow-700 mt-0.5">
-                {locale === "es" ? "Solicitudes esperando aprobación" : "Applications waiting for approval"}
-              </p>
-            </div>
-            <svg className="w-5 h-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        )}
 
         {/* Summary cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

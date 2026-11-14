@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const status = searchParams.get("status") || "active";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  // Search: booking code, customer name/email or Stripe payment id. Characters that
+  // have a meaning in the filter syntax are removed so the text can't change the query.
+  const q = (searchParams.get("q") || "").trim().slice(0, 60).replace(/[,()%*\\"'`]/g, "");
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
@@ -28,7 +31,12 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (status === "active") {
+  if (q) {
+    // While searching, look in every status so the booking is found from any tab.
+    query = query.or(
+      `confirmation_code.ilike.*${q}*,customer_name.ilike.*${q}*,customer_email.ilike.*${q}*,payment_intent_id.ilike.*${q}*`,
+    );
+  } else if (status === "active") {
     query = query.in("status", ACTIVE_STATUSES);
   } else if (status === "archive") {
     query = query.in("status", ARCHIVE_STATUSES);

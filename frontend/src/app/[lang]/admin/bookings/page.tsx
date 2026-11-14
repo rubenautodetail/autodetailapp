@@ -82,8 +82,11 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     pendingAssignment: number;
     pendingPayment: number;
     totalRevenue: number;
+    monthRevenue: number;
     completedThisMonth: number;
   } | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const t = {
     title: locale === "es" ? "Gestión de Reservas" : "Booking Management",
@@ -105,6 +108,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     setFetchError(null);
     try {
       const params = new URLSearchParams({ status: statusFilter, page: String(page) });
+      if (searchQuery) params.set("q", searchQuery);
       const res = await adminFetch(`/api/admin/bookings/list?${params}`);
       if (!res.ok) throw new Error("Failed to fetch bookings");
 
@@ -118,9 +122,18 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, page, locale]);
+  }, [statusFilter, page, locale, searchQuery]);
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
+
+  // Wait a moment after typing before searching
+  useEffect(() => {
+    const h = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(h);
+  }, [searchInput]);
 
   useEffect(() => {
     adminFetch('/api/admin/bookings/stats')
@@ -205,7 +218,19 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
         <p className="text-sm text-gray-500">
-          {total} {locale === "es" ? "reservas en total" : "bookings total"}
+          {searchQuery
+            ? locale === "es"
+              ? `${total} resultado(s) para "${searchQuery}"`
+              : `${total} result(s) for "${searchQuery}"`
+            : statusFilter === "all"
+              ? `${total} ${locale === "es" ? "reservas en total" : "bookings total"}`
+              : statusFilter === "archive"
+                ? `${total} ${locale === "es" ? "reservas canceladas" : "cancelled bookings"}`
+                : statusFilter === "completed"
+                  ? `${total} ${locale === "es" ? "reservas completadas" : "completed bookings"}`
+                  : statusFilter === "active"
+                    ? `${total} ${locale === "es" ? "reservas activas" : "active bookings"}`
+                    : `${total} ${locale === "es" ? "reservas" : "bookings"} (${locale === "es" ? STATUS_LABELS[statusFilter]?.es : STATUS_LABELS[statusFilter]?.en})`}
         </p>
         {fetchError && (
           <div className="mt-3 px-4 py-2 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
@@ -223,7 +248,7 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
 
         {/* Stats bar */}
         {stats ? (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             <div className="bg-white border border-gray-200 rounded-xl px-5 py-4">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                 {locale === "es" ? "Hoy" : "Today"}
@@ -250,14 +275,20 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
             </div>
             <div className="bg-white border border-blue-200 rounded-xl px-5 py-4">
               <p className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">
-                {locale === "es" ? "Ingresos Totales" : "Total Revenue"}
+                {locale === "es" ? "Ingresos del Mes" : "Revenue This Month"}
+              </p>
+              <p className="text-2xl font-bold text-blue-700">${stats.monthRevenue.toFixed(2)}</p>
+            </div>
+            <div className="bg-white border border-blue-200 rounded-xl px-5 py-4">
+              <p className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">
+                {locale === "es" ? "Ingresos Totales (histórico)" : "Total Revenue (all time)"}
               </p>
               <p className="text-2xl font-bold text-blue-700">${stats.totalRevenue.toFixed(2)}</p>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
-            {[...Array(5)].map((_, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-white border border-gray-200 rounded-xl px-5 py-4 animate-pulse">
                 <div className="h-2.5 w-20 bg-gray-200 rounded mb-2" />
                 <div className="h-7 w-12 bg-gray-200 rounded" />
@@ -265,6 +296,26 @@ export default function AdminBookingsPage({ params }: AdminBookingsProps) {
             ))}
           </div>
         )}
+
+        {/* Search */}
+        <div className="mb-4">
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder={
+              locale === "es"
+                ? "Buscar por código (RD-000208), nombre, correo o pago de Stripe…"
+                : "Search by code (RD-000208), name, email or Stripe payment…"
+            }
+            className="w-full sm:w-[28rem] bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500"
+          />
+          {searchQuery && (
+            <p className="text-xs text-gray-500 mt-1">
+              {locale === "es" ? "Buscando en todos los estados." : "Searching all statuses."}
+            </p>
+          )}
+        </div>
 
         {/* Primary filter tabs */}
         <div className="flex gap-2 mb-3 flex-wrap">

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient();
 
   const [bookingsRes, profilesRes] = await Promise.all([
-    supabase.from("bookings").select("status, total_amount, payment_status"),
+    supabase.from("bookings").select("status, total_amount, payment_status, updated_at, contractor_id, payout_id"),
     supabase.from("profiles").select("role, approval_status"),
   ]);
 
@@ -48,6 +48,24 @@ export async function GET(req: NextRequest) {
       return sum + amt;
     }, 0);
 
+  // Start of the current month in Eastern time (05:00Z winter / 04:00Z summer)
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+  const yy = Number(parts.find((p) => p.type === "year")?.value);
+  const mm = Number(parts.find((p) => p.type === "month")?.value);
+  const offsetH = new Date(Date.UTC(yy, mm - 1, 1, 12)).toLocaleString("en-US", { timeZone: "America/New_York", timeZoneName: "short" }).includes("EDT") ? 4 : 5;
+  const monthStart = new Date(Date.UTC(yy, mm - 1, 1, offsetH, 0, 0));
+
+  const toAmt = (v: unknown) => (typeof v === "string" ? parseFloat(v) : Number(v ?? 0)) || 0;
+  const monthRevenue = bookingList
+    .filter((b) => b.status === "completed" && VALID_PAYMENT_STATUSES.includes(b.payment_status ?? "") && b.updated_at && new Date(b.updated_at) >= monthStart)
+    .reduce((sum, b) => sum + toAmt(b.total_amount), 0);
+
+  // Completed jobs not yet paid out to a contractor
+  const unpaid = bookingList.filter((b) => b.status === "completed" && b.contractor_id && !b.payout_id);
+  const unpaidPayouts = new Set(unpaid.map((b) => b.contractor_id)).size;
+  const pendingAssignment = bookingList.filter((b) => b.status === "pending_assignment").length;
+
   const allContractors = profileList.filter((p) => p.role === "contractor").length;
   const activeContractors = profileList.filter(
     (p) => p.role === "contractor" && p.approval_status === "approved"
@@ -67,7 +85,8 @@ export async function GET(req: NextRequest) {
       pending: pendingBookings,
       completed: completedBookings,
     },
-    revenue: { total: totalRevenue },
+    revenue: { total: totalRevenue, month: monthRevenue },
+    attention: { pendingAssignment, unpaidPayouts },
   });
   } catch (err) {
     console.error('admin/stats error:', err);

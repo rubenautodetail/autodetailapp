@@ -486,11 +486,15 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                                     {c.business_name && (
                                                         <div className="text-xs text-gray-500">{c.business_name}</div>
                                                     )}
-                                                    <div className="text-xs text-gray-400 mt-0.5">
+                                                    <div className="text-xs text-gray-500 mt-1 font-medium">
+                                                        {(c.total_jobs_completed ?? 0) === 1
+                                                            ? (isEs ? "1 trabajo completado" : "1 job completed")
+                                                            : `${c.total_jobs_completed ?? 0} ${isEs ? "trabajos completados" : "jobs completed"}`}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400">
                                                         {c.rating != null && c.rating > 0
-                                                            ? `⭐ ${c.rating.toFixed(1)} · `
-                                                            : `${isEs ? "Sin reseñas" : "No reviews"} · `}
-                                                        {c.total_jobs_completed ?? 0} {isEs ? "trabajos" : "jobs"}
+                                                            ? `⭐ ${c.rating.toFixed(1)}`
+                                                            : (isEs ? "Sin reseñas" : "No reviews")}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
