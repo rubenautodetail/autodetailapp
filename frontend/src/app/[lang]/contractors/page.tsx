@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     const isEs = lang === 'es';
 
     return {
-        title: isEs ? 'Trabaja como Detallador de Autos Móvil' : 'Mobile Car Detailer Jobs',
+        title: isEs ? 'Trabajo de Detailing en Miami' : 'Mobile Car Detailer Jobs in Miami',
         description: isEs
             ? 'Únete a Lux como detallador de autos móvil. Trabajos cerca de ti, tu propio horario y pago 1 a 2 días después de cada trabajo aprobado. Hoy en Florida.'
             : 'Join Lux as a mobile car detailer. Jobs near you, your own schedule and payment 1–2 days after each approved job. Now in Florida.',
@@ -57,6 +57,7 @@ const PERKS = [
 ];
 
 const REQUIREMENTS = [
+    { en: 'Car detailing experience', es: 'Experiencia en detallado de autos' },
     { en: "Valid driver's license", es: 'Licencia de conducir válida' },
     { en: 'Proof of vehicle insurance', es: 'Comprobante de seguro vehicular' },
     { en: 'Business or occupational license', es: 'Licencia de negocio u ocupacional' },
@@ -81,6 +82,14 @@ const FAQS = [
     {
         en: { q: 'How long does approval take?', a: "1–3 days. We contact you so you can share photos of your work equipment, then we talk with you by phone. You can apply before you have all the equipment, but we can't approve the application without it." },
         es: { q: '¿Cuánto tarda la aprobación?', a: 'De 1 a 3 días. Te contactamos para que nos compartas fotos de tu equipo de trabajo y después hablamos contigo por teléfono. Puedes aplicar aunque todavía no tengas todo el equipo, pero sin él no podemos aprobar la solicitud.' },
+    },
+    {
+        en: { q: 'Do I need experience?', a: 'Yes. You need car detailing experience. We talk about it with you on the phone before approving your application.' },
+        es: { q: '¿Necesito experiencia?', a: 'Sí. Necesitas experiencia en detallado de autos. Lo hablamos contigo por teléfono antes de aprobar tu solicitud.' },
+    },
+    {
+        en: { q: 'Am I an employee or an independent contractor?', a: 'You work as an independent contractor: you set your own schedule, choose which jobs to take and use your own equipment.' },
+        es: { q: '¿Soy empleado o contratista independiente?', a: 'Trabajas como contratista independiente: tú decides tu horario, qué trabajos aceptar y usas tu propio equipo.' },
     },
 ];
 
@@ -131,7 +140,7 @@ export default async function ContractorsPage({
                 {heroImage && (
                     <Image
                         src={heroImage}
-                        alt={isEs ? "Equipo Lux trabajando" : "Lux team at work"}
+                        alt={isEs ? "Detallador de autos móvil lavando un carro a domicilio" : "Mobile car detailer washing a car at a customer's home"}
                         fill
                         priority
                         className="object-cover object-center opacity-15"
@@ -158,8 +167,8 @@ export default async function ContractorsPage({
                     </h1>
                     <p className="text-lg text-white/70 max-w-xl mx-auto leading-relaxed">
                         {isEs
-                            ? 'Conviértete en un detallador verificado en la plataforma Lux. Tú traes el talento, nosotros traemos los clientes.'
-                            : 'Become a vetted detailer on the Lux platform. You bring the skill, we bring the customers.'}
+                            ? 'Nuestros clientes confían en Lux porque cuidamos cada carro como propio. ¿Trabajas igual? Queremos conocerte.'
+                            : 'Our customers trust Lux because we care for every car like our own. Do you work the same way? We\'d like to meet you.'}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                         <Link
@@ -186,7 +195,7 @@ export default async function ContractorsPage({
                             {isEs ? 'Beneficios' : 'Why join us'}
                         </p>
                         <h2 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                            {isEs ? 'Trabaja en tus términos.' : 'Work on your terms.'}
+                            {isEs ? 'Trabajo de detailing a tu manera.' : 'Car detailing jobs on your terms.'}
                         </h2>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -274,6 +283,39 @@ export default async function ContractorsPage({
 
             {/* ─── FAQ ───────────────────────────────────────────────────────── */}
             <section className="py-12 sm:py-20 px-6">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            '@context': 'https://schema.org',
+                            '@type': 'JobPosting',
+                            title: isEs
+                                ? 'Detallador de Autos a Domicilio (Contratista Independiente)'
+                                : 'Mobile Car Detailer (Independent Contractor)',
+                            description: isEs
+                                ? '<p>Lux Auto Detail Services busca detalladores de autos con experiencia para trabajar a domicilio como contratistas independientes.</p><ul><li>Recibes por correo los trabajos nuevos de tu zona y decides cuáles aceptar.</li><li>Sin mínimos ni horarios obligatorios.</li><li>Pago 1 a 2 días después de que el trabajo es aprobado, por transferencia o Zelle.</li><li>Nosotros manejamos reservas, cobros y atención al cliente.</li></ul><p>Requisitos: experiencia en detallado de autos, licencia de conducir válida, seguro del vehículo, licencia de negocio u ocupacional, equipo y productos propios con generador y agua, y ser mayor de 18 años.</p>'
+                                : '<p>Lux Auto Detail Services is looking for experienced car detailers to work at customers\' homes as independent contractors.</p><ul><li>Get an email for every new job in your area and choose which ones to take.</li><li>No minimums or mandatory hours.</li><li>Paid 1–2 days after the job is approved, by bank transfer or Zelle.</li><li>We handle bookings, payments and customer support.</li></ul><p>Requirements: car detailing experience, a valid driver\'s license, vehicle insurance, a business or occupational license, your own equipment and products including a generator and water, and being 18 or older.</p>',
+                            datePosted: '2026-11-13',
+                            employmentType: 'CONTRACTOR',
+                            directApply: true,
+                            hiringOrganization: {
+                                '@type': 'Organization',
+                                name: 'Lux Auto Detail Services',
+                                sameAs: 'https://www.dtailwash.com',
+                                logo: 'https://www.dtailwash.com/dtailwash_logo_final.png',
+                            },
+                            jobLocation: {
+                                '@type': 'Place',
+                                address: {
+                                    '@type': 'PostalAddress',
+                                    addressLocality: 'Miami',
+                                    addressRegion: 'FL',
+                                    addressCountry: 'US',
+                                },
+                            },
+                        }),
+                    }}
+                />
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{
