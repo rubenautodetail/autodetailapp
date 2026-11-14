@@ -2,6 +2,7 @@ import type { Locale } from "@/i18n-config";
 import type { BlogPost, Block } from "./types";
 import { mobileDetailingCostMiami } from "./articles/mobile-detailing-cost-miami";
 import { carSeatStains } from "./articles/car-seat-stains";
+import { carMildewSmell } from "./articles/car-mildew-smell";
 
 /**
  * The list of blog articles.
@@ -13,7 +14,7 @@ import { carSeatStains } from "./articles/car-seat-stains";
  * While the list is empty, the blog shows "coming soon", is hidden from Google,
  * the menu has no "Blog" link and the sitemap has no blog pages.
  */
-const ALL_POSTS: BlogPost[] = [mobileDetailingCostMiami, carSeatStains];
+const ALL_POSTS: BlogPost[] = [mobileDetailingCostMiami, carSeatStains, carMildewSmell];
 
 const todayIso = (): string => new Date().toISOString().slice(0, 10);
 
