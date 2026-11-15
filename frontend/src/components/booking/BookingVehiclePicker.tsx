@@ -66,7 +66,7 @@ export function BookingVehiclePicker({
     const changeButtonRef = useRef<HTMLButtonElement>(null);
     const shouldFocusPanel = useRef(false);
     const shouldFocusChange = useRef(false);
-    const { addBookingVehicle } = useBooking();
+    const { addBookingVehicle, bookingVehicles, removeBookingVehicle } = useBooking();
     const { addVehicle: addGarageVehicle } = useBookingStatus();
     const { user } = useAuth();
     const [showOptionalDetails, setShowOptionalDetails] = useState(false);
@@ -184,7 +184,7 @@ export function BookingVehiclePicker({
                         appearance="dark"
                         layout="carousel"
                         value={newVehicleType}
-                        onChange={setNewVehicleType}
+                        onChange={(style) => { setNewVehicleType(style); setNewVehicleErrors((prev) => ({ ...prev, type: '' })); }}
                         name="new-vehicle-inline-body-style"
                         required
                     />
@@ -196,7 +196,7 @@ export function BookingVehiclePicker({
                         <input
                             type="text"
                             value={newVehicleMake}
-                            onChange={(e) => setNewVehicleMake(e.target.value)}
+                            onChange={(e) => { setNewVehicleMake(e.target.value); setNewVehicleErrors((prev) => ({ ...prev, make: '' })); }}
                             placeholder="Toyota, Honda..."
                             className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.make ? 'border-red-500/50' : 'border-[#2C355E]'}`}
                         />
@@ -209,7 +209,7 @@ export function BookingVehiclePicker({
                         <input
                             type="text"
                             value={newVehicleModel}
-                            onChange={(e) => setNewVehicleModel(e.target.value)}
+                            onChange={(e) => { setNewVehicleModel(e.target.value); setNewVehicleErrors((prev) => ({ ...prev, model: '' })); }}
                             placeholder="Camry, Civic..."
                             className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.model ? 'border-red-500/50' : 'border-[#2C355E]'}`}
                         />
@@ -262,6 +262,42 @@ export function BookingVehiclePicker({
                     )}
                 </div>
             </BottomSheetModal>
+
+            {bookingVehicles.some((vehicle) => !garageVehicles.some((garage) => garage.id === vehicle.id)) && (
+                <div className="mb-4 rounded-[20px] border border-[#2C355E] bg-[#1A2142] p-4 sm:p-5">
+                    <p className="text-base font-bold text-white">
+                        {isEs ? 'Autos en esta reserva' : 'Cars in this booking'}
+                    </p>
+                    <ul className="mt-3 space-y-2">
+                        {bookingVehicles.map((vehicle, index) => {
+                            if (garageVehicles.some((garage) => garage.id === vehicle.id)) return null;
+                            return (
+                                <li
+                                    key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`}
+                                    className="flex items-center justify-between gap-3 rounded-xl border border-[#D0B078]/40 bg-[#D0B078]/10 px-3 py-2.5"
+                                >
+                                    <span className="min-w-0">
+                                        <span className="block truncate text-sm font-semibold text-white">
+                                            {[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')}
+                                        </span>
+                                        <span className="block text-xs text-[#A5B0D1]">
+                                            {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
+                                        </span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeBookingVehicle(index)}
+                                        aria-label={isEs ? 'Quitar este auto' : 'Remove this car'}
+                                        className="text-[#8994B8] transition-colors hover:text-white"
+                                    >
+                                        ✕
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
 
             {garageVehicles.length > 0 && showGarageSection && (
                 <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">
