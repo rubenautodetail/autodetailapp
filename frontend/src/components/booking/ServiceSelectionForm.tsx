@@ -137,6 +137,15 @@ export default function ServiceSelectionForm({
         });
     };
 
+    // First car still waiting for its service (per-vehicle mode): named in the
+    // reminder next to Continue, with a button that jumps straight to it.
+    const firstUnassignedVehicle = perVehicleServices
+        ? bookingVehicles.find((vehicle) => !(vehicle.id && vehicleServices[vehicle.id])) ?? null
+        : null;
+    const unassignedName = firstUnassignedVehicle
+        ? [firstUnassignedVehicle.year, firstUnassignedVehicle.make, firstUnassignedVehicle.model].filter(Boolean).join(' ')
+        : '';
+
     const handleServiceModeChange = (mode: 'same' | 'per-vehicle') => {
         if (mode === serviceMode) return;
         setPerVehicleServices(mode === 'per-vehicle');
@@ -752,7 +761,20 @@ export default function ServiceSelectionForm({
                                         )}
                                         {hasPricingTarget && !allVehiclesAssigned && (
                                             <p className="text-center text-xs font-medium text-[#D0B078]">
-                                                {locale === "es"
+                                                {firstUnassignedVehicle?.id ? (
+                                                    <>
+                                                        {locale === "es"
+                                                            ? `Falta el servicio de ${unassignedName}. `
+                                                            : `${unassignedName} still needs a service. `}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleChangeVehicleService(firstUnassignedVehicle.id as string)}
+                                                            className="font-bold underline underline-offset-2 hover:text-white"
+                                                        >
+                                                            {locale === "es" ? "Elegir ahora" : "Pick now"}
+                                                        </button>
+                                                    </>
+                                                ) : locale === "es"
                                                     ? "Asigna un servicio a cada vehículo para continuar."
                                                     : "Assign a service to every vehicle to continue."}
                                             </p>
@@ -809,7 +831,9 @@ export default function ServiceSelectionForm({
                                 {!hasPricingTarget
                                     ? locale === "es" ? "Falta elegir el vehículo" : "Choose your vehicle first"
                                     : !allVehiclesAssigned
-                                        ? locale === "es" ? "Asigna un servicio a cada vehículo" : "Assign a service to every vehicle"
+                                        ? firstUnassignedVehicle
+                                            ? locale === "es" ? `Falta el servicio de ${unassignedName}` : `${unassignedName} needs a service`
+                                            : locale === "es" ? "Asigna un servicio a cada vehículo" : "Assign a service to every vehicle"
                                         : [
                                             locale === "es" ? "Total de la reserva" : "Booking total",
                                             activeVehicles.length > 1
