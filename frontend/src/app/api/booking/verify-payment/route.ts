@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { contractorServesZip } from '@/lib/zones';
 
 export async function POST(req: NextRequest) {
     // Require authenticated user
@@ -107,12 +108,16 @@ export async function POST(req: NextRequest) {
         );
 
         // Broadcast to all available contractors
-        const { data: contractors } = await supabase
+        const { data: contractorsAll } = await supabase
             .from('profiles')
-            .select('id, email')
+            .select('id, email, service_zones')
             .eq('role', 'contractor')
             .eq('approval_status', 'approved')
             .eq('is_available', true);
+        // Only contractors who work in this booking's zone.
+        const contractors = (contractorsAll ?? []).filter(
+            (c: { service_zones?: string[] | null }) => contractorServesZip(c.service_zones, zipCode)
+        );
 
         if (contractors && contractors.length > 0) {
             await Promise.all(

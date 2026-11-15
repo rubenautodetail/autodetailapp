@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyAdmin } from "@/lib/verifyAdmin";
+import { contractorServesZip, zoneForZip } from "@/lib/zones";
 
 export const dynamic = 'force-dynamic';
 
@@ -13,8 +14,8 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient();
 
   const [bookingsRes, profilesRes] = await Promise.all([
-    supabase.from("bookings").select("status, total_amount, payment_status, updated_at, contractor_id, payout_id"),
-    supabase.from("profiles").select("role, approval_status"),
+    supabase.from("bookings").select("status, total_amount, payment_status, updated_at, contractor_id, payout_id, zip_code"),
+    supabase.from("profiles").select("role, approval_status, is_available, service_zones"),
   ]);
 
   if (bookingsRes.error) {
@@ -66,6 +67,17 @@ export async function GET(req: NextRequest) {
   const unpaidPayouts = new Set(unpaid.map((b) => b.contractor_id)).size;
   const pendingAssignment = bookingList.filter((b) => b.status === "pending_assignment").length;
 
+  // Jobs waiting for a contractor where no approved, available contractor works that zone.
+  const activeContractorProfiles = profileList.filter(
+    (p) => p.role === "contractor" && p.approval_status === "approved" && p.is_available !== false
+  );
+  const noZoneCoverage = bookingList.filter(
+    (b) =>
+      b.status === "pending_assignment" &&
+      zoneForZip(b.zip_code) !== null &&
+      !activeContractorProfiles.some((p) => contractorServesZip(p.service_zones, b.zip_code))
+  ).length;
+
   const allContractors = profileList.filter((p) => p.role === "contractor").length;
   const activeContractors = profileList.filter(
     (p) => p.role === "contractor" && p.approval_status === "approved"
@@ -86,7 +98,7 @@ export async function GET(req: NextRequest) {
       completed: completedBookings,
     },
     revenue: { total: totalRevenue, month: monthRevenue },
-    attention: { pendingAssignment, unpaidPayouts },
+    attention: { pendingAssignment, unpaidPayouts, noZoneCoverage },
   });
   } catch (err) {
     console.error('admin/stats error:', err);

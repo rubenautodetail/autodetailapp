@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { getApproxMap } from '@/lib/geo/approxLocation';
+import { contractorServesZip } from '@/lib/zones';
 
 // Only the first jobs get a map, to keep Mapbox usage small.
 const MAX_INCOMING_MAPS = 3;
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
 
         const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, approval_status')
+            .select('full_name, approval_status, service_zones')
             .eq('id', contractorId)
             .single();
 
@@ -43,12 +44,15 @@ export async function GET(req: NextRequest) {
         }
 
         // ── Incoming jobs: unassigned, status = pending_assignment ────────────
-        const { data: incomingRaw } = await supabase
+        const { data: incomingAll } = await supabase
             .from('bookings')
             .select('id, document_id, service_name, time_window, address, city, state, zip_code, date, total_amount, status, confirmation_code')
             .eq('status', 'pending_assignment')
             .eq('payment_status', 'authorized')
             .order('created_at', { ascending: true });
+
+        // Only jobs in the zones this contractor works.
+        const incomingRaw = (incomingAll ?? []).filter((b) => contractorServesZip(profile?.service_zones, b.zip_code));
 
         // Approximate 1-mile map for the first incoming jobs (server-side; the real address never leaves).
         const incomingMaps = await Promise.all(
@@ -137,6 +141,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             contractor: contractorId ? { id: contractorId, name: contractorName } : null,
+            serviceZones: profile?.service_zones ?? null,
             incomingJobs,
             activeJobs,
             completedJobs,

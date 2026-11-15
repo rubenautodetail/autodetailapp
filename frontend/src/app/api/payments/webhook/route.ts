@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { contractorServesZip } from '@/lib/zones';
 import { sendChargebackAlertEmail } from '@/lib/email';
 import Stripe from 'stripe';
 
@@ -149,14 +150,16 @@ export async function POST(req: NextRequest) {
                     } else {
                         const { data: contractors } = await supabase
                             .from('profiles')
-                            .select('id, email, verified_service_type_ids')
+                            .select('id, email, verified_service_type_ids, service_zones')
                             .eq('role', 'contractor')
                             .eq('approval_status', 'approved')
                             .eq('is_available', true);
 
                         // Skill match: only notify contractors whose verified_service_type_ids
                         // covers every service in the appointment. NULL or empty arrays are skipped.
-                        eligibleWh = (contractors ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
+                        eligibleWh = (contractors ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null; service_zones?: string[] | null }) => {
+                            // Only contractors who work in this booking's zone.
+                            if (!contractorServesZip(c.service_zones, zipCode)) return false;
                             const v = c.verified_service_type_ids;
                             if (!v || v.length === 0) return false;
                             return groupServiceIds.every((serviceId) => v.includes(serviceId));
@@ -248,12 +251,14 @@ export async function POST(req: NextRequest) {
                 } else {
                     const { data: contractors2 } = await supabase
                         .from('profiles')
-                        .select('id, email, verified_service_type_ids')
+                        .select('id, email, verified_service_type_ids, service_zones')
                         .eq('role', 'contractor')
                         .eq('approval_status', 'approved')
                         .eq('is_available', true);
 
-                    eligibleAc = (contractors2 ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null }) => {
+                    eligibleAc = (contractors2 ?? []).filter((c: { id: string; email: string; verified_service_type_ids: number[] | null; service_zones?: string[] | null }) => {
+                        // Only contractors who work in this booking's zone.
+                        if (!contractorServesZip(c.service_zones, zipCode2)) return false;
                         const v = c.verified_service_type_ids;
                         if (!v || v.length === 0) return false;
                         return v.includes(bookingServiceIdAc);

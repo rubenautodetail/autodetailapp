@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatTimeWindow } from "@/lib/dateUtils";
 import { createClient } from "@/lib/supabase/client";
+import { contractorServesZip } from "@/lib/zones";
 
 // Supabase browser client for realtime
 const supabaseClient = createClient();
@@ -166,6 +167,8 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const [incomingPulse, setIncomingPulse] = useState(false);
     // Track pulse timeout so we can clear it on unmount
     const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Zones this contractor works, so out-of-zone new jobs do not trigger the alert sound.
+    const zonesRef = useRef<string[] | null>(null);
 
     /** Two-tone beep via Web Audio API — no external library required. */
     const playAlert = () => {
@@ -226,7 +229,9 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                     table: "bookings",
                     filter: "status=eq.pending_assignment",
                 },
-                () => {
+                (payload: { new?: { zip_code?: string } }) => {
+                    const zip = payload.new?.zip_code;
+                    if (!contractorServesZip(zonesRef.current, zip)) return;
                     loadDashboard();
                     playAlert();
                     triggerPulse();
@@ -321,6 +326,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
             if (!res.ok) throw new Error('Failed to load');
             const data = await res.json();
             setDashboardData(data);
+            zonesRef.current = Array.isArray(data?.serviceZones) ? data.serviceZones : null;
             setError(null);
             // Persist incoming count so the layout's bottom nav dot stays in sync
             const count: number = data?.incomingJobs?.length ?? 0;

@@ -12,7 +12,7 @@ interface Stats {
   contractors: { total: number; pending: number; active: number };
   bookings: { total: number; pending: number; completed: number };
   revenue: { total: number; month: number };
-  attention: { pendingAssignment: number; unpaidPayouts: number };
+  attention: { pendingAssignment: number; unpaidPayouts: number; noZoneCoverage?: number };
 }
 
 async function fetchAdminStats(): Promise<Stats> {
@@ -36,6 +36,7 @@ export default function AdminDashboardPage({ params }: AdminPageProps) {
   }, []);
 
   const attentionItems = [
+    { count: stats?.attention.noZoneCoverage ?? 0, href: `/${locale}/admin/bookings`, label: locale === "es" ? "Trabajos sin contratista en su zona (asígnalos a mano)" : "Jobs with no contractor in their zone (assign by hand)" },
     { count: stats?.attention.pendingAssignment ?? 0, href: `/${locale}/admin/bookings`, label: locale === "es" ? "Reservas por asignar a un contratista" : "Bookings to assign to a contractor" },
     { count: stats?.attention.unpaidPayouts ?? 0, href: `/${locale}/admin/payouts`, label: locale === "es" ? "Contratistas con pagos por hacer" : "Contractors waiting to be paid" },
     { count: stats?.contractors.pending ?? 0, href: `/${locale}/admin/contractors?status=pending`, label: locale === "es" ? "Solicitudes de contratistas por aprobar" : "Contractor applications to review" },

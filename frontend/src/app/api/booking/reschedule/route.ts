@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notify } from "@/lib/notifications";
 import { hoursFromNow } from "@/lib/dateUtils";
+import { contractorServesZip } from "@/lib/zones";
 
 export const dynamic = "force-dynamic";
 
@@ -122,12 +123,16 @@ export async function POST(req: NextRequest) {
       // 2) Broadcast to all available contractors as a new job in the pool
       const updatedBooking = { ...booking, date: newDate, time_window: finalTimeWindow, service_name: serviceName };
 
-      const { data: contractors } = await supabase
+      const { data: contractorsAll } = await supabase
         .from("profiles")
-        .select("id, email")
+        .select("id, email, service_zones")
         .eq("role", "contractor")
         .eq("approval_status", "approved")
         .eq("is_available", true);
+      // Only contractors who work in this booking's zone.
+      const contractors = (contractorsAll ?? []).filter(
+        (c: { service_zones?: string[] | null }) => contractorServesZip(c.service_zones, zipCode)
+      );
 
       if (contractors && contractors.length > 0) {
         await Promise.all(

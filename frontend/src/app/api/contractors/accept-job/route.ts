@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { logBookingEvent } from '@/lib/supabase/logBookingEvent';
 import { stripe } from '@/lib/stripe/server';
+import { contractorServesZip } from '@/lib/zones';
 
 interface ApprovalCheck {
     approval_status: string | null;
+    service_zones?: string[] | null;
 }
 
 interface ContractorProfile {
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
         // Require admin approval before a contractor can accept jobs
         const { data: approvalCheck } = await supabase
             .from('profiles')
-            .select('approval_status')
+            .select('approval_status, service_zones')
             .eq('id', userId)
             .single();
         if ((approvalCheck as ApprovalCheck | null)?.approval_status !== 'approved') {
@@ -85,6 +87,11 @@ export async function POST(req: NextRequest) {
 
         if (!existingBooking) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+        }
+
+        // The job must be in a zone this contractor works.
+        if (!contractorServesZip((approvalCheck as ApprovalCheck | null)?.service_zones, existingBooking.zip_code)) {
+            return NextResponse.json({ error: 'This job is outside your work zone.' }, { status: 403 });
         }
 
         // Payment must be authorized before anyone can take the job.

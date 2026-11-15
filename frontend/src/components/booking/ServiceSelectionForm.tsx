@@ -145,6 +145,18 @@ export default function ServiceSelectionForm({
         });
     };
 
+    // Short, readable car name: the make ("Jeep"), plus the model only when two
+    // cars in the booking share a make and would otherwise look identical.
+    const shortVehicleName = (vehicle: { year?: string; make?: string; model?: string }) => {
+        const sameMake = bookingVehicles.filter(
+            (other) => (other.make ?? '').trim().toLowerCase() === (vehicle.make ?? '').trim().toLowerCase(),
+        ).length > 1;
+        const name = vehicle.make
+            ? (sameMake ? [vehicle.make, vehicle.model] : [vehicle.make])
+            : [vehicle.model];
+        return [vehicle.year, ...name].filter(Boolean).join(' ');
+    };
+
     // First car still waiting for its service (per-vehicle mode): named in the
     // reminder next to Continue, with a button that jumps straight to it.
     const firstUnassignedVehicle = perVehicleServices
@@ -416,8 +428,8 @@ export default function ServiceSelectionForm({
                             <p className="mb-4 mt-1 text-sm text-[#A5B0D1]">
                                 {serviceMode === 'per-vehicle' && activeVehicle
                                     ? locale === "es"
-                                        ? `Asigna un servicio a cada vehículo. Precios para el ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}.`
-                                        : `Assign a service to each vehicle. Prices shown for the ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}.`
+                                        ? `Asigna un servicio a cada vehículo. Precios para el ${shortVehicleName(activeVehicle)}.`
+                                        : `Assign a service to each vehicle. Prices shown for the ${shortVehicleName(activeVehicle)}.`
                                     : hasPricingTarget
                                         ? pricingTargetLabel
                                             ? locale === "es"
@@ -461,7 +473,7 @@ export default function ServiceSelectionForm({
                                                         </span>
                                                         <span className="min-w-0">
                                                             <span className="block truncate text-xs font-bold text-white">
-                                                                {[vehicle.year, vehicle.model].filter(Boolean).join(' ')}
+                                                                {shortVehicleName(vehicle)}
                                                             </span>
                                                             <span className={`block truncate text-[11px] ${assigned ? "text-[#8994B8]" : "font-semibold text-[#D0B078]"}`}>
                                                                 {assigned
@@ -585,8 +597,8 @@ export default function ServiceSelectionForm({
                                     locale={locale}
                                     forLabel={serviceMode === 'per-vehicle' && activeVehicle
                                         ? (locale === "es"
-                                            ? `Para ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}`
-                                            : `For the ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}`)
+                                            ? `Para ${shortVehicleName(activeVehicle)}`
+                                            : `For the ${shortVehicleName(activeVehicle)}`)
                                         : undefined}
                                 />
                             </div>

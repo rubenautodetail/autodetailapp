@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { contractorServesZip } from '@/lib/zones';
 
 interface Booking {
     id: string;
@@ -18,6 +19,7 @@ interface Booking {
 
 interface ContractorProfile {
     id: string;
+    service_zones?: string[] | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
 
         const { data: contractors, error: contractorsError } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, service_zones')
             .eq('role', 'contractor')
             .eq('approval_status', 'approved')
             .eq('is_available', true);
@@ -84,8 +86,10 @@ export async function GET(request: NextRequest) {
             }
 
             // Contractor re-notifications
-            if (availableContractors.length > 0) {
-                const contractorNotifications = availableContractors.map((contractor) => ({
+            // Only contractors who work in this booking's zone.
+            const zoneContractors = availableContractors.filter((c) => contractorServesZip(c.service_zones, booking.zip_code));
+            if (zoneContractors.length > 0) {
+                const contractorNotifications = zoneContractors.map((contractor) => ({
                     user_id: contractor.id,
                     type: 'contractor.job_reminder',
                     title: 'New Job Available',

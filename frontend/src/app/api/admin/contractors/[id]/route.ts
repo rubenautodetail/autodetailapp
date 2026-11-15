@@ -21,7 +21,7 @@ export async function GET(
         const { data: profile, error: dbError } = await supabase
             .from('profiles')
             .select(
-                'id, full_name, email, phone, bio, profile_photo_url, service_area_zips, availability, is_available, languages, rating, total_ratings, total_jobs_completed, stripe_account_id, onboarding_complete, role, created_at'
+                'id, full_name, email, phone, bio, profile_photo_url, service_area_zips, service_zones, availability, is_available, languages, rating, total_ratings, total_jobs_completed, stripe_account_id, onboarding_complete, role, created_at'
             )
             .eq('id', id)
             .single();
@@ -56,6 +56,7 @@ export async function PATCH(
         address?: string;
         business_name?: string;
         service_area_zips?: string[];
+        service_zones?: string[];
         zelle_contact?: string;
     };
     try {
@@ -121,6 +122,14 @@ export async function PATCH(
             return NextResponse.json({ error: 'ZIP codes must be 5 digits' }, { status: 400 });
         }
         updates.service_area_zips = zips;
+    }
+    if (body.service_zones !== undefined) {
+        const allowed: readonly string[] = ['miami-dade', 'broward'];
+        if (!Array.isArray(body.service_zones) || body.service_zones.length === 0
+            || body.service_zones.some((z) => !allowed.includes(String(z)))) {
+            return NextResponse.json({ error: 'Pick at least one valid work zone' }, { status: 400 });
+        }
+        updates.service_zones = [...new Set(body.service_zones.map((z) => String(z)))];
     }
     if (body.zelle_contact !== undefined) {
         const v = String(body.zelle_contact).trim();

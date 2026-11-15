@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { adminFetch } from "@/lib/adminFetch";
 import { fmtDate } from "@/lib/dateUtils";
+import { ZONES, ZONE_LABELS } from "@/lib/zones";
 
 interface AdminContractorsProps {
     params: Promise<{ lang: "en" | "es" }>;
@@ -26,6 +27,7 @@ interface Contractor {
     address: string | null;
     business_name: string | null;
     service_area_zips: string[] | null;
+    service_zones: string[] | null;
     payment_preference: string | null;
     // Banking details
     zelle_contact: string | null;
@@ -113,6 +115,8 @@ function AdminContractorsContent({ locale }: { locale: string }) {
         zelle_contact: "",
     });
 
+    const [editZones, setEditZones] = useState<string[]>([]);
+
     // Skills verification state
     const [catalogServices, setCatalogServices] = useState<CatalogSvc[]>([]);
     const [skillVerifyIds, setSkillVerifyIds] = useState<number[]>([]);
@@ -156,6 +160,9 @@ function AdminContractorsContent({ locale }: { locale: string }) {
         businessName: isEs ? "Nombre del negocio" : "Business Name",
         addressLabel: isEs ? "Dirección" : "Address",
         serviceZips: isEs ? "Códigos ZIP de servicio" : "Service ZIP Codes",
+        workZones: isEs ? "Zonas de trabajo" : "Work zones",
+        workZonesHint: isEs ? "Solo recibirá trabajos de las zonas marcadas." : "Only gets jobs from the ticked zones.",
+        zoneRequired: isEs ? "Marca al menos una zona" : "Tick at least one zone",
         paymentPref: isEs ? "Método de pago preferido" : "Preferred Payment Method",
         zelleContact: isEs ? "Teléfono/Correo de Zelle" : "Zelle Phone/Email",
         bankName: isEs ? "Banco" : "Bank Name",
@@ -242,12 +249,17 @@ function AdminContractorsContent({ locale }: { locale: string }) {
             zips: (detailModal.service_area_zips ?? []).join(", "),
             zelle_contact: detailModal.zelle_contact ?? "",
         });
+        setEditZones(detailModal.service_zones ?? []);
         setEditError(null);
         setEditing(true);
     };
 
     const handleSaveEdit = async () => {
         if (!detailModal) return;
+        if (editZones.length === 0) {
+            setEditError(t.zoneRequired);
+            return;
+        }
         setSaving(true);
         setEditError(null);
         try {
@@ -260,6 +272,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                     business_name: editForm.business_name,
                     address: editForm.address,
                     service_area_zips: zips,
+                    service_zones: editZones,
                     zelle_contact: editForm.zelle_contact,
                 }),
             });
@@ -275,6 +288,7 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                 business_name: editForm.business_name.trim() || null,
                 address: editForm.address.trim() || null,
                 service_area_zips: [...new Set(zips)],
+                service_zones: editZones,
                 zelle_contact: editForm.zelle_contact.trim() || null,
             };
             setDetailModal(updated);
@@ -682,6 +696,28 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                             )}
                                         </div>
                                     ))}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.workZones}</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {ZONES.map((zone) => {
+                                                const on = editZones.includes(zone);
+                                                return (
+                                                    <label
+                                                        key={zone}
+                                                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer ${on ? "border-blue-500 bg-blue-50 text-blue-800" : "border-gray-300 bg-white text-gray-700"}`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={on}
+                                                            onChange={() => setEditZones((z) => (on ? z.filter((x) => x !== zone) : [...z, zone]))}
+                                                        />
+                                                        {ZONE_LABELS[zone][isEs ? "es" : "en"]}
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">{t.workZonesHint}</p>
+                                    </div>
                                     <div className="text-xs text-gray-400">
                                         {t.emailLabel}: <span className="text-gray-500">{detailModal.email}</span> · 🔒 {t.emailLocked}
                                     </div>
@@ -696,6 +732,10 @@ function AdminContractorsContent({ locale }: { locale: string }) {
                                     <DetailRow label={t.phoneLabel} value={detailModal.phone} />
                                     <DetailRow label={t.businessName} value={detailModal.business_name} />
                                     <DetailRow label={t.addressLabel} value={detailModal.address} />
+                                    <DetailRow
+                                        label={t.workZones}
+                                        value={(detailModal.service_zones ?? []).map((z) => ZONE_LABELS[z as keyof typeof ZONE_LABELS]?.[isEs ? "es" : "en"] ?? z).join(", ") || null}
+                                    />
                                     <DetailRow
                                         label={t.serviceZips}
                                         value={detailModal.service_area_zips?.join(", ") || null}

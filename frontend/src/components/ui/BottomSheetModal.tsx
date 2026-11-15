@@ -20,6 +20,25 @@ export default function BottomSheetModal({
     footer,
 }: BottomSheetModalProps) {
     const [mounted, setMounted] = useState(false);
+    // On phones the keyboard covers the bottom of the screen without resizing the
+    // page, which hid the footer button. Follow the visible area so the sheet (and
+    // its button) always sits above the keyboard.
+    const [viewport, setViewport] = useState<{ height: number; top: number } | null>(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const vv = window.visualViewport;
+        if (!vv) return;
+        const update = () => setViewport({ height: vv.height, top: vv.offsetTop });
+        update();
+        vv.addEventListener("resize", update);
+        vv.addEventListener("scroll", update);
+        return () => {
+            vv.removeEventListener("resize", update);
+            vv.removeEventListener("scroll", update);
+            setViewport(null);
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         setMounted(true);
@@ -38,7 +57,10 @@ export default function BottomSheetModal({
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center">
+        <div
+            className="fixed inset-x-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center"
+            style={viewport ? { top: viewport.top, height: viewport.height } : { top: 0, bottom: 0 }}
+        >
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
@@ -46,7 +68,7 @@ export default function BottomSheetModal({
             />
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-lg bg-[#1A2142] rounded-t-3xl sm:rounded-3xl shadow-2xl transform transition-transform duration-300 ease-out max-h-[90vh] flex flex-col" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+            <div className="relative w-full max-w-lg bg-[#1A2142] rounded-t-3xl sm:rounded-3xl shadow-2xl transform transition-transform duration-300 ease-out max-h-[92%] flex flex-col" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
                 {/* Drag Handle (Mobile only visually) */}
                 <div className="w-full h-6 flex items-center justify-center sm:hidden">
                     <div className="w-12 h-1.5 rounded-full bg-[#2C355E]" />
@@ -66,13 +88,19 @@ export default function BottomSheetModal({
                 </div>
 
                 {/* Scrollable Body */}
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+                <div className="flex-1 overflow-y-auto p-6 scrollbar-hide" onFocusCapture={(e) => {
+                    // Keep the field being typed in visible above the keyboard.
+                    const target = e.target as HTMLElement;
+                    if (target.tagName === "INPUT") {
+                        setTimeout(() => target.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
+                    }
+                }}>
                     {children}
                 </div>
 
                 {/* Sticky Footer */}
                 {footer && (
-                    <div className="p-6 border-t border-[#2C355E] bg-[#1A2142]">
+                    <div className="px-6 py-4 border-t border-[#2C355E] bg-[#1A2142]">
                         {footer}
                     </div>
                 )}
