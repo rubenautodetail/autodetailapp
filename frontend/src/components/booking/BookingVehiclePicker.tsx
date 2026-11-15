@@ -45,6 +45,8 @@ interface BookingVehiclePickerProps {
     onToggleVehicle: (vehicle: GarageVehicleOption) => void;
     onSelectBodyStyle: (style: VehicleBodyStyle) => void;
     isPriceLoading?: boolean;
+    /** Jump to the service list so this car's service can be changed. */
+    onChangeVehicleService?: (vehicleId: string) => void;
 }
 
 export function BookingVehiclePicker({
@@ -55,6 +57,7 @@ export function BookingVehiclePicker({
     onToggleVehicle,
     onSelectBodyStyle,
     isPriceLoading = false,
+    onChangeVehicleService,
 }: BookingVehiclePickerProps) {
     const isEs = locale === 'es';
     const selectedVehicles = garageVehicles.filter((vehicle) => selectedVehicleIds.includes(vehicle.id));
@@ -66,7 +69,18 @@ export function BookingVehiclePicker({
     const changeButtonRef = useRef<HTMLButtonElement>(null);
     const shouldFocusPanel = useRef(false);
     const shouldFocusChange = useRef(false);
-    const { addBookingVehicle, bookingVehicles, removeBookingVehicle } = useBooking();
+    const {
+        addBookingVehicle,
+        bookingVehicles,
+        removeBookingVehicle,
+        replaceBookingVehicles,
+        selectedService,
+        vehicleServices,
+        perVehicleServices,
+        priceQuote,
+    } = useBooking();
+    // Index of the booking car being edited; null means the sheet adds a new car.
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const { addVehicle: addGarageVehicle } = useBookingStatus();
     const { user } = useAuth();
     const [showOptionalDetails, setShowOptionalDetails] = useState(false);
@@ -79,6 +93,32 @@ export function BookingVehiclePicker({
     const [newVehicleType, setNewVehicleType] = useState<VehicleBodyStyle | null>(null);
     const [newVehicleErrors, setNewVehicleErrors] = useState<Record<string, string>>({});
 
+    const resetNewVehicleForm = () => {
+        setNewVehicleMake('');
+        setNewVehicleModel('');
+        setNewVehicleYear('');
+        setNewVehicleColor('');
+        setNewVehicleType(null);
+        setNewVehicleErrors({});
+        setShowOptionalDetails(false);
+        setEditingIndex(null);
+        setShowNewVehicleForm(false);
+    };
+
+    const openEditVehicle = (index: number) => {
+        const vehicle = bookingVehicles[index];
+        if (!vehicle) return;
+        setNewVehicleMake(vehicle.make ?? '');
+        setNewVehicleModel(vehicle.model ?? '');
+        setNewVehicleYear(vehicle.year ?? '');
+        setNewVehicleColor(vehicle.color ?? '');
+        setNewVehicleType(normalizeVehicleBodyStyle(vehicle.type));
+        setNewVehicleErrors({});
+        setShowOptionalDetails(Boolean(vehicle.year || vehicle.color));
+        setEditingIndex(index);
+        setShowNewVehicleForm(true);
+    };
+
     const handleAddNewVehicleInline = async () => {
         const errors: Record<string, string> = {};
         if (!newVehicleMake.trim()) errors.make = isEs ? 'Marca requerida' : 'Make required';
@@ -88,6 +128,15 @@ export function BookingVehiclePicker({
 
         const confirmedType = newVehicleType as VehicleBodyStyle;
         const vehicleData = { make: newVehicleMake.trim(), model: newVehicleModel.trim(), year: newVehicleYear.trim(), color: newVehicleColor.trim(), type: confirmedType };
+
+        // Editing keeps the car's id, so its service and extras stay attached.
+        if (editingIndex !== null && bookingVehicles[editingIndex]) {
+            replaceBookingVehicles(bookingVehicles.map((vehicle, i) =>
+                i === editingIndex ? { ...vehicle, ...vehicleData } : vehicle
+            ));
+            resetNewVehicleForm();
+            return;
+        }
 
         // Save to the garage first so the booking entry reuses the garage id.
         // Two different ids for the same car made the picker show it unchecked,
@@ -102,14 +151,7 @@ export function BookingVehiclePicker({
         }
         addBookingVehicle(garageId ? { id: garageId, ...vehicleData } : vehicleData);
 
-        setNewVehicleMake('');
-        setNewVehicleModel('');
-        setNewVehicleYear('');
-        setNewVehicleColor('');
-        setNewVehicleType(null);
-        setNewVehicleErrors({});
-        setShowOptionalDetails(false);
-        setShowNewVehicleForm(false);
+        resetNewVehicleForm();
     };
 
     // Stays open until the user manually collapses it with the pencil/check button.
@@ -166,15 +208,19 @@ export function BookingVehiclePicker({
 
             <BottomSheetModal
                 isOpen={showNewVehicleForm}
-                onClose={() => setShowNewVehicleForm(false)}
-                title={isEs ? 'Tu auto' : 'Your car'}
+                onClose={resetNewVehicleForm}
+                title={editingIndex !== null
+                    ? (isEs ? 'Editar auto' : 'Edit car')
+                    : (isEs ? 'Tu auto' : 'Your car')}
                 footer={
                     <button
                         type="button"
                         onClick={handleAddNewVehicleInline}
                         className="w-full rounded-full bg-[#D0B078] px-6 py-3 text-sm font-bold text-[#131835] transition-colors hover:bg-[#dcc08d]"
                     >
-                        {isEs ? 'Agregar auto' : 'Add car'}
+                        {editingIndex !== null
+                            ? (isEs ? 'Guardar cambios' : 'Save changes')
+                            : (isEs ? 'Agregar auto' : 'Add car')}
                     </button>
                 }
             >
@@ -249,7 +295,7 @@ export function BookingVehiclePicker({
                             </div>
                         </div>
                     )}
-                    {user && (
+                    {user && editingIndex === null && (
                         <label className="flex items-center gap-2 text-xs text-[#A5B0D1]">
                             <input
                                 type="checkbox"
@@ -263,35 +309,70 @@ export function BookingVehiclePicker({
                 </div>
             </BottomSheetModal>
 
-            {bookingVehicles.some((vehicle) => !garageVehicles.some((garage) => garage.id === vehicle.id)) && (
+            {bookingVehicles.length > 0 && (
                 <div className="mb-4 rounded-[20px] border border-[#2C355E] bg-[#1A2142] p-4 sm:p-5">
                     <p className="text-base font-bold text-white">
                         {isEs ? 'Autos en esta reserva' : 'Cars in this booking'}
                     </p>
                     <ul className="mt-3 space-y-2">
                         {bookingVehicles.map((vehicle, index) => {
-                            if (garageVehicles.some((garage) => garage.id === vehicle.id)) return null;
+                            const assigned = perVehicleServices && vehicle.id
+                                ? vehicleServices[vehicle.id] ?? null
+                                : perVehicleServices ? null : selectedService;
+                            const lineTotal = priceQuote?.vehicles[index]?.total;
                             return (
                                 <li
                                     key={vehicle.id ?? `${vehicle.make}-${vehicle.model}-${index}`}
-                                    className="flex items-center justify-between gap-3 rounded-xl border border-[#D0B078]/40 bg-[#D0B078]/10 px-3 py-2.5"
+                                    className="rounded-xl border border-[#D0B078]/40 bg-[#D0B078]/10 px-3 py-2.5"
                                 >
-                                    <span className="min-w-0">
-                                        <span className="block truncate text-sm font-semibold text-white">
-                                            {[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')}
+                                    <div className="flex items-start justify-between gap-3">
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-sm font-semibold text-white">
+                                                {[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')}
+                                            </span>
+                                            <span className="block text-xs text-[#A5B0D1]">
+                                                {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
+                                            </span>
                                         </span>
-                                        <span className="block text-xs text-[#A5B0D1]">
-                                            {getVehicleBodyStyleLabel(normalizeVehicleBodyStyle(vehicle.type), locale)}
+                                        <span className="flex shrink-0 items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditVehicle(index)}
+                                                className="text-xs font-semibold text-[#D0B078] hover:text-white transition-colors"
+                                            >
+                                                {isEs ? 'Editar auto' : 'Edit car'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeBookingVehicle(index)}
+                                                aria-label={isEs ? 'Quitar este auto' : 'Remove this car'}
+                                                className="text-[#8994B8] transition-colors hover:text-white"
+                                            >
+                                                ✕
+                                            </button>
                                         </span>
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeBookingVehicle(index)}
-                                        aria-label={isEs ? 'Quitar este auto' : 'Remove this car'}
-                                        className="text-[#8994B8] transition-colors hover:text-white"
-                                    >
-                                        ✕
-                                    </button>
+                                    </div>
+                                    {onChangeVehicleService && (
+                                        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg bg-[#131835]/70 px-2.5 py-2 text-xs">
+                                            <span className="min-w-0 truncate text-[#A5B0D1]">
+                                                {assigned ? (
+                                                    <>
+                                                        <span className="font-semibold text-white">{assigned.name}</span>
+                                                        {lineTotal !== undefined && <> · ${lineTotal.toFixed(0)}</>}
+                                                    </>
+                                                ) : (isEs ? 'Sin servicio elegido' : 'No service picked yet')}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => vehicle.id && onChangeVehicleService(vehicle.id)}
+                                                className="shrink-0 font-semibold text-[#D0B078] hover:text-white transition-colors"
+                                            >
+                                                {assigned
+                                                    ? (isEs ? 'Cambiar servicio' : 'Change service')
+                                                    : (isEs ? 'Elegir servicio' : 'Pick service')}
+                                            </button>
+                                        </div>
+                                    )}
                                 </li>
                             );
                         })}
@@ -352,7 +433,7 @@ export function BookingVehiclePicker({
                                         </span>
                                         <span className="min-w-0">
                                             <span className="block truncate text-xs font-bold text-white">
-                                                {vehicle.year} {vehicle.make} {vehicle.model}
+                                                {[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')}
                                             </span>
                                             <span className="mt-0.5 block text-[11px] text-[#A5B0D1]">
                                                 {getVehicleBodyStyleLabel(style, locale)}
@@ -416,7 +497,7 @@ export function BookingVehiclePicker({
                                                 </span>
                                                 <div className="min-w-0">
                                                     <p className="truncate text-sm font-bold text-white">
-                                                        {vehicle.year} {vehicle.make} {vehicle.model}
+                                                        {[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')}
                                                     </p>
                                                     <p className="mt-0.5 text-xs text-[#A5B0D1]">
                                                         {getVehicleBodyStyleLabel(style, locale)}
@@ -449,7 +530,7 @@ export function BookingVehiclePicker({
                                 </div>
                             )
                         ) : (
-                            garageVehicles.length > 0 && (
+                            garageVehicles.length > 0 && bookingVehicles.length === 0 && (
                                 <p className="mt-2 max-w-md text-sm text-[#A5B0D1]">
                                     {isEs
                                         ? 'Elige los vehículos de esta reserva para ver sus precios exactos.'

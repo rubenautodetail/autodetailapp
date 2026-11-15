@@ -125,6 +125,18 @@ export default function ServiceSelectionForm({
     const assignedServiceFor = (vehicleId: string | undefined): Service | null =>
         (vehicleId ? vehicleServices[vehicleId] : undefined) ?? null;
 
+    // "Change service" on a car in the booking card: make that car the active
+    // one (splitting services when there are several) and scroll to the list.
+    const handleChangeVehicleService = (vehicleId: string) => {
+        if (bookingVehicles.length > 1) {
+            if (!perVehicleServices) setPerVehicleServices(true);
+            setActiveVehicleId(vehicleId);
+        }
+        requestAnimationFrame(() => {
+            document.getElementById('service-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    };
+
     const handleServiceModeChange = (mode: 'same' | 'per-vehicle') => {
         if (mode === serviceMode) return;
         setPerVehicleServices(mode === 'per-vehicle');
@@ -376,18 +388,19 @@ export default function ServiceSelectionForm({
                             onToggleVehicle={handleToggleGarageVehicle}
                             onSelectBodyStyle={handleSelectBodyStyle}
                             isPriceLoading={previewStatus === 'loading'}
+                            onChangeVehicleService={handleChangeVehicleService}
                         />
 
                         {/* Services */}
-                        <div>
+                        <div id="service-list" className="scroll-mt-24">
                             <h2 className="text-xl font-bold text-white">
                                 {locale === "es" ? "Elige un servicio" : "Choose a service"}
                             </h2>
                             <p className="mb-4 mt-1 text-sm text-[#A5B0D1]">
                                 {serviceMode === 'per-vehicle' && activeVehicle
                                     ? locale === "es"
-                                        ? `Asigna un servicio a cada vehículo. Precios para el ${activeVehicle.year} ${activeVehicle.model}.`
-                                        : `Assign a service to each vehicle. Prices shown for the ${activeVehicle.year} ${activeVehicle.model}.`
+                                        ? `Asigna un servicio a cada vehículo. Precios para el ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}.`
+                                        : `Assign a service to each vehicle. Prices shown for the ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}.`
                                     : hasPricingTarget
                                         ? pricingTargetLabel
                                             ? locale === "es"
@@ -456,7 +469,7 @@ export default function ServiceSelectionForm({
                                                         </span>
                                                         <span className="min-w-0">
                                                             <span className="block truncate text-xs font-bold text-white">
-                                                                {vehicle.year} {vehicle.model}
+                                                                {[vehicle.year, vehicle.model].filter(Boolean).join(' ')}
                                                             </span>
                                                             <span className={`block truncate text-[11px] ${assigned ? "text-[#8994B8]" : "font-semibold text-[#D0B078]"}`}>
                                                                 {assigned
@@ -568,8 +581,8 @@ export default function ServiceSelectionForm({
                                     locale={locale}
                                     forLabel={serviceMode === 'per-vehicle' && activeVehicle
                                         ? (locale === "es"
-                                            ? `Para ${activeVehicle.year} ${activeVehicle.model}`
-                                            : `For the ${activeVehicle.year} ${activeVehicle.model}`)
+                                            ? `Para ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}`
+                                            : `For the ${[activeVehicle.year, activeVehicle.model].filter(Boolean).join(' ')}`)
                                         : undefined}
                                 />
                             </div>
