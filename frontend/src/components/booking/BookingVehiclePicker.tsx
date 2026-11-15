@@ -15,6 +15,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useBooking, useBookingStatus } from '@/contexts';
+import { useAuth } from '@/contexts/AuthContext';
+import BottomSheetModal from '@/components/ui/BottomSheetModal';
 import { Check, Pencil } from 'lucide-react';
 import {
     getVehicleBodyStyleLabel,
@@ -66,6 +68,8 @@ export function BookingVehiclePicker({
     const shouldFocusChange = useRef(false);
     const { addBookingVehicle } = useBooking();
     const { addVehicle: addGarageVehicle } = useBookingStatus();
+    const { user } = useAuth();
+    const [showOptionalDetails, setShowOptionalDetails] = useState(false);
     const [saveNewVehicleToGarage, setSaveNewVehicleToGarage] = useState(true);
     const [showNewVehicleForm, setShowNewVehicleForm] = useState(false);
     const [newVehicleMake, setNewVehicleMake] = useState('');
@@ -79,26 +83,24 @@ export function BookingVehiclePicker({
         const errors: Record<string, string> = {};
         if (!newVehicleMake.trim()) errors.make = isEs ? 'Marca requerida' : 'Make required';
         if (!newVehicleModel.trim()) errors.model = isEs ? 'Modelo requerido' : 'Model required';
-        if (!newVehicleYear.trim()) errors.year = isEs ? 'Año requerido' : 'Year required';
-        if (!newVehicleColor.trim()) errors.color = isEs ? 'Color requerido' : 'Color required';
         if (!newVehicleType) errors.type = isEs ? 'Tipo de carrocería requerido' : 'Body style required';
         if (Object.keys(errors).length > 0) { setNewVehicleErrors(errors); return; }
 
         const confirmedType = newVehicleType as VehicleBodyStyle;
-        addBookingVehicle({ make: newVehicleMake, model: newVehicleModel, year: newVehicleYear, color: newVehicleColor, type: confirmedType });
+        const vehicleData = { make: newVehicleMake.trim(), model: newVehicleModel.trim(), year: newVehicleYear.trim(), color: newVehicleColor.trim(), type: confirmedType };
 
-        if (saveNewVehicleToGarage) {
+        // Save to the garage first so the booking entry reuses the garage id.
+        // Two different ids for the same car made the picker show it unchecked,
+        // and ticking it then added it a second time (double price).
+        let garageId: string | undefined;
+        // The garage needs a year; without one the car is only part of this booking.
+        if (saveNewVehicleToGarage && vehicleData.year) {
             try {
-                await addGarageVehicle({
-                    make: newVehicleMake,
-                    model: newVehicleModel,
-                    year: newVehicleYear,
-                    color: newVehicleColor,
-                    type: confirmedType,
-                    licensePlate: '',
-                });
+                const saved = await addGarageVehicle({ ...vehicleData, licensePlate: '' });
+                garageId = saved?.id;
             } catch { /* ignore */ }
         }
+        addBookingVehicle(garageId ? { id: garageId, ...vehicleData } : vehicleData);
 
         setNewVehicleMake('');
         setNewVehicleModel('');
@@ -106,6 +108,7 @@ export function BookingVehiclePicker({
         setNewVehicleColor('');
         setNewVehicleType(null);
         setNewVehicleErrors({});
+        setShowOptionalDetails(false);
         setShowNewVehicleForm(false);
     };
 
@@ -144,96 +147,109 @@ export function BookingVehiclePicker({
     return (
         <>
             <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">
-                {!showNewVehicleForm ? (
-                    <>
+                <button
+                    type="button"
+                    onClick={() => setShowNewVehicleForm(true)}
+                    className="flex w-full items-center justify-center gap-2 text-sm font-bold text-[#D0B078] hover:text-white transition-colors"
+                >
+                    <span className="text-lg leading-none">+</span>
+                    {hasSelection
+                        ? (isEs ? 'Agregar otro auto' : 'Add another car')
+                        : (isEs ? 'Agregar mi auto' : 'Add my car')}
+                </button>
+                <p className="mt-2 text-center text-xs text-[#8994B8]">
+                    {isEs
+                        ? '¿Reservas para más de un auto? Agrégalos aquí.'
+                        : 'Booking more than one car? Add them here.'}
+                </p>
+            </div>
+
+            <BottomSheetModal
+                isOpen={showNewVehicleForm}
+                onClose={() => setShowNewVehicleForm(false)}
+                title={isEs ? 'Tu auto' : 'Your car'}
+                footer={
+                    <button
+                        type="button"
+                        onClick={handleAddNewVehicleInline}
+                        className="w-full rounded-full bg-[#D0B078] px-6 py-3 text-sm font-bold text-[#131835] transition-colors hover:bg-[#dcc08d]"
+                    >
+                        {isEs ? 'Agregar auto' : 'Add car'}
+                    </button>
+                }
+            >
+                <div className="space-y-4">
+                    <VehicleBodyStyleSelector
+                        locale={locale}
+                        appearance="dark"
+                        layout="carousel"
+                        value={newVehicleType}
+                        onChange={setNewVehicleType}
+                        name="new-vehicle-inline-body-style"
+                        required
+                    />
+                    {newVehicleErrors.type && <p className="text-xs text-red-400">{newVehicleErrors.type}</p>}
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
+                            {isEs ? 'Marca' : 'Make'}<span className="ml-0.5 text-[#D0B078]">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={newVehicleMake}
+                            onChange={(e) => setNewVehicleMake(e.target.value)}
+                            placeholder="Toyota, Honda..."
+                            className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.make ? 'border-red-500/50' : 'border-[#2C355E]'}`}
+                        />
+                        {newVehicleErrors.make && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.make}</p>}
+                    </div>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
+                            {isEs ? 'Modelo' : 'Model'}<span className="ml-0.5 text-[#D0B078]">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={newVehicleModel}
+                            onChange={(e) => setNewVehicleModel(e.target.value)}
+                            placeholder="Camry, Civic..."
+                            className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.model ? 'border-red-500/50' : 'border-[#2C355E]'}`}
+                        />
+                        {newVehicleErrors.model && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.model}</p>}
+                    </div>
+                    {!showOptionalDetails ? (
                         <button
                             type="button"
-                            onClick={() => setShowNewVehicleForm(true)}
-                            className="flex w-full items-center justify-center gap-2 text-sm font-bold text-[#D0B078] hover:text-white transition-colors"
+                            onClick={() => setShowOptionalDetails(true)}
+                            className="text-sm font-semibold text-[#D0B078] hover:text-white transition-colors"
                         >
-                            <span className="text-lg leading-none">+</span>
-                            {isEs ? 'Agregar otro vehículo' : 'Add another vehicle'}
+                            {isEs ? '+ Agregar año y color (opcional)' : '+ Add year and color (optional)'}
                         </button>
-                        <p className="mt-2 text-center text-xs text-[#8994B8]">
-                            {isEs
-                                ? '¿Reservas para más de un vehículo? Agrégalos aquí.'
-                                : 'Booking more than one vehicle? Add them here.'}
-                        </p>
-                    </>
-                ) : (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-white">{isEs ? 'Nuevo Vehículo' : 'New Vehicle'}</p>
-                            <button type="button" onClick={() => setShowNewVehicleForm(false)} className="text-[#8994B8] hover:text-white transition-colors">
-                                ✕
-                            </button>
-                        </div>
-                        <VehicleBodyStyleSelector
-                            locale={locale}
-                            appearance="dark"
-                            layout="carousel"
-                            value={newVehicleType}
-                            onChange={setNewVehicleType}
-                            name="new-vehicle-inline-body-style"
-                            required
-                        />
-                        {newVehicleType && (
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                        {isEs ? 'Marca' : 'Make'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newVehicleMake}
-                                        onChange={(e) => setNewVehicleMake(e.target.value)}
-                                        placeholder="Toyota, Honda..."
-                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.make ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                    />
-                                    {newVehicleErrors.make && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.make}</p>}
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                        {isEs ? 'Modelo' : 'Model'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newVehicleModel}
-                                        onChange={(e) => setNewVehicleModel(e.target.value)}
-                                        placeholder="Camry, Civic..."
-                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.model ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                    />
-                                    {newVehicleErrors.model && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.model}</p>}
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                        {isEs ? 'Año' : 'Year'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newVehicleYear}
-                                        onChange={(e) => setNewVehicleYear(e.target.value)}
-                                        placeholder="2024"
-                                        maxLength={4}
-                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.year ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                    />
-                                    {newVehicleErrors.year && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.year}</p>}
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                                        {isEs ? 'Color' : 'Color'}<span className="ml-0.5 text-[#D0B078]">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newVehicleColor}
-                                        onChange={(e) => setNewVehicleColor(e.target.value)}
-                                        placeholder={isEs ? 'Blanco, Negro...' : 'White, Black...'}
-                                        className={`w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] ${newVehicleErrors.color ? 'border-red-500/50' : 'border-[#2C355E]'}`}
-                                    />
-                                    {newVehicleErrors.color && <p className="mt-1 text-xs text-red-400">{newVehicleErrors.color}</p>}
-                                </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">{isEs ? 'Año' : 'Year'}</label>
+                                <input
+                                    type="text"
+                                    value={newVehicleYear}
+                                    onChange={(e) => setNewVehicleYear(e.target.value)}
+                                    placeholder="2024"
+                                    maxLength={4}
+                                    inputMode="numeric"
+                                    className="w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] border-[#2C355E]"
+                                />
                             </div>
-                        )}
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">Color</label>
+                                <input
+                                    type="text"
+                                    value={newVehicleColor}
+                                    onChange={(e) => setNewVehicleColor(e.target.value)}
+                                    placeholder={isEs ? 'Blanco, Negro...' : 'White, Black...'}
+                                    className="w-full rounded-lg border bg-[#131835] px-3 py-2.5 text-sm text-white placeholder:text-[#8994B8] focus:outline-none focus:ring-2 focus:ring-[#D0B078] border-[#2C355E]"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    {user && (
                         <label className="flex items-center gap-2 text-xs text-[#A5B0D1]">
                             <input
                                 type="checkbox"
@@ -241,19 +257,11 @@ export function BookingVehiclePicker({
                                 onChange={(e) => setSaveNewVehicleToGarage(e.target.checked)}
                                 className="h-4 w-4 rounded border-[#2C355E] bg-[#131835] text-[#D0B078] focus:ring-[#D0B078]"
                             />
-                            {isEs ? 'Guardar en mi garaje' : 'Save to my garage'}
+                            {isEs ? 'Guardar en mi garaje (requiere año)' : 'Save to my garage (needs a year)'}
                         </label>
-
-                        <button
-                            type="button"
-                            onClick={handleAddNewVehicleInline}
-                            className="w-full rounded-xl bg-[#D0B078] py-2.5 text-sm font-bold text-[#131835] transition-all hover:bg-[#C4A060]"
-                        >
-                            {isEs ? 'Agregar Vehículo' : 'Add Vehicle'}
-                        </button>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            </BottomSheetModal>
 
             {garageVehicles.length > 0 && showGarageSection && (
                 <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">

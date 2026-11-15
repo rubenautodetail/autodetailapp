@@ -74,7 +74,7 @@ interface BookingStatusContextType {
     userProfile: UserProfile | null;
     updateProfile: (data: Partial<UserProfile>) => Promise<void>;
     vehicles: Vehicle[];
-    addVehicle: (vehicle: Omit<Vehicle, 'id'>) => Promise<void>;
+    addVehicle: (vehicle: Omit<Vehicle, 'id'>) => Promise<Vehicle | null>;
     removeVehicle: (id: string) => Promise<void>;
     settings: UserSettings;
     updateSettings: (data: Partial<UserSettings>) => void;
@@ -454,7 +454,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         });
     };
 
-    const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
+    const addVehicle = async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle | null> => {
         const loc = detectLocale();
         const vehicleLabel = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
         const bodyStyle = normalizeVehicleBodyStyle(vehicle.type);
@@ -475,7 +475,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
                 message: loc === 'es' ? `${vehicleLabel} agregado al garaje.` : `${vehicleLabel} added to garage.`,
                 type: 'success',
             });
-            return;
+            return newVehicle;
         }
         const supabase = createClient();
 
@@ -496,13 +496,16 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
         if (error) {
             console.error('Error adding vehicle:', error);
             addNotification({ title: loc === 'es' ? 'Accion Fallida' : 'Action Failed', message: error.message, type: 'error' });
-            return;
+            return null;
         }
 
+        let created: Vehicle | null = null;
         if (data) {
+            created = mapDbVehicleToVehicle(data);
+            const createdVehicle = created;
             setVehicles(prev => {
                 if (prev.some(v => v.id === data.id)) return prev;
-                return [...prev, mapDbVehicleToVehicle(data)];
+                return [...prev, createdVehicle];
             });
         }
 
@@ -511,6 +514,7 @@ export function BookingStatusProvider({ children }: { children: ReactNode }) {
             message: loc === 'es' ? `${vehicleLabel} agregado al garaje.` : `${vehicleLabel} added to garage.`,
             type: 'success',
         });
+        return created;
     };
 
     const removeVehicle = async (id: string) => {

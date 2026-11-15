@@ -42,6 +42,7 @@ export default function VehicleDetailsModal({
     const [model, setModel] = useState("");
     const [year, setYear] = useState("");
     const [color, setColor] = useState("");
+    const [showOptional, setShowOptional] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof VehicleDetails, string>>>({});
 
     const handleConfirm = () => {
@@ -49,8 +50,6 @@ export default function VehicleDetailsModal({
         const newErrors: Partial<Record<keyof VehicleDetails, string>> = {};
         if (!trimmed.make) newErrors.make = isEs ? "Marca requerida" : "Make required";
         if (!trimmed.model) newErrors.model = isEs ? "Modelo requerido" : "Model required";
-        if (!trimmed.year) newErrors.year = isEs ? "Año requerido" : "Year required";
-        if (!trimmed.color) newErrors.color = isEs ? "Color requerido" : "Color required";
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
@@ -60,6 +59,7 @@ export default function VehicleDetailsModal({
         setModel("");
         setYear("");
         setColor("");
+        setShowOptional(false);
         setErrors({});
     };
 
@@ -67,21 +67,21 @@ export default function VehicleDetailsModal({
         <BottomSheetModal
             isOpen={isOpen}
             onClose={onClose}
-            title={isEs ? "Cuéntanos sobre tu auto" : "Tell us about your car"}
+            title={isEs ? "Tu auto" : "Your car"}
             footer={
                 <button
                     type="button"
                     onClick={handleConfirm}
                     className="w-full rounded-full bg-[#D0B078] px-6 py-3 text-sm font-bold text-[#131835] transition-colors hover:bg-[#dcc08d]"
                 >
-                    {isEs ? "Ver mi precio" : "See my price"}
+                    {isEs ? "Continuar" : "Continue"}
                 </button>
             }
         >
             <p className="mb-5 text-sm text-[#A5B0D1]">
                 {isEs
-                    ? `Ya elegiste ${getVehicleBodyStyleLabel(bodyStyle, locale)}. Solo nos faltan estos datos para confirmar tu reserva.`
-                    : `You picked ${getVehicleBodyStyleLabel(bodyStyle, locale)}. We just need these details to confirm your booking.`}
+                    ? `Elegiste ${getVehicleBodyStyleLabel(bodyStyle, locale)}. Solo falta la marca y el modelo.`
+                    : `You picked ${getVehicleBodyStyleLabel(bodyStyle, locale)}. We only need the make and model.`}
             </p>
             <div className="space-y-4">
                 <div>
@@ -112,36 +112,42 @@ export default function VehicleDetailsModal({
                     />
                     {errors.model && <p className="mt-1 text-xs text-red-400">{errors.model}</p>}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                            {isEs ? "Año" : "Year"}
-                            <span className="ml-0.5 text-[#D0B078]">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={year}
-                            onChange={(e) => setYear(e.target.value)}
-                            placeholder="2024"
-                            className={fieldClass(Boolean(errors.year))}
-                        />
-                        {errors.year && <p className="mt-1 text-xs text-red-400">{errors.year}</p>}
+                {!showOptional ? (
+                    <button
+                        type="button"
+                        onClick={() => setShowOptional(true)}
+                        className="text-sm font-semibold text-[#D0B078] hover:text-white transition-colors"
+                    >
+                        {isEs ? "+ Agregar año y color (opcional)" : "+ Add year and color (optional)"}
+                    </button>
+                ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
+                                {isEs ? "Año" : "Year"}
+                            </label>
+                            <input
+                                type="text"
+                                value={year}
+                                onChange={(e) => setYear(e.target.value)}
+                                placeholder="2024"
+                                maxLength={4}
+                                inputMode="numeric"
+                                className={fieldClass(false)}
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">Color</label>
+                            <input
+                                type="text"
+                                value={color}
+                                onChange={(e) => setColor(e.target.value)}
+                                placeholder={isEs ? "Blanco, Negro..." : "White, Black..."}
+                                className={fieldClass(false)}
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="mb-1.5 block text-xs font-medium text-[#A5B0D1]">
-                            {isEs ? "Color" : "Color"}
-                            <span className="ml-0.5 text-[#D0B078]">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={color}
-                            onChange={(e) => setColor(e.target.value)}
-                            placeholder={isEs ? "Blanco, Negro..." : "White, Black..."}
-                            className={fieldClass(Boolean(errors.color))}
-                        />
-                        {errors.color && <p className="mt-1 text-xs text-red-400">{errors.color}</p>}
-                    </div>
-                </div>
+                )}
             </div>
         </BottomSheetModal>
     );
