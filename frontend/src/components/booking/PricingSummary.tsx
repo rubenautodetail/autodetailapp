@@ -59,9 +59,11 @@ export default function PricingSummary({
         <div className="flex items-center justify-between">
           <div>
             <p className="font-semibold text-white">{serviceName}</p>
-            <p className="text-sm text-[#8994B8]">
-              {service.duration} {locale === "es" ? "min" : "min"}
-            </p>
+            {!isMultiVehicle && (
+              <p className="text-sm text-[#8994B8]">
+                {service.duration} {locale === "es" ? "min" : "min"}
+              </p>
+            )}
           </div>
           {/* With quote lines, the per-vehicle rows below carry the prices. */}
           {!hasLines && (

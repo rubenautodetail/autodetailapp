@@ -55,6 +55,8 @@ export default function ServiceSelectionForm({
         assignVehicleService,
         perVehicleServices,
         setPerVehicleServices,
+        assignServiceToAllVehicles,
+        vehicleSummaryLines,
         allVehiclesAssigned,
         addOnsForBookingVehicle,
         addVehicleAddOn,
@@ -109,6 +111,15 @@ export default function ServiceSelectionForm({
     // quote and the step guard all read the same answer.
     const serviceMode: 'same' | 'per-vehicle' = perVehicleServices ? 'per-vehicle' : 'same';
 
+    // Two or more cars always carry one service each; there is no mode to pick.
+    // This also covers bookings restored from an older session.
+    useEffect(() => {
+        if (isHydrated && bookingVehicles.length > 1 && !perVehicleServices) {
+            setPerVehicleServices(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bookingVehicles.length, isHydrated, perVehicleServices]);
+
     // Keep the active pill pointing at a vehicle that still exists.
     useEffect(() => {
         if (!perVehicleServices) return;
@@ -128,10 +139,7 @@ export default function ServiceSelectionForm({
     // "Change service" on a car in the booking card: make that car the active
     // one (splitting services when there are several) and scroll to the list.
     const handleChangeVehicleService = (vehicleId: string) => {
-        if (bookingVehicles.length > 1) {
-            if (!perVehicleServices) setPerVehicleServices(true);
-            setActiveVehicleId(vehicleId);
-        }
+        if (bookingVehicles.length > 1) setActiveVehicleId(vehicleId);
         requestAnimationFrame(() => {
             document.getElementById('service-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
@@ -145,12 +153,6 @@ export default function ServiceSelectionForm({
     const unassignedName = firstUnassignedVehicle
         ? [firstUnassignedVehicle.year, firstUnassignedVehicle.make, firstUnassignedVehicle.model].filter(Boolean).join(' ')
         : '';
-
-    const handleServiceModeChange = (mode: 'same' | 'per-vehicle') => {
-        if (mode === serviceMode) return;
-        setPerVehicleServices(mode === 'per-vehicle');
-        if (mode === 'per-vehicle') setActiveVehicleId(bookingVehicles[0]?.id ?? null);
-    };
 
     const previewVehicles = useMemo(() => {
         if (serviceMode === 'per-vehicle' && activeVehicle) {
@@ -282,7 +284,13 @@ export default function ServiceSelectionForm({
 
     const handleServiceSelect = (service: Service) => {
         if (serviceMode === 'per-vehicle' && activeVehicle?.id) {
-            assignVehicleService(activeVehicle.id, service);
+            // Nobody has a service yet: the first pick covers every car, and the
+            // customer then changes only the ones that differ.
+            if (bookingVehicles.every((vehicle) => !(vehicle.id && vehicleServices[vehicle.id]))) {
+                assignServiceToAllVehicles(service);
+            } else {
+                assignVehicleService(activeVehicle.id, service);
+            }
             return;
         }
         setService(service);
@@ -424,31 +432,6 @@ export default function ServiceSelectionForm({
                             </p>
                             {canSplitServices && (
                                 <div className="mb-4 space-y-3">
-                                    <div
-                                        role="radiogroup"
-                                        aria-label={locale === "es" ? "Modo de servicio" : "Service mode"}
-                                        className="inline-flex rounded-full border border-[#2C355E] bg-[#151B3A] p-1"
-                                    >
-                                        {([
-                                            ["same", locale === "es" ? "Un servicio para todos" : "One service for all"],
-                                            ["per-vehicle", locale === "es" ? "Elegir por vehículo" : "Choose per vehicle"],
-                                        ] as const).map(([mode, label]) => (
-                                            <button
-                                                key={mode}
-                                                type="button"
-                                                role="radio"
-                                                aria-checked={serviceMode === mode}
-                                                onClick={() => handleServiceModeChange(mode)}
-                                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D0B078] ${serviceMode === mode
-                                                    ? "bg-[#D0B078] text-[#131835]"
-                                                    : "text-[#A5B0D1] hover:text-white"
-                                                    }`}
-                                            >
-                                                {label}
-                                            </button>
-                                        ))}
-                                    </div>
-
                                     {serviceMode === 'per-vehicle' && (
                                         <div
                                             className="flex gap-2 overflow-x-auto snap-x overscroll-x-contain pb-1 [&::-webkit-scrollbar]:hidden"
@@ -495,6 +478,18 @@ export default function ServiceSelectionForm({
                                                 );
                                             })}
                                         </div>
+                                    )}
+                                    {serviceMode === 'per-vehicle' && activeVehicleService
+                                        && bookingVehicles.some((vehicle) => vehicleServices[vehicle.id ?? '']?.id !== activeVehicleService.id) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => assignServiceToAllVehicles(activeVehicleService)}
+                                            className="text-xs font-semibold text-[#D0B078] underline underline-offset-2 hover:text-white"
+                                        >
+                                            {locale === "es"
+                                                ? `Usar ${activeVehicleService.name} en todos los autos`
+                                                : `Use ${activeVehicleService.name} for all cars`}
+                                        </button>
                                     )}
                                 </div>
                             )}
@@ -646,12 +641,13 @@ export default function ServiceSelectionForm({
                                             ...selectedService,
                                             basePrice: priceQuote?.vehicles[0]?.servicePrice ?? selectedService.basePrice,
                                         }}
-                                        addOns={selectedAddOns}
+                                        addOns={serviceMode === 'per-vehicle' ? [] : selectedAddOns}
                                         subtotal={subtotal}
                                         serviceFee={serviceFee}
                                         total={total}
                                         locale={locale}
                                         onRemoveAddOn={removeAddOn}
+                                        vehicleLines={bookingVehicles.length > 1 ? vehicleSummaryLines(locale) : undefined}
                                     />
 
                                     <div

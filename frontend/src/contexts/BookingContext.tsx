@@ -68,6 +68,29 @@ function addOnsForVehicle(
   return (vehicle.id && perVehicleAddOns[vehicle.id]) || [];
 }
 
+/**
+ * Give every vehicle that has no service yet a copy of `service` (and its
+ * add-ons). Used when a booking becomes multi-car, so cars start on the same
+ * service and the customer only changes the ones that differ.
+ */
+function seedVehicleServices(
+  vehicles: VehicleInfo[],
+  services: Record<string, Service>,
+  addOnsByVehicle: Record<string, AddOn[]>,
+  service: Service | null,
+  addOns: AddOn[],
+): { services: Record<string, Service>; addOnsByVehicle: Record<string, AddOn[]> } {
+  if (!service) return { services, addOnsByVehicle };
+  const nextServices = { ...services };
+  const nextAddOns = { ...addOnsByVehicle };
+  vehicles.forEach((vehicle) => {
+    if (!vehicle.id || nextServices[vehicle.id]) return;
+    nextServices[vehicle.id] = service;
+    if (addOns.length > 0 && !nextAddOns[vehicle.id]) nextAddOns[vehicle.id] = addOns;
+  });
+  return { services: nextServices, addOnsByVehicle: nextAddOns };
+}
+
 /** Drop map entries whose vehicle is gone; same reference back when nothing changed. */
 function pruneByVehicle<T>(map: Record<string, T>, nextVehicles: VehicleInfo[]): Record<string, T> {
   if (Object.keys(map).length === 0) return map;
@@ -193,6 +216,8 @@ interface BookingContextType {
    */
   perVehicleServices: boolean;
   setPerVehicleServices: (on: boolean) => void;
+  /** Put the same service on every vehicle in the booking (one atomic update). */
+  assignServiceToAllVehicles: (service: Service) => void;
   /** False while per-vehicle mode still has a vehicle waiting for a service. */
   allVehiclesAssigned: boolean;
   /** The service a vehicle is booked with; null while it still waits for one. */
@@ -428,14 +453,16 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
    */
   const setPerVehicleServices = (on: boolean) => {
     if (on === perVehicleServices) return;
-    const nextOverrides = on ? vehicleServices : {};
-    // Add-ons follow the same rule as services: turning per-vehicle on drops
-    // the booking-wide list (each car picks its own), turning it off drops the
-    // per-vehicle lists.
+    // Turning it on starts every car on the current service (and its add-ons);
+    // turning it off drops every assignment.
+    const seeded = on
+      ? seedVehicleServices(bookingVehicles, vehicleServices, vehicleAddOns, selectedService, selectedAddOns)
+      : { services: {} as Record<string, Service>, addOnsByVehicle: {} as Record<string, AddOn[]> };
+    const nextOverrides = seeded.services;
     const nextBookingAddOns = on ? [] : selectedAddOns;
-    const nextVehicleAddOns = on ? vehicleAddOns : {};
+    const nextVehicleAddOns = seeded.addOnsByVehicle;
     setPerVehicleServicesState(on);
-    if (!on) setVehicleServices(nextOverrides);
+    setVehicleServices(nextOverrides);
     setSelectedAddOns(nextBookingAddOns);
     setVehicleAddOns(nextVehicleAddOns);
     setPriceQuote(null);
@@ -444,6 +471,20 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       selectedAddOns: nextBookingAddOns, vehicleAddOns: nextVehicleAddOns, priceQuote: null,
     });
     calculateTotalWithService(selectedService, nextBookingAddOns, bookingVehicles, nextOverrides, on, nextVehicleAddOns);
+  };
+
+  const assignServiceToAllVehicles = (service: Service) => {
+    const nextOverrides: Record<string, Service> = { ...vehicleServices };
+    bookingVehicles.forEach((vehicle) => {
+      if (vehicle.id) nextOverrides[vehicle.id] = service;
+    });
+    setVehicleServices(nextOverrides);
+    if (!selectedService) setSelectedService(service);
+    setPriceQuote(null);
+    ssSave({ vehicleServices: nextOverrides, selectedService: selectedService ?? service, priceQuote: null });
+    calculateTotalWithService(
+      selectedService ?? service, selectedAddOns, bookingVehicles, nextOverrides, perVehicleServices, vehicleAddOns,
+    );
   };
 
   // One shared answer to "is the booking ready to price?" — the step guards and
@@ -709,12 +750,25 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
    * must not vanish just because the other car did.
    */
   const commitVehicles = (next: VehicleInfo[]) => {
-    const nextOverrides = pruneByVehicle(vehicleServices, next);
-    const nextVehicleAddOns = pruneByVehicle(vehicleAddOns, next);
-    const nextPerVehicle = perVehicleServices && next.length > 1;
+    let nextOverrides = pruneByVehicle(vehicleServices, next);
+    let nextVehicleAddOns = pruneByVehicle(vehicleAddOns, next);
+    // Two or more cars always means one service per car; no mode to choose.
+    const nextPerVehicle = next.length > 1;
     const survivor = perVehicleServices && !nextPerVehicle ? next[0] : undefined;
     const nextService = (survivor?.id && vehicleServices[survivor.id]) || selectedService;
-    const nextBookingAddOns = survivor?.id ? (vehicleAddOns[survivor.id] ?? []) : selectedAddOns;
+    let nextBookingAddOns = survivor?.id ? (vehicleAddOns[survivor.id] ?? []) : selectedAddOns;
+    if (nextPerVehicle) {
+      // Cars without a service yet start on the first car's (or the booking's).
+      const first = next[0];
+      const sourceService = (first?.id && nextOverrides[first.id]) || nextService;
+      const sourceAddOns = perVehicleServices
+        ? (first?.id && nextVehicleAddOns[first.id]) || []
+        : selectedAddOns;
+      const seeded = seedVehicleServices(next, nextOverrides, nextVehicleAddOns, sourceService, sourceAddOns);
+      nextOverrides = seeded.services;
+      nextVehicleAddOns = seeded.addOnsByVehicle;
+      nextBookingAddOns = [];
+    }
     if (nextService !== selectedService) {
       setSelectedService(nextService);
       ssSave({ selectedService: nextService });
@@ -886,6 +940,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     assignVehicleService,
     perVehicleServices,
     setPerVehicleServices,
+    assignServiceToAllVehicles,
     allVehiclesAssigned,
     serviceForBookingVehicle,
     addOnsForBookingVehicle,
