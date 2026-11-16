@@ -51,7 +51,6 @@ export default function BrandCarousel({ brands, locale = 'en' }: BrandCarouselPr
                                         alt={groupIndex === 0 ? `${brand.name} logo` : ''}
                                         width={144}
                                         height={56}
-                                        unoptimized
                                         className="max-h-11 w-auto max-w-full object-contain opacity-65 grayscale brightness-0 invert transition-opacity duration-300 hover:opacity-100"
                                     />
                                 </li>
