@@ -131,7 +131,7 @@ function LoginForm() {
         setShowCodeModal(true);
     };
 
-    if (isLoading) {
+    if (isLoading || (user && profile && !wrongRole)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
                 <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
@@ -216,7 +216,7 @@ function LoginForm() {
                                 <label className="block text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">
                                     {dict.password}
                                 </label>
-                                <Link href={`/${lang}/forgot-password`} className="text-xs text-[var(--accent)] hover:underline">
+                                <Link href={`/${lang}/forgot-password`} className="text-xs text-[var(--link)] hover:underline">
                                     {dict.forgotPassword}
                                 </Link>
                             </div>
@@ -279,7 +279,7 @@ function LoginForm() {
                             {dict.noAccount}{" "}
                             <Link
                                 href={`/${lang}/register${searchParams.get("next") ? `?next=${searchParams.get("next")}` : ""}`}
-                                className="text-[var(--accent)] hover:underline font-medium"
+                                className="text-[var(--link)] hover:underline font-medium"
                             >
                                 {dict.register}
                             </Link>
@@ -289,7 +289,7 @@ function LoginForm() {
 
                 {/* Contractor link */}
                 <div className="mt-4 text-center">
-                    <Link href={`/${lang}/contractor/login`} className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors">
+                    <Link href={`/${lang}/contractor/login`} className="text-xs text-[var(--text-secondary)] hover:text-[var(--link)] transition-colors">
                         {dict.contractorLink} →
                     </Link>
                 </div>

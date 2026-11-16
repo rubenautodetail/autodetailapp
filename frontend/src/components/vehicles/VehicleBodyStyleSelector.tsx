@@ -55,7 +55,7 @@ export function VehicleBodyStyleSelector({
         : 'border-[var(--divider)] bg-[var(--card)] hover:border-[var(--accent)]/60 peer-checked:border-[var(--accent)] peer-checked:ring-1 peer-checked:ring-[var(--accent)] peer-focus-visible:ring-[var(--accent)] peer-focus-visible:ring-offset-[var(--background)]';
     const arrowClass = isDark
         ? 'border-[#2C355E] bg-[#151B3A]/90 text-[#A5B0D1] hover:text-[#D0B078] focus-visible:ring-[#D0B078]'
-        : 'border-[var(--divider)] bg-[var(--card)]/90 text-[var(--text-secondary)] hover:text-[var(--accent)] focus-visible:ring-[var(--accent)]';
+        : 'border-[var(--divider)] bg-[var(--card)]/90 text-[var(--text-secondary)] hover:text-[var(--link)] focus-visible:ring-[var(--accent)]';
 
     // Center the selected card by scrolling the track directly: scrollIntoView
     // gets cancelled by the picker's focus management when the panel reopens,

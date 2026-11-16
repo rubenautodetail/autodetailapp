@@ -24,7 +24,7 @@ function Inner() {
             hrefLang={other}
             lang={other}
             aria-label={other === "es" ? "Ver esta página en español" : "View this page in English"}
-            className="fixed right-4 top-4 z-20 flex h-9 items-center rounded-full border border-[var(--divider)] bg-[var(--card)] px-3 text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] shadow-sm transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            className="fixed right-4 top-4 z-20 flex h-9 items-center rounded-full border border-[var(--divider)] bg-[var(--card)] px-3 text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] shadow-sm transition-colors hover:border-[var(--link)] hover:text-[var(--link)]"
         >
             {other.toUpperCase()}
         </Link>

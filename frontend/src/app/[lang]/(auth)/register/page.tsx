@@ -85,7 +85,7 @@ function RegisterForm() {
                     )}
                     <Link
                         href={isContractorFlow ? `/${lang}/contractor/login` : `/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
-                        className="text-[var(--accent)] text-sm hover:underline"
+                        className="text-[var(--link)] text-sm hover:underline"
                     >
                         {isEs ? "Ya confirmé, iniciar sesión" : "Already confirmed? Sign in"}
                     </Link>
@@ -100,7 +100,7 @@ function RegisterForm() {
             <div className="w-full max-w-sm bg-[var(--card)] p-8 rounded-2xl shadow-[var(--shadow-card)] border border-[var(--divider)]">
                 <div className="text-center mb-8">
                     {isContractorFlow && (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-medium mb-4">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--link)] text-xs font-medium mb-4">
                             {isEs ? "Solicitud de contratista" : "Contractor application"}
                         </div>
                     )}
@@ -202,7 +202,7 @@ function RegisterForm() {
                         {isEs ? "¿Ya tienes una cuenta?" : "Already have an account?"}{" "}
                         <Link
                             href={isContractorFlow ? `/${lang}/contractor/login` : `/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
-                            className="text-[var(--accent)] hover:underline font-medium"
+                            className="text-[var(--link)] hover:underline font-medium"
                         >
                             {isEs ? "Iniciar sesión" : "Sign In"}
                         </Link>
