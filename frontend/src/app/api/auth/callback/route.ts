@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
         if (!isValidRole(cbRole)) {
             resolvedNext = `/${locale}`
         } else if (cbRole === 'user' && (goesAdmin || goesContractor)) {
-            resolvedNext = `/${locale}/dashboard`
+            resolvedNext = `/${locale}/customer`
         } else if (cbRole === 'contractor' && goesAdmin) {
             resolvedNext = `/${locale}/contractor/dashboard`
         } else if (cbRole === 'admin' && !goesAdmin && !goesContractor) {

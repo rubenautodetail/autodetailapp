@@ -161,7 +161,7 @@ export async function updateSession(request: NextRequest) {
             // Default destination by role
             dest.pathname = isAdmin(profile) ? `/${locale}/admin`
                 : isContractor(profile) ? `/${locale}/contractor/dashboard`
-                : `/${locale}/dashboard`
+                : `/${locale}/customer`
         }
         return cookiedRedirect(supabaseResponse, dest)
     }
@@ -187,7 +187,7 @@ export async function updateSession(request: NextRequest) {
                         ? `/${locale}/contractors/apply`
                         : `/${locale}/contractor/pending`
             } else {
-                dest.pathname = `/${locale}/dashboard`
+                dest.pathname = `/${locale}/customer`
             }
             return cookiedRedirect(supabaseResponse, dest)
         }

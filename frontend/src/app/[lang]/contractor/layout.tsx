@@ -49,7 +49,7 @@ export default function ContractorLayout({
         if (profile.role !== 'contractor' && profile.role !== 'admin') {
             // Wrong role → send to their correct portal instead of login
             if (profile.role === 'user') {
-                router.replace(`/${lang}/dashboard`);
+                router.replace(`/${lang}/customer`);
             } else {
                 router.replace(`/${lang}/contractor/login`);
             }

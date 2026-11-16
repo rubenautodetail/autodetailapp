@@ -342,7 +342,7 @@ export function welcomeEmailTemplate(user: { name: string }): string {
   const body = `
     <p>Hi ${user.name},</p>
     <p>We're thrilled to have you here!</p>
-    <p>First, please confirm your email using the separate confirmation email we just sent you. Once confirmed, you can log in and start booking premium auto detailing services.</p>
+    <p>Your account is ready. You can sign in and start booking premium auto detailing services.</p>
     <p style="text-align:center;"><a href="${APP_URL}/en/login" class="btn" style="background:#2563eb;color:white;">Sign in to your account</a></p>
     <p>If you have any questions, just reply to this email.</p>
     <p>Happy detailing!<br/>The Lux Team</p>`;
@@ -755,7 +755,7 @@ export function paymentReminderTemplate(
 ): string {
   const { customer, service } = booking;
   const payUrl = `${APP_URL}/en/booking/${booking.id}/pay`;
-  const cancelUrl = `${APP_URL}/en/dashboard`;
+  const cancelUrl = `${APP_URL}/en/customer`;
 
   const configs = {
     1: {

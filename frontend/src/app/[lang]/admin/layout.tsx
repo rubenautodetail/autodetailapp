@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       if (profile.role === "contractor") {
         router.replace(`/${lang}/contractor/dashboard`);
       } else {
-        router.replace(`/${lang}/dashboard`);
+        router.replace(`/${lang}/customer`);
       }
     }
   }, [isLoading, profile, lang, router]);

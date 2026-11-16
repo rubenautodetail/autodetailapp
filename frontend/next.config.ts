@@ -5,6 +5,8 @@ import { CONTENT_SECURITY_POLICY } from "./src/lib/security/contentSecurityPolic
 const nextConfig: NextConfig = {
   async redirects() {
     return [
+      // La entrada vieja /dashboard ya no existe: todo vive en /customer
+      { source: '/:lang(en|es)/dashboard/:path*', destination: '/:lang/customer', permanent: false },
     ];
   },
   async headers() {
