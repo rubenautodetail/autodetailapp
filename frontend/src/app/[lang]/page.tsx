@@ -7,17 +7,20 @@ import { MapPin, Truck, Coffee } from 'lucide-react';
 import Image from 'next/image';
 import { getDictionary } from '@/lib/dictionaries';
 import { getLandingContent, getVehicleBrands, type Testimonial } from '@/lib/hygraph';
-import { createServiceClient, createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { i18n } from '@/i18n-config';
 import ZipChecker from '@/components/ZipChecker/ZipChecker';
 import JsonLd from '@/components/seo/JsonLd';
 import { galleryPath } from '@/lib/gallery';
 import BrandCarousel, { FALLBACK_VEHICLE_BRANDS } from '@/components/BrandCarousel/BrandCarousel';
 import { NavMenu, MobileNav } from '@/components/landing/NavMenu';
+import { HeaderAccount, FooterAccountLink } from '@/components/landing/HeaderAccount';
 import HolidaySparkles from '@/components/seasonal/HolidaySparkles';
 import { getLocalBusinessSchema, getServiceCatalogSchema, getBreadcrumbSchema } from '@/lib/seo/schema';
 
-export const dynamic = 'force-dynamic';
+// Pre-built and refreshed every few minutes. Who is signed in is decided in the
+// browser (HeaderAccount / MobileNav / FooterAccountLink), not on the server.
+export const revalidate = 300;
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
@@ -47,11 +50,6 @@ const FALLBACK_TESTIMONIALS: Testimonial[] = [
         vehicleType: '2021 Porsche 911 Carrera',
     },
 ];
-async function getIsLoggedIn() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    return !!user;
-}
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
     const { lang } = await params;
     const locale = lang === 'es' ? 'es' : 'en';
@@ -76,11 +74,10 @@ export default async function LandingPage({
 
     // No auto-redirect — authenticated users can still view the landing page
 
-    const [dict, hygraph, hygraphVehicleBrands, isLoggedIn] = await Promise.all([
+    const [dict, hygraph, hygraphVehicleBrands] = await Promise.all([
         getDictionary(locale),
         getLandingContent(locale),
         getVehicleBrands(),
-        getIsLoggedIn(),
     ]);
 
     // Merge HyGraph content with dictionary fallbacks
@@ -219,30 +216,13 @@ export default async function LandingPage({
                                 WhatsApp
                             </a>
                         )}
-                        <div className="hidden lg:flex lg:flex-col lg:items-center lg:gap-1">
-                            <Link
-                                href={isLoggedIn ? `/${locale}/customer` : `/${locale}/booking/select`}
-                                className="btn-primary text-sm px-6 py-2.5"
-                            >
-                                {isLoggedIn
-                                    ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
-                                    : (locale === 'es' ? 'Reservar ahora' : 'Book now')}
-                            </Link>
-                            {!isLoggedIn && (
-                                <Link
-                                    href={`/${locale}/login`}
-                                    className="text-xs text-white/80 underline underline-offset-4 hover:text-white"
-                                >
-                                    {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
-                                </Link>
-                            )}
-                        </div>
+                        <HeaderAccount locale={locale} />
                         <MobileNav
                             locale={locale}
                             waHref={waHref}
-                            accountHref={isLoggedIn ? `/${locale}/customer` : `/${locale}/booking/select`}
-                            accountLabel={isLoggedIn ? (locale === 'es' ? 'Mi Cuenta' : 'My Account') : (locale === 'es' ? 'Reservar ahora' : 'Book now')}
-                            loginHref={isLoggedIn ? null : `/${locale}/login`}
+                            accountHref={`/${locale}/booking/select`}
+                            accountLabel={locale === 'es' ? 'Reservar ahora' : 'Book now'}
+                            loginHref={`/${locale}/login`}
                         />
                     </div>
                 </div>
@@ -621,11 +601,7 @@ export default async function LandingPage({
                         <Link href={`/${locale}/contractor/login`} className="hover:text-white/60 transition-colors">
                             {locale === 'es' ? 'Acceso contratistas' : 'Contractor login'}
                         </Link>
-                        <Link href={isLoggedIn ? `/${locale}/customer` : `/${locale}/login`} className="hover:text-white/60 transition-colors">
-                            {isLoggedIn
-                                ? (locale === 'es' ? 'Mi Cuenta' : 'My Account')
-                                : (locale === 'es' ? 'Iniciar sesión' : 'Log in')}
-                        </Link>
+                        <FooterAccountLink locale={locale} />
                     </div>
                 </div>
             </footer>

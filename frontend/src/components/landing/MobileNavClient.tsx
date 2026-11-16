@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ChevronDown, Menu, X } from 'lucide-react';
 import type { NavService } from './NavMenuClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MobileNavClientProps {
     locale: 'en' | 'es';
@@ -19,8 +20,14 @@ interface MobileNavClientProps {
 }
 
 /** Hamburger menu for phones and tablets (the desktop menu takes over from lg up). */
-export default function MobileNavClient({ locale, services, waHref, accountHref, accountLabel, loginHref = null, showBlog = false }: MobileNavClientProps) {
+export default function MobileNavClient({ locale, services, waHref, accountHref: guestAccountHref, accountLabel: guestAccountLabel, loginHref: guestLoginHref = null, showBlog = false }: MobileNavClientProps) {
     const es = locale === 'es';
+    // The page itself is pre-built and the same for everyone, so who is signed in
+    // is decided here in the browser. Guests (and the first instant) see the guest links.
+    const { isAuthenticated } = useAuth();
+    const accountHref = isAuthenticated ? `/${locale}/customer` : guestAccountHref;
+    const accountLabel = isAuthenticated ? (es ? 'Mi Cuenta' : 'My Account') : guestAccountLabel;
+    const loginHref = isAuthenticated ? null : guestLoginHref;
     const [open, setOpen] = useState(false);
     const [servicesOpen, setServicesOpen] = useState(true);
 

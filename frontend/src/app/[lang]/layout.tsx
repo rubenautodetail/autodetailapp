@@ -1,3 +1,9 @@
+import { Inter, Playfair_Display } from "next/font/google";
+import { GoogleAnalytics } from '@next/third-parties/google';
+import Script from 'next/script';
+import ContactClickTracker from '@/components/analytics/ContactClickTracker';
+import AttributionCapture from '@/components/analytics/AttributionCapture';
+import { Providers } from '../providers';
 import { i18n } from '@/i18n-config';
 import { getDictionary } from '@/lib/dictionaries';
 import '../globals.css';
@@ -8,6 +14,23 @@ import JsonLd from '@/components/seo/JsonLd';
 import { getOrganizationSchema, getWebsiteSchema } from '@/lib/seo/schema';
 import { getVehicleBodyStyleImages } from '@/lib/hygraph';
 import { VehicleBodyStyleImagesProvider } from '@/contexts/VehicleBodyStyleImagesContext';
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const GSC_VERIFICATION = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
+const BING_VERIFICATION = process.env.NEXT_PUBLIC_BING_VERIFICATION;
+const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
@@ -70,6 +93,19 @@ export default async function LocaleLayout({
     const siteName = dict.common.siteName;
 
     return (
+      <html lang={validLang} suppressHydrationWarning data-scroll-behavior="smooth">
+      <head>
+       
+        {GSC_VERIFICATION && (
+          <meta name="google-site-verification" content={GSC_VERIFICATION} />
+        )}
+        {BING_VERIFICATION && (
+          <meta name="msvalidate.01" content={BING_VERIFICATION} />
+        )}
+        <meta name="p:domain_verify" content="1a4e30075f1f40a53a175fccf1361202" />
+      </head>
+      <body className={`${inter.variable} ${playfair.variable} antialiased`}>
+        <Providers>
         <VehicleBodyStyleImagesProvider images={vehicleBodyStyleImages}>
             <JsonLd data={[getOrganizationSchema(siteName), getWebsiteSchema(siteName)]} />
             {/* Pad bottom on mobile so content doesn't hide behind the nav */}
@@ -79,5 +115,20 @@ export default async function LocaleLayout({
             <MobileBottomNav lang={lang} />
             {process.env.NODE_ENV !== 'production' && <DevRoleSwitcher />}
         </VehicleBodyStyleImagesProvider>
+          </Providers>
+        {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
+        {GA_MEASUREMENT_ID && <ContactClickTracker />}
+        <AttributionCapture />
+        {CLARITY_PROJECT_ID && (
+          <Script id="microsoft-clarity" strategy="afterInteractive">
+            {`(function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`}
+          </Script>
+        )}
+      </body>
+    </html>
     );
 }
