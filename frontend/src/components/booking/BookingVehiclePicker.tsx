@@ -188,23 +188,18 @@ export function BookingVehiclePicker({
 
     return (
         <>
-            <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">
-                <button
-                    type="button"
-                    onClick={() => setShowNewVehicleForm(true)}
-                    className="flex w-full items-center justify-center gap-2 text-sm font-bold text-[#D0B078] hover:text-white transition-colors"
-                >
-                    <span className="text-lg leading-none">+</span>
-                    {hasSelection
-                        ? (isEs ? 'Agregar otro auto' : 'Add another car')
-                        : (isEs ? 'Agregar mi auto' : 'Add my car')}
-                </button>
-                <p className="mt-2 text-center text-xs text-[#8994B8]">
-                    {isEs
-                        ? '¿Reservas para más de un auto? Agrégalos aquí.'
-                        : 'Booking more than one car? Add them here.'}
-                </p>
-            </div>
+            {bookingVehicles.length === 0 && (
+                <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">
+                    <button
+                        type="button"
+                        onClick={() => setShowNewVehicleForm(true)}
+                        className="flex w-full items-center justify-center gap-2 text-sm font-bold text-[#D0B078] hover:text-white transition-colors"
+                    >
+                        <span className="text-lg leading-none">+</span>
+                        {isEs ? 'Agregar mi auto' : 'Add my car'}
+                    </button>
+                </div>
+            )}
 
             <BottomSheetModal
                 isOpen={showNewVehicleForm}
@@ -377,6 +372,19 @@ export function BookingVehiclePicker({
                             );
                         })}
                     </ul>
+                    <button
+                        type="button"
+                        onClick={() => setShowNewVehicleForm(true)}
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#D0B078]/50 px-3 py-2.5 text-sm font-bold text-[#D0B078] transition-colors hover:text-white"
+                    >
+                        <span className="text-lg leading-none">+</span>
+                        {isEs ? 'Agregar otro auto' : 'Add another car'}
+                    </button>
+                    <p className="mt-2 text-center text-xs text-[#8994B8]">
+                        {isEs
+                            ? '¿Reservas para más de un auto? Agrégalos aquí.'
+                            : 'Booking more than one car? Add them here.'}
+                    </p>
                 </div>
             )}
 
