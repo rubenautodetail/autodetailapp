@@ -313,6 +313,29 @@ export default async function ServicePage({ params }: PageProps) {
     const h1Lead = isEs ? `${name} a domicilio en` : `${name} in`;
     const bookLabel = isEs ? `Reservar ${name}` : `Book ${name}`;
 
+    // "What's included" is the first thing a customer wants to know, so it sits at
+    // the very top: inside the quick-answer box when the service has a guide,
+    // or as its own section right under the hero when it doesn't.
+    const includedList = groups.length > 0 ? (
+        <div className={groups.length > 1 ? "grid gap-6 sm:grid-cols-2" : ""}>
+            {groups.map((group, gi) => (
+                <div key={gi}>
+                    {group.title && (
+                        <h3 className="mb-3 text-base font-semibold text-[#D0B078]">{group.title}</h3>
+                    )}
+                    <ul className={`space-y-2.5 text-white/85 ${groups.length === 1 ? "sm:columns-2 sm:gap-x-10 sm:space-y-0 [&>li]:mb-2.5 [&>li]:break-inside-avoid" : ""}`}>
+                        {group.items.map((item, i) => (
+                            <li key={i} className="flex gap-3">
+                                <Check aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-[#D0B078]" />
+                                <span>{item}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    ) : null;
+
     return (
         <div className="min-h-screen bg-[#131835] text-white">
             <JsonLd data={schemas} />
@@ -420,6 +443,15 @@ export default async function ServicePage({ params }: PageProps) {
                     </div>
                 </section>
 
+                {!guide && includedList && (
+                    <section className="mx-auto max-w-5xl px-6 pt-10">
+                        <div className="rounded-2xl border border-[#D0B078]/30 bg-[#D0B078]/5 p-6">
+                            <h2 className="mb-4 text-lg font-semibold">{isEs ? "Qué incluye" : "What's included"}</h2>
+                            {includedList}
+                        </div>
+                    </section>
+                )}
+
                 {guide && (
                     <>
                         {/* Quick answer */}
@@ -427,6 +459,12 @@ export default async function ServicePage({ params }: PageProps) {
                             <div className="rounded-2xl border border-[#D0B078]/30 bg-[#D0B078]/5 p-6">
                                 <h2 className="text-lg font-semibold">{isEs ? "Respuesta rápida" : "Quick answer"}</h2>
                                 <p className="mt-2 max-w-3xl text-white/85">{t(guide.quickAnswer)}</p>
+                                {includedList && (
+                                    <div className="mt-5 border-t border-[#D0B078]/20 pt-5">
+                                        <h2 className="mb-4 text-lg font-semibold">{isEs ? "Qué incluye" : "What's included"}</h2>
+                                        {includedList}
+                                    </div>
+                                )}
                             </div>
                         </section>
 
@@ -588,32 +626,6 @@ export default async function ServicePage({ params }: PageProps) {
                                 prevLabel={isEs ? "Foto anterior" : "Previous photo"}
                                 nextLabel={isEs ? "Foto siguiente" : "Next photo"}
                             />
-                        </div>
-                    </section>
-                )}
-
-                {/* What's included (from Supabase) */}
-                {groups.length > 0 && (
-                    <section className="mx-auto max-w-5xl px-6 py-12">
-                        <h2 className={h2Class} style={displayFont}>
-                            {isEs ? "Qué incluye" : "What's included"}
-                        </h2>
-                        <div className={`mt-6 ${groups.length > 1 ? "grid gap-8 sm:grid-cols-2" : "max-w-xl"}`}>
-                            {groups.map((group, gi) => (
-                                <div key={gi}>
-                                    {group.title && (
-                                        <h3 className="mb-3 text-base font-semibold text-[#D0B078]">{group.title}</h3>
-                                    )}
-                                    <ul className="space-y-2.5 text-white/80">
-                                        {group.items.map((item, i) => (
-                                            <li key={i} className="flex gap-3">
-                                                <Check aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-[#D0B078]" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
                         </div>
                     </section>
                 )}
