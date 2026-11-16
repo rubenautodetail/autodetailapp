@@ -853,12 +853,19 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         const styleLabel = getVehicleBodyStyleLabel(
           vehicle ? normalizeVehicleBodyStyle(vehicle.type) : line.bodyStyle, lineLocale,
         );
-        const serviceName = hasMixedServices ? line.serviceName : undefined;
+        // The quote carries the catalog's (English) names; the booking's own
+        // service and add-on objects carry the names in the page language.
+        const clientService = vehicle ? serviceForBookingVehicle(vehicle) : null;
+        const serviceName = hasMixedServices ? (clientService?.name ?? line.serviceName) : undefined;
+        const clientAddOns = vehicle ? addOnsForBookingVehicle(vehicle) : [];
+        const addOnNames = clientAddOns.length === (line.addOns?.length ?? 0)
+          ? clientAddOns.map((addOn) => addOn.name)
+          : line.addOns?.map((addOn) => addOn.name);
         return {
           key: vehicle?.id ?? `${line.bodyStyle}-${index}`,
           label: vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : styleLabel,
           sublabel: vehicle ? [styleLabel, serviceName].filter(Boolean).join(' · ') : serviceName,
-          ...(perVehicleServices ? { details: line.addOns?.map((addOn) => addOn.name) } : {}),
+          ...(perVehicleServices ? { details: addOnNames } : {}),
           total: line.total,
         };
       });

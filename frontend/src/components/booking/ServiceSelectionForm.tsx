@@ -651,6 +651,7 @@ export default function ServiceSelectionForm({
                                     <PricingSummary
                                         service={{
                                             ...selectedService,
+                                            name: bookingServiceLabel(locale) || selectedService.name,
                                             basePrice: priceQuote?.vehicles[0]?.servicePrice ?? selectedService.basePrice,
                                         }}
                                         addOns={serviceMode === 'per-vehicle' ? [] : selectedAddOns}
@@ -702,7 +703,7 @@ export default function ServiceSelectionForm({
                                                                 </p>
                                                                 <p className="text-xs text-[#A5B0D1]">
                                                                     {getVehicleBodyStyleLabel(style, locale)}
-                                                                    {hasMixedServices && line?.serviceName ? ` · ${line.serviceName}` : ''}
+                                                                    {hasMixedServices && line?.serviceName ? ` · ${assignedServiceFor(vehicle.id)?.name ?? line.serviceName}` : ''}
                                                                 </p>
                                                                 {serviceMode === 'per-vehicle' && addOnsForBookingVehicle(vehicle).map((addOn) => (
                                                                     <p key={addOn.id} className="text-[11px] text-[#8994B8]">+ {addOn.name}</p>
@@ -715,7 +716,9 @@ export default function ServiceSelectionForm({
                                                                 {line && (
                                                                     <p className="mt-0.5 text-[11px] text-[#A5B0D1]">
                                                                         {line.priceSource === 'override'
-                                                                            ? locale === 'es' ? 'Personalizado' : 'Custom price'
+                                                                            ? locale === 'es'
+                                                                                ? `Precio para ${getVehicleBodyStyleLabel(style, locale)}`
+                                                                                : `${getVehicleBodyStyleLabel(style, locale)} price`
                                                                             : locale === 'es' ? 'Precio base' : 'Base price'}
                                                                     </p>
                                                                 )}

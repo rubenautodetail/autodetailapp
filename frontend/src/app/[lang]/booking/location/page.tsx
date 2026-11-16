@@ -42,6 +42,7 @@ export default function LocationPage({ params }: LocationPageProps) {
     selectedService,
     allVehiclesAssigned,
     vehicleSummaryLines,
+    bookingServiceLabel,
     selectedAddOns,
     customerLocation,
     setLocation,
@@ -464,7 +465,7 @@ export default function LocationPage({ params }: LocationPageProps) {
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-4">
               <PricingSummary
-                service={selectedService}
+                service={{ ...selectedService, name: bookingServiceLabel(locale) || selectedService.name }}
                 addOns={selectedAddOns}
                 subtotal={subtotal}
                 serviceFee={serviceFee}

@@ -32,6 +32,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     selectedService,
     allVehiclesAssigned,
     vehicleSummaryLines,
+    bookingServiceLabel,
     selectedAddOns,
     customerLocation,
     selectedDate,
@@ -489,7 +490,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-4">
               <PricingSummary
-                service={selectedService}
+                service={{ ...selectedService, name: bookingServiceLabel(locale) || selectedService.name }}
                 addOns={selectedAddOns}
                 subtotal={subtotal}
                 serviceFee={serviceFee}
