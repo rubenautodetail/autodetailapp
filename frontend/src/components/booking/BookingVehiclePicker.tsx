@@ -188,7 +188,7 @@ export function BookingVehiclePicker({
 
     return (
         <>
-            {bookingVehicles.length === 0 && (
+            {bookingVehicles.length === 0 && garageVehicles.length > 0 && (
                 <div className="mb-4 rounded-[20px] border border-dashed border-[#D0B078]/50 bg-[#D0B078]/5 p-4 sm:p-5">
                     <button
                         type="button"
@@ -626,6 +626,18 @@ export function BookingVehiclePicker({
                                             ? 'Elige la opción más parecida. Los precios de abajo se actualizan al instante.'
                                             : 'Choose the closest match. Prices below update instantly.'}
                                 />
+                                {bookingVehicles.length === 0 && garageVehicles.length === 0 && (
+                                    <p className="mt-3 text-xs text-[#8994B8]">
+                                        {isEs ? '¿Quieres agregar marca y modelo? ' : 'Want to add make & model? '}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewVehicleForm(true)}
+                                            className="font-semibold text-[#D0B078] underline underline-offset-4 hover:text-white"
+                                        >
+                                            {isEs ? 'Agrega tu auto' : 'Add your car'}
+                                        </button>
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>
