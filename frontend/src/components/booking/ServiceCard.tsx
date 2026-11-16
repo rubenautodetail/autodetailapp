@@ -172,7 +172,7 @@ export function ServiceCard({
             <div
                 className={`${isExpanded ? 'mt-2 block border-t border-[#2C355E] pt-2' : 'hidden'} text-sm leading-relaxed sm:mt-0 sm:mb-4 sm:border-0 sm:pt-0 sm:text-base sm:flex-grow sm:min-h-[3rem]`}
             >
-                <ul className="text-[#A5B0D1] leading-snug space-y-0.5 max-h-56 overflow-y-auto pr-1 -mr-4 gold-scrollbar">
+                <ul className="text-[#A5B0D1] leading-snug space-y-0.5 sm:columns-2 sm:gap-x-8">
                     {displayDescription
                         .split('\n')
                         .map((line: string) => line.trim())
@@ -182,13 +182,13 @@ export function ServiceCard({
                             if (isHeader) {
                                 const label = line.replace(/[>—<]/g, '').trim();
                                 return (
-                                    <li key={idx} className="text-center text-[#D0B078] font-bold text-sm sm:text-base uppercase tracking-wide pt-1 first:pt-0">
+                                    <li key={idx} className="text-center text-[#D0B078] font-bold text-sm sm:text-base uppercase tracking-wide pt-1 first:pt-0 sm:[column-span:all]">
                                         {label}
                                     </li>
                                 );
                             }
                             return (
-                                <li key={idx} className="flex gap-2">
+                                <li key={idx} className="flex gap-2 break-inside-avoid">
                                     <span className="text-white/40 shrink-0">•</span>
                                     <span>{line}</span>
                                 </li>
