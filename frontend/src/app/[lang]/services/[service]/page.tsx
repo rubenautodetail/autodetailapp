@@ -31,6 +31,7 @@ import { NEIGHBORHOODS } from "@/lib/seo/locations";
 import JsonLd from "@/components/seo/JsonLd";
 import PhotoCarousel from "@/components/landing/PhotoCarousel";
 import LanguageSwitch from "@/components/landing/LanguageSwitch";
+import FloatingWhatsApp from "@/components/landing/FloatingWhatsApp";
 import { serviceName, serviceSlug } from "@/lib/seo/serviceNames";
 
 /**
@@ -333,14 +334,6 @@ export default async function ServicePage({ params }: PageProps) {
                     </Link>
                     <div className="flex items-center gap-2 sm:gap-3">
                         <LanguageSwitch locale={locale} href={`/${isEs ? "en" : "es"}/services/${slugOf(svc, isEs ? "en" : "es")}`} />
-                        {waHref && (
-                            <a
-                                href={waHref}
-                                className={`hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block ${focusRing}`}
-                            >
-                                WhatsApp
-                            </a>
-                        )}
                         <Link
                             href={bookHref}
                             className={`rounded-full bg-[#D0B078] px-5 py-2 text-sm font-semibold text-[#131835] transition-colors hover:bg-[#dcc08d] ${focusRing}`}
@@ -879,6 +872,7 @@ export default async function ServicePage({ params }: PageProps) {
                     </div>
                 </div>
             </footer>
+            <FloatingWhatsApp href={waHref} label={isEs ? 'Escríbenos por WhatsApp' : 'Message us on WhatsApp'} />
         </div>
     );
 }

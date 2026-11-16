@@ -208,14 +208,6 @@ export default async function LandingPage({
                 <div className={`absolute right-6 z-20 transition-all ${hygraph.promotionalBanner?.isActive ? 'top-24 sm:top-[64px]' : 'top-5'}`}>
                     <div className="flex items-center gap-1.5 sm:gap-3">
                         <LanguageSwitch locale={locale} href={`/${locale === 'es' ? 'en' : 'es'}`} />
-                        {waHref && (
-                            <a
-                                href={waHref}
-                                className="hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block"
-                            >
-                                WhatsApp
-                            </a>
-                        )}
                         <HeaderAccount locale={locale} />
                         <MobileNav
                             locale={locale}

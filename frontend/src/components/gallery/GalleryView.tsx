@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { i18n, type Locale } from '@/i18n-config';
 import JsonLd from '@/components/seo/JsonLd';
 import GalleryGrid from '@/components/gallery/GalleryGrid';
+import FloatingWhatsApp from '@/components/landing/FloatingWhatsApp';
 import { galleryPath, getGallery } from '@/lib/gallery';
 import { getBreadcrumbSchema } from '@/lib/seo/schema';
 
@@ -135,14 +136,6 @@ export default function GalleryView({ locale }: { locale: Locale }) {
                         >
                             {otherLocale}
                         </Link>
-                        {waHref && (
-                            <a
-                                href={waHref}
-                                className="hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block"
-                            >
-                                WhatsApp
-                            </a>
-                        )}
                         <Link
                             href={bookHref}
                             className="rounded-full bg-[#D0B078] px-5 py-2 text-sm font-semibold text-[#131835] shadow-[0_0_24px_rgba(208,176,120,0.25)] transition-transform hover:scale-[1.03]"
@@ -224,6 +217,7 @@ export default function GalleryView({ locale }: { locale: Locale }) {
                     </div>
                 </div>
             </footer>
+            <FloatingWhatsApp href={waHref} label={locale === 'es' ? 'Escríbenos por WhatsApp' : 'Message us on WhatsApp'} />
         </div>
     );
 }

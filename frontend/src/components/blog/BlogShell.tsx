@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import LanguageSwitch from "@/components/landing/LanguageSwitch";
+import FloatingWhatsApp from "@/components/landing/FloatingWhatsApp";
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 const SITE_NAME = "Lux Auto Detail Services";
@@ -42,14 +43,6 @@ export default function BlogShell({
                     </Link>
                     <div className="flex items-center gap-2 sm:gap-3">
                         <LanguageSwitch locale={locale} href={switchHref} />
-                        {waHref && (
-                            <a
-                                href={waHref}
-                                className={`hidden rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] sm:inline-block ${focusRing}`}
-                            >
-                                WhatsApp
-                            </a>
-                        )}
                         <Link
                             href={`/${locale}/booking/select`}
                             className={`rounded-full bg-[#D0B078] px-5 py-2 text-sm font-semibold text-[#131835] transition-colors hover:bg-[#dcc08d] ${focusRing}`}
@@ -83,6 +76,7 @@ export default function BlogShell({
                     </div>
                 </div>
             </footer>
+            <FloatingWhatsApp href={waHref} label={isEs ? 'Escríbenos por WhatsApp' : 'Message us on WhatsApp'} />
         </div>
     );
 }
