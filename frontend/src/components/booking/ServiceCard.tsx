@@ -108,8 +108,8 @@ export function ServiceCard({
                         className="hidden whitespace-nowrap text-right text-sm sm:block sm:text-base font-bold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors"
                     >
                         {isExpanded
-                            ? isEs ? 'Ocultar detalles' : 'Hide details'
-                            : isEs ? 'Ver detalles' : 'View details'}
+                            ? isEs ? 'Ocultar' : 'Hide'
+                            : isEs ? 'Ver qué incluye' : 'What\u2019s included'}
                     </button>
                 )}
 
@@ -164,8 +164,8 @@ export function ServiceCard({
                     aria-expanded={isExpanded}
                     className="mt-1 self-start text-[11px] font-semibold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors sm:hidden"                >
                     {isExpanded
-                        ? isEs ? 'Ocultar detalles' : 'Hide details'
-                        : isEs ? 'Ver detalles' : 'View details'}
+                        ? isEs ? 'Ocultar' : 'Hide'
+                        : isEs ? 'Ver qué incluye' : 'What\u2019s included'}
                 </button>
             )}
 
