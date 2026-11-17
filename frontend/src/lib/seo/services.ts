@@ -62,7 +62,7 @@ export const SERVICES: DetailService[] = [
             es: 'Nuestro equipo llega directo hasta tu puerta — casa u oficina — sin manejar, sin salas de espera. Cada vehículo recibe la misma atención cuidadosa, ya sea tu auto de todos los días o el de fin de semana. CERO RIESGO — primero revisa, después autorizas el pago.',
         },
         priceFrom: 70,
-        durationMin: 120,
+        durationMin: 80,
         includes: [
             { en: 'Hand wash to prevent paint damage', es: 'Lavado a mano para no arañar la pintura' },
             { en: 'Wheel & tire deep clean', es: 'Limpieza profunda de rines y llantas' },

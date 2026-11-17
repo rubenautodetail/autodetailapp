@@ -212,6 +212,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             url: `/${locale}/services/${slug}`,
             locale: locale === "es" ? "es_ES" : "en_US",
         },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+        },
     };
 }
 

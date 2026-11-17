@@ -41,13 +41,13 @@ export default async function AboutPage({ params }: { params: Promise<{ lang: st
     const points = es
         ? [
               'Llevamos nuestra propia agua y equipo: tú solo nos das acceso al auto.',
-              'Revisas el trabajo antes de pagar. El pago se autoriza solo cuando lo apruebas.',
+              'Retenemos tu tarjeta al reservar y solo se cobra cuando apruebas el trabajo.',
               'Te atendemos en español y en inglés.',
               'El recubrimiento cerámico se aplica en un ambiente controlado en nuestro taller de Doral.',
           ]
         : [
               'We bring our own water and equipment — you just give us access to the car.',
-              'You check the work before you pay. The payment is authorized only after you approve it.',
+              'We place a hold on your card when you book, and you are charged only after you approve the work.',
               'We speak English and Spanish.',
               'Ceramic coating is applied in a controlled environment at our Doral facility.',
           ];

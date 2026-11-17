@@ -153,7 +153,7 @@ export function resolveLanding(
             `Looking for ${kw} in ${place}? Lux offers professional ceramic coating at our Doral facility — bring your car in for a controlled, dust-free environment that ensures the best possible finish. We proudly serve clients across Miami-Dade, including ${place}.`,
             `Transparent pricing from ${price}, secure payment, and service in English or Spanish. Call or text us at 305-988-4449 to book your appointment at our Doral facility.`,
         ] : [
-            `Looking for ${kw} in ${place}? Lux brings our vetted team to ${place} residents' doors — no driving to a shop, no waiting rooms. ${t(neighborhood.blurb, locale)}`,
+            `Looking for ${kw} in ${place}? Lux brings our team to ${place} residents' doors — no driving to a shop, no waiting rooms. ${t(neighborhood.blurb, locale)}`,
             `We cover ZIP codes ${neighborhood.zips.slice(0, 4).join(', ')} and nearby areas like ${neighborhood.landmarks.join(', ')}. Transparent pricing from ${price}, secure online payment, and service in English or Spanish. Book your ${name} online or by WhatsApp.`,
             ...extraIntro,
         ],

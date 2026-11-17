@@ -65,6 +65,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             modifiedTime: post.updated ?? post.published,
             ...(post.cover ? { images: [{ url: post.cover.src, alt: post.cover.alt[locale] }] } : {}),
         },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            ...(post.cover ? { images: [post.cover.src] } : {}),
+        },
     };
 }
 

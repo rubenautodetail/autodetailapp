@@ -114,6 +114,11 @@ export async function generateMetadata({
             url: content.path,
             locale: locale === 'es' ? 'es_ES' : 'en_US',
         },
+        twitter: {
+            card: 'summary_large_image',
+            title: content.title,
+            description: content.metaDescription,
+        },
     };
 }
 
@@ -513,10 +518,10 @@ export default async function ServiceCityPage({
                     <div className="grid gap-6 md:grid-cols-3">
                         {[
                             { icon: service.id === 'ceramic-coating' ? '🏭' : '🚐', t: es ? (service.id === 'ceramic-coating' ? 'Trae tu auto' : 'Vamos a ti') : (service.id === 'ceramic-coating' ? 'Bring your car in' : 'We come to you'), d: es ? (service.id === 'ceramic-coating' ? 'Visítanos en nuestro taller en Doral.' : `A tu casa u oficina en ${neighborhood.name}.`) : (service.id === 'ceramic-coating' ? 'Visit our facility in Doral.' : `To your home or office in ${neighborhood.name}.`) },
-                            { icon: '🛡️', t: es ? 'Verificados y asegurados' : 'Vetted & insured', d: es ? 'Cada miembro de nuestro equipo es revisado y asegurado.' : 'Every team member is background-checked and insured.' },
+                            { icon: '🛡️', t: es ? 'Detalladores con experiencia' : 'Experienced detailers', d: es ? 'Cada detallador tiene experiencia y trae su propio equipo, generador y agua. Lo revisamos antes de aprobarlo.' : 'Every detailer is experienced and brings their own equipment, generator and water. We review it before approving them.' },
                             { icon: '💳', t: es ? 'Precio transparente' : 'Transparent pricing', d: es ? 'Ves el precio antes de confirmar. Sin sorpresas.' : 'See your price before you confirm. No surprises.' },
                             { icon: '🗣️', t: es ? 'Bilingüe' : 'Bilingual', d: es ? 'Reserva y atención en español o inglés.' : 'Book and get service in English or Spanish.' },
-                            { icon: '⭐', t: es ? '5.0 de calificación' : '5.0 average rating', d: es ? 'Más de 90 detalles completados.' : 'Over 90 details completed.' },
+                            { icon: '⭐', t: es ? '800+ detalles completados' : '800+ details completed', d: es ? 'En casas, oficinas y condominios de todo Miami-Dade.' : 'At homes, offices and condos all over Miami-Dade.' },
                             { icon: '📱', t: es ? 'Reserva en 60s' : 'Book in 60s', d: es ? 'En línea o por WhatsApp, cuando quieras.' : 'Online or by text, whenever you want.' },
                         ].map((v) => (
                             <div key={v.t} className="glass-card rounded-2xl p-6">

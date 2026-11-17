@@ -26,30 +26,9 @@ export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ lang: locale }));
 }
 
-// ─── Fallback testimonials (used until HyGraph has data) ──────────────────────
-const FALLBACK_TESTIMONIALS: Testimonial[] = [
-    {
-        authorName: 'Marcus T.',
-        location: 'Miami, FL',
-        rating: 5,
-        text: "My car hasn't looked this good since I drove it off the lot. The Lux team did an incredible job on the full detail.",
-        vehicleType: '2022 BMW M3',
-    },
-    {
-        authorName: 'Sofia R.',
-        location: 'Coral Gables, FL',
-        rating: 5,
-        text: 'Booked online in 2 minutes, they showed up on time, and my SUV looks brand new. Absolutely worth every penny.',
-        vehicleType: '2023 Range Rover Sport',
-    },
-    {
-        authorName: 'James K.',
-        location: 'Brickell, FL',
-        rating: 5,
-        text: 'The engine bay cleaning alone was worth it. These guys are true professionals. Booking monthly from now on.',
-        vehicleType: '2021 Porsche 911 Carrera',
-    },
-];
+// Only real testimonials from HyGraph are shown. No placeholders.
+const FALLBACK_TESTIMONIALS: Testimonial[] = [];
+
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
     const { lang } = await params;
     const locale = lang === 'es' ? 'es' : 'en';
@@ -121,7 +100,7 @@ export default async function LandingPage({
         ? dbServices.map((s, i) => ({
             title: serviceName(s, locale),
             desc: locale === 'es' ? (s.description_es ?? s.description ?? '') : (s.description ?? ''),
-            price: `From $${Math.round(s.base_price)}`,
+            price: `${locale === 'es' ? 'Desde' : 'From'} $${Math.round(s.base_price)}`,
             icon: SERVICE_ICONS[s.name] ?? SERVICE_ICONS[Object.keys(SERVICE_ICONS).find(k => s.name.toLowerCase().includes(k.toLowerCase())) ?? ''] ?? ['\u26a1', '\ud83e\udea1', '\u2728', '\ud83c\udfc6'][i] ?? '\u2728',
             image: serviceImages[i]?.imageUrl,
             href: servicePath(s, locale) as string | undefined,
@@ -260,10 +239,9 @@ export default async function LandingPage({
 
             {/* ─── Stats ─────────────────────────────────────────────────────── */}
             < section className="border-y border-white/5 bg-white/[0.02]" >
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-2 gap-2 sm:gap-4 text-center">
                     {[
-                        { value: '90+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
-                        { value: '5', label: locale === 'es' ? 'Calificación promedio' : 'Average rating' },
+                        { value: '800+', label: locale === 'es' ? 'Detalles completados' : 'Details completed' },
                         { value: '16', label: locale === 'es' ? 'Ciudades servidas' : 'Cities served' },
                     ].map((stat) => (
                         <div key={stat.label} className="space-y-1">
@@ -438,7 +416,8 @@ export default async function LandingPage({
                 )
             }
 
-            {/* ─── Testimonials ───────────────────────────────────────────────── */}
+            {/* ─── Testimonials (only when there are real ones) ───────────────── */}
+            {testimonials.length > 0 && (
             <section className="py-14 sm:py-24 px-6">
                 <div className="max-w-5xl mx-auto">
                     <div className="text-center mb-10 sm:mb-16 space-y-3">
@@ -469,6 +448,7 @@ export default async function LandingPage({
                     </div>
                 </div>
             </section>
+            )}
 
             {/* ─── Work With Us ───────────────────────────────────────────────── */}
             <section className="py-16 px-6 border-y border-white/5">
