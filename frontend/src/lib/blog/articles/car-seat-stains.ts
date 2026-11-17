@@ -23,8 +23,8 @@ export const carSeatStains: BlogPost = {
         es: "Cómo quitar manchas de los asientos del carro (y cuándo llamar a un profesional)",
     },
     seoTitle: {
-        en: "How to Get Stains Out of Car Seats: Cloth Seat Guide",
-        es: "Cómo Quitar Manchas de los Asientos del Carro: Guía",
+        en: "How to Clean Cloth Car Seats and Get Stains Out",
+        es: "Cómo Limpiar y Quitar Manchas de los Asientos del Carro",
     },
     description: {
         en: "How to clean car seat stains at home: coffee, water rings and built-up dirt on cloth seats, the mistake that makes stains worse, and when to call a pro.",

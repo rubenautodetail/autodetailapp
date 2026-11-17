@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     const siteName = dict.common.siteName;
     const description = dict.common.tagline;
 
-    const homeTitle = validLang === 'es' ? 'Lavado de Autos a Domicilio en Miami-Dade | Car Wash Móvil' : 'Mobile Car Detailing & Car Wash in Miami | We Come to You';
+    const homeTitle = validLang === 'es' ? 'Lavado de Carros a Domicilio y Car Wash Móvil en Miami-Dade' : 'Mobile Car Detailing & Car Wash in Miami | We Come to You';
 
     return {
         title: {
