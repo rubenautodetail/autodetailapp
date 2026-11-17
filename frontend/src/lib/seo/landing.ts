@@ -123,7 +123,7 @@ export function resolveLanding(
                 `¿Buscas ${kw} en ${place}? Lux ofrece recubrimiento cerámico profesional en nuestro taller en Doral — trae tu auto para un ambiente controlado y libre de polvo que garantiza el mejor acabado posible. Atendemos con orgullo a clientes de todo Miami-Dade, incluyendo ${place}.`,
                 `Precios transparentes desde ${price}, pago seguro y atención en español. Llámanos o escríbenos al 305-988-4449 para agendar tu cita en nuestro taller en Doral.`,
             ] : [
-                `¿Buscas ${kw} en ${place}? Lux lleva a nuestro equipo verificado hasta la puerta de los residentes de ${place} — sin manejar hasta un taller ni esperar en fila. ${t(neighborhood.blurb, locale)}`,
+                `¿Buscas ${kw} en ${place}? Lux lleva a nuestro equipo hasta la puerta de los residentes de ${place} — sin manejar hasta un taller ni esperar en fila. ${t(neighborhood.blurb, locale)}`,
                 `Cubrimos los códigos postales ${neighborhood.zips.slice(0, 4).join(', ')} y zonas cercanas como ${neighborhood.landmarks.join(', ')}. Precios transparentes desde ${price}, pago seguro y atención en español. Reserva tu ${name} en línea o por WhatsApp.`,
                 ...extraIntro,
             ],
