@@ -380,7 +380,7 @@ export function BookingVehiclePicker({
                         <span className="text-lg leading-none">+</span>
                         {isEs ? 'Agregar otro auto' : 'Add another car'}
                     </button>
-                    <p className="mt-2 text-center text-xs text-[#8994B8]">
+                    <p className="mt-2 text-center text-sm font-medium text-white">
                         {isEs
                             ? '¿Reservas para más de un auto? Agrégalos aquí.'
                             : 'Booking more than one car? Add them here.'}
@@ -569,6 +569,27 @@ export function BookingVehiclePicker({
                         </button>
                     )}
                 </div>
+
+                {!isOpen && bookingVehicles.length === 0 && selectedBodyStyle && (
+                    <div className="mt-4">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setNewVehicleType(selectedBodyStyle);
+                                setShowNewVehicleForm(true);
+                            }}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#D0B078]/50 px-3 py-2.5 text-sm font-bold text-[#D0B078] transition-colors hover:text-white"
+                        >
+                            <span className="text-lg leading-none">+</span>
+                            {isEs ? 'Agregar otro auto' : 'Add another car'}
+                        </button>
+                        <p className="mt-2 text-center text-sm font-medium text-white">
+                            {isEs
+                                ? '¿Reservas para más de un auto? Agrégalos aquí.'
+                                : 'Booking more than one car? Add them here.'}
+                        </p>
+                    </div>
+                )}
 
                 <p className="sr-only" aria-live="polite">
                     {isPriceLoading
