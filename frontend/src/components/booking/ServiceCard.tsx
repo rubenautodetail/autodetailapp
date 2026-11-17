@@ -15,8 +15,7 @@ import React, { useState } from 'react';
 import { Service } from '@/contexts';
 import { Card } from '@/components/ui/Card';
 import { slugify, toDisplayName } from '@/lib/seo/serviceNames';
-
-const DESCRIPTION_TRUNCATE_LENGTH = 110;
+import { getServiceSummary, isPopularService } from '@/lib/booking/serviceSummaries';
 
 interface ServiceCardProps {
     service: Service;
@@ -48,9 +47,13 @@ export function ServiceCard({
     // service.name already comes in the customer's language, so this matches the
     // address of the full service page (/en/services/express-detail, /es/services/detallado-express).
     const fullServiceHref = `/${locale}/services/${slugify(toDisplayName(service.name))}`;
+    const summary = getServiceSummary(service.name, locale);
+    const popular = isPopularService(service.name);
+    // Until a vehicle is chosen the price is a "from" price; the list heading already
+    // says so once, so the card doesn't repeat it.
     const metaCaption = isPriceLoading
         ? isEs ? 'Actualizando precio…' : 'Updating price…'
-        : priceCaption;
+        : isEstimate ? undefined : priceCaption;
 
     return (
         <Card
@@ -76,53 +79,60 @@ export function ServiceCard({
                 }
             }}
         >
-            {/* Desktop top row: service name, centered meta caption, and View details
-                where the selected checkmark used to sit. */}
-            <div className="flex items-center justify-between gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-baseline sm:gap-3">
+            <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <h3 className={`text-sm sm:text-base font-bold leading-tight break-words ${isSelected ? 'text-[#D0B078]' : 'text-[#FFFFFF]'}`}>
-                        {service.name}
-                    </h3>
-
-                    {/* Mobile meta line: duration and price context in one glance. */}
-                    <p className="mt-0.5 text-[11px] font-medium text-[#8994B8] sm:hidden" aria-live="polite">
-                        {service.duration} {isEs ? 'min' : 'mins'}
-                        {metaCaption ? ` · ${metaCaption}` : ''}
-                    </p>
-                </div>
-
-                {metaCaption && (
-                    <p className="hidden whitespace-nowrap text-sm sm:block sm:text-base font-bold uppercase tracking-wide text-[#D0B078]">
-                        {metaCaption}
-                    </p>
-                )}
-
-                {description && (
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsExpanded((prev) => !prev);
-                        }}
-                        aria-expanded={isExpanded}
-                        className="hidden whitespace-nowrap text-right text-sm sm:block sm:text-base font-bold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors"
-                    >
-                        {isExpanded
-                            ? isEs ? 'Ocultar' : 'Hide'
-                            : isEs ? 'Ver qué incluye' : 'What\u2019s included'}
-                    </button>
-                )}
-
-                {/* Mobile right edge: price plus selection circle. */}
-                <div className="flex shrink-0 items-center gap-2.5 sm:hidden" aria-live="polite">
-                    <span key={`m-${visiblePrice}-${isEstimate}`} className="price-changed whitespace-nowrap text-right">
-                        {isEstimate && (
-                            <span className="mr-1 text-[11px] font-semibold text-[#8994B8]">
-                                {isEs ? 'Desde' : 'From'}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h3 className={`text-base font-bold leading-tight break-words ${isSelected ? 'text-[#D0B078]' : 'text-[#FFFFFF]'}`}>
+                            {service.name}
+                        </h3>
+                        {popular && (
+                            <span className="rounded-full bg-[#D0B078] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#131835]">
+                                {isEs ? 'Más popular' : 'Most popular'}
                             </span>
                         )}
-                        <span className="text-xs font-semibold text-[#A5B0D1]">$</span>
-                        <span className={`ml-0.5 text-base font-bold ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
+                    </div>
+
+                    {summary && (
+                        <p className="mt-1.5 text-sm leading-snug text-[#A5B0D1]">{summary}</p>
+                    )}
+
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-[#8994B8]" aria-live="polite">
+                        <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>
+                            {service.duration} {isEs ? 'min' : 'mins'}
+                            {metaCaption ? ` · ${metaCaption}` : ''}
+                        </span>
+                    </p>
+
+                    {description && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsExpanded((prev) => !prev);
+                            }}
+                            aria-expanded={isExpanded}
+                            className="mt-2 text-sm font-semibold text-[#D0B078] transition-colors hover:text-[#D0B078]/80"
+                        >
+                            {isExpanded
+                                ? isEs ? 'Ocultar' : 'Hide'
+                                : isEs ? 'Ver qué incluye' : 'What\u2019s included'}
+                            <span aria-hidden="true"> {isExpanded ? '▴' : '▾'}</span>
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex shrink-0 flex-col items-end gap-2" aria-live="polite">
+                    <span key={`${visiblePrice}-${isEstimate}`} className="price-changed whitespace-nowrap text-right">
+                        {isEstimate && (
+                            <span className="mr-1 text-xs font-semibold text-[#8994B8]">
+                                {isEs ? 'desde' : 'from'}
+                            </span>
+                        )}
+                        <span className="text-sm font-semibold text-[#A5B0D1]">$</span>
+                        <span className={`ml-0.5 text-xl font-bold ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
                             {(Number(visiblePrice) || 0).toFixed(2)}
                         </span>
                     </span>
@@ -138,39 +148,8 @@ export function ServiceCard({
                 </div>
             </div>
 
-            {/* Desktop price row */}
-            <div className="mt-1 hidden sm:block" aria-live="polite">
-                <span key={`${visiblePrice}-${isEstimate}`} className="price-changed">
-                    {isEstimate && (
-                        <span className="mr-1 text-sm font-semibold text-[#8994B8]">
-                            {isEs ? 'Desde' : 'From'}
-                        </span>
-                    )}
-                    <span className="text-[#A5B0D1] text-sm font-semibold">$</span>
-                    <span className={`text-xl font-bold ml-0.5 ${isEstimate ? 'text-[#A5B0D1]' : 'text-[#D0B078]'}`}>
-                        {(Number(visiblePrice) || 0).toFixed(2)}
-                    </span>
-                </span>
-            </div>
-
-            {/* Mobile disclosure: the description is on demand, not in the way. */}
-            {description && (
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsExpanded((prev) => !prev);
-                    }}
-                    aria-expanded={isExpanded}
-                    className="mt-1 self-start text-[11px] font-semibold text-[#D0B078] hover:text-[#D0B078]/80 transition-colors sm:hidden"                >
-                    {isExpanded
-                        ? isEs ? 'Ocultar' : 'Hide'
-                        : isEs ? 'Ver qué incluye' : 'What\u2019s included'}
-                </button>
-            )}
-
             <div
-                className={`${isExpanded ? 'mt-2 block border-t border-[#2C355E] pt-2' : 'hidden'} text-sm leading-relaxed sm:mt-0 sm:mb-4 sm:border-0 sm:pt-0 sm:text-base sm:flex-grow sm:min-h-[3rem]`}
+                className={`${isExpanded ? 'mt-3 block border-t border-[#2C355E] pt-3' : 'hidden'} text-sm leading-relaxed sm:text-base`}
             >
                 <ul className="text-[#A5B0D1] leading-snug space-y-0.5 sm:columns-2 sm:gap-x-8">
                     {displayDescription
@@ -208,41 +187,6 @@ export function ServiceCard({
                 </a>
             </div>
 
-            <div className="hidden items-center justify-between mt-auto pt-3 border-t border-[#2C355E] gap-2 sm:flex">
-                <div className="flex items-center text-[#8994B8] text-xs shrink-0">
-                    <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
-                    <span>
-                        {service.duration} {isEs ? 'min' : 'mins'}
-                    </span>
-                </div>
-
-                <div
-                    className={`
-                        px-3 py-1.5 rounded-full font-semibold text-xs transition-all duration-300 shrink-0
-                        ${isSelected
-                            ? 'bg-[#131835] border border-[#D0B078] text-[#D0B078]'
-                            : 'bg-[#D0B078] text-[#131835] hover:shadow-[var(--shadow-glow)]'
-                        }
-                    `}
-                >
-                    {isSelected
-                        ? isEs ? 'Seleccionado' : 'Selected'
-                        : isEs ? 'Seleccionar' : 'Select'}
-                </div>
-            </div>
         </Card>
     );
 }

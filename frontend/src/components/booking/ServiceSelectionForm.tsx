@@ -790,6 +790,11 @@ export default function ServiceSelectionForm({
                                             ? "Elige uno de los servicios arriba para comenzar con tu reserva."
                                             : "Choose one of the services above to begin your booking."}
                                     </p>
+                                    <ul className="mt-5 space-y-2 text-left text-sm text-[#D6DCF0]">
+                                        <li>🔒 {locale === "es" ? "Pagas solo cuando apruebas el trabajo" : "You pay only when you approve the work"}</li>
+                                        <li>📅 {locale === "es" ? "Cancela gratis hasta 3 h antes" : "Cancel free up to 3h before"}</li>
+                                        <li>✅ {locale === "es" ? "Garantía de satisfacción" : "Satisfaction guaranteed"}</li>
+                                    </ul>
                                     <Button
                                         fullWidth
                                         variant="secondary"

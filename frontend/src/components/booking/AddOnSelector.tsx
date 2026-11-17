@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AddOn } from "@/contexts";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
+import { getAddOnSummary, isPopularAddOn } from "@/lib/booking/serviceSummaries";
 
 interface AddOnSelectorProps {
   addOns: AddOn[];
@@ -42,6 +43,9 @@ export default function AddOnSelector({
       <h3 className={`text-xl font-bold text-white ${forLabel ? "mb-1" : "mb-2"}`}>
         {isEs ? "Extras Opcionales" : "Optional Enhancements"}
       </h3>
+      <p className="-mt-2 text-sm text-[#A5B0D1]">
+        {isEs ? "Agrega a tu reserva · totalmente opcional" : "Add to your booking · totally optional"}
+      </p>
       {forLabel && (
         <p className="mb-2 text-sm font-semibold text-[#D0B078]" aria-live="polite">{forLabel}</p>
       )}
@@ -79,9 +83,19 @@ export default function AddOnSelector({
                 className="flex cursor-pointer items-center justify-between gap-3"
               >
                 <div className="min-w-0">
-                  <span className={`block text-base font-bold leading-tight ${selected ? "text-[#D0B078]" : "text-white"}`}>
-                    {addOn.name}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`block text-base font-bold leading-tight ${selected ? "text-[#D0B078]" : "text-white"}`}>
+                      {addOn.name}
+                    </span>
+                    {isPopularAddOn(addOn.name) && (
+                      <span className="rounded-full bg-[#D0B078] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#131835]">
+                        {isEs ? "Popular" : "Popular"}
+                      </span>
+                    )}
+                  </div>
+                  {getAddOnSummary(addOn.name, locale) && (
+                    <p className="mt-1 text-sm leading-snug text-[#A5B0D1]">{getAddOnSummary(addOn.name, locale)}</p>
+                  )}
                   {lines.length > 0 && (
                     <button
                       type="button"
