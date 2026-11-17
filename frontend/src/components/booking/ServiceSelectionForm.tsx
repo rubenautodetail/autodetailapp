@@ -420,13 +420,13 @@ export default function ServiceSelectionForm({
                             <p className="mb-4 mt-1 text-sm text-[#A5B0D1]">
                                 {serviceMode === 'per-vehicle' && activeVehicle
                                     ? locale === "es"
-                                        ? `Asigna un servicio a cada vehículo. Precios para el ${shortVehicleName(activeVehicle)}.`
-                                        : `Assign a service to each vehicle. Prices shown for the ${shortVehicleName(activeVehicle)}.`
+                                        ? <>Asigna un servicio a cada vehículo. Precios para el <span className="font-semibold text-[#D0B078]">{shortVehicleName(activeVehicle)}</span>.</>
+                                        : <>Assign a service to each vehicle. Prices shown for the <span className="font-semibold text-[#D0B078]">{shortVehicleName(activeVehicle)}</span>.</>
                                     : hasPricingTarget
                                         ? pricingTargetLabel
                                             ? locale === "es"
-                                                ? `Precios para ${pricingTargetLabel}.`
-                                                : `Prices shown for your ${pricingTargetLabel}.`
+                                                ? <>Precios para <span className="font-semibold text-[#D0B078]">{pricingTargetLabel}</span>.</>
+                                                : <>Prices shown for your <span className="font-semibold text-[#D0B078]">{pricingTargetLabel}</span>.</>
                                             : locale === "es"
                                                 ? "Precios para los vehículos seleccionados."
                                                 : "Prices shown for the selected vehicles."
