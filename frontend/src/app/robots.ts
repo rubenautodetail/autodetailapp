@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dtailwash.com';
 
-const PUBLIC_ALLOW = ['/', '/en/', '/es/'];
+const PUBLIC_ALLOW = ['/', '/en/', '/es/', '/en/booking/select', '/es/booking/select'];
 const PRIVATE_DISALLOW = [
     '/en/admin/',
     '/es/admin/',
