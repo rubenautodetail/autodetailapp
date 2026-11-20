@@ -215,9 +215,21 @@ const earnLabels = {
         min: "min",
         allVehicles: "All vehicles",
         saveChanges: "Save changes",
+        approved: "Approved",
+        pending: "Pending review",
+        notSent: "Not sent yet",
+        request: "Request",
+        remove: "Remove",
+        sumApproved: "approved",
+        sumPending: "pending review",
+        sumAvailable: "available to request",
+        hintApproved: "You receive jobs for this service.",
+        hintPending: "Waiting for admin approval. No jobs yet for this service.",
+        hintNotSent: "Tap Save changes to send it for review.",
+        hintAvailable: "Not selected yet. Tap Request and the admin will review it.",
         bodyStyles: {
             sedan: "Sedan", coupe: "Coupe", suv: "SUV", large_suv: "Large SUV",
-            pickup: "Pickup", minivan: "Minivan", van: "Van", other: "Other",
+            pickup: "Truck", minivan: "Minivan", van: "Van", other: "Other",
         } as Record<string, string>,
     },
     es: {
@@ -227,6 +239,18 @@ const earnLabels = {
         min: "min",
         allVehicles: "Todos los vehículos",
         saveChanges: "Guardar cambios",
+        approved: "Aprobado",
+        pending: "En revisión",
+        notSent: "Sin enviar",
+        request: "Pedir",
+        remove: "Quitar",
+        sumApproved: "aprobados",
+        sumPending: "en revisión",
+        sumAvailable: "disponibles para pedir",
+        hintApproved: "Recibes trabajos de este servicio.",
+        hintPending: "Esperando aprobación del admin. Aún no recibes trabajos de este servicio.",
+        hintNotSent: "Toca Guardar cambios para enviarlo a revisión.",
+        hintAvailable: "Aún no lo tienes. Toca Pedir y el admin lo revisará.",
         bodyStyles: {
             sedan: "Sedán", coupe: "Cupé", suv: "SUV", large_suv: "SUV grande",
             pickup: "Camioneta", minivan: "Minivan", van: "Van", other: "Otro",
@@ -749,20 +773,24 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                     <SectionTitle>
                         <span className="flex items-center gap-3">
                             {labels.skillsTitle}
-                            {skillsPendingReview && (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-yellow-400/15 text-yellow-400 border border-yellow-400/30">
-                                    {labels.skillsPending}
-                                </span>
-                            )}
-                            {!skillsPendingReview && verifiedServiceIds.length > 0 && (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/30">
-                                    ✓ {labels.skillsVerified}
-                                </span>
-                            )}
                         </span>
                     </SectionTitle>
 
                     <p className="text-xs text-[#5E698F] -mt-2">{labels.skillsDesc}</p>
+
+                    {catalogServices.length > 0 && (() => {
+                        const el = earnLabels[lang];
+                        const approvedN = catalogServices.filter((x) => selectedServiceIds.includes(x.id) && verifiedServiceIds.includes(x.id)).length;
+                        const pendingN = catalogServices.filter((x) => selectedServiceIds.includes(x.id) && !verifiedServiceIds.includes(x.id)).length;
+                        const availableN = catalogServices.filter((x) => !selectedServiceIds.includes(x.id)).length;
+                        return (
+                            <div className="flex flex-wrap gap-1.5 text-[11px] font-bold">
+                                <span className="px-2.5 py-1 rounded-full bg-green-400/10 text-green-300 border border-green-400/30">{approvedN} {el.sumApproved}</span>
+                                <span className="px-2.5 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30">{pendingN} {el.sumPending}</span>
+                                <span className="px-2.5 py-1 rounded-full text-[#8994B8] border border-[#2C355E]">{availableN} {el.sumAvailable}</span>
+                            </div>
+                        );
+                    })()}
 
                     {catalogServices.length === 0 ? (
                         <p className="text-xs text-[#5E698F]">{labels.skillsNone}</p>
@@ -785,40 +813,36 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                 const chips = allSame
                                     ? [{ key: "all", label: el.allVehicles, earn: amounts[0].earn }]
                                     : amounts.map((a) => ({ key: a.bodyStyle, label: el.bodyStyles[a.bodyStyle] ?? a.bodyStyle, earn: a.earn }));
+                                const isNotSent = isSelected && !initialServiceIds.includes(svc.id);
+                                const status: "approved" | "pending" | "available" =
+                                    isSelected ? (isVerified ? "approved" : "pending") : "available";
+                                const hint =
+                                    status === "approved" ? el.hintApproved
+                                    : status === "pending" ? (isNotSent ? el.hintNotSent : el.hintPending)
+                                    : el.hintAvailable;
                                 return (
                                     <div
                                         key={svc.id}
                                         className={`rounded-xl border p-3 transition-all ${
-                                            isSelected
-                                                ? "bg-[#D0B078]/10 border-[#D0B078]/50"
+                                            status === "approved"
+                                                ? "bg-green-400/5 border-green-400/40"
+                                                : status === "pending"
+                                                ? "bg-amber-400/5 border-amber-400/40"
                                                 : "bg-transparent border-[#2C355E]"
                                         }`}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => toggleServiceId(svc.id)}
-                                                aria-pressed={isSelected}
-                                                className={`flex items-center gap-3 flex-1 min-w-0 text-left ${
-                                                    isSelected ? "text-[#D0B078]" : "text-[#8994B8] hover:text-white/70"
-                                                }`}
-                                            >
-                                                <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 transition-all ${
-                                                    isSelected
-                                                        ? "bg-[#D0B078] border-[#D0B078]"
-                                                        : "bg-transparent border-[#4A5578]"
-                                                }`}>
-                                                    {isSelected && (
-                                                        <svg className="w-2.5 h-2.5 text-[#131835]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    )}
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className={`text-sm font-semibold flex-1 min-w-0 ${status === "available" ? "text-[#CFD5EE]" : "text-white"}`}>
+                                                {displayName}
+                                            </span>
+                                            {status === "approved" && (
+                                                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-green-400/15 text-green-300">✓ {el.approved}</span>
+                                            )}
+                                            {status === "pending" && (
+                                                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-amber-400/15 text-amber-300">
+                                                    {isNotSent ? el.notSent : `⏳ ${el.pending}`}
                                                 </span>
-                                                <span className="text-sm font-medium truncate">{displayName}</span>
-                                                {isVerified && isSelected && (
-                                                    <span className="text-[9px] font-bold uppercase text-green-400 border border-green-400/30 rounded-full px-1.5 py-0.5">✓</span>
-                                                )}
-                                            </button>
+                                            )}
                                             {lines.length > 0 && (
                                                 <button
                                                     type="button"
@@ -829,14 +853,31 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                                     ⓘ {isOpen ? el.hide : el.whatsIncluded} {isOpen ? "▴" : "▾"}
                                                 </button>
                                             )}
+                                            {status === "available" ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleServiceId(svc.id)}
+                                                    className="shrink-0 text-xs font-bold rounded-full px-3.5 py-1.5 bg-[#D0B078] text-[#131835] hover:opacity-90 transition-opacity"
+                                                >
+                                                    {el.request}
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleServiceId(svc.id)}
+                                                    className="shrink-0 text-xs font-medium text-[#8994B8] hover:text-red-300 underline underline-offset-2 transition-colors"
+                                                >
+                                                    {el.remove}
+                                                </button>
+                                            )}
                                         </div>
 
                                         {chips.length > 0 && (
-                                            <div className="mt-2 ml-7 flex flex-wrap gap-1.5">
+                                            <div className="mt-2 flex flex-wrap gap-1.5">
                                                 {chips.map((c) => (
                                                     <span
                                                         key={c.key}
-                                                        className={`text-[11px] border border-[#2C355E] rounded-full px-2 py-0.5 ${isSelected ? "text-[#CFD5EE]" : "text-[#8994B8]"}`}
+                                                        className="text-[11px] border border-[#2C355E] rounded-full px-2 py-0.5 text-[#CFD5EE]"
                                                     >
                                                         {c.label} <b className="text-green-400">${c.earn % 1 === 0 ? c.earn.toFixed(0) : c.earn.toFixed(2)}</b>
                                                     </span>
@@ -844,8 +885,10 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                             </div>
                                         )}
 
+                                        <p className="mt-2 text-[11px] text-[#8994B8]">{hint}</p>
+
                                         {isOpen && lines.length > 0 && (
-                                            <div className="mt-3 ml-7 pt-3 border-t border-dashed border-[#2C355E] text-xs text-[#CFD5EE] leading-relaxed">
+                                            <div className="mt-3 pt-3 border-t border-dashed border-[#2C355E] text-xs text-[#CFD5EE] leading-relaxed">
                                                 <ul className="list-disc pl-4 space-y-0.5">
                                                     {lines.map((l, idx) => (
                                                         <li key={idx}>{l}</li>

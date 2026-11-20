@@ -11,7 +11,8 @@ import { contractorAmount } from '@/lib/contractorPay';
 
 export const dynamic = 'force-dynamic';
 
-const BODY_STYLES = ['sedan', 'coupe', 'suv', 'large_suv', 'pickup', 'minivan', 'van', 'other'] as const;
+// Vehicle types shown to technicians (pickup is shown as "Truck").
+const BODY_STYLES = ['sedan', 'suv', 'large_suv', 'pickup', 'minivan'] as const;
 
 export async function GET(req: NextRequest) {
     try {
