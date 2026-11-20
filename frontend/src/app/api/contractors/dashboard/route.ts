@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server';
 import { getApproxMap } from '@/lib/geo/approxLocation';
 import { contractorServesZip } from '@/lib/zones';
+import { contractorAmount } from '@/lib/contractorPay';
 
 // Only the first jobs get a map, to keep Mapbox usage small.
 const MAX_INCOMING_MAPS = 3;
@@ -73,7 +74,7 @@ export async function GET(req: NextRequest) {
             // Only city + ZIP until accepted — hide full address
             area: [b.city, b.zip_code].filter(Boolean).join(', '),
             approxMap: incomingMaps[i] ?? null,
-            totalAmount: (Number(b.total_amount) || 0) * 0.70,
+            totalAmount: contractorAmount(Number(b.total_amount) || 0),
             status: b.status,
         }));
 
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
                         : [b.address, b.city, b.zip_code].filter(Boolean).join(', '))
                     : [b.city, b.zip_code].filter(Boolean).join(', '),
                 addressHidden: !ADDRESS_REVEALED_STATUSES.includes(b.status),
-                totalAmount: (Number(b.total_amount) || 0) * 0.70,
+                totalAmount: contractorAmount(Number(b.total_amount) || 0),
                 status: b.status,
             }));
 
@@ -124,9 +125,6 @@ export async function GET(req: NextRequest) {
             const monday = new Date(nowEastern);
             monday.setDate(monday.getDate() - (dow === 0 ? 6 : dow - 1));
             const weekStart = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
-
-            const CONTRACTOR_SHARE = 0.70;
-            const contractorAmount = (raw: number) => raw * CONTRACTOR_SHARE;
 
             earnings.total = (completed ?? []).reduce((s, b) => s + contractorAmount(Number(b.total_amount) || 0), 0);
             earnings.thisWeek = (completed ?? [])

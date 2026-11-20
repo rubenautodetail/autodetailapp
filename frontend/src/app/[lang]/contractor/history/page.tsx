@@ -17,6 +17,7 @@ export default function ContractorHistory({ params }: Props) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
+    const [openId, setOpenId] = useState<number | null>(null);
 
     useEffect(() => {
         const load = async () => {
@@ -107,7 +108,13 @@ export default function ContractorHistory({ params }: Props) {
                 <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
                     <div className="divide-y divide-[#2C355E]">
                         {jobs.length > 0 ? jobs.map((job) => (
-                            <div key={job.id} className="px-6 py-4 flex items-start justify-between gap-4">
+                            <div key={job.id} className="px-6 py-4">
+                              <button
+                                type="button"
+                                onClick={() => setOpenId(openId === job.id ? null : job.id)}
+                                aria-expanded={openId === job.id}
+                                className="w-full flex items-start justify-between gap-4 text-left"
+                              >
                                 <div className="space-y-1 min-w-0">
                                     {job.confirmation_code && (
                                         <p className="font-mono text-sm font-semibold text-[#D0B078]">{job.confirmation_code}</p>
@@ -155,6 +162,38 @@ export default function ContractorHistory({ params }: Props) {
                                         );
                                     })()}
                                 </div>
+                              </button>
+                              {openId === job.id && (() => {
+                                  const bp = bookingPayouts[String(job.id)];
+                                  const m: Record<string, string> = { ach: 'ACH', zelle: 'Zelle', check: lang === 'es' ? 'Cheque' : 'Check', cash: lang === 'es' ? 'Efectivo' : 'Cash' };
+                                  const paid = bp && bp.status === 'paid';
+                                  const rows: [string, string][] = [
+                                      [lang === 'es' ? 'Código' : 'Code', job.confirmation_code || '—'],
+                                      [lang === 'es' ? 'Servicio' : 'Service', job.service_name || (lang === 'es' ? 'Servicio de Detallado' : 'Detailing Service')],
+                                      [lang === 'es' ? 'Fecha' : 'Date', job.date ? new Date(job.date + 'T12:00:00Z').toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }) : '—'],
+                                      [lang === 'es' ? 'Tu pago' : 'Your pay', `$${Number(job.total_amount || 0).toFixed(2)}`],
+                                      [lang === 'es' ? 'Estado del pago' : 'Payout status', paid ? (lang === 'es' ? 'Pagado' : 'Paid') : (lang === 'es' ? 'Pendiente' : 'Pending')],
+                                  ];
+                                  if (paid && bp.paid_at) rows.push([lang === 'es' ? 'Pagado el' : 'Paid on', new Date(bp.paid_at).toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })]);
+                                  if (paid && bp.payment_method) rows.push([lang === 'es' ? 'Método' : 'Method', m[bp.payment_method] ?? bp.payment_method]);
+                                  return (
+                                      <div className="mt-3 pt-3 border-t border-dashed border-[#2C355E] space-y-1.5 text-sm">
+                                          {rows.map(([k, v]) => (
+                                              <div key={k} className="flex justify-between gap-4">
+                                                  <span className="text-[#5E698F]">{k}</span>
+                                                  <span className="text-white text-right">{v}</span>
+                                              </div>
+                                          ))}
+                                          {job.review_rating ? (
+                                              <div className="pt-2">
+                                                  <span className="text-[#5E698F]">{lang === 'es' ? 'Reseña del cliente' : 'Customer review'}: </span>
+                                                  <span className="text-yellow-400">{'★'.repeat(job.review_rating)}</span>
+                                                  {job.review_comment && <p className="mt-1 text-[#A5B0D1] italic">&ldquo;{job.review_comment}&rdquo;</p>}
+                                              </div>
+                                          ) : null}
+                                      </div>
+                                  );
+                              })()}
                             </div>
                         )) : (
                             <div className="py-14 text-center">

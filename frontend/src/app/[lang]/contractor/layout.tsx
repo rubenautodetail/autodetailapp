@@ -4,13 +4,11 @@ import { use, useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ContractorProvider } from '@/contexts/ContractorContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut } from 'lucide-react';
 
 interface ContractorLayoutProps {
     children: React.ReactNode;
@@ -24,16 +22,7 @@ export default function ContractorLayout({
     const { lang } = use(params);
     const pathname = usePathname();
     const router = useRouter();
-    const { profile, isLoading: authLoading, logout } = useAuth();
-    const [loggingOut, setLoggingOut] = useState(false);
-
-    const handleLogout = async () => {
-        setLoggingOut(true);
-        try {
-            await logout();
-        } catch { /* ignore */ }
-        router.replace(`/${lang}/contractor/login`);
-    };
+    const { profile, isLoading: authLoading } = useAuth();
 
     // Auth guard — contractor or admin only; pending contractors go to pending page
     // Only redirect when profile is fully loaded to prevent race conditions.
@@ -113,7 +102,6 @@ export default function ContractorLayout({
 
     return (
         <ErrorBoundary lang={lang}>
-        <ContractorProvider>
             <Toaster position="top-center" />
             <NotificationToast notifications={notifications.filter(n => !n.is_read)} onDismiss={dismissToast} />
 
@@ -171,14 +159,25 @@ export default function ContractorLayout({
                                         </Link>
                                     );
                                 })}
-                                <button
-                                    onClick={handleLogout}
-                                    disabled={loggingOut}
-                                    className="ml-2 px-3 py-2 rounded-md text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors duration-200 flex items-center gap-1.5 disabled:opacity-50"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    {lang === 'es' ? 'Salir' : 'Log out'}
-                                </button>
+                            </div>
+
+                            {/* Language switch EN | ES — keeps the same page */}
+                            <div className="flex items-center rounded-full border border-white/15 overflow-hidden text-xs font-bold" role="group" aria-label="Language">
+                                {(['en', 'es'] as const).map((code) => (
+                                    <Link
+                                        key={code}
+                                        href={(pathname || `/${lang}/contractor/dashboard`).replace(/^\/(en|es)(?=\/|$)/, `/${code}`)}
+                                        hrefLang={code}
+                                        aria-current={lang === code ? 'true' : undefined}
+                                        className={`px-3 py-1.5 transition-colors ${
+                                            lang === code
+                                                ? 'bg-[#D0B078] text-[#131835]'
+                                                : 'text-white/60 hover:text-white'
+                                        }`}
+                                    >
+                                        {code.toUpperCase()}
+                                    </Link>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -242,19 +241,9 @@ export default function ContractorLayout({
                             </svg>
                             {lang === 'es' ? 'Ajustes' : 'Settings'}
                         </Link>
-                        {/* Logout tab */}
-                        <button
-                            onClick={handleLogout}
-                            disabled={loggingOut}
-                            className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-medium text-red-400/70 hover:text-red-400 transition-colors disabled:opacity-50"
-                        >
-                            <LogOut className="w-6 h-6" />
-                            {lang === 'es' ? 'Salir' : 'Log out'}
-                        </button>
                     </div>
                 </nav>
             </div>
-        </ContractorProvider>
         </ErrorBoundary>
     );
 }

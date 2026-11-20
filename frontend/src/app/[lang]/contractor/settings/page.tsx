@@ -205,6 +205,45 @@ const END_HOUR_OPTIONS = buildHourOptions(12, 20);
 // Canonical English day keys — used as stable identifiers regardless of locale
 const ALL_DAYS_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+// ── Service earnings labels (technician pay per vehicle type) ─────────────────
+
+const earnLabels = {
+    en: {
+        whatsIncluded: "What\u2019s included",
+        hide: "Hide",
+        estTime: "Estimated time",
+        min: "min",
+        allVehicles: "All vehicles",
+        saveChanges: "Save changes",
+        bodyStyles: {
+            sedan: "Sedan", coupe: "Coupe", suv: "SUV", large_suv: "Large SUV",
+            pickup: "Pickup", minivan: "Minivan", van: "Van", other: "Other",
+        } as Record<string, string>,
+    },
+    es: {
+        whatsIncluded: "Qué incluye",
+        hide: "Ocultar",
+        estTime: "Tiempo estimado",
+        min: "min",
+        allVehicles: "Todos los vehículos",
+        saveChanges: "Guardar cambios",
+        bodyStyles: {
+            sedan: "Sedán", coupe: "Cupé", suv: "SUV", large_suv: "SUV grande",
+            pickup: "Camioneta", minivan: "Minivan", van: "Van", other: "Otro",
+        } as Record<string, string>,
+    },
+};
+
+interface ServiceEarning {
+    id: number;
+    name: string;
+    nameEs: string | null;
+    description: string | null;
+    descriptionEs: string | null;
+    durationMinutes: number | null;
+    earnings: { bodyStyle: string; earn: number }[];
+}
+
 // ── Shared UI primitives ──────────────────────────────────────────────────────
 
 function SectionCard({ children }: { children: React.ReactNode }) {
@@ -372,14 +411,16 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const [fullName, setFullName] = useState("");
     const [phone, setPhone] = useState("");
     const [bio, setBio] = useState("");
-    const [savingProfile, setSavingProfile] = useState(false);
 
     // ── Section B — My Skills ─────────────────────────────────────────────────
     const [catalogServices, setCatalogServices] = useState<CatalogServiceBasic[]>([]);
     const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
-    const [savingSkills, setSavingSkills] = useState(false);
     const [skillsPendingReview, setSkillsPendingReview] = useState<boolean>(false);
     const [verifiedServiceIds, setVerifiedServiceIds] = useState<number[]>([]);
+    const [serviceEarnings, setServiceEarnings] = useState<ServiceEarning[]>([]);
+    const [openInfoId, setOpenInfoId] = useState<number | null>(null);
+    const [initialServiceIds, setInitialServiceIds] = useState<number[]>([]);
+    const [savingAll, setSavingAll] = useState(false);
 
     // ── Section C — Service Area (dormant — geo-routing not active) ───────────
     const [serviceAreaInput, setServiceAreaInput] = useState("");
@@ -393,7 +434,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const [selectedDays, setSelectedDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
     const [startHour, setStartHour] = useState(8);
     const [endHour, setEndHour] = useState(18);
-    const [savingSchedule, setSavingSchedule] = useState(false);
 
     // ── Section E — Payment Info ──────────────────────────────────────────────
     const [paymentPreference, setPaymentPreference] = useState("");
@@ -402,12 +442,10 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const [bankAccountNumber, setBankAccountNumber] = useState("");
     const [bankRoutingNumber, setBankRoutingNumber] = useState("");
     const [bankAccountType, setBankAccountType] = useState("checking");
-    const [savingPayment, setSavingPayment] = useState(false);
 
     // ── Section F — Notifications ─────────────────────────────────────────────
     const [notifEmail, setNotifEmail] = useState(true);
     const [notifPush, setNotifPush] = useState(false);
-    const [savingNotifs, setSavingNotifs] = useState(false);
 
     // ── Section G — Deactivate ───────────────────────────────────────────────
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
@@ -450,6 +488,9 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
             setSelectedServiceIds(
                 Array.from(new Set([...(p.service_type_ids ?? []), ...(p.verified_service_type_ids ?? [])]))
             );
+            setInitialServiceIds(
+                Array.from(new Set([...(p.service_type_ids ?? []), ...(p.verified_service_type_ids ?? [])]))
+            );
             setVerifiedServiceIds(p.verified_service_type_ids ?? []);
             setSkillsPendingReview(p.skills_pending_review ?? false);
 
@@ -486,6 +527,17 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
             .catch(() => {/* non-fatal */});
     }, []);
 
+    // ── Load technician pay per service (server returns only the technician's pay) ──
+    useEffect(() => {
+        if (!session?.access_token) return;
+        fetch("/api/contractors/service-earnings", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+            .then((r) => (r.ok ? r.json() : { services: [] }))
+            .then((d) => setServiceEarnings(d.services ?? []))
+            .catch(() => {/* non-fatal */});
+    }, [session?.access_token]);
+
     // ── Generic PATCH ─────────────────────────────────────────────────────────
     const patchProfile = async (payload: Record<string, unknown>) => {
         const res = await fetch("/api/contractors/profile", {
@@ -501,41 +553,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
             throw new Error((err as { error?: string }).error ?? "Unknown error");
         }
         return res.json();
-    };
-
-    // ── Section A handler ─────────────────────────────────────────────────────
-    const handleSaveProfile = async () => {
-        setSavingProfile(true);
-        try {
-            await patchProfile({ full_name: fullName, phone, bio });
-            toast.success(labels.saved);
-        } catch {
-            toast.error(labels.errorSave);
-        } finally {
-            setSavingProfile(false);
-        }
-    };
-
-    // ── Section B handler — skills ─────────────────────────────────────────────
-    const handleSaveSkills = async () => {
-        setSavingSkills(true);
-        try {
-            const result = (await patchProfile({ service_type_ids: selectedServiceIds })) as {
-                profile?: { verified_service_type_ids?: number[] | null };
-            };
-            // The server drops approval for anything just unchecked and never adds any
-            // here — keep the green checks in step with what is actually still approved.
-            setVerifiedServiceIds(
-                result?.profile?.verified_service_type_ids ??
-                    verifiedServiceIds.filter((id) => selectedServiceIds.includes(id))
-            );
-            setSkillsPendingReview(true);
-            toast.success(labels.skillsSaved);
-        } catch {
-            toast.error(labels.errorSave);
-        } finally {
-            setSavingSkills(false);
-        }
     };
 
     const toggleServiceId = (id: number) => {
@@ -558,48 +575,11 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
         }
     };
 
-    // ── Section D handler — schedule ──────────────────────────────────────────
-    const handleSaveSchedule = async () => {
-        setSavingSchedule(true);
-        try {
-            await patchProfile({
-                availability: { days: selectedDays, start_hour: startHour, end_hour: endHour },
-            });
-            toast.success(labels.saved);
-        } catch {
-            toast.error(labels.errorSave);
-        } finally {
-            setSavingSchedule(false);
-        }
-    };
-
     // ── Toggle day ────────────────────────────────────────────────────────────
     const toggleDay = (dayEn: string) => {
         setSelectedDays((prev) =>
             prev.includes(dayEn) ? prev.filter((d) => d !== dayEn) : [...prev, dayEn]
         );
-    };
-
-    // ── Section E — Payment info save ────────────────────────────────────────
-    const handleSavePayment = async () => {
-        setSavingPayment(true);
-        try {
-            const payload: Record<string, unknown> = { payment_preference: paymentPreference };
-            if (paymentPreference === "zelle") {
-                payload.zelle_contact = zelleContact;
-            } else if (paymentPreference === "direct_deposit") {
-                payload.bank_name = bankName;
-                payload.bank_account_number = bankAccountNumber;
-                payload.bank_routing_number = bankRoutingNumber;
-                payload.bank_account_type = bankAccountType;
-            }
-            await patchProfile(payload);
-            toast.success(labels.paymentSaved);
-        } catch {
-            toast.error(labels.errorSave);
-        } finally {
-            setSavingPayment(false);
-        }
     };
 
     // ── Section F handler — notifications ────────────────────────────────────
@@ -619,18 +599,59 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
         }
     }, []);
 
-    const handleSaveNotifications = async () => {
-        setSavingNotifs(true);
+    // ── One save for the whole page ───────────────────────────────────────────
+    const handleSaveAll = async () => {
+        setSavingAll(true);
         try {
-            localStorage.setItem(
-                "contractor_notif_prefs",
-                JSON.stringify({ email: notifEmail, push: notifPush })
-            );
-            toast.success(labels.saved);
+            const payload: Record<string, unknown> = {
+                full_name: fullName,
+                phone,
+                bio,
+                availability: { days: selectedDays, start_hour: startHour, end_hour: endHour },
+            };
+            // Skills only when changed: saving them sends the selection to admin review.
+            const skillsChanged =
+                selectedServiceIds.length !== initialServiceIds.length ||
+                selectedServiceIds.some((id) => !initialServiceIds.includes(id));
+            if (skillsChanged) payload.service_type_ids = selectedServiceIds;
+
+            if (paymentPreference) {
+                payload.payment_preference = paymentPreference;
+                if (paymentPreference === "zelle") {
+                    payload.zelle_contact = zelleContact;
+                } else if (paymentPreference === "direct_deposit") {
+                    payload.bank_name = bankName;
+                    payload.bank_account_number = bankAccountNumber;
+                    payload.bank_routing_number = bankRoutingNumber;
+                    payload.bank_account_type = bankAccountType;
+                }
+            }
+
+            const result = (await patchProfile(payload)) as {
+                profile?: { verified_service_type_ids?: number[] | null };
+            };
+
+            if (skillsChanged) {
+                setVerifiedServiceIds(
+                    result?.profile?.verified_service_type_ids ??
+                        verifiedServiceIds.filter((id) => selectedServiceIds.includes(id))
+                );
+                setSkillsPendingReview(true);
+                setInitialServiceIds(selectedServiceIds);
+            }
+
+            try {
+                localStorage.setItem(
+                    "contractor_notif_prefs",
+                    JSON.stringify({ email: notifEmail, push: notifPush })
+                );
+            } catch { /* localStorage unavailable — non-fatal */ }
+
+            toast.success(skillsChanged ? labels.skillsSaved : labels.saved);
         } catch {
             toast.error(labels.errorSave);
         } finally {
-            setSavingNotifs(false);
+            setSavingAll(false);
         }
     };
 
@@ -721,13 +742,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                             rows={3}
                         />
                     </div>
-
-                    <SaveBtn
-                        onClick={handleSaveProfile}
-                        loading={savingProfile}
-                        label={labels.saveProfile}
-                        loadingLabel={labels.saving}
-                    />
                 </SectionCard>
 
                 {/* ── Section B: My Skills ────────────────────────────────── */}
@@ -753,48 +767,102 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                     {catalogServices.length === 0 ? (
                         <p className="text-xs text-[#5E698F]">{labels.skillsNone}</p>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-3">
                             {catalogServices.map((svc) => {
                                 const isSelected = selectedServiceIds.includes(svc.id);
                                 const isVerified = verifiedServiceIds.includes(svc.id);
+                                const el = earnLabels[lang];
+                                const info = serviceEarnings.find((x) => x.id === svc.id);
+                                const displayName = (lang === "es" && info?.nameEs) || svc.name;
+                                const description = lang === "es" ? (info?.descriptionEs || info?.description) : info?.description;
+                                const lines = (description ?? "")
+                                    .split(/\r?\n/)
+                                    .map((l) => l.replace(/^[\s\-•*]+/, "").trim())
+                                    .filter(Boolean);
+                                const isOpen = openInfoId === svc.id;
+                                const amounts = info?.earnings ?? [];
+                                const allSame = amounts.length > 0 && amounts.every((a) => a.earn === amounts[0].earn);
+                                const chips = allSame
+                                    ? [{ key: "all", label: el.allVehicles, earn: amounts[0].earn }]
+                                    : amounts.map((a) => ({ key: a.bodyStyle, label: el.bodyStyles[a.bodyStyle] ?? a.bodyStyle, earn: a.earn }));
                                 return (
-                                    <button
+                                    <div
                                         key={svc.id}
-                                        type="button"
-                                        onClick={() => toggleServiceId(svc.id)}
-                                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
+                                        className={`rounded-xl border p-3 transition-all ${
                                             isSelected
-                                                ? "bg-[#D0B078]/10 border-[#D0B078]/50 text-[#D0B078]"
-                                                : "bg-transparent border-[#2C355E] text-[#5E698F] hover:border-white/20 hover:text-white/60"
+                                                ? "bg-[#D0B078]/10 border-[#D0B078]/50"
+                                                : "bg-transparent border-[#2C355E]"
                                         }`}
                                     >
-                                        <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 transition-all ${
-                                            isSelected
-                                                ? "bg-[#D0B078] border-[#D0B078]"
-                                                : "bg-transparent border-[#4A5578]"
-                                        }`}>
-                                            {isSelected && (
-                                                <svg className="w-2.5 h-2.5 text-[#131835]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                </svg>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleServiceId(svc.id)}
+                                                aria-pressed={isSelected}
+                                                className={`flex items-center gap-3 flex-1 min-w-0 text-left ${
+                                                    isSelected ? "text-[#D0B078]" : "text-[#8994B8] hover:text-white/70"
+                                                }`}
+                                            >
+                                                <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 transition-all ${
+                                                    isSelected
+                                                        ? "bg-[#D0B078] border-[#D0B078]"
+                                                        : "bg-transparent border-[#4A5578]"
+                                                }`}>
+                                                    {isSelected && (
+                                                        <svg className="w-2.5 h-2.5 text-[#131835]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </span>
+                                                <span className="text-sm font-medium truncate">{displayName}</span>
+                                                {isVerified && isSelected && (
+                                                    <span className="text-[9px] font-bold uppercase text-green-400 border border-green-400/30 rounded-full px-1.5 py-0.5">✓</span>
+                                                )}
+                                            </button>
+                                            {lines.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOpenInfoId(isOpen ? null : svc.id)}
+                                                    aria-expanded={isOpen}
+                                                    className="shrink-0 text-xs font-medium text-[#CFD5EE] border border-[#2C355E] rounded-full px-2.5 py-1 hover:border-white/30 transition-colors"
+                                                >
+                                                    ⓘ {isOpen ? el.hide : el.whatsIncluded} {isOpen ? "▴" : "▾"}
+                                                </button>
                                             )}
-                                        </span>
-                                        <span className="text-sm font-medium flex-1">{svc.name}</span>
-                                        {isVerified && isSelected && (
-                                            <span className="text-[9px] font-bold uppercase text-green-400 border border-green-400/30 rounded-full px-1.5 py-0.5">✓</span>
+                                        </div>
+
+                                        {chips.length > 0 && (
+                                            <div className="mt-2 ml-7 flex flex-wrap gap-1.5">
+                                                {chips.map((c) => (
+                                                    <span
+                                                        key={c.key}
+                                                        className={`text-[11px] border border-[#2C355E] rounded-full px-2 py-0.5 ${isSelected ? "text-[#CFD5EE]" : "text-[#8994B8]"}`}
+                                                    >
+                                                        {c.label} <b className="text-green-400">${c.earn % 1 === 0 ? c.earn.toFixed(0) : c.earn.toFixed(2)}</b>
+                                                    </span>
+                                                ))}
+                                            </div>
                                         )}
-                                    </button>
+
+                                        {isOpen && lines.length > 0 && (
+                                            <div className="mt-3 ml-7 pt-3 border-t border-dashed border-[#2C355E] text-xs text-[#CFD5EE] leading-relaxed">
+                                                <ul className="list-disc pl-4 space-y-0.5">
+                                                    {lines.map((l, idx) => (
+                                                        <li key={idx}>{l}</li>
+                                                    ))}
+                                                </ul>
+                                                {info?.durationMinutes ? (
+                                                    <p className="mt-2 text-[#8994B8]">
+                                                        {el.estTime}: {info.durationMinutes} {el.min}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        )}
+                                    </div>
                                 );
                             })}
                         </div>
                     )}
-
-                    <SaveBtn
-                        onClick={handleSaveSkills}
-                        loading={savingSkills}
-                        label={labels.saveSkills}
-                        loadingLabel={labels.saving}
-                    />
                 </SectionCard>
 
                 {/* ── Section C: Availability Toggle ──────────────────────── */}
@@ -877,13 +945,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                             </select>
                         </div>
                     </div>
-
-                    <SaveBtn
-                        onClick={handleSaveSchedule}
-                        loading={savingSchedule}
-                        label={labels.saveAvailability}
-                        loadingLabel={labels.saving}
-                    />
                 </SectionCard>
 
                 {/* ── Section E: Payment Info ──────────────────────────────── */}
@@ -955,14 +1016,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                         </>
                     )}
 
-                    {paymentPreference && (
-                        <SaveBtn
-                            onClick={handleSavePayment}
-                            loading={savingPayment}
-                            label={labels.savePayment}
-                            loadingLabel={labels.saving}
-                        />
-                    )}
                 </SectionCard>
 
                 {/* ── Section F: Notifications ────────────────────────────── */}
@@ -999,14 +1052,19 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                             />
                         </div>
                     </div>
-
-                    <SaveBtn
-                        onClick={handleSaveNotifications}
-                        loading={savingNotifs}
-                        label={labels.saveNotifications}
-                        loadingLabel={labels.saving}
-                    />
                 </SectionCard>
+
+                {/* ── One Save button for the whole page ─────────────────── */}
+                <div className="sticky bottom-20 sm:bottom-4 z-30">
+                    <button
+                        type="button"
+                        onClick={handleSaveAll}
+                        disabled={savingAll}
+                        className="w-full py-3.5 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl shadow-lg shadow-black/40 hover:opacity-90 disabled:opacity-50 transition-all"
+                    >
+                        {savingAll ? labels.saving : earnLabels[lang].saveChanges}
+                    </button>
+                </div>
 
                 {/* ── Section G: Account ──────────────────────────────────── */}
                 <SectionCard>

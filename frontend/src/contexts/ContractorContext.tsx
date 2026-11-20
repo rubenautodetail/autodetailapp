@@ -80,9 +80,8 @@ function mapBookingToRequest(booking: BookingRow): ServiceRequest {
     serviceId: 'S-N/A',
     serviceName: booking.service_name || 'Auto Detailing',
     address,
-    estimatedTotal: (typeof booking.total_amount === 'string'
-      ? parseFloat(booking.total_amount)
-      : (Number(booking.total_amount) || 0)) * 0.70,
+    // The customer total and the pay percentage must never be computed in the browser.
+    estimatedTotal: 0,
     notes: booking.special_instructions || undefined,
     status: (booking.status as RequestStatus) || 'pending',
     timestamp: booking.created_at || new Date().toISOString(),
