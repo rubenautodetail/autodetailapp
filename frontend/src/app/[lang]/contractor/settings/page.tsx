@@ -227,6 +227,10 @@ const earnLabels = {
         hintPending: "Waiting for admin approval. No jobs yet for this service.",
         hintNotSent: "Tap Save changes to send it for review.",
         hintAvailable: "Not selected yet. Tap Request and the admin will review it.",
+        willRemove: "Will be removed on save",
+        hintRemove: "Tap Save changes to confirm. You will stop receiving jobs for this service.",
+        undo: "Undo",
+        unsaved: "You have unsaved changes",
         bodyStyles: {
             sedan: "Sedan", coupe: "Coupe", suv: "SUV", large_suv: "Large SUV",
             pickup: "Truck", minivan: "Minivan", van: "Van", other: "Other",
@@ -251,6 +255,10 @@ const earnLabels = {
         hintPending: "Esperando aprobación del admin. Aún no recibes trabajos de este servicio.",
         hintNotSent: "Toca Guardar cambios para enviarlo a revisión.",
         hintAvailable: "Aún no lo tienes. Toca Pedir y el admin lo revisará.",
+        willRemove: "Se quitará al guardar",
+        hintRemove: "Toca Guardar cambios para confirmar. Dejarás de recibir trabajos de este servicio.",
+        undo: "Deshacer",
+        unsaved: "Tienes cambios sin guardar",
         bodyStyles: {
             sedan: "Sedán", coupe: "Cupé", suv: "SUV", large_suv: "SUV grande",
             pickup: "Camioneta", minivan: "Minivan", van: "Van", other: "Otro",
@@ -814,11 +822,13 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                     ? [{ key: "all", label: el.allVehicles, earn: amounts[0].earn }]
                                     : amounts.map((a) => ({ key: a.bodyStyle, label: el.bodyStyles[a.bodyStyle] ?? a.bodyStyle, earn: a.earn }));
                                 const isNotSent = isSelected && !initialServiceIds.includes(svc.id);
+                                const isRemoving = !isSelected && initialServiceIds.includes(svc.id);
                                 const status: "approved" | "pending" | "available" =
                                     isSelected ? (isVerified ? "approved" : "pending") : "available";
                                 const hint =
                                     status === "approved" ? el.hintApproved
                                     : status === "pending" ? (isNotSent ? el.hintNotSent : el.hintPending)
+                                    : isRemoving ? el.hintRemove
                                     : el.hintAvailable;
                                 return (
                                     <div
@@ -828,6 +838,8 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                                 ? "bg-green-400/5 border-green-400/40"
                                                 : status === "pending"
                                                 ? "bg-amber-400/5 border-amber-400/40"
+                                                : isRemoving
+                                                ? "bg-red-400/5 border-red-400/40"
                                                 : "bg-transparent border-[#2C355E]"
                                         }`}
                                     >
@@ -837,6 +849,9 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                             </span>
                                             {status === "approved" && (
                                                 <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-green-400/15 text-green-300">✓ {el.approved}</span>
+                                            )}
+                                            {isRemoving && (
+                                                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-red-400/15 text-red-300">{el.willRemove}</span>
                                             )}
                                             {status === "pending" && (
                                                 <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-amber-400/15 text-amber-300">
@@ -859,7 +874,7 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                                     onClick={() => toggleServiceId(svc.id)}
                                                     className="shrink-0 text-xs font-bold rounded-full px-3.5 py-1.5 bg-[#D0B078] text-[#131835] hover:opacity-90 transition-opacity"
                                                 >
-                                                    {el.request}
+                                                    {isRemoving ? el.undo : el.request}
                                                 </button>
                                             ) : (
                                                 <button
@@ -1099,6 +1114,12 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
 
                 {/* ── One Save button for the whole page ─────────────────── */}
                 <div className="sticky bottom-20 sm:bottom-4 z-30">
+                    {(selectedServiceIds.length !== initialServiceIds.length ||
+                        selectedServiceIds.some((id) => !initialServiceIds.includes(id))) && (
+                        <p className="mb-2 text-center text-xs font-semibold text-amber-300 bg-[#131835]/90 border border-amber-400/30 rounded-lg py-1.5">
+                            ● {earnLabels[lang].unsaved}
+                        </p>
+                    )}
                     <button
                         type="button"
                         onClick={handleSaveAll}
