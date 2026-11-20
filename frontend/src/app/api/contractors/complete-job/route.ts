@@ -73,44 +73,9 @@ export async function POST(req: NextRequest) {
             }
             contractorId = user.id;
         } else {
-            // Code-based access — no JWT required
-            const body = await req.json();
-            bookingId = body.bookingId;
-            checklist = body.checklist;
-            const confirmationCode = body.confirmationCode;
-
-            if (!bookingId || !confirmationCode) {
-                return NextResponse.json({ error: 'bookingId and confirmationCode are required' }, { status: 400 });
-            }
-
-            safeId = String(bookingId).trim();
-            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
-                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
-            }
-
-            // Verify the code matches this booking
-            const { data: booking, error } = await supabase
-                .from('bookings')
-                .select('id, contractor_id, status, confirmation_code')
-                .eq('id', safeId)
-                .single();
-
-            if (error || !booking) {
-                return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-            }
-
-            if (booking.confirmation_code !== confirmationCode) {
-                return NextResponse.json({ error: 'Invalid confirmation code' }, { status: 403 });
-            }
-
-            if (booking.status !== 'in_progress') {
-                return NextResponse.json(
-                    { error: `Cannot complete a job with status '${booking.status}'` },
-                    { status: 409 }
-                );
-            }
-
-            contractorId = booking.contractor_id;
+            // A contractor session is always required. Code-only access was removed:
+            // the confirmation code also sits in the customer's approval email.
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         if (!bookingId) {

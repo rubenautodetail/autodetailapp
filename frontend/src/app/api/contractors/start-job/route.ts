@@ -41,51 +41,13 @@ export async function POST(req: NextRequest) {
             }
             contractorId = user.id;
         } else {
-            // Code-based access — no JWT required, secured by confirmationCode
-            const body = await req.json();
-            bookingId = body.bookingId;
-            const confirmationCode = body.confirmationCode;
-
-            if (!bookingId || !confirmationCode) {
-                return NextResponse.json(
-                    { error: 'bookingId and confirmationCode are required' },
-                    { status: 400 }
-                );
-            }
-
-            safeId = String(bookingId).trim();
-            if (!/^[a-zA-Z0-9\-_]+$/.test(safeId)) {
-                return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
-            }
-
-            // Verify the code matches this booking before allowing the transition
-            const { data: booking, error } = await supabase
-                .from('bookings')
-                .select('id, contractor_id, status, confirmation_code')
-                .eq('id', safeId)
-                .single();
-
-            if (error || !booking) {
-                return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-            }
-
-            if (booking.confirmation_code !== confirmationCode) {
-                return NextResponse.json({ error: 'Invalid confirmation code' }, { status: 403 });
-            }
-
-            if (booking.status !== 'confirmed' && booking.status !== 'en_route') {
-                return NextResponse.json(
-                    { error: `Cannot start a job with status '${booking.status}'` },
-                    { status: 409 }
-                );
-            }
-
-            contractorId = booking.contractor_id ?? undefined;
+            // A contractor session is always required. Code-only access was removed:
+            // the confirmation code also sits in the customer's approval email.
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         // Logged-in contractors must press "On My Way" first (status en_route);
         // this keeps the customer's phone and the 2-hour rule from being bypassed.
-        // Legacy code-link access keeps the 2-hour check only.
         const { data: timing } = await supabase
             .from('bookings')
             .select('status, date, time_window')

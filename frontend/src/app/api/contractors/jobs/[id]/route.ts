@@ -128,7 +128,12 @@ export async function GET(
             vehicle_model: data.vehicle_model,
             vehicle_year: data.vehicle_year,
             vehicle_color: data.vehicle_color,
-            selected_add_ons: data.selected_add_ons ?? [],
+            // Add-ons go out at the contractor's share too, with no cents field:
+            // the customer's price for an add-on would reveal the margin.
+            selected_add_ons: ((data.selected_add_ons ?? []) as Array<{ name?: string; price?: number }>).map((addOn) => ({
+                name: addOn.name,
+                price: addOn.price != null ? Math.round(Number(addOn.price) * CONTRACTOR_SHARE * 100) / 100 : undefined,
+            })),
             total_amount: data.total_amount != null ? data.total_amount * CONTRACTOR_SHARE : null,
             // Camel-case aliases consumed by the job page
             scheduled_date: data.date,

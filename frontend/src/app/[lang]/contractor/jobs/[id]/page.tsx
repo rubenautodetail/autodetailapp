@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/lib/supabase/client";
 import * as contractorApi from "@/lib/api/contractor";
 import { formatTimeWindow, hoursFromNow, ON_MY_WAY_WINDOW_HOURS } from "@/lib/dateUtils";
 
@@ -192,9 +191,6 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     const { lang, id } = use(params);
     const t = translations[lang];
     const router = useRouter();
-    const searchParams = useSearchParams();
-    // ?code=CONFIRMATION_CODE bypasses JWT auth entirely
-    const codeParam = searchParams.get("code");
     const { session, isAuthenticated, isLoading: authLoading } = useAuth();
 
     const [job, setJob] = useState<JobData | null>(null);
@@ -217,47 +213,13 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     // Load job on mount
     // ---------------------------------------------------------------
     useEffect(() => {
-        if (codeParam) {
-            loadJobByCode(codeParam);
-        } else if (!authLoading && isAuthenticated) {
+        if (!authLoading && isAuthenticated) {
             loadJobDetails();
         } else if (!authLoading && !isAuthenticated) {
             setLoading(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authLoading, isAuthenticated, id, codeParam]);
-
-    // Code-based load — no JWT required
-    const loadJobByCode = async (code: string) => {
-        try {
-            setLoading(true);
-            setError(null);
-            const supabase = createClient();
-            const { data, error: fetchError } = await supabase
-                .from("bookings")
-                .select("id, status, service_name, time_window, address, city, zip_code, date, contractor_id, customer_name, special_instructions, confirmation_code, document_id, vehicle_make, vehicle_model, vehicle_year, vehicle_color, selected_add_ons, total_amount")
-                .eq('id', id)
-                .eq("confirmation_code", code)
-                .single();
-
-            if (fetchError || !data) {
-                setError("Job not found or invalid access code.");
-            } else {
-                setJob({
-                    ...data,
-                    service: data.service_name ? { name: data.service_name, name_es: data.service_name } : null,
-                    timeWindow: data.time_window,
-                    specialInstructions: data.special_instructions,
-                    location: { address: data.address, city: data.city, zipCode: data.zip_code },
-                    selected_add_ons: data.selected_add_ons ?? [],
-                });
-            }
-        } catch {
-            setError(t.error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [authLoading, isAuthenticated, id]);
 
     // Auth-based load — uses Bearer token
     const loadJobDetails = async () => {
@@ -277,7 +239,6 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     // Silent refresh (no spinner): after a status change the server releases the
     // address and phone, so the screen must fetch them again.
     const refreshJob = async () => {
-        if (codeParam) return;
         try {
             const accessToken = session?.access_token;
             const data = await contractorApi.fetchJobDetails(id, accessToken);
@@ -288,11 +249,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     };
 
     const reload = () => {
-        if (codeParam) {
-            loadJobByCode(codeParam);
-        } else {
-            loadJobDetails();
-        }
+        loadJobDetails();
     };
 
     // ---------------------------------------------------------------
@@ -329,26 +286,16 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
         setActionError(null);
         setStarting(true);
         try {
-            if (codeParam) {
-                const res = await fetch("/api/contractors/start-job", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ bookingId: id, confirmationCode: codeParam }),
-                });
-                const json = await res.json();
-                if (!res.ok) throw new Error(json.error || "Failed to start job");
-            } else {
-                const accessToken = session?.access_token;
-                const headers: HeadersInit = { "Content-Type": "application/json" };
-                if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-                const res = await fetch("/api/contractors/start-job", {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify({ bookingId: id }),
-                });
-                const json = await res.json();
-                if (!res.ok) throw new Error(json.error || "Failed to start job");
-            }
+            const accessToken = session?.access_token;
+            const headers: HeadersInit = { "Content-Type": "application/json" };
+            if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+            const res = await fetch("/api/contractors/start-job", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ bookingId: id }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || "Failed to start job");
             // Optimistically update status without a full reload
             setJob((prev) => prev ? { ...prev, status: "in_progress" } : prev);
             await refreshJob();
@@ -367,26 +314,12 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
         setActionError(null);
         setCompleting(true);
         try {
-            if (codeParam) {
-                const res = await fetch("/api/contractors/complete-job", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        bookingId: id,
-                        confirmationCode: codeParam,
-                        checklist: completionNotes,
-                    }),
-                });
-                const json = await res.json();
-                if (!res.ok) throw new Error(json.error || "Failed");
-            } else {
-                const accessToken = session?.access_token;
-                await contractorApi.completeJob(
-                    id,
-                    { checklist: completionNotes, beforePhotos: [], afterPhotos: [] },
-                    accessToken
-                );
-            }
+            const accessToken = session?.access_token;
+            await contractorApi.completeJob(
+                id,
+                { checklist: completionNotes, beforePhotos: [], afterPhotos: [] },
+                accessToken
+            );
             // Optimistically update to pending_approval
             setJob((prev) => prev ? { ...prev, status: "pending_approval" } : prev);
             // Redirect to dashboard after a short delay
@@ -410,7 +343,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     // ---------------------------------------------------------------
     // Loading state
     // ---------------------------------------------------------------
-    if ((authLoading && !codeParam) || loading) {
+    if (authLoading || loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[#131835]">
                 <div className="text-center">
@@ -422,9 +355,9 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
     }
 
     // ---------------------------------------------------------------
-    // Auth gate (only triggered when no code param)
+    // Auth gate
     // ---------------------------------------------------------------
-    if (!codeParam && !isAuthenticated) {
+    if (!isAuthenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#131835] p-4">
                 <h1 className="text-2xl font-bold text-white mb-4">{t.accessDenied}</h1>
@@ -495,7 +428,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
         : t.addressHidden;
 
     // The Supabase column is `date`; `scheduled_date` is the legacy Strapi field name.
-    // Support both so the page works whether data comes from loadJobByCode or the API.
+    // Support both so the page works with either name.
     const rawDate = job.date || job.scheduled_date;
     const formattedDate = rawDate
         ? new Date(rawDate + (rawDate.length === 10 ? 'T12:00:00' : '')).toLocaleDateString(lang === "es" ? "es-US" : "en-US", {
@@ -773,7 +706,7 @@ export default function JobDetailsPage({ params }: JobDetailsProps) {
                 )}
 
                 {/* ── START JOB — only when status = confirmed or en_route ── */}
-                {(job.status === "en_route" || (codeParam && job.status === "confirmed")) && (
+                {job.status === "en_route" && (
                     <div className="bg-[#1A2142] border border-[#2A3155] rounded-2xl p-6 mb-4">
                         <p className="text-[#A5B0D1] text-sm mb-4">
                             {lang === "es"
