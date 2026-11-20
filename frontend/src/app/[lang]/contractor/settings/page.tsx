@@ -843,22 +843,27 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                                 : "bg-transparent border-[#2C355E]"
                                         }`}
                                     >
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className={`text-sm font-semibold flex-1 min-w-0 ${status === "available" ? "text-[#CFD5EE]" : "text-white"}`}>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <span className={`text-sm font-semibold flex-1 min-w-0 break-words ${status === "available" ? "text-[#CFD5EE]" : "text-white"}`}>
                                                 {displayName}
                                             </span>
+                                            <div className="shrink-0 flex flex-col items-end gap-1">
                                             {status === "approved" && (
-                                                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-green-400/15 text-green-300">✓ {el.approved}</span>
+                                                <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-green-400/15 text-green-300">✓ {el.approved}</span>
                                             )}
                                             {isRemoving && (
-                                                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-red-400/15 text-red-300">{el.willRemove}</span>
+                                                <span className="text-right text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-red-400/15 text-red-300">{el.willRemove}</span>
                                             )}
                                             {status === "pending" && (
-                                                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-amber-400/15 text-amber-300">
+                                                <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-amber-400/15 text-amber-300">
                                                     {isNotSent ? el.notSent : `⏳ ${el.pending}`}
                                                 </span>
                                             )}
-                                            {lines.length > 0 && (
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-2 flex items-center justify-between gap-2">
+                                            {lines.length > 0 ? (
                                                 <button
                                                     type="button"
                                                     onClick={() => setOpenInfoId(isOpen ? null : svc.id)}
@@ -867,7 +872,7 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                                                 >
                                                     ⓘ {isOpen ? el.hide : el.whatsIncluded} {isOpen ? "▴" : "▾"}
                                                 </button>
-                                            )}
+                                            ) : <span />}
                                             {status === "available" ? (
                                                 <button
                                                     type="button"
