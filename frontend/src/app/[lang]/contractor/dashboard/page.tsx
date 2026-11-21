@@ -870,12 +870,20 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                             <h3 className="text-lg font-bold text-white">{lang === 'es' && detailJob.serviceNameEs ? detailJob.serviceNameEs : detailJob.serviceName}</h3>
                             {detailJob.confirmationCode && <span className="text-xs font-mono text-[#D0B078] bg-[#D0B078]/10 px-2 py-0.5 rounded">{detailJob.confirmationCode}</span>}
                         </div>
-                        <div className="mt-3 divide-y divide-[#263058] text-sm">
-                            {vehicleLine(detailJob) && (
-                                <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.vehicle}</span><span className="text-white font-medium">{vehicleLine(detailJob)}</span></div>
-                            )}
-                            {detailJob.vehicle?.color && (
-                                <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.color}</span><span className="text-white font-medium">{detailJob.vehicle.color}</span></div>
+                        {(() => {
+                            const lines = (lang === 'es' && detailJob.includesEs && detailJob.includesEs.length > 0 ? detailJob.includesEs : detailJob.includes) ?? [];
+                            return lines.length > 0 ? (
+                                <div className="mt-3">
+                                    <p className="text-xs font-bold tracking-wider text-[#9FB0E8] mb-2">{labels.whatsIncluded}</p>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm text-[#E8ECFF]">
+                                        {lines.map((l, i) => <li key={i}>{l}</li>)}
+                                    </ul>
+                                </div>
+                            ) : null;
+                        })()}
+                        <div className="mt-4 pt-1 border-t border-[#3B4575] divide-y divide-[#263058] text-sm">
+                            {(vehicleLine(detailJob) || detailJob.vehicle?.color) && (
+                                <div className="flex justify-between gap-4 py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.vehicle}</span><span className="text-white font-medium text-right">{[vehicleLine(detailJob), detailJob.vehicle?.color].filter(Boolean).join(' · ')}</span></div>
                             )}
                             {sizeLabel(detailJob) && (
                                 <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.size}</span><span className="text-white font-medium">{sizeLabel(detailJob)}</span></div>
@@ -887,17 +895,6 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                             )}
                             <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.yourPayout}</span><span className="text-[#D0B078] font-bold">${(Number(detailJob.totalAmount) || 0).toFixed(2)}</span></div>
                         </div>
-                        {(() => {
-                            const lines = (lang === 'es' && detailJob.includesEs && detailJob.includesEs.length > 0 ? detailJob.includesEs : detailJob.includes) ?? [];
-                            return lines.length > 0 ? (
-                                <div className="mt-4">
-                                    <p className="text-xs font-bold tracking-wider text-[#9FB0E8] mb-2">{labels.whatsIncluded}</p>
-                                    <ul className="list-disc pl-5 space-y-1 text-sm text-[#E8ECFF]">
-                                        {lines.map((l, i) => <li key={i}>{l}</li>)}
-                                    </ul>
-                                </div>
-                            ) : null;
-                        })()}
                         {detailJob.addOns && detailJob.addOns.length > 0 && (
                             <div className="mt-4">
                                 <p className="text-xs font-bold tracking-wider text-[#9FB0E8] mb-2">{labels.addOnsTitle}</p>
