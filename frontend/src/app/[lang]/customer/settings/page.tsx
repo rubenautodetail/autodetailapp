@@ -3,14 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { useBookingStatus, UserProfile } from '@/contexts/BookingStatusContext';
 import { NotificationToast } from '@/components/dashboard/NotificationToast';
-import { ChevronLeft, User, Bell, Shield, Moon, Save, Camera, Loader2 } from 'lucide-react';
+import { ChevronLeft, User, Bell, Shield, Moon, Save, Camera, Loader2, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SettingsPage() {
     const params = useParams();
     const lang = (params?.lang as string) || 'en';
     const isEs = lang === 'es';
+    const router = useRouter();
+    const { logout } = useAuth();
+    const [loggingOut, setLoggingOut] = useState(false);
     const { userProfile, updateProfile, settings, updateSettings, notifications, dismissNotification, isLoading } = useBookingStatus();
 
     // Local state for form values
@@ -32,6 +36,17 @@ export default function SettingsPage() {
     const handleProfileSave = async (e: React.FormEvent) => {
         e.preventDefault();
         await updateProfile(profileForm);
+    };
+
+    const handleLogout = async () => {
+        if (loggingOut) return;
+        setLoggingOut(true);
+        try {
+            await logout();
+            router.push(`/${lang}/login`);
+        } catch {
+            setLoggingOut(false);
+        }
     };
 
     if (isLoading) {
@@ -208,6 +223,20 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                         </section>
+                        {/* Session Section */}
+                        <section className="glass-card p-8 rounded-2xl">
+                            <h3 className="text-lg font-bold mb-4">{isEs ? 'Sesión' : 'Session'}</h3>
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                disabled={loggingOut}
+                                className="w-full sm:w-auto px-6 py-3 border border-red-500/40 text-red-400 text-sm font-semibold rounded-xl hover:bg-red-500/10 hover:border-red-500/60 transition-all flex items-center justify-center disabled:opacity-60"
+                            >
+                                {loggingOut ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LogOut className="w-4 h-4 mr-2" />}
+                                {isEs ? 'Cerrar Sesión' : 'Sign Out'}
+                            </button>
+                        </section>
+
                         {/* About Section */}
                         <section className="glass-card p-8 rounded-2xl">
                             <h3 className="text-lg font-bold mb-6">{params.lang === 'es' ? 'Acerca de' : 'About'}</h3>
