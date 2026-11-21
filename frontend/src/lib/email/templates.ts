@@ -213,19 +213,32 @@ export function bookingConfirmationTemplate(booking: BookingEmailData): string {
   });
 }
 
+/** "1-STEP CAR POLISH" -> "1-Step Car Polish". Names that already have lowercase letters are left alone. */
+export function prettyServiceName(name: string): string {
+  const n = (name ?? '').trim();
+  if (!n || n !== n.toUpperCase()) return n;
+  return n.toLowerCase().replace(/(^|[\s-])([a-z])/g, (_m, sep: string, ch: string) => sep + ch.toUpperCase());
+}
+
 export function newJobContractorTemplate(booking: BookingEmailData): string {
   const { service, location } = booking;
+  const row = (label: string, value: string, last = false) =>
+    `<tr>
+        <td style="padding:12px 0;${last ? '' : 'border-bottom:1px solid #a7f3d0;'}width:34%;font-size:16px;font-weight:700;color:#047857;">${label}</td>
+        <td style="padding:12px 0;${last ? '' : 'border-bottom:1px solid #a7f3d0;'}font-size:17px;font-weight:700;color:#111827;">${value}</td>
+      </tr>`;
   const body = `
-    <p><strong>A new detailing job is available in your area. Log in to accept it before someone else does!</strong></p>
-    <div style="background:#f0fdf4;border:2px solid #10b981;padding:20px;margin:20px 0;border-radius:8px;">
-      <h3 style="margin-top:0;color:#065f46;">Job Overview</h3>
-      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span class="lbl" style="color:#065f46;">Service:</span><span class="val">${service.name}</span></div>
-      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span class="lbl" style="color:#065f46;">Date:</span><span class="val">${fmtDate(booking.scheduledDate)}</span></div>
-      <div class="detail-row" style="border-bottom:1px solid #d1fae5;padding:8px 0;"><span class="lbl" style="color:#065f46;">Time:</span><span class="val">${fmtTime(booking.scheduledTime)}</span></div>
-      <div class="detail-row" style="padding:8px 0;"><span class="lbl" style="color:#065f46;">Area:</span><span class="val">ZIP ${location.zipCode}</span></div>
+    <p style="font-size:18px;font-weight:700;color:#111827;">A new job is available in your area. Log in to your dashboard to review and accept it.</p>
+    <div style="background:#f0fdf4;border:2px solid #10b981;padding:8px 20px;margin:20px 0;border-radius:8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        ${row('Service', prettyServiceName(service.name))}
+        ${row('Date', fmtDate(booking.scheduledDate))}
+        ${row('Time', fmtTime(booking.scheduledTime))}
+        ${row('Area', [location.city, location.zipCode].filter(Boolean).join(', '), true)}
+      </table>
     </div>
-    <p>Log in to your contractor dashboard to view the full details and accept this job. First come, first served!</p>
-    <p style="margin-top:30px;text-align:center;"><a href="${APP_URL}/en/contractor/dashboard" class="btn" style="background:#10b981;color:white;">Go to My Dashboard</a></p>`;
+    <p style="font-size:16px;color:#111827;">Full address and details appear after you accept.</p>
+    <p style="margin-top:30px;text-align:center;"><a href="${APP_URL}/en/contractor/dashboard" class="btn" style="background:#10b981;color:white;font-size:17px;">View &amp; accept job</a></p>`;
 
   return baseLayout({
     headerGradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)',

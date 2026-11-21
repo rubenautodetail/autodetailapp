@@ -8,6 +8,7 @@ import { Resend } from 'resend';
 import {
   bookingConfirmationTemplate,
   newJobContractorTemplate,
+  prettyServiceName,
   paymentReceiptTemplate,
   contractorApplicationAdminTemplate,
   contractorApplicationReceivedTemplate,
@@ -85,8 +86,12 @@ function resolveSubject(payload: EmailPayload): string {
       const isEs = (payload.data as BookingEmailData).locale === 'es';
       return isEs ? '¡Tu cita de detallado está confirmada! 🚗' : 'Your Detailing Appointment is Confirmed! 🚗';
     }
-    case 'new_job_contractor':
-      return '🔔 New Job Available — Log in to Accept';
+    case 'new_job_contractor': {
+      const d = payload.data as BookingEmailData;
+      const svc = prettyServiceName(d.service?.name ?? '');
+      const zip = d.location?.zipCode ?? '';
+      return ['🔔 New job', svc, zip].filter(Boolean).join(' · ');
+    }
     case 'payment_receipt': {
       const d = payload.data as BookingEmailData;
       const isEs = d.locale === 'es';
