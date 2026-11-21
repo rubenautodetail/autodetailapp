@@ -32,6 +32,11 @@ const t = {
         noActive: "No active jobs",
         noActiveDesc: "Jobs you accept will appear here.",
         accept: "Accept Job",
+        jobsOne: "1 job available",
+        jobsMany: "jobs available",
+        jobsSub: "Review it and accept as soon as you can",
+        jobsNone: "No jobs available right now",
+        jobsNoneSub: "They will appear here as soon as a new one comes in",
         reject: "Skip",
         viewJob: "View Job",
         area: "Area",
@@ -71,6 +76,11 @@ const t = {
         noActive: "No hay trabajos activos",
         noActiveDesc: "Los trabajos que aceptes aparecerán aquí.",
         accept: "Aceptar",
+        jobsOne: "1 trabajo disponible",
+        jobsMany: "trabajos disponibles",
+        jobsSub: "Revísalo y acéptalo cuanto antes",
+        jobsNone: "No hay trabajos disponibles ahora",
+        jobsNoneSub: "Aparecerán aquí en cuanto entre uno nuevo",
         reject: "Omitir",
         viewJob: "Ver Trabajo",
         area: "Área",
@@ -512,70 +522,23 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                     </button>
                 </div>
 
-                {/* Stats strip — scrollable on mobile, 4-col grid on desktop */}
-                <div className="grid grid-cols-2 gap-3">
-                    {/* Incoming */}
-                    <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 ">
-                        <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.incoming}</p>
-                        <p className="text-2xl font-bold text-[#D0B078]">{incomingJobs.length}</p>
+                {/* Jobs banner — the first thing a technician needs to know */}
+                {incomingJobs.length > 0 ? (
+                    <div className="rounded-2xl border border-[#D0B078]/60 bg-gradient-to-br from-[#D0B078]/25 to-[#D0B078]/5 px-5 py-4">
+                        <p className="text-lg font-bold text-[#D0B078]">
+                            🔔 {incomingJobs.length === 1 ? labels.jobsOne : `${incomingJobs.length} ${labels.jobsMany}`}
+                        </p>
+                        <p className="text-sm text-[#CFD5EE] mt-0.5">{labels.jobsSub}</p>
                     </div>
-                    {/* Active */}
-                    <div className="bg-[#1A2142] border border-[#2C355E] rounded-xl px-4 py-3 ">
-                        <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">{labels.activeCount}</p>
-                        <p className="text-2xl font-bold text-blue-400">{activeJobs.length}</p>
-                    </div>
-                </div>
-
-                {/* Earnings Summary Card */}
-                {earningSummary && (
-                    <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
-                        <div className="px-6 py-4 border-b border-[#2C355E] flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-white">
-                                {lang === 'es' ? 'Resumen de Ganancias' : 'Earnings Overview'}
-                            </h2>
-                            <Link
-                                href={`/${lang}/contractor/earnings`}
-                                className="text-xs text-[#D0B078] hover:text-white transition-colors font-medium"
-                            >
-                                {lang === 'es' ? 'Ver historial →' : 'Full history →'}
-                            </Link>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[#2C355E]">
-                            <div className="px-5 py-4 bg-[#1A2142]">
-                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
-                                    {lang === 'es' ? 'Total Ganado' : 'Total Earned'}
-                                </p>
-                                <p className="text-xl font-bold text-white">${(Number(earningSummary.totalEarned) || 0).toFixed(2)}</p>
-                            </div>
-                            <div className="px-5 py-4 bg-[#1A2142]">
-                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
-                                    {labels.thisWeek}
-                                </p>
-                                <p className="text-xl font-bold text-green-400">${(Number(dashboardData?.earnings?.thisWeek) || 0).toFixed(2)}</p>
-                            </div>
-                            <div className="px-5 py-4 bg-[#1A2142]">
-                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
-                                    {lang === 'es' ? 'Este Mes' : 'This Month'}
-                                </p>
-                                <p className="text-xl font-bold text-[#D0B078]">${(Number(earningSummary.thisMonthEarned) || 0).toFixed(2)}</p>
-                            </div>
-                            <div className="px-5 py-4 bg-[#1A2142]">
-                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
-                                    {lang === 'es' ? 'Por Cobrar' : 'Pending Payout'}
-                                </p>
-                                <p className="text-xl font-bold text-amber-400">${(Number(earningSummary.pendingPayout) || 0).toFixed(2)}</p>
-                            </div>
-                            <div className="px-5 py-4 bg-[#1A2142]">
-                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
-                                    {lang === 'es' ? 'Trabajos Completados' : 'Jobs Completed'}
-                                </p>
-                                <p className="text-xl font-bold text-green-400">{earningSummary.completedJobs}</p>
-                            </div>
-                        </div>
+                ) : (
+                    <div className="rounded-2xl border border-[#2C355E] bg-[#1A2142] px-5 py-4">
+                        <p className="text-base font-semibold text-[#CFD5EE]">{labels.jobsNone}</p>
+                        <p className="text-sm text-[#8994B8] mt-0.5">{labels.jobsNoneSub}</p>
                     </div>
                 )}
 
-                {/* Incoming Jobs */}
+                {/* Incoming Jobs — only shown when there is something to accept */}
+                {incomingJobs.length > 0 && (
                 <div className={`bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden transition-shadow ${incomingPulse ? 'ring-2 ring-[#D0B078] ring-offset-2 ring-offset-[#131835]' : ''}`}>
                     <div className="px-6 py-4 border-b border-[#2C355E] flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-white">{labels.incomingJobs}</h2>
@@ -661,6 +624,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                         )}
                     </div>
                 </div>
+                )}
 
                 {/* Active Jobs */}
                 <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
@@ -730,6 +694,55 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                         )}
                     </div>
                 </div>
+
+                {/* Earnings Summary Card */}
+                {earningSummary && (
+                    <div className="bg-[#1A2142] rounded-2xl border border-[#2C355E] overflow-hidden">
+                        <div className="px-6 py-4 border-b border-[#2C355E] flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-white">
+                                {lang === 'es' ? 'Resumen de Ganancias' : 'Earnings Overview'}
+                            </h2>
+                            <Link
+                                href={`/${lang}/contractor/earnings`}
+                                className="text-xs text-[#D0B078] hover:text-white transition-colors font-medium"
+                            >
+                                {lang === 'es' ? 'Ver historial →' : 'Full history →'}
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[#2C355E]">
+                            <div className="px-5 py-4 bg-[#1A2142]">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Total Ganado' : 'Total Earned'}
+                                </p>
+                                <p className="text-xl font-bold text-white">${(Number(earningSummary.totalEarned) || 0).toFixed(2)}</p>
+                            </div>
+                            <div className="px-5 py-4 bg-[#1A2142]">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {labels.thisWeek}
+                                </p>
+                                <p className="text-xl font-bold text-green-400">${(Number(dashboardData?.earnings?.thisWeek) || 0).toFixed(2)}</p>
+                            </div>
+                            <div className="px-5 py-4 bg-[#1A2142]">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Este Mes' : 'This Month'}
+                                </p>
+                                <p className="text-xl font-bold text-[#D0B078]">${(Number(earningSummary.thisMonthEarned) || 0).toFixed(2)}</p>
+                            </div>
+                            <div className="px-5 py-4 bg-[#1A2142]">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Por Cobrar' : 'Pending Payout'}
+                                </p>
+                                <p className="text-xl font-bold text-amber-400">${(Number(earningSummary.pendingPayout) || 0).toFixed(2)}</p>
+                            </div>
+                            <div className="px-5 py-4 bg-[#1A2142]">
+                                <p className="text-[10px] font-semibold text-[#5E698F] uppercase tracking-wider mb-1">
+                                    {lang === 'es' ? 'Trabajos Completados' : 'Jobs Completed'}
+                                </p>
+                                <p className="text-xl font-bold text-green-400">{earningSummary.completedJobs}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </div>
