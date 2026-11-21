@@ -270,35 +270,42 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Background refresh ────────────────────────────────────────────────────
-    // Checks for new jobs every 30 s through the server API (which filters by zone and
-    // never exposes customer data). Does not depend on database realtime events, so the
-    // technician never needs direct read access to open bookings.
+    // Every POLL_INTERVAL_MS (and when the tab becomes visible again) asks the server for
+    // just the NUMBER of open jobs in this technician's zones. The full dashboard is only
+    // reloaded when that number changes. Goes through the server API, so the technician
+    // never needs direct read access to open bookings.
     useEffect(() => {
+        const POLL_INTERVAL_MS = 2 * 60 * 1000; // change this number to refresh more or less often
         const refresh = async () => {
             if (document.visibilityState !== 'visible') return;
             const token = sessionRef.current?.access_token;
             if (!token) return;
             try {
-                const res = await fetch('/api/contractors/dashboard', {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const headers = { Authorization: `Bearer ${token}` };
+                const lite = await fetch('/api/contractors/incoming-count', { headers });
+                if (!lite.ok) return;
+                const { count } = (await lite.json()) as { count?: number };
+                if (typeof count !== 'number') return;
+                const previous = lastIncomingRef.current;
+                if (previous !== null && count === previous) return; // nothing changed
+
+                const res = await fetch('/api/contractors/dashboard', { headers });
                 if (!res.ok) return;
                 const data = await res.json();
-                const count: number = data?.incomingJobs?.length ?? 0;
-                const previous = lastIncomingRef.current;
-                lastIncomingRef.current = count;
+                const fullCount: number = data?.incomingJobs?.length ?? 0;
+                lastIncomingRef.current = fullCount;
                 setDashboardData(data);
                 zonesRef.current = Array.isArray(data?.serviceZones) ? data.serviceZones : null;
                 try {
-                    localStorage.setItem('contractor_incoming_count', String(count));
+                    localStorage.setItem('contractor_incoming_count', String(fullCount));
                 } catch { /* non-fatal */ }
-                if (previous !== null && count > previous) {
+                if (previous !== null && fullCount > previous) {
                     playAlert();
                     triggerPulse();
                 }
             } catch { /* non-fatal — try again on the next tick */ }
         };
-        const id = setInterval(refresh, 30000);
+        const id = setInterval(refresh, POLL_INTERVAL_MS);
         const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
         document.addEventListener('visibilitychange', onVisible);
         return () => {
