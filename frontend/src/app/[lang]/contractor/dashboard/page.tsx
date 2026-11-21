@@ -39,6 +39,23 @@ const t = {
         jobsNoneSub: "They will appear here as soon as a new one comes in",
         reject: "Skip",
         viewJob: "View Job",
+        viewDetails: "View job",
+        vehicle: "Vehicle",
+        color: "Color",
+        size: "Size",
+        estTime: "Est. time",
+        yourPayout: "Your payout",
+        whatsIncluded: "WHAT'S INCLUDED",
+        addOnsTitle: "ADD-ONS",
+        close: "Close",
+        addrNote: "The exact address is shared after you accept and press On My Way.",
+        confirmTitle: "Accept this job?",
+        confirmText: "Make sure you can be there at this date and time.",
+        confirmYes: "Yes, accept",
+        confirmBack: "Go back",
+        hrs: "hrs",
+        min: "min",
+        sizeNames: { sedan: "Sedan", suv: "SUV", large_suv: "Large SUV", pickup: "Truck", truck: "Truck", minivan: "Minivan" } as Record<string, string>,
         area: "Area",
         approxMapCaption: "Approximate area (about 1 mile). The exact address is shared after you accept and press On My Way.",
         date: "Date",
@@ -83,6 +100,23 @@ const t = {
         jobsNoneSub: "Aparecerán aquí en cuanto entre uno nuevo",
         reject: "Omitir",
         viewJob: "Ver Trabajo",
+        viewDetails: "Ver trabajo",
+        vehicle: "Vehículo",
+        color: "Color",
+        size: "Tamaño",
+        estTime: "Tiempo est.",
+        yourPayout: "Tu pago",
+        whatsIncluded: "QUÉ INCLUYE",
+        addOnsTitle: "EXTRAS",
+        close: "Cerrar",
+        addrNote: "La dirección exacta se comparte después de aceptar y presionar Estoy en camino.",
+        confirmTitle: "¿Aceptar este trabajo?",
+        confirmText: "Asegúrate de poder estar ahí en esta fecha y hora.",
+        confirmYes: "Sí, aceptar",
+        confirmBack: "Volver",
+        hrs: "h",
+        min: "min",
+        sizeNames: { sedan: "Sedán", suv: "SUV", large_suv: "SUV Grande", pickup: "Camioneta", truck: "Camioneta", minivan: "Minivan" } as Record<string, string>,
         area: "Área",
         approxMapCaption: "Zona aproximada (a 1 milla). La dirección exacta se da después de aceptar y presionar Estoy en camino.",
         date: "Fecha",
@@ -134,6 +168,12 @@ interface DashboardJob {
     addressHidden?: boolean;
     totalAmount: number;
     status: string;
+    vehicle?: { make: string | null; model: string | null; year: string | null; color: string | null; bodyStyle: string | null };
+    serviceNameEs?: string | null;
+    includes?: string[];
+    includesEs?: string[];
+    durationMinutes?: number | null;
+    addOns?: string[];
 }
 
 interface DashboardData {
@@ -162,6 +202,27 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const [paymentInfoSet, setPaymentInfoSet] = useState<boolean | null>(null);
     const [acceptingId, setAcceptingId] = useState<string | null>(null);
     const [rejectingId, setRejectingId] = useState<string | null>(null);
+    const [detailJobId, setDetailJobId] = useState<string | null>(null);
+    const [confirmJobId, setConfirmJobId] = useState<string | null>(null);
+
+    // Close the detail / confirm windows if the job disappears (taken by someone else, cancelled).
+    useEffect(() => {
+        const ids = new Set((dashboardData?.incomingJobs ?? []).map((j) => String(j.id)));
+        if (detailJobId && !ids.has(String(detailJobId))) setDetailJobId(null);
+        if (confirmJobId && !ids.has(String(confirmJobId))) setConfirmJobId(null);
+    }, [dashboardData, detailJobId, confirmJobId]);
+
+    // Escape closes the windows.
+    useEffect(() => {
+        if (!detailJobId && !confirmJobId) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key !== 'Escape') return;
+            if (confirmJobId) setConfirmJobId(null);
+            else setDetailJobId(null);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [detailJobId, confirmJobId]);
     const [isAvailable, setIsAvailable] = useState<boolean>(true);
     const [togglingAvailability, setTogglingAvailability] = useState(false);
     const [bannerMessage, setBannerMessage] = useState<string | null>(null);
@@ -499,6 +560,27 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const incomingJobs: DashboardJob[] = dashboardData?.incomingJobs ?? [];
     const activeJobs: DashboardJob[] = dashboardData?.activeJobs ?? [];
 
+    // "2021 Toyota Camry" / "Toyota Camry" ... empty when the customer gave nothing.
+    const vehicleLine = (job: DashboardJob): string =>
+        [job.vehicle?.year, job.vehicle?.make, job.vehicle?.model].filter(Boolean).join(' ');
+    const sizeLabel = (job: DashboardJob): string => {
+        const raw = job.vehicle?.bodyStyle;
+        if (!raw) return '';
+        return labels.sizeNames[raw] ?? raw.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    };
+    const durationLabel = (mins?: number | null): string => {
+        if (!mins || mins <= 0) return '';
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return [h ? `${h} ${labels.hrs}` : '', m ? `${m} ${labels.min}` : ''].filter(Boolean).join(' ');
+    };
+    const dateLabel = (job: DashboardJob): string =>
+        job.date
+            ? new Date(job.date + 'T12:00:00Z').toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/New_York' })
+            : '—';
+    const detailJob = incomingJobs.find((j) => String(j.id) === String(detailJobId)) ?? null;
+    const confirmJob = incomingJobs.find((j) => String(j.id) === String(confirmJobId)) ?? null;
+
     return (
         <div className="min-h-screen bg-[#131835] py-8 px-4">
             <div className="max-w-5xl mx-auto space-y-6">
@@ -626,11 +708,20 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                                 {labels.area}: {job.area}
                                             </span>
                                         </div>
+                                        {vehicleLine(job) && (
+                                            <p className="text-sm text-[#A5B0D1]">🚗 {vehicleLine(job)}{job.vehicle?.color ? ` · ${job.vehicle.color}` : ''}</p>
+                                        )}
                                         <p className="text-[#D0B078] font-semibold text-sm">${(Number(job.totalAmount) || 0).toFixed(2)} {labels.payout}</p>
                                     </div>
-                                    <div className="flex gap-2 shrink-0 mt-4">
+                                    <div className="flex flex-wrap gap-2 shrink-0 mt-4">
                                         <button
-                                            onClick={() => handleAcceptJob(job.id)}
+                                            onClick={() => setDetailJobId(String(job.id))}
+                                            className="px-4 py-2.5 border border-[#D0B078]/60 text-[#D0B078] text-sm font-semibold rounded-xl hover:bg-[#D0B078]/10 transition-all"
+                                        >
+                                            {labels.viewDetails}
+                                        </button>
+                                        <button
+                                            onClick={() => setConfirmJobId(String(job.id))}
                                             disabled={acceptingId === job.id}
                                             className="px-5 py-2.5 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
                                         >
@@ -791,6 +882,112 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                         </div>
                     </div>
                 )}
+
+
+            {/* ── View job (details) ───────────────────────────────────────── */}
+            {detailJob && !confirmJob && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" role="dialog" aria-modal="true">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setDetailJobId(null)} />
+                    <div className="relative w-full sm:max-w-md bg-[#1A2142] border border-[#3B4575] rounded-t-3xl sm:rounded-3xl p-5 max-h-[88vh] overflow-y-auto">
+                        <div className="w-11 h-1 bg-[#3B4575] rounded mx-auto mb-4 sm:hidden" />
+                        <div className="flex items-center justify-between gap-3">
+                            <h3 className="text-lg font-bold text-white">{lang === 'es' && detailJob.serviceNameEs ? detailJob.serviceNameEs : detailJob.serviceName}</h3>
+                            {detailJob.confirmationCode && <span className="text-xs font-mono text-[#D0B078] bg-[#D0B078]/10 px-2 py-0.5 rounded">{detailJob.confirmationCode}</span>}
+                        </div>
+                        <div className="mt-3 divide-y divide-[#263058] text-sm">
+                            {vehicleLine(detailJob) && (
+                                <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.vehicle}</span><span className="text-white font-medium">{vehicleLine(detailJob)}</span></div>
+                            )}
+                            {detailJob.vehicle?.color && (
+                                <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.color}</span><span className="text-white font-medium">{detailJob.vehicle.color}</span></div>
+                            )}
+                            {sizeLabel(detailJob) && (
+                                <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.size}</span><span className="text-white font-medium">{sizeLabel(detailJob)}</span></div>
+                            )}
+                            <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.date}</span><span className="text-white font-medium">{dateLabel(detailJob)} · {formatTimeWindow(detailJob.timeWindow, lang)}</span></div>
+                            <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.area}</span><span className="text-white font-medium">{detailJob.area}</span></div>
+                            {durationLabel(detailJob.durationMinutes) && (
+                                <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.estTime}</span><span className="text-white font-medium">~{durationLabel(detailJob.durationMinutes)}</span></div>
+                            )}
+                            <div className="flex justify-between py-2.5"><span className="font-bold text-[#9FB0E8]">{labels.yourPayout}</span><span className="text-[#D0B078] font-bold">${(Number(detailJob.totalAmount) || 0).toFixed(2)}</span></div>
+                        </div>
+                        {(() => {
+                            const lines = (lang === 'es' && detailJob.includesEs && detailJob.includesEs.length > 0 ? detailJob.includesEs : detailJob.includes) ?? [];
+                            return lines.length > 0 ? (
+                                <div className="mt-4">
+                                    <p className="text-xs font-bold tracking-wider text-[#9FB0E8] mb-2">{labels.whatsIncluded}</p>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm text-[#E8ECFF]">
+                                        {lines.map((l, i) => <li key={i}>{l}</li>)}
+                                    </ul>
+                                </div>
+                            ) : null;
+                        })()}
+                        {detailJob.addOns && detailJob.addOns.length > 0 && (
+                            <div className="mt-4">
+                                <p className="text-xs font-bold tracking-wider text-[#9FB0E8] mb-2">{labels.addOnsTitle}</p>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-[#E8ECFF]">
+                                    {detailJob.addOns.map((a, i) => <li key={i}>{a}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                        <div className="mt-5 flex flex-wrap gap-2">
+                            <button
+                                onClick={() => setConfirmJobId(String(detailJob.id))}
+                                className="px-5 py-2.5 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90 transition-all"
+                            >
+                                {labels.accept}
+                            </button>
+                            <button
+                                onClick={() => { const id = String(detailJob.id); setDetailJobId(null); handleRejectJob(id); }}
+                                disabled={rejectingId === detailJob.id}
+                                className="px-4 py-2.5 border border-[#2C355E] text-[#A5B0D1] text-sm font-semibold rounded-xl hover:border-white/30 hover:text-white disabled:opacity-50 transition-all"
+                            >
+                                {labels.reject}
+                            </button>
+                            <button
+                                onClick={() => setDetailJobId(null)}
+                                className="px-4 py-2.5 border border-[#2C355E] text-[#A5B0D1] text-sm font-semibold rounded-xl hover:border-white/30 hover:text-white transition-all"
+                            >
+                                {labels.close}
+                            </button>
+                        </div>
+                        <p className="text-[11px] text-[#8E99C8] mt-3">{labels.addrNote}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Confirm accept ───────────────────────────────────────────── */}
+            {confirmJob && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center px-5" role="dialog" aria-modal="true">
+                    <div className="absolute inset-0 bg-black/70" onClick={() => acceptingId ? undefined : setConfirmJobId(null)} />
+                    <div className="relative w-full max-w-sm bg-[#1A2142] border border-[#4A5590] rounded-2xl p-5 shadow-2xl">
+                        <h3 className="text-xl font-bold text-white mb-2">{labels.confirmTitle}</h3>
+                        <p className="text-sm text-[#AAB3D6]">{labels.confirmText}</p>
+                        <div className="mt-3 rounded-xl border border-[#2C355E] bg-[#10162E] p-3 text-sm text-[#E8ECFF] leading-relaxed">
+                            <p className="font-semibold">{lang === 'es' && confirmJob.serviceNameEs ? confirmJob.serviceNameEs : confirmJob.serviceName}</p>
+                            <p>{dateLabel(confirmJob)} · {formatTimeWindow(confirmJob.timeWindow, lang)}</p>
+                            <p>{confirmJob.area}</p>
+                            {vehicleLine(confirmJob) && <p>{vehicleLine(confirmJob)}</p>}
+                        </div>
+                        <div className="mt-4 flex gap-2">
+                            <button
+                                onClick={async () => { const id = String(confirmJob.id); await handleAcceptJob(id); setConfirmJobId(null); }}
+                                disabled={acceptingId === confirmJob.id}
+                                className="flex-1 px-4 py-2.5 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
+                            >
+                                {acceptingId === confirmJob.id ? '...' : labels.confirmYes}
+                            </button>
+                            <button
+                                onClick={() => setConfirmJobId(null)}
+                                disabled={acceptingId === confirmJob.id}
+                                className="flex-1 px-4 py-2.5 border border-[#2C355E] text-[#A5B0D1] text-sm font-semibold rounded-xl hover:border-white/30 hover:text-white disabled:opacity-50 transition-all"
+                            >
+                                {labels.confirmBack}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             </div>
         </div>

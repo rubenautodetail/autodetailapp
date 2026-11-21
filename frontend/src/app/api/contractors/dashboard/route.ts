@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         // ── Incoming jobs: unassigned, status = pending_assignment ────────────
         const { data: incomingAll } = await supabase
             .from('bookings')
-            .select('id, document_id, service_name, time_window, address, city, state, zip_code, date, total_amount, status, confirmation_code')
+            .select('id, document_id, service_id, service_name, time_window, address, city, state, zip_code, date, total_amount, status, confirmation_code, vehicle_make, vehicle_model, vehicle_year, vehicle_color, vehicle_body_style, vehicle_type, selected_add_ons')
             .eq('status', 'pending_assignment')
             .eq('payment_status', 'authorized')
             .order('created_at', { ascending: true });
@@ -64,7 +64,27 @@ export async function GET(req: NextRequest) {
             )
         );
 
-        const incomingJobs = (incomingRaw ?? []).map((b, i) => ({
+        // Service details (what's included + duration) for the incoming jobs.
+        const serviceIds = [...new Set((incomingRaw ?? []).map((b) => b.service_id).filter((v) => v != null))];
+        const { data: serviceRows } = await supabase
+            .from('services')
+            .select('id, name_es, description, description_es, duration_minutes')
+            .in('id', serviceIds.length > 0 ? serviceIds : [-1]);
+        const serviceById = new Map((serviceRows ?? []).map((sv) => [sv.id, sv]));
+
+        // "- item" / "• item" lines -> clean list. Empty text -> [].
+        const toLines = (text: string | null | undefined): string[] =>
+            String(text ?? '')
+                .split(/\r?\n/)
+                .map((l) => l.replace(/^\s*[-•*–]\s*/, '').trim())
+                .filter(Boolean);
+
+        const incomingJobs = (incomingRaw ?? []).map((b, i) => {
+            const sv = serviceById.get(b.service_id);
+            const addOns = Array.isArray(b.selected_add_ons)
+                ? (b.selected_add_ons as { name?: string }[]).map((a) => a?.name).filter((n): n is string => !!n)
+                : [];
+            return {
             id: b.id,
             documentId: b.document_id,
             confirmationCode: b.confirmation_code,
@@ -76,7 +96,21 @@ export async function GET(req: NextRequest) {
             approxMap: incomingMaps[i] ?? null,
             totalAmount: contractorAmount(Number(b.total_amount) || 0),
             status: b.status,
-        }));
+            // Vehicle info only (no plate, no customer data).
+            vehicle: {
+                make: b.vehicle_make || null,
+                model: b.vehicle_model || null,
+                year: b.vehicle_year ? String(b.vehicle_year) : null,
+                color: b.vehicle_color || null,
+                bodyStyle: b.vehicle_body_style || b.vehicle_type || null,
+            },
+            serviceNameEs: sv?.name_es ?? null,
+            includes: toLines(sv?.description),
+            includesEs: toLines(sv?.description_es),
+            durationMinutes: sv?.duration_minutes ?? null,
+            addOns,
+            };
+        });
 
         // ── Active jobs: assigned to this contractor ──────────────────────────
         // The street address is only released once the contractor presses "On My Way".
