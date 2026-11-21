@@ -201,7 +201,6 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const [error, setError] = useState<string | null>(null);
     const [paymentInfoSet, setPaymentInfoSet] = useState<boolean | null>(null);
     const [acceptingId, setAcceptingId] = useState<string | null>(null);
-    const [rejectingId, setRejectingId] = useState<string | null>(null);
     const [detailJobId, setDetailJobId] = useState<string | null>(null);
     const [confirmJobId, setConfirmJobId] = useState<string | null>(null);
 
@@ -493,22 +492,6 @@ export default function ContractorDashboard({ params }: DashboardProps) {
         finally { setAcceptingId(null); }
     };
 
-    const handleRejectJob = async (bookingId: string) => {
-        setRejectingId(bookingId);
-        try {
-            const res = await fetch('/api/contractors/reject-job', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-                },
-                body: JSON.stringify({ bookingId }),
-            });
-            if (res.ok) loadDashboard();
-        } catch { /* non-fatal */ }
-        finally { setRejectingId(null); }
-    };
-
     // ── Loading skeleton ──────────────────────────────────────────────────────
     if (authLoading || loading) {
         return (
@@ -727,13 +710,6 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                         >
                                             {acceptingId === job.id ? '...' : labels.accept}
                                         </button>
-                                        <button
-                                            onClick={() => handleRejectJob(job.id)}
-                                            disabled={rejectingId === job.id}
-                                            className="px-4 py-2.5 border border-[#2C355E] text-[#A5B0D1] text-sm font-semibold rounded-xl hover:border-white/30 hover:text-white disabled:opacity-50 transition-all"
-                                        >
-                                            {rejectingId === job.id ? '...' : labels.reject}
-                                        </button>
                                     </div>
                                     </div>
                                     {job.approxMap?.imageUrl && (
@@ -936,13 +912,6 @@ export default function ContractorDashboard({ params }: DashboardProps) {
                                 className="px-5 py-2.5 bg-[#D0B078] text-[#131835] text-sm font-bold rounded-xl hover:opacity-90 transition-all"
                             >
                                 {labels.accept}
-                            </button>
-                            <button
-                                onClick={() => { const id = String(detailJob.id); setDetailJobId(null); handleRejectJob(id); }}
-                                disabled={rejectingId === detailJob.id}
-                                className="px-4 py-2.5 border border-[#2C355E] text-[#A5B0D1] text-sm font-semibold rounded-xl hover:border-white/30 hover:text-white disabled:opacity-50 transition-all"
-                            >
-                                {labels.reject}
                             </button>
                             <button
                                 onClick={() => setDetailJobId(null)}
