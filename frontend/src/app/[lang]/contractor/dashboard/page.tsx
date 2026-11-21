@@ -179,6 +179,8 @@ export default function ContractorDashboard({ params }: DashboardProps) {
     const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Zones this contractor works, so out-of-zone new jobs do not trigger the alert sound.
     const zonesRef = useRef<string[] | null>(null);
+    // Last known number of incoming jobs, used by the background refresh to detect new ones.
+    const lastIncomingRef = useRef<number | null>(null);
 
     /** Two-tone beep via Web Audio API — no external library required. */
     const playAlert = () => {
@@ -267,6 +269,44 @@ export default function ContractorDashboard({ params }: DashboardProps) {
         };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // ── Background refresh ────────────────────────────────────────────────────
+    // Checks for new jobs every 30 s through the server API (which filters by zone and
+    // never exposes customer data). Does not depend on database realtime events, so the
+    // technician never needs direct read access to open bookings.
+    useEffect(() => {
+        const refresh = async () => {
+            if (document.visibilityState !== 'visible') return;
+            const token = sessionRef.current?.access_token;
+            if (!token) return;
+            try {
+                const res = await fetch('/api/contractors/dashboard', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const count: number = data?.incomingJobs?.length ?? 0;
+                const previous = lastIncomingRef.current;
+                lastIncomingRef.current = count;
+                setDashboardData(data);
+                zonesRef.current = Array.isArray(data?.serviceZones) ? data.serviceZones : null;
+                try {
+                    localStorage.setItem('contractor_incoming_count', String(count));
+                } catch { /* non-fatal */ }
+                if (previous !== null && count > previous) {
+                    playAlert();
+                    triggerPulse();
+                }
+            } catch { /* non-fatal — try again on the next tick */ }
+        };
+        const id = setInterval(refresh, 30000);
+        const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => {
+            clearInterval(id);
+            document.removeEventListener('visibilitychange', onVisible);
+        };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
     const checkPaymentInfo = async () => {
         try {
             const res = await fetch('/api/contractors/profile', {
@@ -340,6 +380,7 @@ export default function ContractorDashboard({ params }: DashboardProps) {
             setError(null);
             // Persist incoming count so the layout's bottom nav dot stays in sync
             const count: number = data?.incomingJobs?.length ?? 0;
+            lastIncomingRef.current = count;
             try {
                 localStorage.setItem('contractor_incoming_count', String(count));
             } catch {

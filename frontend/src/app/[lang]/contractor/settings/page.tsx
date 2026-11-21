@@ -475,10 +475,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
     const [bankRoutingNumber, setBankRoutingNumber] = useState("");
     const [bankAccountType, setBankAccountType] = useState("checking");
 
-    // ── Section F — Notifications ─────────────────────────────────────────────
-    const [notifEmail, setNotifEmail] = useState(true);
-    const [notifPush, setNotifPush] = useState(false);
-
     // ── Section G — Deactivate ───────────────────────────────────────────────
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
     const [deactivating, setDeactivating] = useState(false);
@@ -614,23 +610,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
         );
     };
 
-    // ── Section F handler — notifications ────────────────────────────────────
-    // Notification preferences are stored locally (localStorage) since the
-    // profiles table doesn't have a notification_prefs column yet. This keeps
-    // the UI functional without a schema migration.
-    useEffect(() => {
-        try {
-            const stored = localStorage.getItem("contractor_notif_prefs");
-            if (stored) {
-                const prefs = JSON.parse(stored) as { email: boolean; push: boolean };
-                setNotifEmail(prefs.email ?? true);
-                setNotifPush(prefs.push ?? false);
-            }
-        } catch {
-            // ignore parse errors
-        }
-    }, []);
-
     // ── One save for the whole page ───────────────────────────────────────────
     const handleSaveAll = async () => {
         setSavingAll(true);
@@ -671,13 +650,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                 setSkillsPendingReview(true);
                 setInitialServiceIds(selectedServiceIds);
             }
-
-            try {
-                localStorage.setItem(
-                    "contractor_notif_prefs",
-                    JSON.stringify({ email: notifEmail, push: notifPush })
-                );
-            } catch { /* localStorage unavailable — non-fatal */ }
 
             toast.success(skillsChanged ? labels.skillsSaved : labels.saved);
         } catch {
@@ -1079,42 +1051,6 @@ export default function ContractorSettingsPage({ params }: SettingsPageProps) {
                         </>
                     )}
 
-                </SectionCard>
-
-                {/* ── Section F: Notifications ────────────────────────────── */}
-                <SectionCard>
-                    <SectionTitle>{labels.notificationsTitle}</SectionTitle>
-
-                    <div className="space-y-4">
-                        {/* Email notifications toggle */}
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="min-w-0">
-                                <p className="text-sm font-semibold text-white">{labels.notifEmailLabel}</p>
-                                <p className="mt-0.5 text-xs text-[#5E698F]">{labels.notifEmailDesc}</p>
-                            </div>
-                            <ToggleSwitch
-                                checked={notifEmail}
-                                onChange={setNotifEmail}
-                                label={labels.notifEmailLabel}
-                            />
-                        </div>
-
-                        {/* Divider */}
-                        <div className="border-t border-[#2C355E]" />
-
-                        {/* Push notifications toggle */}
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="min-w-0">
-                                <p className="text-sm font-semibold text-white">{labels.notifPushLabel}</p>
-                                <p className="mt-0.5 text-xs text-[#5E698F]">{labels.notifPushDesc}</p>
-                            </div>
-                            <ToggleSwitch
-                                checked={notifPush}
-                                onChange={setNotifPush}
-                                label={labels.notifPushLabel}
-                            />
-                        </div>
-                    </div>
                 </SectionCard>
 
                 {/* ── One Save button for the whole page ─────────────────── */}
