@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -9,7 +10,7 @@ import Inline, { plainText } from "@/components/blog/Inline";
 import JsonLd from "@/components/seo/JsonLd";
 import { getBreadcrumbSchema, getFaqSchema } from "@/lib/seo/schema";
 import { slugify } from "@/lib/seo/serviceNames";
-import { CATEGORIES, type Block } from "@/lib/blog/types";
+import { CATEGORIES, type Block, type BlogPost } from "@/lib/blog/types";
 import {
     formatDate,
     getPostByAnySlug,
@@ -161,6 +162,23 @@ function BlockView({ block, locale, index }: { block: Block; locale: Locale; ind
     }
 }
 
+function CtaBox({ cta, locale, className = "" }: { cta: NonNullable<BlogPost["cta"]>; locale: Locale; className?: string }) {
+    return (
+        <div className={`flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#2C355E] bg-[#151B3A] p-6 sm:flex-row sm:items-center ${className}`}>
+            <div>
+                <h3 className="text-lg font-semibold text-[#D0B078]">{cta.title[locale]}</h3>
+                <p className="mt-1 text-sm text-white/70">{cta.text[locale]}</p>
+            </div>
+            <Link
+                href={cta.href[locale]}
+                className={`shrink-0 rounded-full bg-[#D0B078] px-6 py-2.5 text-sm font-semibold text-[#131835] hover:bg-[#dcc08d] ${focusRing}`}
+            >
+                {cta.label[locale]} →
+            </Link>
+        </div>
+    );
+}
+
 export default async function BlogPostPage({ params }: PageProps) {
     const { lang, slug } = await params;
     const locale = toLocale(lang);
@@ -176,6 +194,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
     const title = plainText(post.title[locale]);
     const url = `${APP_URL}${postPath(post, locale)}`;
+    const firstH2Index = post.body.findIndex((b) => b.type === "h2");
     const headings = post.body.filter((b): b is Extract<Block, { type: "h2" }> => b.type === "h2");
     const related = getRelatedPosts(post);
     const minutes = readMinutes(post, locale);
@@ -284,24 +303,14 @@ export default async function BlogPostPage({ params }: PageProps) {
 
                 <div>
                     {post.body.map((block, i) => (
-                        <BlockView key={i} block={block} locale={locale} index={i} />
+                        <Fragment key={i}>
+                            {post.cta && i === firstH2Index && <CtaBox cta={post.cta} locale={locale} className="my-8" />}
+                            <BlockView block={block} locale={locale} index={i} />
+                        </Fragment>
                     ))}
                 </div>
 
-                {post.cta && (
-                    <div className="mt-12 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#2C355E] bg-[#151B3A] p-6 sm:flex-row sm:items-center">
-                        <div>
-                            <h3 className="text-lg font-semibold text-[#D0B078]">{post.cta.title[locale]}</h3>
-                            <p className="mt-1 text-sm text-white/70">{post.cta.text[locale]}</p>
-                        </div>
-                        <Link
-                            href={post.cta.href[locale]}
-                            className={`shrink-0 rounded-full bg-[#D0B078] px-6 py-2.5 text-sm font-semibold text-[#131835] hover:bg-[#dcc08d] ${focusRing}`}
-                        >
-                            {post.cta.label[locale]} →
-                        </Link>
-                    </div>
-                )}
+                {post.cta && <CtaBox cta={post.cta} locale={locale} className="mt-12" />}
 
                 {post.faqs && post.faqs.length > 0 && (
                     <section className="mt-14">
