@@ -24,7 +24,7 @@ export const carSeatStains: BlogPost = {
     },
     seoTitle: {
         en: "How to Clean Cloth Car Seats and Get Stains Out",
-        es: "Cómo Limpiar y Quitar Manchas de los Asientos del Carro",
+        es: "Cómo Quitar Manchas de los Asientos del Carro (Café y Agua)",
     },
     description: {
         en: "How to clean car seat stains at home: coffee, water rings and built-up dirt on cloth seats, the mistake that makes stains worse, and when to call a pro.",

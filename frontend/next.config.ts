@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     return [
       // La entrada vieja /dashboard ya no existe: todo vive en /customer
       { source: '/:lang(en|es)/dashboard/:path*', destination: '/:lang/customer', permanent: false },
+      // 1-Step: direcciones viejas (indexadas en Google) → nuevas
+      { source: '/en/services/paint-enhancement', destination: '/en/services/1-step-car-polish', permanent: true },
+      { source: '/es/services/pulido', destination: '/es/services/pulido-1-paso', permanent: true },
+      { source: '/es/services/pulido-de-un-paso', destination: '/es/services/pulido-1-paso', permanent: true },
     ];
   },
   async headers() {
